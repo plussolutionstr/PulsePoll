@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:PulsePoll.Mobile.ViewModels"
+             x:Class="PulsePoll.Mobile.Views.LoginPage"
+             x:DataType="vm:LoginViewModel"
+             Shell.NavBarIsVisible="False">
+
+    <VerticalStackLayout Spacing="16" Padding="24" VerticalOptions="Center">
+
+        <Label Text="PulsePoll"
+               FontFamily="JakartaBold" FontSize="28"
+               HorizontalTextAlignment="Center"
+               TextColor="{StaticResource PrimaryPurple}"
+               Margin="0,0,0,24"/>
+
+        <Entry Placeholder="E-posta"
+               Text="{Binding Email}"
+               Keyboard="Email"
+               ReturnType="Next"/>
+
+        <Entry Placeholder="Şifre"
+               Text="{Binding Password}"
+               IsPassword="True"
+               ReturnType="Done"/>
+
+        <Label Text="{Binding ErrorMessage}"
+               TextColor="{StaticResource Danger}"
+               FontFamily="JakartaMedium" FontSize="13"
+               HorizontalTextAlignment="Center"
+               IsVisible="{Binding HasError}"/>
+
+        <Button Text="Giriş Yap"
+                Command="{Binding LoginCommand}"
+                BackgroundColor="{StaticResource PrimaryPurple}"
+                TextColor="White"
+                FontFamily="JakartaBold"
+                HeightRequest="48"
+                CornerRadius="12"/>
+
+        <ActivityIndicator IsRunning="{Binding IsBusy}"
+                           IsVisible="{Binding IsBusy}"
+                           Color="{StaticResource PrimaryPurple}"
+                           HeightRequest="30"/>
+
+    </VerticalStackLayout>
+</ContentPage>

@@ -10,6 +10,7 @@
 
     <ContentPage.Resources>
         <converters:NotificationTypeToBgConverter x:Key="TypeToBg"/>
+        <converters:BoolToReadBgConverter x:Key="BoolToReadBg"/>
     </ContentPage.Resources>
 
     <VerticalStackLayout Spacing="16" Padding="20,16">
@@ -66,12 +67,8 @@
                     <DataTemplate x:DataType="models:NotificationModel">
                         <Border StrokeShape="RoundRectangle 16"
                                 Stroke="{StaticResource CardBorder}"
+                                BackgroundColor="{Binding IsRead, Converter={StaticResource BoolToReadBg}}"
                                 Padding="14">
-                            <Border.BackgroundColor>
-                                <MultiBinding>
-                                    <Binding Path="IsRead"/>
-                                </MultiBinding>
-                            </Border.BackgroundColor>
                             <Grid ColumnDefinitions="40,*,Auto" ColumnSpacing="12">
                                 <Border StrokeThickness="0"
                                         StrokeShape="RoundRectangle 20"

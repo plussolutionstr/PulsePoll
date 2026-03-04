@@ -23,6 +23,22 @@ public sealed class PulsePollApiClient : IPulsePollApiClient
         _tokenProvider = tokenProvider;
     }
 
+    public async Task<bool> LoginAsync(string email, string password, CancellationToken ct = default)
+    {
+        var payload = new { email, password };
+        var response = await _http.PostAsJsonAsync("api/auth/login", payload, JsonOptions, ct);
+
+        if (!response.IsSuccessStatusCode)
+            return false;
+
+        var result = await response.Content.ReadFromJsonAsync<ApiResponse<AuthResultDto>>(JsonOptions, ct);
+        if (result is not { Success: true } || result.Data is null)
+            return false;
+
+        await _tokenProvider.SetTokenAsync(result.Data.AccessToken);
+        return true;
+    }
+
     public async Task<List<StoryModel>> GetStoriesAsync(CancellationToken ct = default)
     {
         var response = await GetAsync<List<StoryApiDto>>("api/stories", ct);

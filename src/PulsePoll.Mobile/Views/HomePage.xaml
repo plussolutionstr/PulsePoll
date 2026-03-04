@@ -85,7 +85,7 @@
                 <Grid>
                     <CarouselView x:Name="newsCarousel"
                                   ItemsSource="{Binding News}"
-                                  Loop="True"
+                                  Loop="False"
                                   PeekAreaInsets="0"
                                   IndicatorView="{x:Reference newsIndicator}">
                         <CarouselView.ItemsLayout>

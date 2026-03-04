@@ -6,17 +6,22 @@ public class MockDataService
 {
     public List<StoryModel> GetStories() =>
     [
-        new(1, "Arçelik", "arcelik"),
-        new(2, "Turkcell", "turkcell"),
-        new(3, "Migros", "migros"),
-        new(4, "BMW", "bmw"),
-        new(5, "Akbank", "akbank"),
-        new(6, "Nike", "nike")
+        new(1, "PulsePoll", "", BrandColor: "#7C5CFC", IsSeen: false),
+        new(2, "Arçelik", "", BrandColor: "#E04A2F"),
+        new(3, "Turkcell", "", BrandColor: "#0060AF"),
+        new(4, "Migros", "", BrandColor: "#007A33", IsSeen: true),
+        new(5, "BMW", "", BrandColor: "#1F4E79", IsSeen: true),
+        new(6, "Akbank", "", BrandColor: "#7C5CFC", IsSeen: true)
     ];
 
     public List<NewsModel> GetNews() =>
     [
-        new(1, "Duyuru", "Yeni Platin Üyelik Sistemi Geliyor", "Daha fazla kazanç, daha fazla fırsat!")
+        new(1, "Duyuru", "Yeni Platin Üyelik Sistemi Geliyor", "Daha fazla kazanç, daha fazla fırsat!",
+            "#2D1B6E", "#A78BFA"),
+        new(2, "Kampanya", "Hafta Sonu Anketi 2x Puan", "Cumartesi-Pazar tamamlanan anketler çift puan!",
+            "#1F4E79", "#3B82F6"),
+        new(3, "Yenilik", "Yeni Kategori: Otomotiv", "Otomotiv anketleri ile daha fazla kazanın.",
+            "#0B4D2C", "#22C988")
     ];
 
     public List<SurveyModel> GetSurveys() =>

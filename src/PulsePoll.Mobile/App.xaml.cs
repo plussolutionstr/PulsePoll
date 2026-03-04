@@ -1,3 +1,5 @@
+using PulsePoll.Mobile.Views;
+
 namespace PulsePoll.Mobile;
 
 public partial class App : Application
@@ -12,6 +14,6 @@ public partial class App : Application
 
     protected override Window CreateWindow(IActivationState? activationState)
     {
-        return new Window(_serviceProvider.GetRequiredService<AppShell>());
+        return new Window(_serviceProvider.GetRequiredService<LoginPage>());
     }
 }

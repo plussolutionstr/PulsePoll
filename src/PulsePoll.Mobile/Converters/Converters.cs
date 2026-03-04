@@ -97,6 +97,24 @@ public class NotificationTypeToBgConverter : IValueConverter
         => throw new NotSupportedException();
 }
 
+public class BoolToReadBgConverter : IValueConverter
+{
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        if (value is bool isRead)
+        {
+            if (isRead)
+                return Colors.White;
+            // Unread → light purple tint
+            return Application.Current!.Resources.TryGetValue("PrimaryLight", out var p) ? (Color)p : Color.FromArgb("#EDE8FF");
+        }
+        return Colors.White;
+    }
+
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}
+
 public class BoolToIconConverter : IValueConverter
 {
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)

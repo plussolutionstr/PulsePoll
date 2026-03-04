@@ -1,8 +1,8 @@
 namespace PulsePoll.Mobile.Models;
 
-public record StoryModel(int Id, string BrandName, string AvatarUrl);
+public record StoryModel(int Id, string BrandName, string ImageUrl, string BrandColor = "#7C5CFC", bool IsSeen = false);
 
-public record NewsModel(int Id, string Tag, string Title, string Subtitle);
+public record NewsModel(int Id, string Tag, string Title, string Subtitle, string GradientStart = "#2D1B6E", string GradientEnd = "#A78BFA");
 
 public record SurveyModel(
     int Id,

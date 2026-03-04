@@ -23,8 +23,8 @@ public static class MauiProgram
                 fonts.AddFont("PlusJakartaSans-ExtraBold.ttf", "JakartaExtraBold");
             });
 
-        // Shell
-        builder.Services.AddSingleton<AppShell>();
+        // Shell & Auth
+        builder.Services.AddTransient<AppShell>();
 
         // Services
         builder.Services.AddSingleton<MockDataService>();
@@ -47,6 +47,7 @@ public static class MauiProgram
         ;
 
         // ViewModels
+        builder.Services.AddTransient<LoginViewModel>();
         builder.Services.AddTransient<HomeViewModel>();
         builder.Services.AddTransient<SurveysViewModel>();
         builder.Services.AddTransient<SurveyDetailViewModel>();
@@ -57,6 +58,7 @@ public static class MauiProgram
         builder.Services.AddTransient<NotificationsViewModel>();
 
         // Pages
+        builder.Services.AddTransient<LoginPage>();
         builder.Services.AddTransient<HomePage>();
         builder.Services.AddTransient<SurveysPage>();
         builder.Services.AddTransient<SurveyDetailPage>();

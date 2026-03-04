@@ -58,24 +58,31 @@ public partial class HomeViewModel : ObservableObject
 
     private async Task FetchDataAsync()
     {
-        try
+        var storiesTask = FetchOrFallbackAsync(
+            () => _apiClient.GetStoriesAsync(),
+            () => _mockDataService.GetStories());
+        var newsTask = FetchOrFallbackAsync(
+            () => _apiClient.GetNewsAsync(),
+            () => _mockDataService.GetNews());
+        var surveysTask = FetchOrFallbackAsync(
+            () => _apiClient.GetProjectsAsync(),
+            () => _mockDataService.GetSurveys());
+
+        await Task.WhenAll(storiesTask, newsTask, surveysTask);
+
+        MainThread.BeginInvokeOnMainThread(() =>
         {
-            var storiesTask = _apiClient.GetStoriesAsync();
-            var newsTask = _apiClient.GetNewsAsync();
-            var projectsTask = _apiClient.GetProjectsAsync();
-
-            await Task.WhenAll(storiesTask, newsTask, projectsTask);
-
             Stories = new ObservableCollection<StoryModel>(storiesTask.Result);
             News = new ObservableCollection<NewsModel>(newsTask.Result);
-            Surveys = new ObservableCollection<SurveyModel>(projectsTask.Result);
-        }
-        catch
-        {
-            Stories = new ObservableCollection<StoryModel>(_mockDataService.GetStories());
-            News = new ObservableCollection<NewsModel>(_mockDataService.GetNews());
-            Surveys = new ObservableCollection<SurveyModel>(_mockDataService.GetSurveys());
-        }
+            Surveys = new ObservableCollection<SurveyModel>(surveysTask.Result);
+        });
+    }
+
+    private static async Task<List<T>> FetchOrFallbackAsync<T>(
+        Func<Task<List<T>>> fetch, Func<List<T>> fallback)
+    {
+        try { return await fetch(); }
+        catch { return fallback(); }
     }
 
     [RelayCommand]
