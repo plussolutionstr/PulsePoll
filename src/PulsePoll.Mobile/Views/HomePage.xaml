@@ -7,46 +7,68 @@
              x:DataType="vm:HomeViewModel"
              Shell.NavBarIsVisible="False">
 
+    <RefreshView Command="{Binding RefreshCommand}"
+                 IsRefreshing="{Binding IsRefreshing}">
     <ScrollView>
         <VerticalStackLayout Spacing="16" Padding="20,16">
 
-            <!-- Top Bar -->
+            <!-- ══════ TOP BAR ══════ -->
             <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,4">
                 <Label Text="PulsePoll"
                        Style="{StaticResource PageTitleStyle}"
                        FontSize="24"
                        TextColor="{StaticResource PrimaryPurple}"
                        VerticalOptions="Center"/>
-                <ImageButton Grid.Column="1"
-                             Source="icon_bell.png"
-                             HeightRequest="24" WidthRequest="24"
-                             Command="{Binding NavigateToNotificationsCommand}"
-                             VerticalOptions="Center"/>
+                <!-- Bell with red notification dot -->
+                <Grid Grid.Column="1" VerticalOptions="Center">
+                    <ImageButton Source="icon_bell.png"
+                                 HeightRequest="24" WidthRequest="24"
+                                 Command="{Binding NavigateToNotificationsCommand}"/>
+                    <Border StrokeThickness="0"
+                            StrokeShape="RoundRectangle 5"
+                            HeightRequest="10" WidthRequest="10"
+                            BackgroundColor="{StaticResource Danger}"
+                            HorizontalOptions="End" VerticalOptions="Start"
+                            Margin="0,-2,-2,0"/>
+                </Grid>
             </Grid>
 
-            <!-- Stories -->
+            <!-- ══════ LOADING ══════ -->
+            <ActivityIndicator IsRunning="{Binding IsLoading}"
+                               IsVisible="{Binding IsLoading}"
+                               Color="{StaticResource PrimaryPurple}"
+                               HeightRequest="36"
+                               HorizontalOptions="Center"/>
+
+            <!-- ══════ STORIES ══════ -->
             <ScrollView Orientation="Horizontal" HorizontalScrollBarVisibility="Never">
-                <HorizontalStackLayout Spacing="16"
+                <HorizontalStackLayout Spacing="14"
                                        BindableLayout.ItemsSource="{Binding Stories}">
                     <BindableLayout.ItemTemplate>
                         <DataTemplate x:DataType="models:StoryModel">
                             <VerticalStackLayout Spacing="6" WidthRequest="68">
-                                <Border StrokeThickness="3"
+                                <!-- Story ring — gradient ring simulated with border -->
+                                <Border StrokeThickness="2.5"
                                         Stroke="{StaticResource PrimaryPurple}"
-                                        StrokeShape="RoundRectangle 32"
-                                        HeightRequest="64" WidthRequest="64"
+                                        StrokeShape="RoundRectangle 30"
+                                        HeightRequest="60" WidthRequest="60"
                                         HorizontalOptions="Center"
-                                        BackgroundColor="{StaticResource PrimaryLight}"
-                                        Padding="2">
-                                    <Label Text="{Binding BrandName, StringFormat='{0:0}'}"
-                                           FontFamily="JakartaBold" FontSize="11"
-                                           HorizontalOptions="Center" VerticalOptions="Center"
-                                           TextColor="{StaticResource PrimaryPurple}"
-                                           HorizontalTextAlignment="Center"
-                                           MaxLines="2" LineBreakMode="TailTruncation"/>
+                                        Padding="3">
+                                    <!-- Inner circle — image placeholder -->
+                                    <Border StrokeThickness="0"
+                                            StrokeShape="RoundRectangle 25"
+                                            BackgroundColor="{StaticResource SurfaceColor}">
+                                        <!-- Placeholder: brand initial (will be Image when API ready) -->
+                                        <Image Source="icon_star.png"
+                                               HeightRequest="24" WidthRequest="24"
+                                               Opacity="0.3"
+                                               HorizontalOptions="Center"
+                                               VerticalOptions="Center"/>
+                                    </Border>
                                 </Border>
                                 <Label Text="{Binding BrandName}"
-                                       Style="{StaticResource CaptionStyle}"
+                                       FontFamily="JakartaMedium" FontSize="11"
+                                       TextColor="{StaticResource TextSecondary}"
                                        HorizontalTextAlignment="Center"
                                        MaxLines="1" LineBreakMode="TailTruncation"/>
                             </VerticalStackLayout>
@@ -55,48 +77,115 @@
                 </HorizontalStackLayout>
             </ScrollView>
 
-            <!-- Featured News Banner -->
-            <VerticalStackLayout BindableLayout.ItemsSource="{Binding News}">
-                <BindableLayout.ItemTemplate>
-                    <DataTemplate x:DataType="models:NewsModel">
-                        <Border StrokeThickness="0"
-                                StrokeShape="RoundRectangle 20"
-                                Padding="20"
-                                HeightRequest="140">
-                            <Border.Background>
-                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                    <GradientStop Color="{StaticResource PrimaryPurple}" Offset="0"/>
-                                    <GradientStop Color="{StaticResource PrimaryDark}" Offset="1"/>
-                                </LinearGradientBrush>
-                            </Border.Background>
-                            <VerticalStackLayout Spacing="8" VerticalOptions="Center">
-                                <Border StrokeThickness="0"
-                                        StrokeShape="RoundRectangle 8"
-                                        BackgroundColor="#50FFFFFF"
-                                        Padding="8,4"
-                                        HorizontalOptions="Start">
-                                    <Label Text="{Binding Tag}"
-                                           FontFamily="JakartaSemiBold" FontSize="11"
-                                           TextColor="White"/>
-                                </Border>
-                                <Label Text="{Binding Title}"
-                                       FontFamily="JakartaBold" FontSize="18"
-                                       TextColor="White"/>
-                                <Label Text="{Binding Subtitle}"
-                                       FontFamily="JakartaRegular" FontSize="13"
-                                       TextColor="#CCFFFFFF"/>
-                            </VerticalStackLayout>
-                        </Border>
-                    </DataTemplate>
-                </BindableLayout.ItemTemplate>
-            </VerticalStackLayout>
+            <!-- ══════ NEWS SLIDER ══════ -->
+            <Border StrokeThickness="0"
+                    StrokeShape="RoundRectangle 16"
+                    HeightRequest="160"
+                    Padding="0">
+                <Grid>
+                    <CarouselView x:Name="newsCarousel"
+                                  ItemsSource="{Binding News}"
+                                  Loop="True"
+                                  PeekAreaInsets="0"
+                                  IndicatorView="{x:Reference newsIndicator}">
+                        <CarouselView.ItemsLayout>
+                            <LinearItemsLayout Orientation="Horizontal"
+                                               SnapPointsType="MandatorySingle"
+                                               SnapPointsAlignment="Center"
+                                               ItemSpacing="0"/>
+                        </CarouselView.ItemsLayout>
+                        <CarouselView.ItemTemplate>
+                            <DataTemplate x:DataType="models:NewsModel">
+                                <Grid>
+                                    <BoxView BackgroundColor="#1A1535"/>
+                                    <BoxView Opacity="0.85">
+                                        <BoxView.Background>
+                                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                                <GradientStop Color="#2D1B6E" Offset="0"/>
+                                                <GradientStop Color="#6D3FC0" Offset="0.5"/>
+                                                <GradientStop Color="#A78BFA" Offset="1"/>
+                                            </LinearGradientBrush>
+                                        </BoxView.Background>
+                                    </BoxView>
 
-            <!-- Sana Özel Header -->
-            <Label Text="Sana Özel Anketler"
-                   Style="{StaticResource TitleStyle}"
-                   Margin="0,4,0,0"/>
+                                    <!-- Decorative circles -->
+                                    <Border StrokeThickness="0"
+                                            StrokeShape="RoundRectangle 70"
+                                            HeightRequest="140" WidthRequest="140"
+                                            BackgroundColor="#12FFFFFF"
+                                            HorizontalOptions="End" VerticalOptions="Start"
+                                            Margin="0,-20,-20,0"/>
+                                    <Border StrokeThickness="0"
+                                            StrokeShape="RoundRectangle 50"
+                                            HeightRequest="100" WidthRequest="100"
+                                            BackgroundColor="#0DFFFFFF"
+                                            HorizontalOptions="Start" VerticalOptions="End"
+                                            Margin="20,0,0,-30"/>
 
-            <!-- ====== VISUAL SURVEY CARDS (01B) ====== -->
+                                    <!-- Image placeholder -->
+                                    <Image Source="icon_star.png"
+                                           HeightRequest="48" WidthRequest="48"
+                                           Opacity="0.1"
+                                           HorizontalOptions="Center"
+                                           VerticalOptions="Center"/>
+
+                                    <!-- Bottom text gradient -->
+                                    <BoxView VerticalOptions="End" HeightRequest="80">
+                                        <BoxView.Background>
+                                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                                <GradientStop Color="#000F0A28" Offset="0"/>
+                                                <GradientStop Color="#D90F0A28" Offset="1"/>
+                                            </LinearGradientBrush>
+                                        </BoxView.Background>
+                                    </BoxView>
+
+                                    <!-- Text content -->
+                                    <VerticalStackLayout Spacing="6"
+                                                         VerticalOptions="End"
+                                                         Padding="16,0,16,14">
+                                        <Border StrokeThickness="0"
+                                                StrokeShape="RoundRectangle 6"
+                                                BackgroundColor="#33FFFFFF"
+                                                Padding="8,3"
+                                                HorizontalOptions="Start">
+                                            <Label Text="{Binding Tag}"
+                                                   FontFamily="JakartaBold" FontSize="10"
+                                                   TextColor="White"
+                                                   CharacterSpacing="1"/>
+                                        </Border>
+                                        <Label Text="{Binding Title}"
+                                               FontFamily="JakartaBold" FontSize="15"
+                                               TextColor="White"
+                                               LineHeight="1.35"/>
+                                    </VerticalStackLayout>
+                                </Grid>
+                            </DataTemplate>
+                        </CarouselView.ItemTemplate>
+                    </CarouselView>
+
+                    <!-- Indicator dots (bottom-right, inside banner) -->
+                    <IndicatorView x:Name="newsIndicator"
+                                   HorizontalOptions="End"
+                                   VerticalOptions="End"
+                                   Margin="0,0,16,12"
+                                   IndicatorColor="#66FFFFFF"
+                                   SelectedIndicatorColor="#E6FFFFFF"
+                                   IndicatorSize="6"/>
+                </Grid>
+            </Border>
+
+            <!-- ══════ SECTION HEADER ══════ -->
+            <Grid ColumnDefinitions="*,Auto">
+                <Label Text="Sana Özel"
+                       Style="{StaticResource TitleStyle}"/>
+                <Label Grid.Column="1"
+                       Text="Tümü"
+                       FontFamily="JakartaSemiBold" FontSize="14"
+                       TextColor="{StaticResource PrimaryPurple}"
+                       VerticalOptions="Center"/>
+            </Grid>
+
+            <!-- ══════ SURVEY CARDS (VISUAL) ══════ -->
             <VerticalStackLayout Spacing="12"
                                  BindableLayout.ItemsSource="{Binding Surveys}">
                 <BindableLayout.ItemTemplate>
@@ -113,9 +202,9 @@
                             </Border.GestureRecognizers>
                             <VerticalStackLayout>
 
-                                <!-- Banner Area with Gradient -->
-                                <Grid HeightRequest="110">
-                                    <!-- Gradient Background -->
+                                <!-- Banner — survey visual area -->
+                                <Grid HeightRequest="120">
+                                    <!-- Gradient background (brand-specific colors via code-behind later) -->
                                     <BoxView>
                                         <BoxView.Background>
                                             <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
@@ -125,43 +214,26 @@
                                         </BoxView.Background>
                                     </BoxView>
 
-                                    <!-- Decorative Circle -->
+                                    <!-- Decorative circles -->
                                     <Border StrokeThickness="0"
                                             StrokeShape="RoundRectangle 50"
                                             HeightRequest="100" WidthRequest="100"
-                                            BackgroundColor="#10000000"
-                                            HorizontalOptions="End"
-                                            VerticalOptions="Start"
+                                            BackgroundColor="#08000000"
+                                            HorizontalOptions="End" VerticalOptions="Start"
                                             Margin="0,-10,-10,0"/>
+                                    <Border StrokeThickness="0"
+                                            StrokeShape="RoundRectangle 40"
+                                            HeightRequest="80" WidthRequest="80"
+                                            BackgroundColor="#05000000"
+                                            HorizontalOptions="Start" VerticalOptions="End"
+                                            Margin="30,0,0,-20"/>
 
-                                    <!-- Image Placeholder Icon -->
+                                    <!-- Image placeholder (survey visual will go here) -->
                                     <Image Source="icon_star.png"
                                            HeightRequest="40" WidthRequest="40"
                                            Opacity="0.15"
                                            HorizontalOptions="Center"
                                            VerticalOptions="Center"/>
-
-                                    <!-- Brand Badge (top-left) -->
-                                    <HorizontalStackLayout Spacing="8"
-                                                           Margin="12,12,0,0"
-                                                           VerticalOptions="Start"
-                                                           HorizontalOptions="Start">
-                                        <Border StrokeThickness="1"
-                                                Stroke="{StaticResource CardBorder}"
-                                                StrokeShape="RoundRectangle 10"
-                                                HeightRequest="32" WidthRequest="32"
-                                                BackgroundColor="{StaticResource White}">
-                                            <Label Text="{Binding BrandName, StringFormat='{0:0}'}"
-                                                   FontFamily="JakartaExtraBold" FontSize="12"
-                                                   HorizontalOptions="Center" VerticalOptions="Center"
-                                                   TextColor="{StaticResource PrimaryPurple}"
-                                                   MaxLines="1"/>
-                                        </Border>
-                                        <Label Text="{Binding BrandName}"
-                                               FontFamily="JakartaBold" FontSize="12"
-                                               TextColor="{StaticResource TextPrimary}"
-                                               VerticalOptions="Center"/>
-                                    </HorizontalStackLayout>
 
                                     <!-- Earn Badge (top-right) -->
                                     <Border StrokeThickness="1"
@@ -180,19 +252,16 @@
 
                                 <!-- Card Body -->
                                 <VerticalStackLayout Spacing="10" Padding="16,12,16,14">
-                                    <!-- Title -->
                                     <Label Text="{Binding Title}"
                                            FontFamily="JakartaBold" FontSize="14"
                                            TextColor="{StaticResource TextPrimary}"/>
 
-                                    <!-- Meta + Category -->
-                                    <Grid ColumnDefinitions="Auto,Auto,*">
-                                        <!-- Duration Chip -->
+                                    <!-- Duration + Category -->
+                                    <Grid ColumnDefinitions="Auto,*">
                                         <Border StrokeThickness="0"
                                                 StrokeShape="RoundRectangle 8"
                                                 BackgroundColor="{StaticResource SurfaceColor}"
-                                                Padding="10,4"
-                                                Margin="0,0,8,0">
+                                                Padding="10,4">
                                             <HorizontalStackLayout Spacing="4">
                                                 <Image Source="icon_clock.png"
                                                        HeightRequest="12" WidthRequest="12"
@@ -204,25 +273,7 @@
                                             </HorizontalStackLayout>
                                         </Border>
 
-                                        <!-- Question Count Chip -->
                                         <Border Grid.Column="1"
-                                                StrokeThickness="0"
-                                                StrokeShape="RoundRectangle 8"
-                                                BackgroundColor="{StaticResource SurfaceColor}"
-                                                Padding="10,4">
-                                            <HorizontalStackLayout Spacing="4">
-                                                <Image Source="icon_check.png"
-                                                       HeightRequest="12" WidthRequest="12"
-                                                       VerticalOptions="Center"/>
-                                                <Label Text="{Binding QuestionCount, StringFormat='{0} soru'}"
-                                                       FontFamily="JakartaMedium" FontSize="12"
-                                                       TextColor="{StaticResource TextSecondary}"
-                                                       VerticalOptions="Center"/>
-                                            </HorizontalStackLayout>
-                                        </Border>
-
-                                        <!-- Category Tag (pushed right) -->
-                                        <Border Grid.Column="2"
                                                 StrokeThickness="0"
                                                 StrokeShape="RoundRectangle 8"
                                                 BackgroundColor="{StaticResource PrimaryLight}"
@@ -246,4 +297,5 @@
 
         </VerticalStackLayout>
     </ScrollView>
+    </RefreshView>
 </ContentPage>

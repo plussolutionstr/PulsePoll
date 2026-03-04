@@ -28,6 +28,23 @@ public static class MauiProgram
 
         // Services
         builder.Services.AddSingleton<MockDataService>();
+        builder.Services.AddSingleton<ITokenProvider, DevTokenProvider>();
+
+        builder.Services.AddHttpClient<IPulsePollApiClient, PulsePollApiClient>(client =>
+        {
+#if ANDROID
+            client.BaseAddress = new Uri("https://10.0.2.2:5001");
+#else
+            client.BaseAddress = new Uri("https://localhost:5001");
+#endif
+        })
+#if DEBUG
+        .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+        {
+            ServerCertificateCustomValidationCallback = (_, _, _, _) => true
+        })
+#endif
+        ;
 
         // ViewModels
         builder.Services.AddTransient<HomeViewModel>();
