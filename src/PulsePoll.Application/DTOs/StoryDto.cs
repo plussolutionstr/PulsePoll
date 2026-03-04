@@ -5,8 +5,10 @@ public record StoryDto(
     string Title,
     string ImageUrl,
     int? MediaAssetId,
+    string? StoryImageUrl,
+    int? StoryMediaAssetId,
     string? LinkUrl,
-    string? BrandName,
+    string? Description,
     DateTime StartsAt,
     DateTime EndsAt,
     int Order,
@@ -14,12 +16,13 @@ public record StoryDto(
 
 public record CreateStoryDto(
     string Title,
-    string? BrandName,
+    string? Description,
     string? LinkUrl,
     DateTime StartsAt,
     DateTime EndsAt,
     int Order,
     bool IsActive,
     int? MediaAssetId,
+    int? StoryMediaAssetId,
     Stream? ImageStream,
     string? ImageFileName);

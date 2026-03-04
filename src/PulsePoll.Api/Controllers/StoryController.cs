@@ -25,13 +25,14 @@ public class StoryController(IStoryService storyService) : ControllerBase
     {
         var createDto = new CreateStoryDto(
             dto.Title,
-            dto.BrandName,
+            dto.Description,
             dto.LinkUrl,
             dto.StartsAt,
             dto.EndsAt,
             dto.Order,
             dto.IsActive,
             dto.MediaAssetId,
+            dto.StoryMediaAssetId,
             dto.Image?.OpenReadStream(),
             dto.Image?.FileName);
 
@@ -44,13 +45,14 @@ public class StoryController(IStoryService storyService) : ControllerBase
     {
         var updateDto = new CreateStoryDto(
             dto.Title,
-            dto.BrandName,
+            dto.Description,
             dto.LinkUrl,
             dto.StartsAt,
             dto.EndsAt,
             dto.Order,
             dto.IsActive,
             dto.MediaAssetId,
+            dto.StoryMediaAssetId,
             dto.Image?.OpenReadStream(),
             dto.Image?.FileName);
 
@@ -70,12 +72,13 @@ public class StoryController(IStoryService storyService) : ControllerBase
 public class CreateStoryFormDto
 {
     public string Title { get; set; } = string.Empty;
-    public string? BrandName { get; set; }
+    public string? Description { get; set; }
     public string? LinkUrl { get; set; }
     public DateTime StartsAt { get; set; }
     public DateTime EndsAt { get; set; }
     public int Order { get; set; }
     public bool IsActive { get; set; } = true;
     public int? MediaAssetId { get; set; }
+    public int? StoryMediaAssetId { get; set; }
     public IFormFile? Image { get; set; }
 }

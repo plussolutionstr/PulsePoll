@@ -38,7 +38,7 @@
                                         HorizontalOptions="Center"
                                         BackgroundColor="{StaticResource PrimaryLight}"
                                         Padding="2">
-                                    <Label Text="{Binding BrandName, StringFormat='{0:0}'}"
+                                    <Label Text="{Binding Title, StringFormat='{0:0}'}"
                                            FontFamily="JakartaBold"
                                            FontSize="11"
                                            HorizontalOptions="Center"
@@ -48,7 +48,7 @@
                                            MaxLines="2"
                                            LineBreakMode="TailTruncation"/>
                                 </Border>
-                                <Label Text="{Binding BrandName}"
+                                <Label Text="{Binding Title}"
                                        Style="{StaticResource CaptionStyle}"
                                        HorizontalTextAlignment="Center"
                                        MaxLines="1"

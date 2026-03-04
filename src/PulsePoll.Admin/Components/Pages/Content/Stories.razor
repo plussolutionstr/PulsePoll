@@ -54,7 +54,7 @@
                 </CellDisplayTemplate>
             </DxGridDataColumn>
             <DxGridDataColumn FieldName="Title" Caption="Başlık" MinWidth="180"/>
-            <DxGridDataColumn FieldName="BrandName" Caption="Marka" Width="140px"/>
+            <DxGridDataColumn FieldName="Description" Caption="Kısa Açıklama" MinWidth="220"/>
             <DxGridDataColumn Caption="Aktif" Width="90px">
                 <CellDisplayTemplate>
                     @{
@@ -123,7 +123,7 @@
 
         <DxFormLayout>
             <DxFormLayoutItem ColSpanMd="12">
-                <label class="form-label">Görsel *</label>
+                <label class="form-label">Önizleme Görseli *</label>
                 <div class="d-flex align-items-center gap-3">
                     @if (!string.IsNullOrWhiteSpace(_form.ImageUrl))
                     {
@@ -136,7 +136,7 @@
                               RenderStyle="ButtonRenderStyle.Secondary"
                               RenderStyleMode="ButtonRenderStyleMode.Outline"
                               SizeMode="SizeMode.Small"
-                              Click="OpenMediaPicker"/>
+                              Click="OpenPreviewMediaPicker"/>
                     @if (_form.MediaAssetId.HasValue)
                     {
                         <DxButton Text="Temizle"
@@ -144,18 +144,45 @@
                                   RenderStyle="ButtonRenderStyle.Danger"
                                   RenderStyleMode="ButtonRenderStyleMode.Text"
                                   SizeMode="SizeMode.Small"
-                                  Click="ClearMedia"/>
+                                  Click="ClearPreviewMedia"/>
                     }
                 </div>
                 <div class="small text-muted mt-1">Önerilen boyut: 200×200px (1:1 kare, dairesel crop edilir)</div>
             </DxFormLayoutItem>
             <DxFormLayoutItem ColSpanMd="12">
+                <label class="form-label">Story Detay Görseli (Opsiyonel)</label>
+                <div class="d-flex align-items-center gap-3">
+                    @if (!string.IsNullOrWhiteSpace(_form.StoryImageUrl))
+                    {
+                        <img src="@_form.StoryImageUrl"
+                             style="max-height:110px; max-width:70px; object-fit:cover; border:1px solid #dee2e6; border-radius:8px;"
+                             alt="Story detay görseli"/>
+                    }
+                    <DxButton Text="Medya Kütüphanesinden Seç"
+                              IconCssClass="bi bi-images"
+                              RenderStyle="ButtonRenderStyle.Secondary"
+                              RenderStyleMode="ButtonRenderStyleMode.Outline"
+                              SizeMode="SizeMode.Small"
+                              Click="OpenStoryMediaPicker"/>
+                    @if (_form.StoryMediaAssetId.HasValue)
+                    {
+                        <DxButton Text="Temizle"
+                                  IconCssClass="bi bi-x-circle"
+                                  RenderStyle="ButtonRenderStyle.Danger"
+                                  RenderStyleMode="ButtonRenderStyleMode.Text"
+                                  SizeMode="SizeMode.Small"
+                                  Click="ClearStoryMedia"/>
+                    }
+                </div>
+                <div class="small text-muted mt-1">Önerilen boyut: 1080×1920px (9:16, story tam ekran)</div>
+            </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanMd="4">
                 <label class="form-label">Başlık *</label>
                 <DxTextBox @bind-Text="_form.Title"/>
             </DxFormLayoutItem>
-            <DxFormLayoutItem ColSpanMd="6">
-                <label class="form-label">Marka</label>
-                <DxTextBox @bind-Text="_form.BrandName"/>
+            <DxFormLayoutItem ColSpanMd="8">
+                <label class="form-label">Kısa Açıklama</label>
+                <DxMemo @bind-Text="_form.Description" Rows="2"/>
             </DxFormLayoutItem>
             <DxFormLayoutItem ColSpanMd="6">
                 <label class="form-label">Başlangıç *</label>
@@ -193,7 +220,7 @@
 </DxPopup>
 
 <MediaPickerPopup @bind-Visible="_mediaPickerVisible"
-                  CurrentMediaId="@_form.MediaAssetId"
+                  CurrentMediaId="@CurrentMediaPickerMediaId"
                   OnSelected="OnMediaSelected"/>
 
 <DxPopup @bind-Visible="_deleteConfirmVisible"
@@ -238,6 +265,7 @@
     private bool _isDeleting;
     private bool _mediaPickerVisible;
     private bool _isReordering;
+    private MediaSelectionTarget _mediaSelectionTarget = MediaSelectionTarget.Preview;
     private bool _canCreate;
     private bool _canEdit;
     private bool _canDelete;
@@ -246,6 +274,10 @@
     private StoryDto? _itemToDelete;
     private StoryDto? _selectedItem;
     private FormModel _form = new();
+    private int? CurrentMediaPickerMediaId =>
+        _mediaSelectionTarget == MediaSelectionTarget.StoryDetail
+            ? _form.StoryMediaAssetId
+            : _form.MediaAssetId;
 
     protected override async Task OnInitializedAsync()
     {
@@ -314,35 +346,61 @@
 
         _isNew = false;
         _formError = null;
-        _form = new FormModel
+            _form = new FormModel
         {
             Id = item.Id,
             Title = item.Title,
-            BrandName = item.BrandName,
+            Description = item.Description,
             LinkUrl = item.LinkUrl,
             StartsAt = item.StartsAt,
             EndsAt = item.EndsAt,
             Order = item.Order,
             IsActive = item.IsActive,
             MediaAssetId = item.MediaAssetId,
-            ImageUrl = item.ImageUrl
+            ImageUrl = item.ImageUrl,
+            StoryMediaAssetId = item.StoryMediaAssetId,
+            StoryImageUrl = item.StoryImageUrl
         };
         _popupVisible = true;
     }
 
-    private void OpenMediaPicker()
-        => _mediaPickerVisible = true;
+    private void OpenPreviewMediaPicker()
+    {
+        _mediaSelectionTarget = MediaSelectionTarget.Preview;
+        _mediaPickerVisible = true;
+    }
 
-    private void ClearMedia()
+    private void OpenStoryMediaPicker()
+    {
+        _mediaSelectionTarget = MediaSelectionTarget.StoryDetail;
+        _mediaPickerVisible = true;
+    }
+
+    private void ClearPreviewMedia()
     {
         _form.MediaAssetId = null;
         _form.ImageUrl = null;
     }
 
+    private void ClearStoryMedia()
+    {
+        _form.StoryMediaAssetId = null;
+        _form.StoryImageUrl = null;
+    }
+
     private Task OnMediaSelected(MediaAssetDto? asset)
     {
-        _form.MediaAssetId = asset?.Id;
-        _form.ImageUrl = asset?.Url;
+        if (_mediaSelectionTarget == MediaSelectionTarget.StoryDetail)
+        {
+            _form.StoryMediaAssetId = asset?.Id;
+            _form.StoryImageUrl = asset?.Url;
+        }
+        else
+        {
+            _form.MediaAssetId = asset?.Id;
+            _form.ImageUrl = asset?.Url;
+        }
+
         return Task.CompletedTask;
     }
 
@@ -385,13 +443,14 @@
             var order = _isNew ? ((_stories.Count == 0 ? 0 : _stories.Max(s => s.Order)) + 1) : _form.Order;
             var dto = new CreateStoryDto(
                 _form.Title.Trim(),
-                NullIfWhiteSpace(_form.BrandName),
+                NullIfWhiteSpace(_form.Description),
                 NullIfWhiteSpace(_form.LinkUrl),
                 _form.StartsAt,
                 _form.EndsAt,
                 order,
                 _form.IsActive,
                 _form.MediaAssetId,
+                _form.StoryMediaAssetId,
                 null,
                 null);
 
@@ -576,7 +635,7 @@
     {
         public int Id { get; set; }
         public string Title { get; set; } = string.Empty;
-        public string? BrandName { get; set; }
+        public string? Description { get; set; }
         public string? LinkUrl { get; set; }
         public DateTime StartsAt { get; set; }
         public DateTime EndsAt { get; set; }
@@ -584,5 +643,13 @@
         public bool IsActive { get; set; } = true;
         public int? MediaAssetId { get; set; }
         public string? ImageUrl { get; set; }
+        public int? StoryMediaAssetId { get; set; }
+        public string? StoryImageUrl { get; set; }
+    }
+
+    private enum MediaSelectionTarget
+    {
+        Preview,
+        StoryDetail
     }
 }

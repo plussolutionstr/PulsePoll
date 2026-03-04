@@ -92,6 +92,12 @@ public partial class HomeViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private async Task OpenStory(StoryModel story)
+    {
+        await Shell.Current.GoToAsync($"storyviewer?id={story.Id}");
+    }
+
+    [RelayCommand]
     private async Task NavigateToNotifications()
     {
         await Shell.Current.GoToAsync("notifications");

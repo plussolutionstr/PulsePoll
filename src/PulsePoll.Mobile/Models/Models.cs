@@ -1,6 +1,18 @@
 namespace PulsePoll.Mobile.Models;
 
-public record StoryModel(int Id, string BrandName, string ImageUrl, string BrandColor = "#7C5CFC", bool IsSeen = false);
+public record StoryModel(
+    int Id,
+    string Title,
+    string ImageUrl,
+    string StoryImageUrl = "",
+    string? LinkUrl = null,
+    string Description = "",
+    string BrandColor = "#7C5CFC",
+    bool IsSeen = false)
+{
+    public string DisplayStoryImageUrl => string.IsNullOrWhiteSpace(StoryImageUrl) ? ImageUrl : StoryImageUrl;
+    public bool HasDescription => !string.IsNullOrWhiteSpace(Description);
+}
 
 public record NewsModel(
     int Id,

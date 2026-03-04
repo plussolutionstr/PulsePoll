@@ -6,9 +6,17 @@
              x:Class="PulsePoll.Mobile.Views.HomePage"
              x:DataType="vm:HomeViewModel"
              Shell.NavBarIsVisible="False">
-
-    <RefreshView Command="{Binding RefreshCommand}"
+    <Grid>
+    <RefreshView x:Name="MainContent"
+                 Command="{Binding RefreshCommand}"
                  IsRefreshing="{Binding IsRefreshing}">
+        <RefreshView.Triggers>
+            <DataTrigger TargetType="RefreshView"
+                         Binding="{Binding IsLoading}"
+                         Value="True">
+                <Setter Property="IsVisible" Value="False"/>
+            </DataTrigger>
+        </RefreshView.Triggers>
     <ScrollView>
         <VerticalStackLayout Spacing="16" Padding="20,16">
 
@@ -33,13 +41,6 @@
                 </Grid>
             </Grid>
 
-            <!-- ══════ LOADING ══════ -->
-            <ActivityIndicator IsRunning="{Binding IsLoading}"
-                               IsVisible="{Binding IsLoading}"
-                               Color="{StaticResource PrimaryPurple}"
-                               HeightRequest="36"
-                               HorizontalOptions="Center"/>
-
             <!-- ══════ STORIES ══════ -->
             <ScrollView Orientation="Horizontal" HorizontalScrollBarVisibility="Never">
                 <HorizontalStackLayout Spacing="14"
@@ -47,6 +48,11 @@
                     <BindableLayout.ItemTemplate>
                         <DataTemplate x:DataType="models:StoryModel">
                             <VerticalStackLayout Spacing="6" WidthRequest="68">
+                                <VerticalStackLayout.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:HomeViewModel}}, Path=OpenStoryCommand}"
+                                        CommandParameter="{Binding .}"/>
+                                </VerticalStackLayout.GestureRecognizers>
                                 <!-- Story ring — gradient ring simulated with border -->
                                 <Border StrokeThickness="2.5"
                                         Stroke="{StaticResource PrimaryPurple}"
@@ -69,7 +75,7 @@
                                         </Grid>
                                     </Border>
                                 </Border>
-                                <Label Text="{Binding BrandName}"
+                                <Label Text="{Binding Title}"
                                        FontFamily="JakartaMedium" FontSize="11"
                                        TextColor="{StaticResource TextSecondary}"
                                        HorizontalTextAlignment="Center"
@@ -304,4 +310,156 @@
         </VerticalStackLayout>
     </ScrollView>
     </RefreshView>
+        <Grid x:Name="ShimmerOverlay"
+              IsVisible="{Binding IsLoading}"
+              BackgroundColor="{StaticResource PageBackground}"
+              InputTransparent="True">
+            <Grid x:Name="ShimmerContainer">
+                <ScrollView>
+                    <VerticalStackLayout Spacing="16" Padding="20,16">
+                        <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,4">
+                            <Border StrokeThickness="0"
+                                    BackgroundColor="#E4DDF2"
+                                    StrokeShape="RoundRectangle 8"
+                                    HeightRequest="26"
+                                    WidthRequest="130"
+                                    HorizontalOptions="Start"/>
+                            <Border Grid.Column="1"
+                                    StrokeThickness="0"
+                                    BackgroundColor="#E4DDF2"
+                                    StrokeShape="RoundRectangle 12"
+                                    HeightRequest="24"
+                                    WidthRequest="24"
+                                    HorizontalOptions="End"/>
+                        </Grid>
+
+                        <ScrollView Orientation="Horizontal" HorizontalScrollBarVisibility="Never">
+                            <HorizontalStackLayout Spacing="14">
+                                <VerticalStackLayout Spacing="6" WidthRequest="68">
+                                    <Border StrokeThickness="0"
+                                            BackgroundColor="#DDD4F0"
+                                            StrokeShape="RoundRectangle 30"
+                                            HeightRequest="60"
+                                            WidthRequest="60"
+                                            HorizontalOptions="Center"/>
+                                    <Border StrokeThickness="0"
+                                            BackgroundColor="#E7E1F5"
+                                            StrokeShape="RoundRectangle 6"
+                                            HeightRequest="11"
+                                            WidthRequest="52"
+                                            HorizontalOptions="Center"/>
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Spacing="6" WidthRequest="68">
+                                    <Border StrokeThickness="0"
+                                            BackgroundColor="#DDD4F0"
+                                            StrokeShape="RoundRectangle 30"
+                                            HeightRequest="60"
+                                            WidthRequest="60"
+                                            HorizontalOptions="Center"/>
+                                    <Border StrokeThickness="0"
+                                            BackgroundColor="#E7E1F5"
+                                            StrokeShape="RoundRectangle 6"
+                                            HeightRequest="11"
+                                            WidthRequest="52"
+                                            HorizontalOptions="Center"/>
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Spacing="6" WidthRequest="68">
+                                    <Border StrokeThickness="0"
+                                            BackgroundColor="#DDD4F0"
+                                            StrokeShape="RoundRectangle 30"
+                                            HeightRequest="60"
+                                            WidthRequest="60"
+                                            HorizontalOptions="Center"/>
+                                    <Border StrokeThickness="0"
+                                            BackgroundColor="#E7E1F5"
+                                            StrokeShape="RoundRectangle 6"
+                                            HeightRequest="11"
+                                            WidthRequest="52"
+                                            HorizontalOptions="Center"/>
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Spacing="6" WidthRequest="68">
+                                    <Border StrokeThickness="0"
+                                            BackgroundColor="#DDD4F0"
+                                            StrokeShape="RoundRectangle 30"
+                                            HeightRequest="60"
+                                            WidthRequest="60"
+                                            HorizontalOptions="Center"/>
+                                    <Border StrokeThickness="0"
+                                            BackgroundColor="#E7E1F5"
+                                            StrokeShape="RoundRectangle 6"
+                                            HeightRequest="11"
+                                            WidthRequest="52"
+                                            HorizontalOptions="Center"/>
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Spacing="6" WidthRequest="68">
+                                    <Border StrokeThickness="0"
+                                            BackgroundColor="#DDD4F0"
+                                            StrokeShape="RoundRectangle 30"
+                                            HeightRequest="60"
+                                            WidthRequest="60"
+                                            HorizontalOptions="Center"/>
+                                    <Border StrokeThickness="0"
+                                            BackgroundColor="#E7E1F5"
+                                            StrokeShape="RoundRectangle 6"
+                                            HeightRequest="11"
+                                            WidthRequest="52"
+                                            HorizontalOptions="Center"/>
+                                </VerticalStackLayout>
+                            </HorizontalStackLayout>
+                        </ScrollView>
+
+                        <Border StrokeThickness="0"
+                                BackgroundColor="#DED5F1"
+                                StrokeShape="RoundRectangle 16"
+                                HeightRequest="160"/>
+
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Border StrokeThickness="0"
+                                    BackgroundColor="#E4DDF2"
+                                    StrokeShape="RoundRectangle 8"
+                                    HeightRequest="24"
+                                    WidthRequest="120"
+                                    HorizontalOptions="Start"/>
+                            <Border Grid.Column="1"
+                                    StrokeThickness="0"
+                                    BackgroundColor="#ECE6F7"
+                                    StrokeShape="RoundRectangle 6"
+                                    HeightRequest="18"
+                                    WidthRequest="48"
+                                    HorizontalOptions="End"
+                                    VerticalOptions="Center"/>
+                        </Grid>
+
+                        <VerticalStackLayout Spacing="12">
+                            <Border StrokeThickness="0"
+                                    BackgroundColor="#E8E1F6"
+                                    StrokeShape="RoundRectangle 20"
+                                    HeightRequest="222"/>
+                            <Border StrokeThickness="0"
+                                    BackgroundColor="#E8E1F6"
+                                    StrokeShape="RoundRectangle 20"
+                                    HeightRequest="222"/>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+                </ScrollView>
+
+                <Border x:Name="ShimmerSweep"
+                        StrokeThickness="0"
+                        WidthRequest="180"
+                        Opacity="0"
+                        Rotation="-18"
+                        HorizontalOptions="Start"
+                        VerticalOptions="Fill"
+                        InputTransparent="True">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                            <GradientStop Color="#00FFFFFF" Offset="0"/>
+                            <GradientStop Color="#66FFFFFF" Offset="0.5"/>
+                            <GradientStop Color="#00FFFFFF" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
 </ContentPage>

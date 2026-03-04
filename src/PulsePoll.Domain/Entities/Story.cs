@@ -5,11 +5,14 @@ public class Story : EntityBase
     public string Title { get; set; } = string.Empty;
     public string ImageUrl { get; set; } = string.Empty;
     public int? MediaAssetId { get; set; }
+    public string? StoryImageUrl { get; set; }
+    public int? StoryMediaAssetId { get; set; }
     public string? LinkUrl { get; set; }
-    public string? BrandName { get; set; }
+    public string? Description { get; set; }
     public DateTime StartsAt { get; set; }
     public DateTime EndsAt { get; set; }
     public bool IsActive { get; set; } = true;
     public int Order { get; set; }
     public MediaAsset? MediaAsset { get; set; }
+    public MediaAsset? StoryMediaAsset { get; set; }
 }

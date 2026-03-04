@@ -5,7 +5,13 @@ namespace PulsePoll.Mobile.ApiModels;
 public static class ApiDtoMapper
 {
     public static StoryModel ToModel(this StoryApiDto dto)
-        => new(dto.Id, dto.BrandName ?? dto.Title, dto.ImageUrl);
+        => new(
+            dto.Id,
+            dto.Title,
+            dto.ImageUrl,
+            dto.StoryImageUrl ?? dto.ImageUrl,
+            dto.LinkUrl,
+            dto.Description ?? string.Empty);
 
     public static NewsModel ToModel(this NewsApiDto dto)
         => new(dto.Id, "", dto.Title, dto.Summary, ImageUrl: dto.ImageUrl);

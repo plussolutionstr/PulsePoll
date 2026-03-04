@@ -9,6 +9,7 @@ public class StoryRepository(AppDbContext db) : IStoryRepository
     public Task<List<Story>> GetAllAsync()
         => db.Stories
             .Include(s => s.MediaAsset)
+            .Include(s => s.StoryMediaAsset)
             .Where(s => s.DeletedAt == null)
             .OrderBy(s => s.Order)
             .ThenByDescending(s => s.StartsAt)
@@ -19,6 +20,7 @@ public class StoryRepository(AppDbContext db) : IStoryRepository
         var now = DateTime.UtcNow;
         return db.Stories
             .Include(s => s.MediaAsset)
+            .Include(s => s.StoryMediaAsset)
             .Where(s => s.IsActive && s.StartsAt <= now && s.EndsAt >= now && s.DeletedAt == null)
             .OrderBy(s => s.Order)
             .ToListAsync();
@@ -27,6 +29,7 @@ public class StoryRepository(AppDbContext db) : IStoryRepository
     public Task<Story?> GetByIdAsync(int id)
         => db.Stories
             .Include(s => s.MediaAsset)
+            .Include(s => s.StoryMediaAsset)
             .FirstOrDefaultAsync(s => s.Id == id && s.DeletedAt == null);
 
     public async Task AddAsync(Story story)
