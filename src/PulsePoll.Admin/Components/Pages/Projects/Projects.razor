@@ -1,0 +1,690 @@
+@page "/projects"
+@attribute [HasPermission(PermissionCodes.Projects.View)]
+@using System.Security.Claims
+@using PulsePoll.Domain.Enums
+@using PulsePoll.Application.Extensions
+@inject IProjectService ProjectService
+@inject ICustomerService CustomerService
+@inject IAppToastService Toast
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IMediaAssetService MediaAssetService
+@inject NavigationManager NavigationManager
+@inject IPermissionAuthorizationService PermissionService
+
+<PageTitle>Projeler — PulsePoll Admin</PageTitle>
+
+<h3>Projeler</h3>
+
+<div class="d-flex justify-content-end gap-2 mb-2">
+    <DxButton Text="Excel" IconCssClass="bi bi-file-earmark-excel"
+              RenderStyle="ButtonRenderStyle.Secondary"
+              RenderStyleMode="ButtonRenderStyleMode.Outline"
+              Click="ExportToExcelAsync"/>
+    @if (_canCreate)
+    {
+        <DxButton Text="Yeni Proje" IconCssClass="bi bi-plus-lg"
+                  RenderStyle="ButtonRenderStyle.Primary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="OnNewClick" />
+    }
+</div>
+
+<DxLoadingPanel @bind-Visible="_isLoading"
+                IsContentBlocked="true"
+                ApplyBackgroundShading="true"
+                IndicatorAreaVisible="false"
+                Text="Yükleniyor...">
+    <DxGrid @ref="_grid" Data="@_projects" ShowFilterRow="true" PageSize="25">
+        <Columns>
+            <DxGridDataColumn FieldName="Code" Caption="Kod" Width="90px" />
+            <DxGridDataColumn FieldName="Name" Caption="Ad" />
+            <DxGridDataColumn FieldName="CustomerShortName" Caption="Müşteri" Width="130px" />
+            <DxGridDataColumn FieldName="ParticipantCount" Caption="Katılımcı" Width="100px" />
+            <DxGridDataColumn FieldName="TotalTargetCount" Caption="Hedef" Width="100px" />
+            <DxGridDataColumn FieldName="Budget" Caption="Birim Fiyat (TL)" DisplayFormat="N2" Width="130px" />
+            <DxGridDataColumn FieldName="Status" Caption="Durum" Width="110px">
+                <CellDisplayTemplate>
+                    @{
+                        var status = (ProjectStatus)context.Value;
+                        var badgeClass = status switch
+                        {
+                            ProjectStatus.Draft => "bg-secondary",
+                            ProjectStatus.Active => "bg-success",
+                            ProjectStatus.Paused => "bg-warning text-dark",
+                            ProjectStatus.Completed => "bg-info text-dark",
+                            ProjectStatus.Cancelled => "bg-danger",
+                            _ => "bg-light text-dark"
+                        };
+                    }
+                    <span class="badge @badgeClass">@status.GetDescription()</span>
+                </CellDisplayTemplate>
+            </DxGridDataColumn>
+            <DxGridDataColumn FieldName="StartDate" Caption="Başlangıç" DisplayFormat="dd.MM.yyyy" Width="110px" />
+            <DxGridCommandColumn NewButtonVisible="false" EditButtonVisible="false" DeleteButtonVisible="false"
+                                 Width="50px" Caption="" TextAlignment="GridTextAlignment.Center">
+                <CellDisplayTemplate>
+                    @{
+                        var item = (ProjectDto)context.DataItem;
+                    }
+                    @if (_canEdit || _canCreate || _canManageSubjects || _canViewStatement || _canDelete)
+                    {
+                        <DxButton IconCssClass="bi bi-three-dots-vertical"
+                                  RenderStyle="ButtonRenderStyle.Link"
+                                  Click="@(async e => await ShowMenuAsync(e, item))"
+                                  title="İşlemler" />
+                    }
+                </CellDisplayTemplate>
+            </DxGridCommandColumn>
+        </Columns>
+        <TotalSummary>
+            <DxGridSummaryItem SummaryType="GridSummaryItemType.Count"
+                               FieldName="Code"
+                               FooterColumnName="Code"
+                               DisplayText="Kayıt Sayısı: {0}" />
+        </TotalSummary>
+    </DxGrid>
+</DxLoadingPanel>
+
+<DxContextMenu @ref="_contextMenu" ItemClick="OnContextMenuItemClick">
+    <Items>
+        @if (_canEdit)
+        {
+            <DxContextMenuItem Text="Düzenle" Name="edit" IconCssClass="bi bi-pencil" />
+        }
+        @if (_canCreate)
+        {
+            <DxContextMenuItem Text="Kopyala" Name="copy" IconCssClass="bi bi-files" />
+        }
+        @if (_canManageSubjects)
+        {
+            <DxContextMenuItem Text="Denekleri Yönet" Name="subjects" IconCssClass="bi bi-people" BeginGroup="@(_canEdit || _canCreate)" />
+        }
+        @if (_canViewStatement)
+        {
+            <DxContextMenuItem Text="Proje Ekstresi" Name="statement" IconCssClass="bi bi-receipt-cutoff" />
+        }
+        @if (_canDelete)
+        {
+            <DxContextMenuItem Text="Sil" Name="delete" IconCssClass="bi bi-trash" CssClass="text-danger" BeginGroup="true" />
+        }
+    </Items>
+</DxContextMenu>
+
+<!-- Kayıt / Düzenleme Popup -->
+<DxPopup @bind-Visible="_popupVisible"
+         HeaderText="@(_isNew ? "Yeni Proje" : "Proje Düzenle")"
+         Width="900px"
+         CloseOnOutsideClick="false"
+         ShowFooter="true">
+    <BodyContentTemplate Context="_">
+        @if (!string.IsNullOrEmpty(_formError))
+        {
+            <div class="alert alert-danger py-2 mb-3">@_formError</div>
+        }
+        <DxFormLayout>
+            <DxFormLayoutItem ColSpanMd="12">
+                <label class="form-label">Müşteri *</label>
+                <DxComboBox Data="@_customers"
+                            @bind-Value="_form.CustomerId"
+                            TextFieldName="ShortName"
+                            ValueFieldName="Id"
+                            Enabled="@_isNew"
+                            SearchMode="ListSearchMode.AutoSearch"
+                            SearchFilterCondition="ListSearchFilterCondition.Contains"
+                            NullText="Seçiniz..." />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanMd="12">
+                <label class="form-label">Kapak Görseli</label>
+                <div class="d-flex align-items-center gap-3">
+                    @if (_form.CoverImageUrl != null)
+                    {
+                        <img src="@_form.CoverImageUrl"
+                             style="max-height:80px; max-width:240px; object-fit:cover; border:1px solid #dee2e6; border-radius:4px;"
+                             alt="Kapak görseli" />
+                        <div>
+                            <div class="small fw-semibold text-truncate" style="max-width:160px;" title="@_form.CoverImageName">@_form.CoverImageName</div>
+                            <DxButton Text="Kaldır" IconCssClass="bi bi-x-circle"
+                                      RenderStyle="ButtonRenderStyle.Danger"
+                                      RenderStyleMode="ButtonRenderStyleMode.Text"
+                                      SizeMode="SizeMode.Small"
+                                      Click="ClearCoverImage" />
+                        </div>
+                    }
+                    <DxButton Text="Görsel Seç" IconCssClass="bi bi-image"
+                              RenderStyle="ButtonRenderStyle.Secondary"
+                              RenderStyleMode="ButtonRenderStyleMode.Outline"
+                              SizeMode="SizeMode.Small"
+                              Click="OpenMediaPicker" />
+                </div>
+                <div class="small text-muted mt-1">Önerilen boyut: 900×300px (3:1 oran)</div>
+            </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanMd="5">
+                <label class="form-label">Kod *</label>
+                <DxTextBox @bind-Text="_form.Code" Enabled="@_isNew" />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanMd="7">
+                <label class="form-label">Ad *</label>
+                <DxTextBox @bind-Text="_form.Name" />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanMd="12">
+                <label class="form-label">Açıklama</label>
+                <DxMemo @bind-Text="_form.Description" Rows="2" />
+            </DxFormLayoutItem>
+
+            <DxFormLayoutGroup Caption="Operasyonel Bilgiler" ColSpanMd="12">
+                <DxFormLayoutItem ColSpanMd="4">
+                    <label class="form-label">Katılımcı Sayısı *</label>
+                    <DxSpinEdit @bind-Value="_form.ParticipantCount" MinValue="0" />
+                </DxFormLayoutItem>
+                <DxFormLayoutItem ColSpanMd="4">
+                    <label class="form-label">Hedef Sayısı *</label>
+                    <DxSpinEdit @bind-Value="_form.TotalTargetCount" MinValue="0" />
+                </DxFormLayoutItem>
+                <DxFormLayoutItem ColSpanMd="4">
+                    <label class="form-label">Süre (Gün) *</label>
+                    <DxSpinEdit @bind-Value="_form.DurationDays" MinValue="0" />
+                </DxFormLayoutItem>
+                <DxFormLayoutItem ColSpanMd="6">
+                    <label class="form-label">Başlangıç Tarihi</label>
+                    <DxDateEdit @bind-Date="_form.StartDate" ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto" />
+                </DxFormLayoutItem>
+                <DxFormLayoutItem ColSpanMd="6">
+                    <label class="form-label">Tahmini Süre (Dakika) *</label>
+                    <DxSpinEdit @bind-Value="_form.EstimatedMinutes" MinValue="1" />
+                </DxFormLayoutItem>
+            </DxFormLayoutGroup>
+
+            <DxFormLayoutGroup Caption="Birim Fiyat ve Ödül" ColSpanMd="12">
+                <DxFormLayoutItem ColSpanMd="4">
+                    <label class="form-label">Birim Fiyat (TL) *</label>
+                    <DxSpinEdit @bind-Value="_form.Budget" MinValue="0" DisplayFormat="N2" />
+                </DxFormLayoutItem>
+                <DxFormLayoutItem ColSpanMd="4">
+                    <label class="form-label">Ödül *</label>
+                    <DxSpinEdit @bind-Value="_form.Reward" MinValue="0" DisplayFormat="N2" />
+                </DxFormLayoutItem>
+                <DxFormLayoutItem ColSpanMd="4">
+                    <label class="form-label">Teselli Ödülü *</label>
+                    <DxSpinEdit @bind-Value="_form.ConsolationReward" MinValue="0" DisplayFormat="N2" />
+                </DxFormLayoutItem>
+            </DxFormLayoutGroup>
+
+            <DxFormLayoutGroup Caption="Anket Ayarları" ColSpanMd="12">
+                <DxFormLayoutItem ColSpanMd="12">
+                    <label class="form-label">Anket URL *</label>
+                    <DxTextBox @bind-Text="_form.SurveyUrl" />
+                </DxFormLayoutItem>
+                <DxFormLayoutItem ColSpanMd="6">
+                    <label class="form-label">Katılımcı Parametre Adı *</label>
+                    <DxTextBox @bind-Text="_form.SubjectParameterName" />
+                </DxFormLayoutItem>
+                <DxFormLayoutItem ColSpanMd="6" Visible="!_isNew">
+                    <label class="form-label">Durum *</label>
+                    <DxComboBox Data="@_statuses"
+                                @bind-Value="_form.Status"
+                                NullText="Seçiniz...">
+                        <ItemDisplayTemplate Context="statusCtx">
+                            @statusCtx.DataItem.GetDescription()
+                        </ItemDisplayTemplate>
+                    </DxComboBox>
+                </DxFormLayoutItem>
+            </DxFormLayoutGroup>
+
+            <DxFormLayoutGroup Caption="Katılımcı Mesajları" ColSpanMd="12">
+                <DxFormLayoutItem ColSpanMd="12">
+                    <label class="form-label">Başlangıç Mesajı *</label>
+                    <DxMemo @bind-Text="_form.StartMessage" Rows="2" />
+                </DxFormLayoutItem>
+                <DxFormLayoutItem ColSpanMd="12">
+                    <label class="form-label">Tamamlanma Mesajı *</label>
+                    <DxMemo @bind-Text="_form.CompletedMessage" Rows="2" />
+                </DxFormLayoutItem>
+                <DxFormLayoutItem ColSpanMd="12">
+                    <label class="form-label">Diskalifiye Mesajı *</label>
+                    <DxMemo @bind-Text="_form.DisqualifyMessage" Rows="2" />
+                </DxFormLayoutItem>
+                <DxFormLayoutItem ColSpanMd="12">
+                    <label class="form-label">Kota Dolu Mesajı *</label>
+                    <DxMemo @bind-Text="_form.QuotaFullMessage" Rows="2" />
+                </DxFormLayoutItem>
+                <DxFormLayoutItem ColSpanMd="12">
+                    <label class="form-label">Screen Out Mesajı *</label>
+                    <DxMemo @bind-Text="_form.ScreenOutMessage" Rows="2" />
+                </DxFormLayoutItem>
+            </DxFormLayoutGroup>
+
+            <DxFormLayoutItem ColSpanMd="12">
+                <label class="form-label">Müşteri Bilgilendirme (Briefing)</label>
+                <DxMemo @bind-Text="_form.CustomerBriefing" Rows="3" />
+            </DxFormLayoutItem>
+        </DxFormLayout>
+    </BodyContentTemplate>
+    <FooterContentTemplate>
+        <DxButton Text="@(_isSaving ? "Kaydediliyor..." : "Kaydet")"
+                  IconCssClass="@(_isSaving ? "spinner-border spinner-border-sm" : "bi bi-check-lg")"
+                  RenderStyle="ButtonRenderStyle.Primary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="OnSave" Enabled="!_isSaving" />
+        <DxButton Text="İptal" IconCssClass="bi bi-x-lg"
+                  RenderStyle="ButtonRenderStyle.Secondary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="() => _popupVisible = false" Enabled="!_isSaving" />
+    </FooterContentTemplate>
+</DxPopup>
+
+<!-- Medya Seçici Popup -->
+<MediaPickerPopup @bind-Visible="_mediaPickerVisible"
+                  CurrentMediaId="@_form.CoverMediaId"
+                  OnSelected="OnMediaSelected" />
+
+<!-- Silme Onay Popup -->
+<DxPopup @bind-Visible="_deleteConfirmVisible"
+         HeaderText="Silme Onayı"
+         Width="420px"
+         CloseOnOutsideClick="false"
+         ShowFooter="true">
+    <BodyContentTemplate Context="_">
+        <div class="d-flex align-items-start gap-3 p-2">
+            <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size:2.5rem; flex-shrink:0;"></i>
+            <div>
+                <p class="mb-1 fw-semibold">Bu projeyi silmek istediğinize emin misiniz?</p>
+                <p class="mb-0 text-muted">@_projectToDelete?.Name (@_projectToDelete?.Code)</p>
+            </div>
+        </div>
+    </BodyContentTemplate>
+    <FooterContentTemplate>
+        <DxButton Text="Sil" IconCssClass="bi bi-trash"
+                  RenderStyle="ButtonRenderStyle.Danger"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="ConfirmDelete" Enabled="!_isDeleting" />
+        <DxButton Text="İptal"
+                  RenderStyle="ButtonRenderStyle.Secondary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="() => _deleteConfirmVisible = false" />
+    </FooterContentTemplate>
+</DxPopup>
+
+@code {
+    private DxGrid? _grid;
+    private DxContextMenu? _contextMenu;
+    private ProjectDto? _selectedItem;
+
+    private IReadOnlyList<ProjectDto> _projects = [];
+    private List<CustomerDto> _customers = [];
+    private readonly List<ProjectStatus> _statuses = Enum.GetValues<ProjectStatus>().ToList();
+
+    private bool _isLoading = true;
+    private bool _popupVisible;
+    private bool _deleteConfirmVisible;
+    private bool _isNew;
+    private bool _isSaving;
+    private bool _isDeleting;
+    private bool _canCreate;
+    private bool _canEdit;
+    private bool _canDelete;
+    private bool _canManageSubjects;
+    private bool _canViewStatement;
+    private string? _formError;
+    private ProjectDto? _projectToDelete;
+    private FormModel _form = new();
+
+    // Medya picker
+    private bool _mediaPickerVisible;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPermissionsAsync();
+        _customers = await CustomerService.GetAllAsync();
+        await LoadDataAsync();
+    }
+
+    private async Task LoadPermissionsAsync()
+    {
+        var permissions = await PermissionService.GetCurrentPermissionsAsync();
+        _canCreate = permissions.Contains(PermissionCodes.Projects.Create);
+        _canEdit = permissions.Contains(PermissionCodes.Projects.Edit);
+        _canDelete = permissions.Contains(PermissionCodes.Projects.Delete);
+        _canManageSubjects = permissions.Contains(PermissionCodes.Projects.ManageSubjects);
+        _canViewStatement = permissions.Contains(PermissionCodes.Projects.StatementView);
+    }
+
+    private async Task ExportToExcelAsync()
+    {
+        if (_grid is not null)
+            await _grid.ExportToXlsxAsync("projeler");
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _isLoading = true;
+        _projects = await ProjectService.GetAllAsync();
+        _isLoading = false;
+    }
+
+    private void OnNewClick()
+    {
+        if (!_canCreate)
+        {
+            Toast.Error("Proje oluşturma yetkiniz yok.");
+            return;
+        }
+
+        _isNew = true;
+        _form = new FormModel();
+        _formError = null;
+        _popupVisible = true;
+    }
+
+    private async Task OpenEditPopup(ProjectDto dto)
+    {
+        if (!_canEdit)
+        {
+            Toast.Error("Proje düzenleme yetkiniz yok.");
+            return;
+        }
+
+        _isNew = false;
+        _form = new FormModel
+        {
+            Id = dto.Id,
+            CustomerId = dto.CustomerId,
+            Code = dto.Code,
+            Name = dto.Name,
+            Description = dto.Description,
+            ParticipantCount = dto.ParticipantCount,
+            TotalTargetCount = dto.TotalTargetCount,
+            DurationDays = dto.DurationDays,
+            StartDate = dto.StartDate?.ToDateTime(TimeOnly.MinValue),
+            Budget = dto.Budget,
+            Reward = dto.Reward,
+            ConsolationReward = dto.ConsolationReward,
+            SurveyUrl = dto.SurveyUrl,
+            SubjectParameterName = dto.SubjectParameterName,
+            EstimatedMinutes = dto.EstimatedMinutes,
+            CustomerBriefing = dto.CustomerBriefing,
+            StartMessage = dto.StartMessage,
+            CompletedMessage = dto.CompletedMessage,
+            DisqualifyMessage = dto.DisqualifyMessage,
+            QuotaFullMessage = dto.QuotaFullMessage,
+            ScreenOutMessage = dto.ScreenOutMessage,
+            Status = dto.Status,
+            CoverMediaId   = dto.CoverMediaId,
+            CoverImageUrl  = dto.CoverImageUrl,
+            CoverImageName = dto.CoverMediaId.HasValue ? "(mevcut görsel)" : null
+        };
+        _formError = null;
+        _popupVisible = true;
+    }
+
+    private async Task CopyProjectAsync(ProjectDto dto)
+    {
+        if (!_canCreate)
+        {
+            Toast.Error("Proje kopyalama yetkiniz yok.");
+            return;
+        }
+
+        _isNew = true;
+        _form = new FormModel
+        {
+            CustomerId = dto.CustomerId,
+            Code = string.Empty,
+            Name = $"{dto.Name} - Kopyası",
+            Description = dto.Description,
+            ParticipantCount = dto.ParticipantCount,
+            TotalTargetCount = dto.TotalTargetCount,
+            DurationDays = dto.DurationDays,
+            StartDate = dto.StartDate?.ToDateTime(TimeOnly.MinValue),
+            Budget = dto.Budget,
+            Reward = dto.Reward,
+            ConsolationReward = dto.ConsolationReward,
+            SurveyUrl = dto.SurveyUrl,
+            SubjectParameterName = dto.SubjectParameterName,
+            EstimatedMinutes = dto.EstimatedMinutes,
+            CustomerBriefing = dto.CustomerBriefing,
+            StartMessage = dto.StartMessage,
+            CompletedMessage = dto.CompletedMessage,
+            DisqualifyMessage = dto.DisqualifyMessage,
+            QuotaFullMessage = dto.QuotaFullMessage,
+            ScreenOutMessage = dto.ScreenOutMessage,
+            Status = ProjectStatus.Draft,
+            CoverMediaId = dto.CoverMediaId,
+            CoverImageUrl = dto.CoverImageUrl,
+            CoverImageName = dto.CoverMediaId.HasValue ? "(mevcut görsel)" : null
+        };
+        _formError = null;
+        _popupVisible = true;
+        await Task.CompletedTask;
+    }
+
+    private async Task OnSave()
+    {
+        if (_isNew && !_canCreate)
+        {
+            _formError = "Proje oluşturma yetkiniz yok.";
+            return;
+        }
+
+        if (!_isNew && !_canEdit)
+        {
+            _formError = "Proje düzenleme yetkiniz yok.";
+            return;
+        }
+
+        if (_form.CustomerId == 0) { _formError = "Müşteri seçiniz."; return; }
+        if (string.IsNullOrWhiteSpace(_form.Code)) { _formError = "Kod zorunludur."; return; }
+        if (string.IsNullOrWhiteSpace(_form.Name)) { _formError = "Ad zorunludur."; return; }
+        if (string.IsNullOrWhiteSpace(_form.SurveyUrl)) { _formError = "Anket URL zorunludur."; return; }
+        if (string.IsNullOrWhiteSpace(_form.SubjectParameterName)) { _formError = "Parametre adı zorunludur."; return; }
+
+        _isSaving = true;
+        _formError = null;
+        try
+        {
+            var adminId = await GetAdminIdAsync();
+            var startDate = _form.StartDate.HasValue ? DateOnly.FromDateTime(_form.StartDate.Value) : (DateOnly?)null;
+
+            if (_isNew)
+            {
+                var dto = new CreateProjectDto(
+                    _form.CustomerId,
+                    _form.Code.Trim(),
+                    _form.Name.Trim(),
+                    _form.Description?.Trim(),
+                    _form.ParticipantCount,
+                    _form.TotalTargetCount,
+                    _form.DurationDays,
+                    startDate,
+                    _form.Budget,
+                    _form.Reward,
+                    _form.ConsolationReward,
+                    _form.SurveyUrl.Trim(),
+                    _form.SubjectParameterName.Trim(),
+                    _form.EstimatedMinutes,
+                    _form.CustomerBriefing?.Trim(),
+                    _form.StartMessage.Trim(),
+                    _form.CompletedMessage.Trim(),
+                    _form.DisqualifyMessage.Trim(),
+                    _form.QuotaFullMessage.Trim(),
+                    _form.ScreenOutMessage.Trim(),
+                    _form.CoverMediaId);
+
+                await ProjectService.CreateAsync(dto, adminId);
+                Toast.Success("Proje kaydedildi.");
+            }
+            else
+            {
+                var dto = new UpdateProjectDto(
+                    _form.Name.Trim(),
+                    _form.Description?.Trim(),
+                    _form.ParticipantCount,
+                    _form.TotalTargetCount,
+                    _form.DurationDays,
+                    startDate,
+                    _form.Budget,
+                    _form.Reward,
+                    _form.ConsolationReward,
+                    _form.SurveyUrl.Trim(),
+                    _form.SubjectParameterName.Trim(),
+                    _form.EstimatedMinutes,
+                    _form.CustomerBriefing?.Trim(),
+                    _form.StartMessage.Trim(),
+                    _form.CompletedMessage.Trim(),
+                    _form.DisqualifyMessage.Trim(),
+                    _form.QuotaFullMessage.Trim(),
+                    _form.ScreenOutMessage.Trim(),
+                    _form.Status,
+                    _form.CoverMediaId);
+
+                await ProjectService.UpdateAsync(_form.Id, dto, adminId);
+                Toast.Success("Proje güncellendi.");
+            }
+
+            _popupVisible = false;
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            _formError = ErrorHandler.HandleFormSave(ex, Toast);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private async Task ShowMenuAsync(MouseEventArgs e, ProjectDto item)
+    {
+        _selectedItem = item;
+        if (_contextMenu is not null)
+            await _contextMenu.ShowAsync(e);
+    }
+
+    private async Task OnContextMenuItemClick(ContextMenuItemClickEventArgs e)
+    {
+        if (_selectedItem is null) return;
+        switch (e.ItemInfo.Name)
+        {
+            case "edit" when _canEdit:
+                await OpenEditPopup(_selectedItem);
+                break;
+            case "copy" when _canCreate:
+                await CopyProjectAsync(_selectedItem);
+                break;
+            case "subjects" when _canManageSubjects:
+                NavigationManager.NavigateTo($"/projects/{_selectedItem.Id}/subjects");
+                break;
+            case "statement" when _canViewStatement:
+                NavigationManager.NavigateTo($"/projects/{_selectedItem.Id}/statement");
+                break;
+            case "delete" when _canDelete:
+                ShowDeleteConfirm(_selectedItem);
+                break;
+        }
+    }
+
+    private void ShowDeleteConfirm(ProjectDto dto)
+    {
+        if (!_canDelete)
+        {
+            Toast.Error("Proje silme yetkiniz yok.");
+            return;
+        }
+
+        _projectToDelete = dto;
+        _deleteConfirmVisible = true;
+    }
+
+    private async Task ConfirmDelete()
+    {
+        if (!_canDelete)
+        {
+            Toast.Error("Proje silme yetkiniz yok.");
+            return;
+        }
+
+        if (_projectToDelete is null) return;
+
+        _isDeleting = true;
+        try
+        {
+            var adminId = await GetAdminIdAsync();
+            await ProjectService.DeleteAsync(_projectToDelete.Id, adminId);
+            _deleteConfirmVisible = false;
+            _projectToDelete = null;
+            await LoadDataAsync();
+            Toast.Success("Proje silindi.");
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleOperation(ex, Toast, "Silme işlemi başarısız.");
+        }
+        finally
+        {
+            _isDeleting = false;
+        }
+    }
+
+    private void OpenMediaPicker()
+        => _mediaPickerVisible = true;
+
+    private void ClearCoverImage()
+    {
+        _form.CoverMediaId   = null;
+        _form.CoverImageUrl  = null;
+        _form.CoverImageName = null;
+    }
+
+    private Task OnMediaSelected(MediaAssetDto? asset)
+    {
+        if (asset is not null)
+        {
+            _form.CoverMediaId   = asset.Id;
+            _form.CoverImageUrl  = asset.Url;
+            _form.CoverImageName = asset.Name;
+        }
+        else
+        {
+            ClearCoverImage();
+        }
+        return Task.CompletedTask;
+    }
+
+    private async Task<int> GetAdminIdAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var claim = authState.User.FindFirst(ClaimTypes.NameIdentifier);
+        return claim is not null && int.TryParse(claim.Value, out var adminUserId)
+            ? adminUserId
+            : 0;
+    }
+
+    private sealed class FormModel
+    {
+        public int Id { get; set; }
+        public int CustomerId { get; set; }
+        public string Code { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string? Description { get; set; }
+        public int ParticipantCount { get; set; }
+        public int TotalTargetCount { get; set; }
+        public int DurationDays { get; set; }
+        public DateTime? StartDate { get; set; }
+        public decimal Budget { get; set; }
+        public decimal Reward { get; set; }
+        public decimal ConsolationReward { get; set; }
+        public string SurveyUrl { get; set; } = string.Empty;
+        public string SubjectParameterName { get; set; } = "uid";
+        public int EstimatedMinutes { get; set; } = 10;
+        public string? CustomerBriefing { get; set; }
+        public string StartMessage { get; set; } = "Hoş geldiniz.";
+        public string CompletedMessage { get; set; } = "Teşekkürler.";
+        public string DisqualifyMessage { get; set; } = "Üzgünüz.";
+        public string QuotaFullMessage { get; set; } = "Kota dolu.";
+        public string ScreenOutMessage { get; set; } = "Uygun değilsiniz.";
+        public ProjectStatus Status { get; set; } = ProjectStatus.Draft;
+        public int? CoverMediaId { get; set; }
+        public string? CoverImageUrl { get; set; }
+        public string? CoverImageName { get; set; }
+    }
+}

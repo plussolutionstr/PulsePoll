@@ -1,0 +1,332 @@
+@page "/payments/batches/{Id:int}"
+@attribute [HasPermission(PermissionCodes.Payments.BatchesView)]
+@using System.Security.Claims
+@using PulsePoll.Application.Constants
+@inject IPaymentBatchService PaymentBatchService
+@inject IAppToastService Toast
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JS
+@inject IPermissionAuthorizationService PermissionService
+
+<PageTitle>Odeme Paketi - PulsePoll Admin</PageTitle>
+
+<div class="d-flex align-items-center gap-2 mb-2">
+    <DxButton IconCssClass="bi bi-arrow-left"
+              RenderStyle="ButtonRenderStyle.Secondary"
+              RenderStyleMode="ButtonRenderStyleMode.Text"
+              Click="@(() => NavigationManager.NavigateTo("/payments/batches"))"/>
+    <h3 class="mb-0">@(_batch?.BatchNumber ?? "Yukleniyor...")</h3>
+    @if (_batch is not null)
+    {
+        <span class="badge @BatchStatusBadge(_batch.Status) ms-1">@_batch.StatusLabel</span>
+    }
+</div>
+
+@if (_batch is not null)
+{
+    <div class="row g-3 mb-3">
+        <div class="col-md-3">
+            <div class="card text-center p-3 shadow-sm">
+                <div class="fs-4 fw-bold">@_batch.ItemCount</div>
+                <div class="text-muted small">Toplam Talep</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center p-3 shadow-sm">
+                <div class="fs-4 fw-bold">@_batch.TotalAmount.ToString("N2") TL</div>
+                <div class="text-muted small">Toplam Tutar</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center p-3 shadow-sm">
+                <div class="fs-4 fw-bold text-success">@PaidCount()</div>
+                <div class="text-muted small">Odendi</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center p-3 shadow-sm">
+                <div class="fs-4 fw-bold text-danger">@FailedCount()</div>
+                <div class="text-muted small">Basarisiz</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex gap-2 mb-3">
+        @if (_canExport)
+        {
+            <DxButton Text="Banka Dosyası İndir"
+                      IconCssClass="bi bi-download"
+                      RenderStyle="ButtonRenderStyle.Secondary"
+                      RenderStyleMode="ButtonRenderStyleMode.Outline"
+                      Click="DownloadBankFileAsync"/>
+        }
+        @if (_batch.Status == PaymentBatchStatus.Draft && _canManage)
+        {
+            <DxButton Text="Gonderildi Olarak Isaretlendi"
+                      IconCssClass="bi bi-send"
+                      RenderStyle="ButtonRenderStyle.Primary"
+                      RenderStyleMode="ButtonRenderStyleMode.Outline"
+                      Click="MarkSentAsync"/>
+        }
+        @if (_batch.Status == PaymentBatchStatus.Sent && _canManage)
+        {
+            <DxButton Text="Paketi Tamamla"
+                      IconCssClass="bi bi-check-circle"
+                      RenderStyle="ButtonRenderStyle.Success"
+                      RenderStyleMode="ButtonRenderStyleMode.Outline"
+                      Click="FinalizeAsync"/>
+        }
+    </div>
+
+    <DxLoadingPanel @bind-Visible="_isLoading"
+                    IsContentBlocked="true"
+                    ApplyBackgroundShading="true"
+                    IndicatorAreaVisible="false"
+                    Text="Yukleniyor...">
+        <DxGrid Data="@_batch.Items"
+                ShowFilterRow="true"
+                PageSize="50"
+                ColumnResizeMode="GridColumnResizeMode.ColumnsContainer">
+            <Columns>
+                <DxGridDataColumn FieldName="SubjectFullName" Caption="Denek" MinWidth="140"/>
+                <DxGridDataColumn FieldName="PhoneNumber" Caption="Telefon" Width="130px"/>
+                <DxGridDataColumn FieldName="BankName" Caption="Banka" Width="130px"/>
+                <DxGridDataColumn FieldName="IbanLast4" Caption="IBAN Son 4" Width="110px"/>
+                <DxGridDataColumn FieldName="Amount" Caption="Tutar (Birim)" Width="140px">
+                    <CellDisplayTemplate>
+                        @{
+                            var rowItem = (PaymentBatchItemDto)context.DataItem;
+                        }
+                        @($"{rowItem.Amount:N2} {rowItem.UnitLabel}")
+                    </CellDisplayTemplate>
+                </DxGridDataColumn>
+                <DxGridDataColumn FieldName="AmountTry" Caption="TL Karşılığı" DisplayFormat="N2" Width="120px"/>
+                <DxGridDataColumn FieldName="StatusLabel" Caption="Durum" Width="120px">
+                    <CellDisplayTemplate>
+                        @{
+                            var rowItem = (PaymentBatchItemDto)context.DataItem;
+                        }
+                        <span class="badge @ItemStatusBadge(rowItem.Status)">@rowItem.StatusLabel</span>
+                    </CellDisplayTemplate>
+                </DxGridDataColumn>
+                <DxGridDataColumn FieldName="FailureReason" Caption="Hata" MinWidth="130"/>
+                <DxGridDataColumn FieldName="ProcessedAt" Caption="Islem Tarihi" DisplayFormat="dd.MM.yyyy HH:mm" Width="150px"/>
+                @if (_batch.Status == PaymentBatchStatus.Sent && _canManage)
+                {
+                    <DxGridCommandColumn Width="130px" Caption="Guncelle">
+                        <CellDisplayTemplate>
+                            @{
+                                var actionItem = (PaymentBatchItemDto)context.DataItem;
+                            }
+                            @if (actionItem.Status == PaymentStatus.Pending)
+                            {
+                                <div class="d-flex gap-1">
+                                    <DxButton Text="Odendi"
+                                              RenderStyle="ButtonRenderStyle.Success"
+                                              RenderStyleMode="ButtonRenderStyleMode.Outline"
+                                              SizeMode="SizeMode.Small"
+                                              Click="@(() => UpdateItemAsync(actionItem, PaymentStatus.Paid, null))"/>
+                                    <DxButton Text="Hata"
+                                              RenderStyle="ButtonRenderStyle.Danger"
+                                              RenderStyleMode="ButtonRenderStyleMode.Outline"
+                                              SizeMode="SizeMode.Small"
+                                              Click="@(() => ShowFailurePopup(actionItem))"/>
+                                </div>
+                            }
+                        </CellDisplayTemplate>
+                    </DxGridCommandColumn>
+                }
+            </Columns>
+        </DxGrid>
+    </DxLoadingPanel>
+}
+
+<DxPopup @bind-Visible="_failurePopupVisible" HeaderText="Hata Nedeni" Width="420px" CloseOnOutsideClick="false" ShowFooter="true">
+    <BodyContentTemplate Context="popupCtx">
+        <DxFormLayout>
+            <DxFormLayoutItem Caption="Hata Aciklamasi" ColSpanMd="12">
+                <DxMemo @bind-Text="_failureReason" Rows="3" style="width:100%"/>
+            </DxFormLayoutItem>
+        </DxFormLayout>
+    </BodyContentTemplate>
+    <FooterContentTemplate>
+        <DxButton Text="Kaydet"
+                  RenderStyle="ButtonRenderStyle.Danger"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="ConfirmFailureAsync"/>
+        <DxButton Text="Iptal"
+                  RenderStyle="ButtonRenderStyle.Secondary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="() => _failurePopupVisible = false"/>
+    </FooterContentTemplate>
+</DxPopup>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    PaymentBatchDetailDto? _batch;
+    bool _isLoading;
+    bool _failurePopupVisible;
+    bool _canManage;
+    bool _canExport;
+    string _failureReason = string.Empty;
+    PaymentBatchItemDto? _failureItem;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPermissionsAsync();
+        await LoadAsync();
+    }
+
+    private async Task LoadPermissionsAsync()
+    {
+        var permissions = await PermissionService.GetCurrentPermissionsAsync();
+        _canManage = permissions.Contains(PermissionCodes.Payments.BatchesManage);
+        _canExport = permissions.Contains(PermissionCodes.Payments.BatchesExport);
+    }
+
+    private async Task LoadAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            _batch = await PaymentBatchService.GetBatchDetailAsync(Id);
+        }
+        catch (Exception ex) { ErrorHandler.HandleOperation(ex, Toast); }
+        finally { _isLoading = false; }
+    }
+
+    private int PaidCount() => _batch?.Items.Count(i => i.Status == PaymentStatus.Paid) ?? 0;
+    private int FailedCount() => _batch?.Items.Count(i => i.Status == PaymentStatus.Failed) ?? 0;
+
+    private async Task MarkSentAsync()
+    {
+        if (!_canManage)
+        {
+            Toast.Error("Ödeme paketi yönetme yetkiniz yok.");
+            return;
+        }
+
+        var adminId = await GetAdminIdAsync();
+        _isLoading = true;
+        try
+        {
+            await PaymentBatchService.MarkBatchSentAsync(Id, adminId);
+            Toast.Success("Paket 'Gonderildi' olarak isaretlendi.");
+            await LoadAsync();
+        }
+        catch (Exception ex) { ErrorHandler.HandleOperation(ex, Toast); }
+        finally { _isLoading = false; }
+    }
+
+    private async Task FinalizeAsync()
+    {
+        if (!_canManage)
+        {
+            Toast.Error("Ödeme paketi yönetme yetkiniz yok.");
+            return;
+        }
+
+        var adminId = await GetAdminIdAsync();
+        _isLoading = true;
+        try
+        {
+            await PaymentBatchService.FinalizeBatchAsync(Id, adminId);
+            Toast.Success("Paket tamamlandi.");
+            await LoadAsync();
+        }
+        catch (Exception ex) { ErrorHandler.HandleOperation(ex, Toast); }
+        finally { _isLoading = false; }
+    }
+
+    private async Task UpdateItemAsync(PaymentBatchItemDto item, PaymentStatus status, string? reason)
+    {
+        if (!_canManage)
+        {
+            Toast.Error("Ödeme paketi yönetme yetkiniz yok.");
+            return;
+        }
+
+        var adminId = await GetAdminIdAsync();
+        _isLoading = true;
+        try
+        {
+            await PaymentBatchService.UpdateItemStatusAsync(Id, item.Id,
+                new UpdatePaymentItemStatusDto(status, reason), adminId);
+            await LoadAsync();
+        }
+        catch (Exception ex) { ErrorHandler.HandleOperation(ex, Toast); }
+        finally { _isLoading = false; }
+    }
+
+    private void ShowFailurePopup(PaymentBatchItemDto item)
+    {
+        if (!_canManage)
+        {
+            Toast.Error("Ödeme paketi yönetme yetkiniz yok.");
+            return;
+        }
+
+        _failureItem         = item;
+        _failureReason       = string.Empty;
+        _failurePopupVisible = true;
+    }
+
+    private async Task ConfirmFailureAsync()
+    {
+        if (!_canManage)
+        {
+            Toast.Error("Ödeme paketi yönetme yetkiniz yok.");
+            return;
+        }
+
+        _failurePopupVisible = false;
+        await UpdateItemAsync(_failureItem!, PaymentStatus.Failed, _failureReason);
+    }
+
+    private async Task DownloadBankFileAsync()
+    {
+        if (_batch is null || !_canExport)
+        {
+            if (!_canExport)
+                Toast.Error("Ödeme paketi dışa aktarma yetkiniz yok.");
+            return;
+        }
+
+        try
+        {
+            var file = await PaymentBatchService.GenerateBankTransferFileAsync(Id);
+            var base64 = Convert.ToBase64String(file.Content);
+            await JS.InvokeVoidAsync("downloadBase64File", base64, file.FileName, file.ContentType);
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleOperation(ex, Toast);
+        }
+    }
+
+    private static string BatchStatusBadge(PaymentBatchStatus status) => status switch
+    {
+        PaymentBatchStatus.Draft      => "bg-secondary",
+        PaymentBatchStatus.Sent       => "bg-primary",
+        PaymentBatchStatus.Completed  => "bg-success",
+        _                             => "bg-secondary"
+    };
+
+    private static string ItemStatusBadge(PaymentStatus status) => status switch
+    {
+        PaymentStatus.Pending => "bg-warning text-dark",
+        PaymentStatus.Paid    => "bg-success",
+        PaymentStatus.Failed  => "bg-danger",
+        _                     => "bg-secondary"
+    };
+
+    private async Task<int> GetAdminIdAsync()
+    {
+        var state = await AuthStateProvider.GetAuthenticationStateAsync();
+        var claimValue = state.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        return int.TryParse(claimValue, out var adminUserId) ? adminUserId : 0;
+    }
+
+}

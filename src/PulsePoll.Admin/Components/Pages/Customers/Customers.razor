@@ -1,0 +1,546 @@
+@page "/customers"
+@attribute [HasPermission(PermissionCodes.Customers.View)]
+@using System.Security.Claims
+@inject ICustomerService CustomerService
+@inject ILookupService LookupService
+@inject IAppToastService Toast
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IPermissionAuthorizationService PermissionService
+
+<PageTitle>Müşteriler — PulsePoll Admin</PageTitle>
+
+<h3>Müşteriler</h3>
+
+<div class="d-flex justify-content-end gap-2 mb-2">
+    <DxButton Text="Excel" IconCssClass="bi bi-file-earmark-excel"
+              RenderStyle="ButtonRenderStyle.Secondary"
+              RenderStyleMode="ButtonRenderStyleMode.Outline"
+              Click="ExportToExcelAsync"/>
+    @if (_canCreate)
+    {
+        <DxButton Text="Yeni Müşteri" IconCssClass="bi bi-plus-lg"
+                  RenderStyle="ButtonRenderStyle.Primary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="OnNewClick" />
+    }
+</div>
+
+<DxLoadingPanel @bind-Visible="_isLoading"
+                IsContentBlocked="true"
+                ApplyBackgroundShading="true"
+                IndicatorAreaVisible="false"
+                Text="Yükleniyor...">
+    <DxGrid @ref="_grid" Data="@_customers" ShowFilterRow="true" PageSize="25">
+        <Columns>
+            <DxGridDataColumn FieldName="Code" Caption="Kod" Width="90px" />
+            <DxGridDataColumn FieldName="Title" Caption="Unvan" />
+            <DxGridDataColumn FieldName="ShortName" Caption="Kısa Ad" Width="130px" />
+            <DxGridDataColumn FieldName="TaxNumber" Caption="Vergi No" Width="120px" />
+            <DxGridDataColumn FieldName="TaxOfficeName" Caption="Vergi Dairesi" Width="160px" />
+            <DxGridDataColumn FieldName="CityName" Caption="Şehir" Width="100px" />
+            <DxGridDataColumn FieldName="Phone1" Caption="Telefon" Width="130px" />
+            <DxGridDataColumn FieldName="Email" Caption="E-posta" />
+            <DxGridDataColumn FieldName="CreatedAt" Caption="Kayıt Tarihi" DisplayFormat="dd.MM.yyyy" Width="110px" />
+            <DxGridCommandColumn NewButtonVisible="false" EditButtonVisible="false" DeleteButtonVisible="false"
+                                 Width="50px" Caption="" TextAlignment="GridTextAlignment.Center">
+                <CellDisplayTemplate>
+                    @{
+                        var item = (CustomerDto)context.DataItem;
+                    }
+                    @if (_canEdit || _canDelete)
+                    {
+                        <DxButton IconCssClass="bi bi-three-dots-vertical"
+                                  RenderStyle="ButtonRenderStyle.Link"
+                                  Click="@(async e => await ShowMenuAsync(e, item))"
+                                  title="İşlemler" />
+                    }
+                </CellDisplayTemplate>
+            </DxGridCommandColumn>
+        </Columns>
+        <TotalSummary>
+            <DxGridSummaryItem SummaryType="GridSummaryItemType.Count"
+                               FieldName="Code"
+                               FooterColumnName="Code"
+                               DisplayText="Kayıt Sayısı: {0}" />
+        </TotalSummary>
+    </DxGrid>
+</DxLoadingPanel>
+
+<DxContextMenu @ref="_contextMenu" ItemClick="OnContextMenuItemClick">
+    <Items>
+        @if (_canEdit)
+        {
+            <DxContextMenuItem Text="Düzenle" Name="edit" IconCssClass="bi bi-pencil" />
+        }
+        @if (_canDelete)
+        {
+            <DxContextMenuItem Text="Sil" Name="delete" IconCssClass="bi bi-trash" CssClass="text-danger" BeginGroup="@_canEdit" />
+        }
+    </Items>
+</DxContextMenu>
+
+<!-- Kayıt / Düzenleme Popup -->
+<DxPopup @bind-Visible="_popupVisible"
+         HeaderText="@(_isNew ? "Yeni Müşteri" : "Müşteri Düzenle")"
+         Width="700px"
+         CloseOnOutsideClick="false"
+         ShowFooter="true">
+    <BodyContentTemplate Context="_">
+        @if (!string.IsNullOrEmpty(_formError))
+        {
+            <div class="alert alert-danger py-2 mb-3">@_formError</div>
+        }
+        <DxFormLayout>
+            <DxFormLayoutItem ColSpanMd="6">
+                <label class="form-label">Kod *</label>
+                <DxTextBox @bind-Text="_form.Code" Enabled="@_isNew" />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanMd="6">
+                <label class="form-label">Kısa Ad *</label>
+                <DxTextBox @bind-Text="_form.ShortName" />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanMd="12">
+                <label class="form-label">Unvan *</label>
+                <DxTextBox @bind-Text="_form.Title" />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanMd="6">
+                <label class="form-label">Şehir *</label>
+                <DxComboBox Data="@_cities"
+                            @bind-Value="_form.CityId"
+                            @bind-Value:after="OnCityChangedAsync"
+                            TextFieldName="Name"
+                            ValueFieldName="Id"
+                            SearchMode="ListSearchMode.AutoSearch"
+                            SearchFilterCondition="ListSearchFilterCondition.Contains"
+                            NullText="Seçiniz..." />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanMd="6">
+                <label class="form-label">İlçe *</label>
+                <DxComboBox Data="@_districts"
+                            @bind-Value="_form.DistrictId"
+                            TextFieldName="Name"
+                            ValueFieldName="Id"
+                            SearchMode="ListSearchMode.AutoSearch"
+                            SearchFilterCondition="ListSearchFilterCondition.Contains"
+                            NullText="@(_form.CityId > 0 ? "Seçiniz..." : "Önce şehir seçiniz...")"
+                            Enabled="@(_form.CityId > 0)" />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanMd="6">
+                <label class="form-label">Vergi Dairesi *</label>
+                <DxComboBox Data="@_taxOffices"
+                            @bind-Value="_form.TaxOfficeId"
+                            TextFieldName="Name"
+                            ValueFieldName="Id"
+                            SearchMode="ListSearchMode.AutoSearch"
+                            SearchFilterCondition="ListSearchFilterCondition.Contains"
+                            NullText="@(_form.CityId > 0 ? "Seçiniz..." : "Önce şehir seçiniz...")"
+                            Enabled="@(_form.CityId > 0)">
+                    <ItemDisplayTemplate Context="taxCtx">
+                        <div class="d-flex gap-2">
+                            <span class="text-muted" style="min-width:46px; font-variant-numeric:tabular-nums;">@taxCtx.DataItem.Code</span>
+                            <span>@taxCtx.DataItem.Name</span>
+                        </div>
+                    </ItemDisplayTemplate>
+                </DxComboBox>
+            </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanMd="6">
+                <label class="form-label">Vergi No *</label>
+                <DxTextBox @bind-Text="_form.TaxNumber" />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanMd="6">
+                <label class="form-label">Telefon 1 *</label>
+                <DxTextBox @bind-Text="_form.Phone1" />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanMd="6">
+                <label class="form-label">Telefon 2</label>
+                <DxTextBox @bind-Text="_form.Phone2" />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanMd="6">
+                <label class="form-label">Cep Tel</label>
+                <DxTextBox @bind-Text="_form.Mobile" />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanMd="6">
+                <label class="form-label">E-posta *</label>
+                <DxTextBox @bind-Text="_form.Email" />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanMd="12">
+                <label class="form-label">Adres *</label>
+                <DxMemo @bind-Text="_form.Address" Rows="3" />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanMd="12">
+                <label class="form-label">Logo</label>
+                @if (_currentLogoUrl != null && _logoBytes == null)
+                {
+                    <div class="mb-2">
+                        <img src="@_currentLogoUrl"
+                             style="max-height:80px; max-width:200px; object-fit:contain;"
+                             alt="Mevcut logo" />
+                    </div>
+                }
+                @if (_logoBytes != null)
+                {
+                    <div class="mb-2">
+                        <img src="@($"data:{_logoFileType};base64,{Convert.ToBase64String(_logoBytes)}")"
+                             style="max-height:80px; max-width:200px; object-fit:contain;"
+                             alt="Logo önizlemesi" />
+                    </div>
+                }
+                <DxFileInput MaxFileSize="2000000"
+                             MaxFileCount="1"
+                             FilesUploading="OnLogoFileUploading"
+                             AcceptedFileTypes="@_logoAcceptedTypes" />
+                <div class="small text-muted mt-1">JPG, PNG, WebP — maks. 2 MB</div>
+            </DxFormLayoutItem>
+        </DxFormLayout>
+    </BodyContentTemplate>
+    <FooterContentTemplate>
+        <DxButton Text="@(_isSaving ? "Kaydediliyor..." : "Kaydet")"
+                  IconCssClass="@(_isSaving ? "spinner-border spinner-border-sm" : "bi bi-check-lg")"
+                  RenderStyle="ButtonRenderStyle.Primary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="OnSave" Enabled="!_isSaving" />
+        <DxButton Text="İptal" IconCssClass="bi bi-x-lg"
+                  RenderStyle="ButtonRenderStyle.Secondary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="() => _popupVisible = false" Enabled="!_isSaving" />
+    </FooterContentTemplate>
+</DxPopup>
+
+<!-- Silme Onay Popup -->
+<DxPopup @bind-Visible="_deleteConfirmVisible"
+         HeaderText="Silme Onayı"
+         Width="420px"
+         CloseOnOutsideClick="false"
+         ShowFooter="true">
+    <BodyContentTemplate Context="_">
+        <div class="d-flex align-items-start gap-3 p-2">
+            <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size:2.5rem; flex-shrink:0;"></i>
+            <div>
+                <p class="mb-1 fw-semibold">Bu müşteriyi silmek istediğinize emin misiniz?</p>
+                <p class="mb-0 text-muted">@_customerToDelete?.Title</p>
+            </div>
+        </div>
+    </BodyContentTemplate>
+    <FooterContentTemplate>
+        <DxButton Text="Sil" IconCssClass="bi bi-trash"
+                  RenderStyle="ButtonRenderStyle.Danger"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="ConfirmDelete" Enabled="!_isDeleting" />
+        <DxButton Text="İptal"
+                  RenderStyle="ButtonRenderStyle.Secondary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="() => _deleteConfirmVisible = false" />
+    </FooterContentTemplate>
+</DxPopup>
+
+@code {
+    private DxGrid? _grid;
+    private DxContextMenu? _contextMenu;
+    private CustomerDto? _selectedItem;
+
+    private IReadOnlyList<CustomerDto> _customers = [];
+    private List<City> _cities = [];
+    private List<District> _districts = [];
+    private List<TaxOffice> _taxOffices = [];
+
+    private bool _isLoading = true;
+    private bool _popupVisible;
+    private bool _deleteConfirmVisible;
+    private bool _isNew;
+    private bool _isSaving;
+    private bool _isDeleting;
+    private bool _canCreate;
+    private bool _canEdit;
+    private bool _canDelete;
+    private string? _formError;
+    private CustomerDto? _customerToDelete;
+    private FormModel _form = new();
+
+    // Logo
+    private byte[]? _logoBytes;
+    private string? _logoFileName;
+    private string? _logoFileType;
+    private string? _currentLogoUrl;
+    private readonly List<string> _logoAcceptedTypes = [".jpg", ".jpeg", ".png", ".webp"];
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPermissionsAsync();
+        _cities = await LookupService.GetCitiesAsync();
+        await LoadDataAsync();
+    }
+
+    private async Task LoadPermissionsAsync()
+    {
+        var permissions = await PermissionService.GetCurrentPermissionsAsync();
+        _canCreate = permissions.Contains(PermissionCodes.Customers.Create);
+        _canEdit = permissions.Contains(PermissionCodes.Customers.Edit);
+        _canDelete = permissions.Contains(PermissionCodes.Customers.Delete);
+    }
+
+    private async Task ExportToExcelAsync()
+    {
+        if (_grid is not null)
+            await _grid.ExportToXlsxAsync("musteriler");
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _isLoading = true;
+        _customers = await CustomerService.GetAllAsync();
+        _isLoading = false;
+    }
+
+    private void OnNewClick()
+    {
+        if (!_canCreate)
+        {
+            Toast.Error("Müşteri oluşturma yetkiniz yok.");
+            return;
+        }
+
+        _isNew = true;
+        _form  = new FormModel();
+        _districts  = [];
+        _taxOffices = [];
+        _formError  = null;
+        ResetLogo();
+        _popupVisible = true;
+    }
+
+    private async Task OpenEditPopup(CustomerDto dto)
+    {
+        if (!_canEdit)
+        {
+            Toast.Error("Müşteri düzenleme yetkiniz yok.");
+            return;
+        }
+
+        _isNew = false;
+        _form  = new FormModel
+        {
+            Id          = dto.Id,
+            Code        = dto.Code,
+            Title       = dto.Title,
+            ShortName   = dto.ShortName,
+            TaxNumber   = dto.TaxNumber,
+            TaxOfficeId = dto.TaxOfficeId,
+            Phone1      = dto.Phone1,
+            Phone2      = dto.Phone2,
+            Mobile      = dto.Mobile,
+            Email       = dto.Email,
+            CityId      = dto.CityId,
+            DistrictId  = dto.DistrictId,
+            Address     = dto.Address
+        };
+        _districts  = await LookupService.GetDistrictsByCityIdAsync(dto.CityId);
+        _taxOffices = await LookupService.GetTaxOfficesByCityIdAsync(dto.CityId);
+        _formError  = null;
+        ResetLogo();
+        _currentLogoUrl = dto.LogoUrl;
+        _popupVisible = true;
+    }
+
+    private void ResetLogo()
+    {
+        _logoBytes    = null;
+        _logoFileName = null;
+        _logoFileType = null;
+        _currentLogoUrl = null;
+    }
+
+    private async Task OnLogoFileUploading(FilesUploadingEventArgs args)
+    {
+        var file = args.Files[0];
+        _logoFileType = file.Type;
+        _logoFileName = file.Name;
+        _logoBytes    = new byte[(int)file.Size];
+
+        var stream = file.OpenReadStream((long)file.Size);
+        try
+        {
+            int read, offset = 0;
+            while ((read = await stream.ReadAsync(_logoBytes, offset, (int)file.Size - offset)) > 0)
+                offset += read;
+        }
+        finally
+        {
+            stream.Close();
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task OnCityChangedAsync()
+    {
+        _form.DistrictId  = 0;
+        _form.TaxOfficeId = 0;
+        if (_form.CityId > 0)
+        {
+            _districts  = await LookupService.GetDistrictsByCityIdAsync(_form.CityId);
+            _taxOffices = await LookupService.GetTaxOfficesByCityIdAsync(_form.CityId);
+        }
+        else
+        {
+            _districts  = [];
+            _taxOffices = [];
+        }
+    }
+
+    private async Task OnSave()
+    {
+        if (_isNew && !_canCreate)
+        {
+            _formError = "Müşteri oluşturma yetkiniz yok.";
+            return;
+        }
+
+        if (!_isNew && !_canEdit)
+        {
+            _formError = "Müşteri düzenleme yetkiniz yok.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_form.Code))      { _formError = "Kod zorunludur."; return; }
+        if (string.IsNullOrWhiteSpace(_form.Title))     { _formError = "Unvan zorunludur."; return; }
+        if (string.IsNullOrWhiteSpace(_form.ShortName)) { _formError = "Kısa ad zorunludur."; return; }
+        if (string.IsNullOrWhiteSpace(_form.TaxNumber)) { _formError = "Vergi numarası zorunludur."; return; }
+        if (_form.CityId == 0)                          { _formError = "Şehir seçiniz."; return; }
+        if (_form.DistrictId == 0)                      { _formError = "İlçe seçiniz."; return; }
+        if (_form.TaxOfficeId == 0)                     { _formError = "Vergi dairesi seçiniz."; return; }
+        if (string.IsNullOrWhiteSpace(_form.Phone1))    { _formError = "Telefon zorunludur."; return; }
+        if (string.IsNullOrWhiteSpace(_form.Email))     { _formError = "E-posta zorunludur."; return; }
+        if (string.IsNullOrWhiteSpace(_form.Address))   { _formError = "Adres zorunludur."; return; }
+
+        _isSaving  = true;
+        _formError = null;
+        try
+        {
+            var adminId    = await GetAdminIdAsync();
+            var logoStream = _logoBytes is not null ? new MemoryStream(_logoBytes, false) : null;
+
+            if (_isNew)
+            {
+                var dto = new CreateCustomerDto(
+                    _form.Code.Trim(),      _form.Title.Trim(),   _form.ShortName.Trim(),
+                    _form.TaxNumber.Trim(), _form.TaxOfficeId,
+                    _form.Phone1.Trim(),    _form.Phone2?.Trim(), _form.Mobile?.Trim(),
+                    _form.Email.Trim(),     _form.CityId,         _form.DistrictId,
+                    _form.Address.Trim(),   logoStream,           _logoFileName);
+                await CustomerService.CreateAsync(dto, adminId);
+                Toast.Success("Müşteri kaydedildi.");
+            }
+            else
+            {
+                var dto = new UpdateCustomerDto(
+                    _form.Title.Trim(),     _form.ShortName.Trim(),
+                    _form.TaxNumber.Trim(), _form.TaxOfficeId,
+                    _form.Phone1.Trim(),    _form.Phone2?.Trim(), _form.Mobile?.Trim(),
+                    _form.Email.Trim(),     _form.CityId,         _form.DistrictId,
+                    _form.Address.Trim(),   logoStream,           _logoFileName);
+                await CustomerService.UpdateAsync(_form.Id, dto, adminId);
+                Toast.Success("Müşteri güncellendi.");
+            }
+
+            _popupVisible = false;
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            _formError = ErrorHandler.HandleFormSave(ex, Toast);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private async Task ShowMenuAsync(MouseEventArgs e, CustomerDto item)
+    {
+        _selectedItem = item;
+        if (_contextMenu is not null)
+            await _contextMenu.ShowAsync(e);
+    }
+
+    private async Task OnContextMenuItemClick(ContextMenuItemClickEventArgs e)
+    {
+        if (_selectedItem is null) return;
+        switch (e.ItemInfo.Name)
+        {
+            case "edit" when _canEdit:
+                await OpenEditPopup(_selectedItem);
+                break;
+            case "delete" when _canDelete:
+                ShowDeleteConfirm(_selectedItem);
+                break;
+        }
+    }
+
+    private void ShowDeleteConfirm(CustomerDto dto)
+    {
+        if (!_canDelete)
+        {
+            Toast.Error("Müşteri silme yetkiniz yok.");
+            return;
+        }
+
+        _customerToDelete     = dto;
+        _deleteConfirmVisible = true;
+    }
+
+    private async Task ConfirmDelete()
+    {
+        if (!_canDelete)
+        {
+            Toast.Error("Müşteri silme yetkiniz yok.");
+            return;
+        }
+
+        if (_customerToDelete is null) return;
+
+        _isDeleting = true;
+        try
+        {
+            var adminId = await GetAdminIdAsync();
+            await CustomerService.DeleteAsync(_customerToDelete.Id, adminId);
+            _deleteConfirmVisible = false;
+            _customerToDelete     = null;
+            await LoadDataAsync();
+            Toast.Success("Müşteri silindi.");
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleOperation(ex, Toast, "Silme işlemi başarısız.");
+        }
+        finally
+        {
+            _isDeleting = false;
+        }
+    }
+
+    private async Task<int> GetAdminIdAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var claim     = authState.User.FindFirst(ClaimTypes.NameIdentifier);
+        return claim is not null && int.TryParse(claim.Value, out var adminUserId)
+            ? adminUserId
+            : 0;
+    }
+
+    private sealed class FormModel
+    {
+        public int     Id          { get; set; }
+        public string  Code        { get; set; } = string.Empty;
+        public string  Title       { get; set; } = string.Empty;
+        public string  ShortName   { get; set; } = string.Empty;
+        public string  TaxNumber   { get; set; } = string.Empty;
+        public int     TaxOfficeId { get; set; }
+        public string  Phone1      { get; set; } = string.Empty;
+        public string? Phone2      { get; set; }
+        public string? Mobile      { get; set; }
+        public string  Email       { get; set; } = string.Empty;
+        public int     CityId      { get; set; }
+        public int     DistrictId  { get; set; }
+        public string  Address     { get; set; } = string.Empty;
+    }
+}

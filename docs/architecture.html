@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PulsePoll — Mimari</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0D0F14;
+  --surface: #13161E;
+  --surface2: #1A1E28;
+  --border: #252A38;
+  --border2: #2E3548;
+
+  --purple: #7C5CFC;
+  --purple-d: #5B3FD9;
+  --purple-l: rgba(124,92,252,0.12);
+  --purple-l2: rgba(124,92,252,0.06);
+
+  --green: #22C988;
+  --green-l: rgba(34,201,136,0.12);
+  --blue: #4A9EFF;
+  --blue-l: rgba(74,158,255,0.12);
+  --amber: #F5A623;
+  --amber-l: rgba(245,166,35,0.12);
+  --red: #FF5C7A;
+  --red-l: rgba(255,92,122,0.12);
+  --teal: #2EC4A0;
+  --teal-l: rgba(46,196,160,0.12);
+  --pink: #F472B6;
+  --pink-l: rgba(244,114,182,0.12);
+
+  --text: #E8EBF5;
+  --text2: #8892AA;
+  --text3: #4A5268;
+
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'Plus Jakarta Sans', sans-serif;
+}
+
+body {
+  background: var(--bg);
+  font-family: var(--sans);
+  color: var(--text);
+  min-height: 100vh;
+  padding: 48px 32px 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 48px;
+}
+
+/* ── HEADER ── */
+.header {
+  text-align: center;
+}
+.header-tag {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--purple);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.header-title {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+.header-title span { color: var(--purple); }
+.header-sub {
+  font-size: 14px;
+  color: var(--text2);
+  margin-top: 6px;
+}
+
+/* ── DIAGRAM ── */
+.diagram {
+  width: 100%;
+  max-width: 1100px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* Layer */
+.layer {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+}
+
+.layer-label {
+  width: 110px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 16px;
+}
+.layer-label-text {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text3);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  writing-mode: horizontal-tb;
+  text-align: right;
+  line-height: 1.4;
+}
+
+.layer-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 0;
+  border-left: 1px solid var(--border);
+  padding-left: 24px;
+  position: relative;
+}
+
+/* Arrow connector between layers */
+.arrow-row {
+  display: flex;
+  align-items: center;
+  padding-left: 134px; /* 110 label + 24 padding */
+}
+.arrow-line {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-left: 1px solid var(--border);
+  padding-left: 24px;
+}
+.arrow-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text3);
+}
+.arrow-item .dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.arrow-item .line {
+  height: 1px;
+  width: 32px;
+  position: relative;
+}
+.arrow-item .line::after {
+  content: '▶';
+  position: absolute;
+  right: -6px;
+  top: -6px;
+  font-size: 8px;
+}
+
+/* ── BOX ── */
+.box {
+  border-radius: 14px;
+  border: 1px solid;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  position: relative;
+  transition: transform 0.15s;
+  cursor: default;
+  min-width: 130px;
+}
+.box:hover { transform: translateY(-2px); }
+
+.box-icon {
+  width: 32px; height: 32px;
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 2px;
+  font-size: 16px;
+}
+.box-name {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.box-desc {
+  font-size: 11px;
+  line-height: 1.5;
+  font-family: var(--sans);
+}
+.box-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 2px;
+}
+.btag {
+  font-size: 9px;
+  font-weight: 600;
+  font-family: var(--mono);
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.3px;
+}
+
+/* Color variants */
+.box-purple { background: var(--purple-l2); border-color: rgba(124,92,252,0.25); }
+.box-purple .box-icon { background: var(--purple-l); }
+.box-purple .box-name { color: #A78BFA; }
+.box-purple .box-desc { color: var(--text2); }
+.box-purple .btag { background: var(--purple-l); color: #A78BFA; }
+
+.box-green { background: var(--green-l); border-color: rgba(34,201,136,0.25); }
+.box-green .box-icon { background: rgba(34,201,136,0.15); }
+.box-green .box-name { color: var(--green); }
+.box-green .box-desc { color: var(--text2); }
+.box-green .btag { background: rgba(34,201,136,0.15); color: var(--green); }
+
+.box-blue { background: var(--blue-l); border-color: rgba(74,158,255,0.25); }
+.box-blue .box-icon { background: rgba(74,158,255,0.15); }
+.box-blue .box-name { color: var(--blue); }
+.box-blue .box-desc { color: var(--text2); }
+.box-blue .btag { background: rgba(74,158,255,0.15); color: var(--blue); }
+
+.box-amber { background: var(--amber-l); border-color: rgba(245,166,35,0.25); }
+.box-amber .box-icon { background: rgba(245,166,35,0.15); }
+.box-amber .box-name { color: var(--amber); }
+.box-amber .box-desc { color: var(--text2); }
+.box-amber .btag { background: rgba(245,166,35,0.15); color: var(--amber); }
+
+.box-red { background: var(--red-l); border-color: rgba(255,92,122,0.25); }
+.box-red .box-icon { background: rgba(255,92,122,0.15); }
+.box-red .box-name { color: var(--red); }
+.box-red .box-desc { color: var(--text2); }
+.box-red .btag { background: rgba(255,92,122,0.15); color: var(--red); }
+
+.box-teal { background: var(--teal-l); border-color: rgba(46,196,160,0.25); }
+.box-teal .box-icon { background: rgba(46,196,160,0.15); }
+.box-teal .box-name { color: var(--teal); }
+.box-teal .box-desc { color: var(--text2); }
+.box-teal .btag { background: rgba(46,196,160,0.15); color: var(--teal); }
+
+.box-pink { background: var(--pink-l); border-color: rgba(244,114,182,0.25); }
+.box-pink .box-icon { background: rgba(244,114,182,0.15); }
+.box-pink .box-name { color: var(--pink); }
+.box-pink .box-desc { color: var(--text2); }
+.box-pink .btag { background: rgba(244,114,182,0.15); color: var(--pink); }
+
+.box-dark { background: var(--surface2); border-color: var(--border2); }
+.box-dark .box-icon { background: var(--border); }
+.box-dark .box-name { color: var(--text); }
+.box-dark .box-desc { color: var(--text2); }
+.box-dark .btag { background: var(--border); color: var(--text2); }
+
+/* Wide box */
+.box-wide { min-width: 200px; }
+.box-xl { min-width: 260px; }
+
+/* ── QUEUE SECTION ── */
+.queue-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: rgba(245,166,35,0.04);
+  border: 1px solid rgba(245,166,35,0.12);
+  border-radius: 16px;
+  padding: 12px;
+}
+.queue-group-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--amber);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+.queue-items {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.queue-item {
+  background: rgba(245,166,35,0.08);
+  border: 1px solid rgba(245,166,35,0.2);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--amber);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.queue-item::before {
+  content: '';
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--amber);
+}
+
+/* ── DIVIDER ── */
+.divider {
+  width: 100%;
+  max-width: 1100px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border2), transparent);
+}
+
+/* ── FLOW ARROWS ── */
+.flow-arrows {
+  display: flex;
+  gap: 32px;
+  align-items: center;
+  padding-left: 134px;
+  padding: 8px 0 8px 134px;
+}
+.flow-arrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-family: var(--mono);
+}
+.fa-line {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.fa-dash {
+  width: 20px;
+  height: 1px;
+}
+.fa-arrow { font-size: 9px; }
+.fa-label { font-size: 10px; font-weight: 500; }
+
+/* Direct call */
+.fa-direct .fa-dash { background: var(--blue); }
+.fa-direct .fa-arrow { color: var(--blue); }
+.fa-direct .fa-label { color: var(--blue); }
+
+/* Queue */
+.fa-queue .fa-dash { background: var(--amber); }
+.fa-queue .fa-arrow { color: var(--amber); }
+.fa-queue .fa-label { color: var(--amber); }
+
+/* Webhook */
+.fa-webhook .fa-dash { background: var(--green); }
+.fa-webhook .fa-arrow { color: var(--green); }
+.fa-webhook .fa-label { color: var(--green); }
+
+/* Cache */
+.fa-cache .fa-dash { background: var(--red); }
+.fa-cache .fa-arrow { color: var(--red); }
+.fa-cache .fa-label { color: var(--red); }
+
+/* ── SECTION TITLE ── */
+.section-title {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text3);
+  padding: 24px 0 0 134px;
+}
+
+/* ── NOTES ── */
+.notes-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  width: 100%;
+  max-width: 1100px;
+}
+.note-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+}
+.note-card-title {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.note-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.note-items {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.note-item {
+  font-size: 12px;
+  color: var(--text2);
+  padding-left: 14px;
+  position: relative;
+  line-height: 1.5;
+}
+.note-item::before {
+  content: '—';
+  position: absolute;
+  left: 0;
+  color: var(--text3);
+  font-size: 10px;
+}
+
+/* Docker compose section */
+.docker-section {
+  width: 100%;
+  max-width: 1100px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+.docker-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface2);
+}
+.docker-header-title {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--blue);
+}
+.docker-dots { display: flex; gap: 6px; }
+.docker-dot { width: 10px; height: 10px; border-radius: 50%; }
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+}
+.service-item {
+  padding: 14px 16px;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.service-item:nth-child(4n) { border-right: none; }
+.service-item:nth-last-child(-n+4) { border-bottom: none; }
+.service-name {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.service-image {
+  font-size: 10px;
+  color: var(--text3);
+  font-family: var(--mono);
+  margin-bottom: 6px;
+}
+.service-ports {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.sport {
+  font-size: 9px;
+  font-family: var(--mono);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--text2);
+}
+
+/* Separator in layer */
+.layer-sep {
+  width: 1px;
+  height: 100%;
+  min-height: 40px;
+  background: var(--border);
+  margin: 0 8px;
+  flex-shrink: 0;
+}
+
+/* Group wrapper */
+.box-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: rgba(255,255,255,0.015);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 12px;
+}
+.box-group-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 2px;
+}
+.box-group-row {
+  display: flex;
+  gap: 8px;
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-tag">System Architecture · v1.0</div>
+  <div class="header-title">PulsePoll <span>Mimari Tasarımı</span></div>
+  <div class="header-sub">100k üye · 7-10k eşzamanlı · Docker · Self-hosted</div>
+</div>
+
+<!-- LEGEND -->
+<div class="flow-arrows" style="padding-left:0; justify-content:center; gap:24px; flex-wrap:wrap;">
+  <div class="flow-arrow fa-direct"><div class="fa-line"><div class="fa-dash"></div><span class="fa-arrow">▶</span></div><span class="fa-label">Direkt API çağrı</span></div>
+  <div class="flow-arrow fa-queue"><div class="fa-line"><div class="fa-dash"></div><span class="fa-arrow">▶</span></div><span class="fa-label">Kuyruk (RabbitMQ)</span></div>
+  <div class="flow-arrow fa-webhook"><div class="fa-line"><div class="fa-dash"></div><span class="fa-arrow">▶</span></div><span class="fa-label">Webhook / dış kaynak</span></div>
+  <div class="flow-arrow fa-cache"><div class="fa-line"><div class="fa-dash"></div><span class="fa-arrow">▶</span></div><span class="fa-label">Cache (Redis)</span></div>
+</div>
+
+<!-- DIAGRAM -->
+<div class="diagram">
+
+  <!-- ── LAYER 1: CLIENT ── -->
+  <div class="layer">
+    <div class="layer-label"><div class="layer-label-text">Client<br>Layer</div></div>
+    <div class="layer-content">
+
+      <div class="box box-purple">
+        <div class="box-icon">📱</div>
+        <div class="box-name">.NET MAUI</div>
+        <div class="box-desc">Mobil uygulama<br>iOS & Android</div>
+        <div class="box-tags">
+          <span class="btag">HTTP/REST</span>
+          <span class="btag">JWT</span>
+        </div>
+      </div>
+
+      <div class="box box-blue">
+        <div class="box-icon">🖥️</div>
+        <div class="box-name">Blazor Server</div>
+        <div class="box-desc">Admin panel<br>Anket yönetimi</div>
+        <div class="box-tags">
+          <span class="btag">SignalR</span>
+          <span class="btag">Direct DB</span>
+        </div>
+      </div>
+
+      <div class="box box-teal" style="margin-left:auto;">
+        <div class="box-icon">🔗</div>
+        <div class="box-name">SSI Platform</div>
+        <div class="box-desc">Anket yapılıyor<br>Webhook ile dönüyor</div>
+        <div class="box-tags">
+          <span class="btag">Webhook</span>
+          <span class="btag">HTTPS</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Arrow -->
+  <div class="arrow-row">
+    <div class="arrow-line">
+      <div class="arrow-item" style="color:var(--blue);">
+        <div class="dot" style="background:var(--blue);"></div>
+        MAUI → HTTPS → Nginx
+      </div>
+      <div style="width:32px; height:1px; background:var(--border2); margin:0 16px;"></div>
+      <div class="arrow-item" style="color:var(--blue);">
+        <div class="dot" style="background:var(--blue);"></div>
+        Blazor → Servis katmanı (direkt)
+      </div>
+      <div style="width:32px; height:1px; background:var(--border2); margin:0 16px;"></div>
+      <div class="arrow-item" style="color:var(--green);">
+        <div class="dot" style="background:var(--green);"></div>
+        SSI → Webhook POST /api/survey/complete
+      </div>
+    </div>
+  </div>
+
+  <!-- ── LAYER 2: GATEWAY ── -->
+  <div class="layer">
+    <div class="layer-label"><div class="layer-label-text">Gateway<br>Layer</div></div>
+    <div class="layer-content">
+
+      <div class="box box-dark box-wide">
+        <div class="box-icon">⚡</div>
+        <div class="box-name">Nginx</div>
+        <div class="box-desc">Reverse proxy<br>SSL termination<br>Rate limiting</div>
+        <div class="box-tags">
+          <span class="btag">:443</span>
+          <span class="btag">:80 → redirect</span>
+        </div>
+      </div>
+
+      <div class="box box-red">
+        <div class="box-icon">🛡️</div>
+        <div class="box-name">Rate Limiter</div>
+        <div class="box-desc">Kayıt: 5 req/dk<br>Login: 10 req/dk<br>API: 100 req/dk</div>
+        <div class="box-tags">
+          <span class="btag">Redis backed</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Arrow -->
+  <div class="arrow-row">
+    <div class="arrow-line">
+      <div class="arrow-item" style="color:var(--blue);">
+        <div class="dot" style="background:var(--blue);"></div>
+        Route /api/* → Web API
+      </div>
+      <div style="width:32px; height:1px; background:var(--border2); margin:0 16px;"></div>
+      <div class="arrow-item" style="color:var(--red);">
+        <div class="dot" style="background:var(--red);"></div>
+        Rate limit aşılırsa 429 döner, arkaya geçmez
+      </div>
+    </div>
+  </div>
+
+  <!-- ── LAYER 3: API ── -->
+  <div class="layer">
+    <div class="layer-label"><div class="layer-label-text">API<br>Layer</div></div>
+    <div class="layer-content" style="gap:16px;">
+
+      <div class="box-group">
+        <div class="box-group-label">Web API — .NET Core 10</div>
+        <div class="box-group-row">
+
+          <div class="box box-purple">
+            <div class="box-icon">🔐</div>
+            <div class="box-name">Auth</div>
+            <div class="box-desc">Kayıt / Login<br>JWT üretim</div>
+            <div class="box-tags">
+              <span class="btag">→ Queue</span>
+            </div>
+          </div>
+
+          <div class="box box-blue">
+            <div class="box-icon">📋</div>
+            <div class="box-name">Survey API</div>
+            <div class="box-desc">Anket listesi<br>Detay, başlatma</div>
+            <div class="box-tags">
+              <span class="btag">Redis cache</span>
+            </div>
+          </div>
+
+          <div class="box box-green">
+            <div class="box-icon">👤</div>
+            <div class="box-name">Profile API</div>
+            <div class="box-desc">Persona<br>güncelleme</div>
+            <div class="box-tags">
+              <span class="btag">Direkt DB</span>
+            </div>
+          </div>
+
+          <div class="box box-amber">
+            <div class="box-icon">💰</div>
+            <div class="box-name">Wallet API</div>
+            <div class="box-desc">Bakiye okuma<br>Çekim talebi</div>
+            <div class="box-tags">
+              <span class="btag">→ Queue</span>
+            </div>
+          </div>
+
+          <div class="box box-teal">
+            <div class="box-icon">🔔</div>
+            <div class="box-name">Webhook</div>
+            <div class="box-desc">SSI callback<br>Tamamlandı</div>
+            <div class="box-tags">
+              <span class="btag">→ Queue</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Arrow -->
+  <div class="arrow-row">
+    <div class="arrow-line" style="flex-wrap:wrap; gap:8px 24px;">
+      <div class="arrow-item" style="color:var(--amber);">
+        <div class="dot" style="background:var(--amber);"></div>
+        Kayıt → user.registered kuyruğuna
+      </div>
+      <div class="arrow-item" style="color:var(--amber);">
+        <div class="dot" style="background:var(--amber);"></div>
+        SSI callback → survey.completed kuyruğuna
+      </div>
+      <div class="arrow-item" style="color:var(--amber);">
+        <div class="dot" style="background:var(--amber);"></div>
+        Çekim talebi → withdrawal.requested kuyruğuna
+      </div>
+      <div class="arrow-item" style="color:var(--red);">
+        <div class="dot" style="background:var(--red);"></div>
+        Anket listesi → Redis'ten (5 dk TTL)
+      </div>
+    </div>
+  </div>
+
+  <!-- ── LAYER 4: QUEUE ── -->
+  <div class="layer">
+    <div class="layer-label"><div class="layer-label-text">Queue<br>Layer</div></div>
+    <div class="layer-content" style="gap:20px;">
+
+      <div class="box box-amber box-wide">
+        <div class="box-icon">🐰</div>
+        <div class="box-name">RabbitMQ</div>
+        <div class="box-desc">Message broker<br>Spike'ları absorbe eder</div>
+        <div class="box-tags">
+          <span class="btag">:5672</span>
+          <span class="btag">:15672 mgmt</span>
+        </div>
+      </div>
+
+      <div class="queue-group">
+        <div class="queue-group-label">Kuyruklar</div>
+        <div class="queue-items">
+          <div class="queue-item">user.registered</div>
+          <div class="queue-item">survey.completed</div>
+          <div class="queue-item">notification.send</div>
+          <div class="queue-item">withdrawal.requested</div>
+          <div class="queue-item">wallet.credit</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Arrow -->
+  <div class="arrow-row">
+    <div class="arrow-line">
+      <div class="arrow-item" style="color:var(--amber);">
+        <div class="dot" style="background:var(--amber);"></div>
+        Worker'lar ilgili kuyruğu dinler, işler
+      </div>
+    </div>
+  </div>
+
+  <!-- ── LAYER 5: WORKERS ── -->
+  <div class="layer">
+    <div class="layer-label"><div class="layer-label-text">Worker<br>Layer</div></div>
+    <div class="layer-content" style="gap:12px; flex-wrap:wrap;">
+
+      <div class="box box-purple">
+        <div class="box-icon">✉️</div>
+        <div class="box-name">Notification<br>Worker</div>
+        <div class="box-desc">Push notification<br>E-posta gönderimi</div>
+        <div class="box-tags">
+          <span class="btag">FCM/APNs</span>
+          <span class="btag">SMTP</span>
+        </div>
+      </div>
+
+      <div class="box box-green">
+        <div class="box-icon">👤</div>
+        <div class="box-name">Registration<br>Worker</div>
+        <div class="box-desc">Kullanıcı kaydı<br>tamamlama<br>Hoşgeldin maili</div>
+        <div class="box-tags">
+          <span class="btag">DB write</span>
+        </div>
+      </div>
+
+      <div class="box box-amber">
+        <div class="box-icon">💳</div>
+        <div class="box-name">Wallet<br>Worker</div>
+        <div class="box-desc">Kazanç yazma<br>Çekim işleme<br>Bakiye güncelleme</div>
+        <div class="box-tags">
+          <span class="btag">DB write</span>
+          <span class="btag">→ Notify</span>
+        </div>
+      </div>
+
+      <div class="box box-teal">
+        <div class="box-icon">📊</div>
+        <div class="box-name">Survey<br>Worker</div>
+        <div class="box-desc">SSI callback işleme<br>Sonuç kaydetme</div>
+        <div class="box-tags">
+          <span class="btag">DB write</span>
+          <span class="btag">→ Wallet</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Arrow -->
+  <div class="arrow-row">
+    <div class="arrow-line">
+      <div class="arrow-item" style="color:var(--blue);">
+        <div class="dot" style="background:var(--blue);"></div>
+        Worker'lar direkt servis katmanına erişir
+      </div>
+    </div>
+  </div>
+
+  <!-- ── LAYER 6: DATA ── -->
+  <div class="layer">
+    <div class="layer-label"><div class="layer-label-text">Data<br>Layer</div></div>
+    <div class="layer-content" style="gap:12px; flex-wrap:wrap;">
+
+      <div class="box box-blue box-wide">
+        <div class="box-icon">🐘</div>
+        <div class="box-name">PostgreSQL</div>
+        <div class="box-desc">Ana veritabanı<br>Users, Surveys,<br>Wallet, History</div>
+        <div class="box-tags">
+          <span class="btag">:5432</span>
+          <span class="btag">Connection Pool</span>
+        </div>
+      </div>
+
+      <div class="box box-red">
+        <div class="box-icon">⚡</div>
+        <div class="box-name">Redis</div>
+        <div class="box-desc">Session cache<br>Anket listesi cache<br>Rate limit counter</div>
+        <div class="box-tags">
+          <span class="btag">:6379</span>
+          <span class="btag">TTL: 5dk</span>
+        </div>
+      </div>
+
+      <div class="box box-pink">
+        <div class="box-icon">🗄️</div>
+        <div class="box-name">MinIO</div>
+        <div class="box-desc">Profil fotoğrafı<br>Story görselleri<br>Haber görselleri</div>
+        <div class="box-tags">
+          <span class="btag">:9000</span>
+          <span class="btag">S3 compat.</span>
+        </div>
+      </div>
+
+      <div class="box box-dark">
+        <div class="box-icon">📝</div>
+        <div class="box-name">Seq / Logs</div>
+        <div class="box-desc">Structured logging<br>Hata takibi</div>
+        <div class="box-tags">
+          <span class="btag">:5341</span>
+          <span class="btag">Serilog</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- DIVIDER -->
+<div class="divider"></div>
+
+<!-- DOCKER COMPOSE -->
+<div class="docker-section">
+  <div class="docker-header">
+    <div class="docker-dots">
+      <div class="docker-dot" style="background:#FF5F57;"></div>
+      <div class="docker-dot" style="background:#FFBD2E;"></div>
+      <div class="docker-dot" style="background:#28CA41;"></div>
+    </div>
+    <div class="docker-header-title">docker-compose.yml — Servisler</div>
+  </div>
+  <div class="services-grid">
+
+    <div class="service-item">
+      <div class="service-name" style="color:var(--blue);">nginx</div>
+      <div class="service-image">nginx:alpine</div>
+      <div class="service-ports"><span class="sport">80:80</span><span class="sport">443:443</span></div>
+    </div>
+
+    <div class="service-item">
+      <div class="service-name" style="color:var(--purple);">api</div>
+      <div class="service-image">pulsepoll/api:latest</div>
+      <div class="service-ports"><span class="sport">8080:80</span></div>
+    </div>
+
+    <div class="service-item">
+      <div class="service-name" style="color:var(--blue);">admin</div>
+      <div class="service-image">pulsepoll/admin:latest</div>
+      <div class="service-ports"><span class="sport">8081:80</span></div>
+    </div>
+
+    <div class="service-item">
+      <div class="service-name" style="color:var(--green);">worker</div>
+      <div class="service-image">pulsepoll/worker:latest</div>
+      <div class="service-ports"><span class="sport">internal</span></div>
+    </div>
+
+    <div class="service-item">
+      <div class="service-name" style="color:var(--blue);">postgres</div>
+      <div class="service-image">postgres:16-alpine</div>
+      <div class="service-ports"><span class="sport">5432:5432</span></div>
+    </div>
+
+    <div class="service-item">
+      <div class="service-name" style="color:var(--red);">redis</div>
+      <div class="service-image">redis:7-alpine</div>
+      <div class="service-ports"><span class="sport">6379:6379</span></div>
+    </div>
+
+    <div class="service-item">
+      <div class="service-name" style="color:var(--amber);">rabbitmq</div>
+      <div class="service-image">rabbitmq:3-management</div>
+      <div class="service-ports"><span class="sport">5672</span><span class="sport">15672</span></div>
+    </div>
+
+    <div class="service-item">
+      <div class="service-name" style="color:var(--pink);">minio</div>
+      <div class="service-image">minio/minio:latest</div>
+      <div class="service-ports"><span class="sport">9000</span><span class="sport">9001</span></div>
+    </div>
+
+    <div class="service-item">
+      <div class="service-name" style="color:var(--text2);">seq</div>
+      <div class="service-image">datalust/seq:latest</div>
+      <div class="service-ports"><span class="sport">5341:80</span></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- NOTES -->
+<div class="notes-grid">
+
+  <div class="note-card">
+    <div class="note-card-title">
+      <div class="note-dot" style="background:var(--red);"></div>
+      <span style="color:var(--red);">Spike Koruması</span>
+    </div>
+    <div class="note-items">
+      <div class="note-item">Nginx rate limiting — IP başına kayıt 5 req/dk ile sınırlandırılır</div>
+      <div class="note-item">Kayıt formu kuyruğa gider, DB'ye anlık 10k insert gelmez</div>
+      <div class="note-item">Redis ile login token cache — DB'ye her istekte gitme</div>
+      <div class="note-item">Anket listesi 5 dakika Redis'te kalır, her user için ayrı DB sorgusu yok</div>
+    </div>
+  </div>
+
+  <div class="note-card">
+    <div class="note-card-title">
+      <div class="note-dot" style="background:var(--amber);"></div>
+      <span style="color:var(--amber);">Kuyruk Stratejisi</span>
+    </div>
+    <div class="note-items">
+      <div class="note-item">Anlık cevap gerekmeyen her şey kuyruğa — kullanıcı beklemez</div>
+      <div class="note-item">Push notification binlerce kişiye aynı anda gitmez, worker pace'li gönderir</div>
+      <div class="note-item">SSI webhook geldiğinde kazanç işlemi asenkron — cüzdana yazar, bildirim atar</div>
+      <div class="note-item">Worker crash olursa mesaj kaybolmaz, RabbitMQ'da bekler</div>
+    </div>
+  </div>
+
+  <div class="note-card">
+    <div class="note-card-title">
+      <div class="note-dot" style="background:var(--green);"></div>
+      <span style="color:var(--green);">Ölçeklenme Noktaları</span>
+    </div>
+    <div class="note-items">
+      <div class="note-item">Yük arttığında sadece API container'ı çoğaltılır — Nginx load balance eder</div>
+      <div class="note-item">Worker container'ları bağımsız ölçeklenir</div>
+      <div class="note-item">PostgreSQL için connection pooling (PgBouncer) eklenebilir</div>
+      <div class="note-item">Tüm state dışarıda (Redis/DB) — API stateless, scale sorunsuz</div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

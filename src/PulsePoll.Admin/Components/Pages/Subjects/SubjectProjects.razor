@@ -1,0 +1,155 @@
+@page "/subjects/{SubjectId:int}/projects"
+@attribute [HasPermission(PermissionCodes.Subjects.ProjectsView)]
+@using PulsePoll.Application.DTOs
+@using PulsePoll.Application.Services
+@using PulsePoll.Domain.Enums
+@using PulsePoll.Application.Extensions
+@inject SubjectProjectHistoryService HistoryService
+@inject ISubjectService SubjectService
+@inject IRewardUnitConfigService RewardUnitConfigService
+@inject IAppToastService Toast
+@inject NavigationManager Nav
+
+<PageTitle>Proje Geçmişi — PulsePoll Admin</PageTitle>
+
+<div class="d-flex align-items-center gap-2 mb-3">
+    <DxButton Text="← Denekler"
+              RenderStyle="ButtonRenderStyle.Link"
+              Click="@(() => Nav.NavigateTo("/subjects"))" />
+    <span class="text-muted">/</span>
+    <span class="fw-semibold">@_subjectName — Proje Geçmişi</span>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-header py-2 d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center gap-2">
+            <span class="fw-semibold">Proje Geçmişi</span>
+            <span class="badge bg-secondary">@_projects.Count</span>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <DxButton Text="Excel"
+                      IconCssClass="bi bi-file-earmark-excel"
+                      RenderStyle="ButtonRenderStyle.Secondary"
+                      RenderStyleMode="ButtonRenderStyleMode.Outline"
+                      SizeMode="SizeMode.Small"
+                      Click="ExportToExcelAsync" />
+            <DxButton IconCssClass="bi bi-arrow-clockwise"
+                      RenderStyle="ButtonRenderStyle.Link"
+                      SizeMode="SizeMode.Small"
+                      title="Yenile"
+                      Click="RefreshAsync" />
+        </div>
+    </div>
+    <div class="card-body p-0">
+        @if (_isLoading)
+        {
+            <div class="text-center py-5 text-muted">
+                <span class="spinner-border spinner-border-sm me-2"></span>Yükleniyor...
+            </div>
+        }
+        else if (_projects.Count == 0)
+        {
+            <div class="text-center py-5 text-muted">Bu deneğe henüz proje atanmadı.</div>
+        }
+        else
+        {
+            <DxGrid @ref="_grid" Data="@_projects" ShowFilterRow="true" PageSize="15">
+                <Columns>
+                    <DxGridDataColumn FieldName="ProjectName" Caption="Proje Adı" />
+                    <DxGridDataColumn FieldName="CustomerShortName" Caption="Firma" Width="120px" />
+                    <DxGridDataColumn FieldName="Status" Caption="Durum" Width="100px" TextAlignment="GridTextAlignment.Center">
+                        <CellDisplayTemplate>
+                            @{
+                                var item = (ProjectHistoryDto)context.DataItem;
+                                var badgeClass = item.Status switch
+                                {
+                                    AssignmentStatus.NotStarted => "bg-secondary",
+                                    AssignmentStatus.Completed  => "bg-success",
+                                    AssignmentStatus.Partial    => "bg-warning text-dark",
+                                    AssignmentStatus.Disqualify => "bg-danger",
+                                    AssignmentStatus.QuotaFull  => "bg-info text-dark",
+                                    AssignmentStatus.ScreenOut  => "bg-danger",
+                                    AssignmentStatus.Unknown    => "bg-light text-dark",
+                                    _                           => "bg-light text-dark"
+                                };
+                            }
+                            <span class="badge @badgeClass">@item.Status.GetDescription()</span>
+                        </CellDisplayTemplate>
+                    </DxGridDataColumn>
+                    <DxGridDataColumn FieldName="AssignedAt" Caption="Atanma" DisplayFormat="dd.MM.yyyy HH:mm" Width="140px" />
+                    <DxGridDataColumn FieldName="CompletedAt" Caption="Tamamlama" DisplayFormat="dd.MM.yyyy HH:mm" Width="140px" />
+                    <DxGridDataColumn FieldName="DurationMinutes" Caption="Süre (dk)" Width="90px" TextAlignment="GridTextAlignment.Right" />
+                    <DxGridDataColumn FieldName="EarnedAmount" Caption="@($"Kazanç ({_unitLabel})")" DisplayFormat="N2" Width="110px" TextAlignment="GridTextAlignment.Right" />
+                </Columns>
+                <TotalSummary>
+                    <DxGridSummaryItem SummaryType="GridSummaryItemType.Count"
+                                       FieldName="ProjectId"
+                                       FooterColumnName="ProjectName"
+                                       DisplayText="Kayıt Sayısı: {0}" />
+                    <DxGridSummaryItem SummaryType="GridSummaryItemType.Sum"
+                                       FieldName="EarnedAmount"
+                                       FooterColumnName="EarnedAmount"
+                                       DisplayText="@($"Toplam Kazanç: {{0:N2}} {_unitLabel}")" />
+                </TotalSummary>
+            </DxGrid>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public int SubjectId { get; set; }
+
+    private List<ProjectHistoryDto> _projects = [];
+    private string _subjectName = string.Empty;
+    private bool _isLoading = true;
+    private string _unitLabel = "TL";
+    private IGrid? _grid;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var rewardUnit = await RewardUnitConfigService.GetAsync();
+        _unitLabel = rewardUnit.UnitLabel;
+
+        var subject = await SubjectService.GetByIdAsync(SubjectId);
+        if (subject is null)
+        {
+            Nav.NavigateTo("/subjects");
+            return;
+        }
+
+        _subjectName = subject.FullName;
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            _projects = await HistoryService.GetSubjectProjectHistoryAsync(SubjectId);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task RefreshAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task ExportToExcelAsync()
+    {
+        try
+        {
+            if (_grid is not null)
+                await _grid.ExportToXlsxAsync($"denek-projeleri-{SubjectId}");
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleOperation(ex, Toast, "Excel dışa aktarma başarısız.");
+        }
+    }
+
+}

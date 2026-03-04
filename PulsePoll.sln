@@ -1,0 +1,75 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Solution Folders
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{00000000-0000-0000-0000-000000000000}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{00000000-0000-0000-0000-000000000000}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "deploy", "deploy", "{00000000-0000-0000-0000-000000000000}"
+	ProjectSection(SolutionItems) = preProject
+		deploy\docker-compose.yml = deploy\docker-compose.yml
+		deploy\docker-compose.override.yml = deploy\docker-compose.override.yml
+		deploy\nginx.conf = deploy\nginx.conf
+	EndProjectSection
+EndProject
+# Source Projects
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PulsePoll.Domain", "src\PulsePoll.Domain\PulsePoll.Domain.csproj", "{A1B2C3D4-0001-0000-0000-000000000001}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PulsePoll.Application", "src\PulsePoll.Application\PulsePoll.Application.csproj", "{A1B2C3D4-0002-0000-0000-000000000002}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PulsePoll.Infrastructure", "src\PulsePoll.Infrastructure\PulsePoll.Infrastructure.csproj", "{A1B2C3D4-0003-0000-0000-000000000003}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PulsePoll.Api", "src\PulsePoll.Api\PulsePoll.Api.csproj", "{A1B2C3D4-0004-0000-0000-000000000004}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PulsePoll.Worker", "src\PulsePoll.Worker\PulsePoll.Worker.csproj", "{A1B2C3D4-0005-0000-0000-000000000005}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PulsePoll.Admin", "src\PulsePoll.Admin\PulsePoll.Admin.csproj", "{306BB3C3-FD07-4177-A5F5-B8AD82F5C150}"
+EndProject
+# Test Projects
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PulsePoll.Tests", "tests\PulsePoll.Tests\PulsePoll.Tests.csproj", "{A1B2C3D4-0008-0000-0000-000000000008}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A1B2C3D4-0001-0000-0000-000000000001}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1B2C3D4-0001-0000-0000-000000000001}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1B2C3D4-0001-0000-0000-000000000001}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1B2C3D4-0001-0000-0000-000000000001}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1B2C3D4-0002-0000-0000-000000000002}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1B2C3D4-0002-0000-0000-000000000002}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1B2C3D4-0002-0000-0000-000000000002}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1B2C3D4-0002-0000-0000-000000000002}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1B2C3D4-0003-0000-0000-000000000003}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1B2C3D4-0003-0000-0000-000000000003}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1B2C3D4-0003-0000-0000-000000000003}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1B2C3D4-0003-0000-0000-000000000003}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1B2C3D4-0004-0000-0000-000000000004}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1B2C3D4-0004-0000-0000-000000000004}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1B2C3D4-0004-0000-0000-000000000004}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1B2C3D4-0004-0000-0000-000000000004}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1B2C3D4-0005-0000-0000-000000000005}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1B2C3D4-0005-0000-0000-000000000005}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1B2C3D4-0005-0000-0000-000000000005}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1B2C3D4-0005-0000-0000-000000000005}.Release|Any CPU.Build.0 = Release|Any CPU
+		{306BB3C3-FD07-4177-A5F5-B8AD82F5C150}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{306BB3C3-FD07-4177-A5F5-B8AD82F5C150}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{306BB3C3-FD07-4177-A5F5-B8AD82F5C150}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{306BB3C3-FD07-4177-A5F5-B8AD82F5C150}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1B2C3D4-0008-0000-0000-000000000008}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1B2C3D4-0008-0000-0000-000000000008}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1B2C3D4-0008-0000-0000-000000000008}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1B2C3D4-0008-0000-0000-000000000008}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{306BB3C3-FD07-4177-A5F5-B8AD82F5C150} = {00000000-0000-0000-0000-000000000000}
+		{A1B2C3D4-0004-0000-0000-000000000004} = {00000000-0000-0000-0000-000000000000}
+		{A1B2C3D4-0002-0000-0000-000000000002} = {00000000-0000-0000-0000-000000000000}
+		{A1B2C3D4-0001-0000-0000-000000000001} = {00000000-0000-0000-0000-000000000000}
+		{A1B2C3D4-0003-0000-0000-000000000003} = {00000000-0000-0000-0000-000000000000}
+		{A1B2C3D4-0005-0000-0000-000000000005} = {00000000-0000-0000-0000-000000000000}
+		{A1B2C3D4-0008-0000-0000-000000000008} = {00000000-0000-0000-0000-000000000000}
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,188 @@
+@page "/subjects/{SubjectId:int}/referrals"
+@attribute [HasPermission(PermissionCodes.Subjects.ReferralsView)]
+@using PulsePoll.Application.DTOs
+@using PulsePoll.Application.Services
+@using PulsePoll.Domain.Enums
+@using PulsePoll.Application.Extensions
+@inject ReferralService ReferralService
+@inject ISubjectService SubjectService
+@inject IRewardUnitConfigService RewardUnitConfigService
+@inject IAppToastService Toast
+@inject NavigationManager Nav
+
+<PageTitle>Referans Oldukları — PulsePoll Admin</PageTitle>
+
+<div class="d-flex align-items-center gap-2 mb-3">
+    <DxButton Text="← Denekler"
+              RenderStyle="ButtonRenderStyle.Link"
+              Click="@(() => Nav.NavigateTo("/subjects"))" />
+    <span class="text-muted">/</span>
+    <span class="fw-semibold">@_subjectName — Referans Oldukları</span>
+</div>
+
+<div class="card shadow-sm mb-3">
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="text-muted small">Toplam Referral</div>
+                <div class="fs-5 fw-bold text-primary">@_summary.TotalReferrals</div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-muted small">Onaylı Referral</div>
+                <div class="fs-5 fw-bold text-success">@_summary.ApprovedReferrals</div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-muted small">Toplam Komisyon</div>
+                <div class="fs-5 fw-bold text-info">@($"{_summary.TotalCommissionEarned:N2} {_unitLabel}")</div>
+                <div class="small text-muted">TL Karşılığı: @_summary.TotalCommissionTry.ToString("N2") TL</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-header py-2 d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center gap-2">
+            <span class="fw-semibold">Referans Olan Denekler</span>
+            <span class="badge bg-secondary">@_referrals.Count</span>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <DxButton Text="Excel"
+                      IconCssClass="bi bi-file-earmark-excel"
+                      RenderStyle="ButtonRenderStyle.Secondary"
+                      RenderStyleMode="ButtonRenderStyleMode.Outline"
+                      SizeMode="SizeMode.Small"
+                      Click="ExportToExcelAsync" />
+            <DxButton IconCssClass="bi bi-arrow-clockwise"
+                      RenderStyle="ButtonRenderStyle.Link"
+                      SizeMode="SizeMode.Small"
+                      title="Yenile"
+                      Click="RefreshAsync" />
+        </div>
+    </div>
+    <div class="card-body p-0">
+        @if (_isLoading)
+        {
+            <div class="text-center py-5 text-muted">
+                <span class="spinner-border spinner-border-sm me-2"></span>Yükleniyor...
+            </div>
+        }
+        else if (_referrals.Count == 0)
+        {
+            <div class="text-center py-5 text-muted">Bu denek henüz kimseyi referans etmemiş.</div>
+        }
+        else
+        {
+            <DxGrid @ref="_grid" Data="@_referrals" ShowFilterRow="true" PageSize="15">
+                <Columns>
+                    <DxGridDataColumn FieldName="SubjectId" Caption="ID" Width="70px" TextAlignment="GridTextAlignment.Center" />
+                    <DxGridDataColumn FieldName="FullName" Caption="Ad Soyad" />
+                    <DxGridDataColumn FieldName="ReferralCode" Caption="Referral Kodu" Width="120px" TextAlignment="GridTextAlignment.Center" />
+                    <DxGridDataColumn FieldName="Status" Caption="Durum" Width="110px" TextAlignment="GridTextAlignment.Center">
+                        <CellDisplayTemplate>
+                            @{
+                                var item = (ReferredSubjectDto)context.DataItem;
+                                var badgeClass = item.Status switch
+                                {
+                                    ApprovalStatus.Pending => "bg-warning text-dark",
+                                    ApprovalStatus.Approved => "bg-success",
+                                    ApprovalStatus.Rejected => "bg-danger",
+                                    _ => "bg-secondary"
+                                };
+                            }
+                            <span class="badge @badgeClass">@item.Status.GetDescription()</span>
+                        </CellDisplayTemplate>
+                    </DxGridDataColumn>
+                    <DxGridDataColumn FieldName="RewardStatusLabel" Caption="Ödül Durumu" Width="160px" TextAlignment="GridTextAlignment.Center">
+                        <CellDisplayTemplate>
+                            @{
+                                var item = (ReferredSubjectDto)context.DataItem;
+                                var badgeClass = item.RewardStatus switch
+                                {
+                                    ReferralRewardStatus.PendingApproval => "bg-secondary",
+                                    ReferralRewardStatus.WaitingTrigger => "bg-warning text-dark",
+                                    ReferralRewardStatus.RewardGranted => "bg-success",
+                                    _ => "bg-secondary"
+                                };
+                            }
+                            <span class="badge @badgeClass">@item.RewardStatusLabel</span>
+                        </CellDisplayTemplate>
+                    </DxGridDataColumn>
+                    <DxGridDataColumn FieldName="RegisteredAt" Caption="Kayıt Tarihi" DisplayFormat="dd.MM.yyyy" Width="120px" />
+                    <DxGridDataColumn FieldName="CommissionEarned" Caption="Komisyon (Birim)" Width="140px" TextAlignment="GridTextAlignment.Right">
+                        <CellDisplayTemplate>
+                            @{
+                                var item = (ReferredSubjectDto)context.DataItem;
+                            }
+                            @(item.CommissionEarned.HasValue
+                                ? $"{item.CommissionEarned.Value:N2} {item.CommissionUnitLabel ?? _unitLabel}"
+                                : "—")
+                        </CellDisplayTemplate>
+                    </DxGridDataColumn>
+                    <DxGridDataColumn FieldName="CommissionAmountTry" Caption="Komisyon (TL)" DisplayFormat="N2" Width="120px" TextAlignment="GridTextAlignment.Right" />
+                    <DxGridDataColumn FieldName="CommissionGrantedAt" Caption="Ödül Tarihi" DisplayFormat="dd.MM.yyyy HH:mm" Width="140px" />
+                </Columns>
+            </DxGrid>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public int SubjectId { get; set; }
+
+    private List<ReferredSubjectDto> _referrals = [];
+    private ReferralSummaryDto _summary = new(0, 0, 0, 0);
+    private string _subjectName = string.Empty;
+    private bool _isLoading = true;
+    private string _unitLabel = "TL";
+    private IGrid? _grid;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var rewardUnit = await RewardUnitConfigService.GetAsync();
+        _unitLabel = rewardUnit.UnitLabel;
+
+        var subject = await SubjectService.GetByIdAsync(SubjectId);
+        if (subject is null)
+        {
+            Nav.NavigateTo("/subjects");
+            return;
+        }
+
+        _subjectName = subject.FullName;
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            _referrals = await ReferralService.GetReferredSubjectsAsync(SubjectId);
+            _summary = await ReferralService.GetReferralSummaryAsync(SubjectId);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task RefreshAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task ExportToExcelAsync()
+    {
+        try
+        {
+            if (_grid is not null)
+                await _grid.ExportToXlsxAsync($"denek-referanslari-{SubjectId}");
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleOperation(ex, Toast, "Excel dışa aktarma başarısız.");
+        }
+    }
+
+}

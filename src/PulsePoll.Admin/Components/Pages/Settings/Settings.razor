@@ -1,0 +1,177 @@
+@page "/settings"
+@attribute [HasPermission(PermissionCodes.Settings.View)]
+@inject NavigationManager Nav
+@inject IPermissionAuthorizationService PermissionService
+
+<PageTitle>Ayarlar — PulsePoll Admin</PageTitle>
+
+<div class="d-flex align-items-center justify-content-between mb-3">
+    <h3 class="mb-0">Ayarlar</h3>
+</div>
+
+<div class="row g-3">
+    @if (_canScoringSettings)
+    {
+        <div class="col-12 col-md-6 col-lg-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body d-flex flex-column">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <i class="bi bi-stars fs-5 text-primary"></i>
+                    <h5 class="mb-0">Denek Skor Ayarları</h5>
+                </div>
+                <p class="text-muted small mb-3">
+                    Denek değerleme puanı, yıldız eşikleri ve aktivite çarpanları.
+                </p>
+                <div class="mt-auto">
+                    <DxButton Text="Aç"
+                              IconCssClass="bi bi-arrow-right"
+                              RenderStyle="ButtonRenderStyle.Secondary"
+                              RenderStyleMode="ButtonRenderStyleMode.Outline"
+                              Click="@(() => Nav.NavigateTo("/subjects/scoring-settings?menu=settings"))" />
+                </div>
+            </div>
+        </div>
+    </div>
+    }
+
+    @if (_canRewardUnitSettings)
+    {
+        <div class="col-12 col-md-6 col-lg-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body d-flex flex-column">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <i class="bi bi-currency-exchange fs-5 text-success"></i>
+                    <h5 class="mb-0">Ödül Birimi Ayarları</h5>
+                </div>
+                <p class="text-muted small mb-3">
+                    Birim kodu/etiketi ve 1 birimin TL karşılığı (çarpan).
+                </p>
+                <div class="mt-auto">
+                    <DxButton Text="Aç"
+                              IconCssClass="bi bi-arrow-right"
+                              RenderStyle="ButtonRenderStyle.Secondary"
+                              RenderStyleMode="ButtonRenderStyleMode.Outline"
+                              Click="@(() => Nav.NavigateTo("/subjects/reward-unit-settings?menu=settings"))" />
+                </div>
+            </div>
+        </div>
+    </div>
+    }
+
+    @if (_canPaymentSettings)
+    {
+        <div class="col-12 col-md-6 col-lg-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body d-flex flex-column">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <i class="bi bi-gear fs-5 text-warning"></i>
+                    <h5 class="mb-0">Ödeme Ayarları</h5>
+                </div>
+                <p class="text-muted small mb-3">
+                    Ödeme servis ayarları ve entegrasyon parametreleri.
+                </p>
+                <div class="mt-auto">
+                    <DxButton Text="Aç"
+                              IconCssClass="bi bi-arrow-right"
+                              RenderStyle="ButtonRenderStyle.Secondary"
+                              RenderStyleMode="ButtonRenderStyleMode.Outline"
+                              Click="@(() => Nav.NavigateTo("/payments/settings?menu=settings"))" />
+                </div>
+            </div>
+        </div>
+    </div>
+    }
+
+    @if (_canReferralReward)
+    {
+        <div class="col-12 col-md-6 col-lg-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body d-flex flex-column">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <i class="bi bi-person-hearts fs-5 text-danger"></i>
+                    <h5 class="mb-0">Referans Ödül Ayarları</h5>
+                </div>
+                <p class="text-muted small mb-3">
+                    Referans ödül tutarı ve ödülü tetikleyecek davranış kuralı.
+                </p>
+                <div class="mt-auto">
+                    <DxButton Text="Aç"
+                              IconCssClass="bi bi-arrow-right"
+                              RenderStyle="ButtonRenderStyle.Secondary"
+                              RenderStyleMode="ButtonRenderStyleMode.Outline"
+                              Click="@(() => Nav.NavigateTo("/settings/referral-reward"))" />
+                </div>
+            </div>
+        </div>
+    </div>
+    }
+
+    @if (_canAppContent)
+    {
+        <div class="col-12 col-md-6 col-lg-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body d-flex flex-column">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <i class="bi bi-file-text fs-5 text-info"></i>
+                    <h5 class="mb-0">Mobil İçerik Ayarları</h5>
+                </div>
+                <p class="text-muted small mb-3">
+                    KVKK aydınlatma metni ve Bize Ulaşın sayfası içerikleri.
+                </p>
+                <div class="mt-auto">
+                    <DxButton Text="Aç"
+                              IconCssClass="bi bi-arrow-right"
+                              RenderStyle="ButtonRenderStyle.Secondary"
+                              RenderStyleMode="ButtonRenderStyleMode.Outline"
+                              Click="@(() => Nav.NavigateTo("/settings/app-content"))" />
+                </div>
+            </div>
+        </div>
+    </div>
+    }
+
+    @if (_canCommunicationAutomation)
+    {
+        <div class="col-12 col-md-6 col-lg-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body d-flex flex-column">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <i class="bi bi-clock-history fs-5 text-secondary"></i>
+                    <h5 class="mb-0">İletişim Otomasyon Saati</h5>
+                </div>
+                <p class="text-muted small mb-3">
+                    Otomatik SMS/Push kampanyalarının her gün hangi saatte çalışacağını ayarlayın.
+                </p>
+                <div class="mt-auto">
+                    <DxButton Text="Aç"
+                              IconCssClass="bi bi-arrow-right"
+                              RenderStyle="ButtonRenderStyle.Secondary"
+                              RenderStyleMode="ButtonRenderStyleMode.Outline"
+                              Click="@(() => Nav.NavigateTo("/settings/communication-automation"))" />
+                </div>
+            </div>
+        </div>
+    </div>
+    }
+</div>
+
+@code {
+    private bool _canScoringSettings;
+    private bool _canRewardUnitSettings;
+    private bool _canPaymentSettings;
+    private bool _canReferralReward;
+    private bool _canAppContent;
+    private bool _canCommunicationAutomation;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var permissions = await PermissionService.GetCurrentPermissionsAsync();
+        _canScoringSettings = permissions.Contains(PermissionCodes.Subjects.ScoringSettings);
+        _canRewardUnitSettings = permissions.Contains(PermissionCodes.Subjects.RewardUnitSettings);
+        _canPaymentSettings = permissions.Contains(PermissionCodes.Payments.SettingsView);
+        _canReferralReward = permissions.Contains(PermissionCodes.Settings.ReferralRewardEdit);
+        _canAppContent = permissions.Contains(PermissionCodes.Settings.AppContentEdit);
+        _canCommunicationAutomation = permissions.Contains(PermissionCodes.Communications.View) ||
+                                      permissions.Contains(PermissionCodes.Communications.Edit);
+    }
+}

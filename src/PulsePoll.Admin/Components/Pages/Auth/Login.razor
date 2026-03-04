@@ -1,0 +1,140 @@
+@page "/login"
+@layout EmptyLayout
+@attribute [AllowAnonymous]
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@using System.ComponentModel.DataAnnotations
+
+<PageTitle>Giriş — PulsePool Admin</PageTitle>
+
+<div class="login-container">
+    <div class="login-left">
+        <div class="login-left-content">
+            <h1 class="login-brand">PulsePool</h1>
+            <p class="login-subtitle">Araştırma Yönetim Paneli</p>
+        </div>
+    </div>
+
+    <div class="login-right">
+        <div class="login-form-wrapper">
+            <h2 class="login-form-title">Hoş Geldiniz</h2>
+            <p class="login-form-subtitle">Devam etmek için giriş yapın</p>
+
+            @if (!string.IsNullOrEmpty(_errorMessage))
+            {
+                <div class="login-alert">
+                    <i class="bi bi-exclamation-circle"></i>
+                    @_errorMessage
+                </div>
+            }
+
+            <EditForm Model="_model" OnValidSubmit="HandleLogin">
+                <DataAnnotationsValidator />
+
+                <div class="login-field">
+                    <label class="login-label">E-posta</label>
+                    <div class="login-input-wrapper">
+                        <i class="bi bi-envelope"></i>
+                        <InputText class="login-input"
+                                   @bind-Value="_model.Email"
+                                   type="email"
+                                   placeholder="admin@pulsepoll.com"
+                                   autocomplete="email" />
+                    </div>
+                    <ValidationMessage class="login-validation" For="() => _model.Email" />
+                </div>
+
+                <div class="login-field">
+                    <label class="login-label">Şifre</label>
+                    <div class="login-input-wrapper">
+                        <i class="bi bi-key"></i>
+                        <InputText class="login-input"
+                                   @bind-Value="_model.Password"
+                                   type="password"
+                                   placeholder="••••••••"
+                                   autocomplete="current-password" />
+                    </div>
+                    <ValidationMessage class="login-validation" For="() => _model.Password" />
+                </div>
+
+                <div class="login-check">
+                    <InputCheckbox class="form-check-input" @bind-Value="_model.RememberMe" id="rememberMe" />
+                    <label class="form-check-label" for="rememberMe">Beni Hatırla</label>
+                </div>
+
+                <button type="submit" class="login-button" disabled="@_isLoading">
+                    @if (_isLoading)
+                    {
+                        <span class="login-spinner" role="status"></span>
+                        <span>Giriş yapılıyor...</span>
+                    }
+                    else
+                    {
+                        <span>Giriş Yap</span>
+                    }
+                </button>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
+    private readonly LoginModel _model = new();
+    private string? _errorMessage;
+    private bool _isLoading;
+
+    private async Task HandleLogin()
+    {
+        _isLoading = true;
+        _errorMessage = null;
+
+        var result = await JS.InvokeAsync<LoginResult>("adminAuth.login", new
+        {
+            email      = _model.Email,
+            password   = _model.Password,
+            rememberMe = _model.RememberMe,
+            returnUrl  = ReturnUrl ?? "/"
+        });
+
+        if (result.Success)
+        {
+            Navigation.NavigateTo(NormalizeRedirectUrl(result.RedirectUrl), forceLoad: true);
+        }
+        else
+        {
+            _errorMessage = result.ErrorMessage ?? "Giriş başarısız.";
+            _isLoading = false;
+        }
+    }
+
+    private class LoginModel
+    {
+        [Required(ErrorMessage = "E-posta zorunludur")]
+        [EmailAddress(ErrorMessage = "Geçerli bir e-posta adresi girin")]
+        public string Email { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Şifre zorunludur")]
+        public string Password { get; set; } = string.Empty;
+
+        public bool RememberMe { get; set; }
+    }
+
+    private static string NormalizeRedirectUrl(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+            return "/";
+
+        if (!path.StartsWith('/'))
+            return "/";
+
+        if (path.StartsWith("//", StringComparison.Ordinal))
+            return "/";
+
+        return path.Contains('\\') ? "/" : path;
+    }
+
+    private record LoginResult(bool Success, string? RedirectUrl, string? ErrorMessage);
+}

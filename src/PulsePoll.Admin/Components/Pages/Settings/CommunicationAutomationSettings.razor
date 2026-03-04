@@ -1,0 +1,118 @@
+@page "/settings/communication-automation"
+@attribute [HasPermission(PermissionCodes.Settings.View)]
+@using System.Security.Claims
+@using PulsePoll.Application.DTOs
+@inject ICommunicationAutomationConfigService CommunicationAutomationConfigService
+@inject IPermissionAuthorizationService PermissionService
+@inject IAppToastService Toast
+@inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthStateProvider
+
+<PageTitle>İletişim Otomasyon Ayarları — PulsePoll Admin</PageTitle>
+
+<div class="d-flex align-items-center justify-content-between gap-2 mb-3">
+    <div class="d-flex align-items-center gap-2">
+        <DxButton Text="← Ayarlar"
+                  RenderStyle="ButtonRenderStyle.Link"
+                  Click="@(() => Nav.NavigateTo("/settings"))" />
+        <span class="text-muted">/</span>
+        <h3 class="mb-0">İletişim Otomasyon Ayarları</h3>
+    </div>
+    <DxButton Text="@(_isSaving ? "Kaydediliyor..." : "Ayarları Kaydet")"
+              IconCssClass="bi bi-check-lg"
+              RenderStyle="ButtonRenderStyle.Primary"
+              RenderStyleMode="ButtonRenderStyleMode.Outline"
+              Enabled="@(!_isSaving && _canEdit)"
+              Click="SaveAsync" />
+</div>
+
+@if (!string.IsNullOrWhiteSpace(_error))
+{
+    <div class="alert alert-danger py-2">@_error</div>
+}
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <DxFormLayout>
+            <DxFormLayoutGroup Caption="Günlük Çalışma" ColSpanMd="12">
+                <DxFormLayoutItem ColSpanMd="4" Caption="Çalışma Saati (HH:mm)">
+                    <DxTextBox @bind-Text="_form.DailyRunTime"
+                               NullText="09:00"
+                               Enabled="@_canEdit" />
+                </DxFormLayoutItem>
+                <DxFormLayoutItem ColSpanMd="8" Caption="Zaman Dilimi">
+                    <DxTextBox @bind-Text="_form.TimeZoneId"
+                               ReadOnly="true" />
+                </DxFormLayoutItem>
+                <DxFormLayoutItem ColSpanMd="12">
+                    <small class="text-muted">
+                        Worker her gün belirtilen saatten sonra bir kez otomasyonu çalıştırır (doğum günü + özel gün kampanyaları).
+                    </small>
+                </DxFormLayoutItem>
+            </DxFormLayoutGroup>
+        </DxFormLayout>
+    </div>
+</div>
+
+@code {
+    private CommunicationAutomationSettingsForm _form = new();
+    private bool _isSaving;
+    private bool _canEdit;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var permissions = await PermissionService.GetCurrentPermissionsAsync();
+        _canEdit = permissions.Contains(PermissionCodes.Communications.Edit);
+
+        var dto = await CommunicationAutomationConfigService.GetAsync();
+        _form = CommunicationAutomationSettingsForm.FromDto(dto);
+    }
+
+    private async Task SaveAsync()
+    {
+        _error = null;
+        _isSaving = true;
+        try
+        {
+            var adminId = await GetAdminIdAsync();
+            await CommunicationAutomationConfigService.SaveAsync(_form.ToDto(), adminId);
+            Toast.Success("İletişim otomasyon ayarları kaydedildi.");
+        }
+        catch (Exception ex)
+        {
+            _error = ErrorHandler.HandleFormSave(ex, Toast);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private async Task<int> GetAdminIdAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var claim = authState.User.FindFirst(ClaimTypes.NameIdentifier);
+        return claim is not null && int.TryParse(claim.Value, out var adminUserId)
+            ? adminUserId
+            : 0;
+    }
+
+    private sealed class CommunicationAutomationSettingsForm
+    {
+        public string DailyRunTime { get; set; } = "09:00";
+        public string TimeZoneId { get; set; } = "Europe/Istanbul";
+
+        public CommunicationAutomationConfigDto ToDto()
+            => new(
+                DailyRunTime,
+                TimeZoneId);
+
+        public static CommunicationAutomationSettingsForm FromDto(CommunicationAutomationConfigDto dto)
+            => new()
+            {
+                DailyRunTime = dto.DailyRunTime,
+                TimeZoneId = dto.TimeZoneId
+            };
+    }
+}

@@ -1,0 +1,106 @@
+services:
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - api
+      - admin
+
+  api:
+    image: pulsepoll/api:latest
+    build:
+      context: .
+      dockerfile: PulsePoll.Api/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__Postgres=Host=postgres;Port=5432;Database=pulsepoll;Username=postgres;Password=${POSTGRES_PASSWORD}
+      - ConnectionStrings__Redis=redis:6379
+      - Jwt__Secret=${JWT_SECRET}
+      - RabbitMQ__Host=rabbitmq
+      - MinIO__Endpoint=minio:9000
+      - MinIO__AccessKey=${MINIO_ACCESS_KEY}
+      - MinIO__SecretKey=${MINIO_SECRET_KEY}
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+      - minio
+
+  admin:
+    image: pulsepoll/admin:latest
+    build:
+      context: .
+      dockerfile: PulsePoll.Admin/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__Postgres=Host=postgres;Port=5432;Database=pulsepoll;Username=postgres;Password=${POSTGRES_PASSWORD}
+      - ConnectionStrings__Redis=redis:6379
+    depends_on:
+      - postgres
+      - redis
+
+  worker:
+    image: pulsepoll/worker:latest
+    build:
+      context: .
+      dockerfile: PulsePoll.Worker/Dockerfile
+    environment:
+      - DOTNET_ENVIRONMENT=Production
+      - ConnectionStrings__Postgres=Host=postgres;Port=5432;Database=pulsepoll;Username=postgres;Password=${POSTGRES_PASSWORD}
+      - ConnectionStrings__Redis=redis:6379
+      - RabbitMQ__Host=rabbitmq
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: pulsepoll
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+  minio:
+    image: minio/minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
+    volumes:
+      - minio_data:/data
+
+  seq:
+    image: datalust/seq
+    environment:
+      ACCEPT_EULA: Y
+    volumes:
+      - seq_data:/data
+
+volumes:
+  postgres_data:
+  redis_data:
+  rabbitmq_data:
+  minio_data:
+  seq_data:

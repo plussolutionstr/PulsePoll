@@ -1,0 +1,587 @@
+@page "/stories"
+@attribute [HasPermission(PermissionCodes.Stories.View)]
+@using PulsePoll.Application.Attributes
+@using PulsePoll.Application.Constants
+@inject IStoryService StoryService
+@inject IAppToastService Toast
+@inject IPermissionAuthorizationService PermissionService
+
+<PageTitle>Story Yönetimi - PulsePoll Admin</PageTitle>
+
+<div class="d-flex align-items-center justify-content-between mb-2">
+    <h3 class="mb-0">Story Yönetimi</h3>
+    <div class="d-flex gap-2">
+        <DxButton Text="Excel"
+                  IconCssClass="bi bi-file-earmark-excel"
+                  RenderStyle="ButtonRenderStyle.Secondary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="ExportToExcelAsync"/>
+        @if (_canCreate)
+        {
+            <DxButton Text="Yeni Story"
+                      IconCssClass="bi bi-plus-lg"
+                      RenderStyle="ButtonRenderStyle.Primary"
+                      RenderStyleMode="ButtonRenderStyleMode.Outline"
+                      Click="OnNewClick"/>
+        }
+    </div>
+</div>
+<div class="text-muted small mb-2">Sıralamayı değiştirmek için satırları sürükleyip bırakın.</div>
+
+<DxLoadingPanel @bind-Visible="_isLoading"
+                IsContentBlocked="true"
+                ApplyBackgroundShading="true"
+                IndicatorAreaVisible="false"
+                Text="Yükleniyor...">
+    <DxGrid @ref="_grid"
+            Data="@_stories"
+            ShowFilterRow="true"
+            PageSize="25"
+            ColumnResizeMode="GridColumnResizeMode.ColumnsContainer"
+            AllowDragRows="@_canReorder"
+            AllowedDropTarget="GridAllowedDropTarget.Internal"
+            ItemsDropped="OnItemsDropped">
+        <Columns>
+            <DxGridDataColumn Caption="Görsel" Width="110px">
+                <CellDisplayTemplate>
+                    @{
+                        var item = (StoryDto)context.DataItem;
+                    }
+                    @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
+                    {
+                        <img src="@item.ImageUrl" style="width:80px; height:45px; object-fit:cover; border-radius:4px;" alt="@item.Title"/>
+                    }
+                </CellDisplayTemplate>
+            </DxGridDataColumn>
+            <DxGridDataColumn FieldName="Title" Caption="Başlık" MinWidth="180"/>
+            <DxGridDataColumn FieldName="BrandName" Caption="Marka" Width="140px"/>
+            <DxGridDataColumn Caption="Aktif" Width="90px">
+                <CellDisplayTemplate>
+                    @{
+                        var item = (StoryDto)context.DataItem;
+                    }
+                    <span class="badge @(item.IsActive ? "bg-success" : "bg-secondary")">@(item.IsActive ? "Evet" : "Hayır")</span>
+                </CellDisplayTemplate>
+            </DxGridDataColumn>
+            <DxGridDataColumn FieldName="StartsAt" Caption="Başlangıç" DisplayFormat="dd.MM.yyyy" Width="120px"/>
+            <DxGridDataColumn FieldName="EndsAt" Caption="Bitiş" DisplayFormat="dd.MM.yyyy" Width="120px"/>
+            <DxGridDataColumn Caption="Link" MinWidth="180">
+                <CellDisplayTemplate>
+                    @{
+                        var item = (StoryDto)context.DataItem;
+                    }
+                    @if (!string.IsNullOrWhiteSpace(item.LinkUrl))
+                    {
+                        <a href="@item.LinkUrl" target="_blank" rel="noopener noreferrer" class="text-truncate d-inline-block" style="max-width:250px;">
+                            @item.LinkUrl
+                        </a>
+                    }
+                </CellDisplayTemplate>
+            </DxGridDataColumn>
+            <DxGridCommandColumn NewButtonVisible="false" EditButtonVisible="false" DeleteButtonVisible="false"
+                                 Width="50px" Caption="" TextAlignment="GridTextAlignment.Center">
+                <CellDisplayTemplate>
+                    @{
+                        var item = (StoryDto)context.DataItem;
+                    }
+                    @if (_canEdit || _canDelete)
+                    {
+                        <DxButton IconCssClass="bi bi-three-dots-vertical"
+                                  RenderStyle="ButtonRenderStyle.Link"
+                                  Click="@(async e => await ShowMenuAsync(e, item))"
+                                  title="İşlemler"/>
+                    }
+                </CellDisplayTemplate>
+            </DxGridCommandColumn>
+        </Columns>
+    </DxGrid>
+</DxLoadingPanel>
+
+<DxContextMenu @ref="_contextMenu" ItemClick="OnContextMenuItemClick">
+    <Items>
+        @if (_canEdit)
+        {
+            <DxContextMenuItem Text="Düzenle" Name="edit" IconCssClass="bi bi-pencil"/>
+        }
+        @if (_canDelete)
+        {
+            <DxContextMenuItem Text="Sil" Name="delete" IconCssClass="bi bi-trash" CssClass="text-danger" BeginGroup="@_canEdit"/>
+        }
+    </Items>
+</DxContextMenu>
+
+<DxPopup @bind-Visible="_popupVisible"
+         HeaderText="@(_isNew ? "Yeni Story" : "Story Düzenle")"
+         Width="760px"
+         CloseOnOutsideClick="false"
+         ShowFooter="true">
+    <BodyContentTemplate Context="popupCtx">
+        @if (!string.IsNullOrWhiteSpace(_formError))
+        {
+            <div class="alert alert-danger py-2 mb-3">@_formError</div>
+        }
+
+        <DxFormLayout>
+            <DxFormLayoutItem ColSpanMd="12">
+                <label class="form-label">Görsel *</label>
+                <div class="d-flex align-items-center gap-3">
+                    @if (!string.IsNullOrWhiteSpace(_form.ImageUrl))
+                    {
+                        <img src="@_form.ImageUrl"
+                             style="max-height:70px; max-width:180px; object-fit:cover; border:1px solid #dee2e6; border-radius:4px;"
+                             alt="Story görseli"/>
+                    }
+                    <DxButton Text="Medya Kütüphanesinden Seç"
+                              IconCssClass="bi bi-images"
+                              RenderStyle="ButtonRenderStyle.Secondary"
+                              RenderStyleMode="ButtonRenderStyleMode.Outline"
+                              SizeMode="SizeMode.Small"
+                              Click="OpenMediaPicker"/>
+                    @if (_form.MediaAssetId.HasValue)
+                    {
+                        <DxButton Text="Temizle"
+                                  IconCssClass="bi bi-x-circle"
+                                  RenderStyle="ButtonRenderStyle.Danger"
+                                  RenderStyleMode="ButtonRenderStyleMode.Text"
+                                  SizeMode="SizeMode.Small"
+                                  Click="ClearMedia"/>
+                    }
+                </div>
+            </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanMd="12">
+                <label class="form-label">Başlık *</label>
+                <DxTextBox @bind-Text="_form.Title"/>
+            </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanMd="6">
+                <label class="form-label">Marka</label>
+                <DxTextBox @bind-Text="_form.BrandName"/>
+            </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanMd="6">
+                <label class="form-label">Başlangıç *</label>
+                <DxDateEdit @bind-Date="_form.StartsAt"/>
+            </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanMd="6">
+                <label class="form-label">Bitiş *</label>
+                <DxDateEdit @bind-Date="_form.EndsAt"/>
+            </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanMd="12">
+                <label class="form-label">Link URL</label>
+                <DxTextBox @bind-Text="_form.LinkUrl"/>
+            </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanMd="12">
+                <div class="form-check mt-2">
+                    <input id="story-is-active" class="form-check-input" type="checkbox" @bind="_form.IsActive"/>
+                    <label class="form-check-label" for="story-is-active">Aktif</label>
+                </div>
+            </DxFormLayoutItem>
+        </DxFormLayout>
+    </BodyContentTemplate>
+    <FooterContentTemplate>
+        <DxButton Text="@(_isSaving ? "Kaydediliyor..." : "Kaydet")"
+                  IconCssClass="@(_isSaving ? "spinner-border spinner-border-sm" : "bi bi-check-lg")"
+                  RenderStyle="ButtonRenderStyle.Primary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="OnSave"
+                  Enabled="!_isSaving"/>
+        <DxButton Text="İptal"
+                  RenderStyle="ButtonRenderStyle.Secondary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="() => _popupVisible = false"
+                  Enabled="!_isSaving"/>
+    </FooterContentTemplate>
+</DxPopup>
+
+<MediaPickerPopup @bind-Visible="_mediaPickerVisible"
+                  CurrentMediaId="@_form.MediaAssetId"
+                  OnSelected="OnMediaSelected"/>
+
+<DxPopup @bind-Visible="_deleteConfirmVisible"
+         HeaderText="Silme Onayı"
+         Width="420px"
+         CloseOnOutsideClick="false"
+         ShowFooter="true">
+    <BodyContentTemplate Context="popupCtx">
+        <div class="d-flex align-items-start gap-3 p-2">
+            <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size:2.5rem; flex-shrink:0;"></i>
+            <div>
+                <p class="mb-1 fw-semibold">Bu story kaydını silmek istediğinize emin misiniz?</p>
+                <p class="mb-0 text-muted">@_itemToDelete?.Title</p>
+            </div>
+        </div>
+    </BodyContentTemplate>
+    <FooterContentTemplate>
+        <DxButton Text="Sil"
+                  IconCssClass="bi bi-trash"
+                  RenderStyle="ButtonRenderStyle.Danger"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="ConfirmDelete"
+                  Enabled="!_isDeleting"/>
+        <DxButton Text="İptal"
+                  RenderStyle="ButtonRenderStyle.Secondary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="() => _deleteConfirmVisible = false"
+                  Enabled="!_isDeleting"/>
+    </FooterContentTemplate>
+</DxPopup>
+
+@code {
+    private DxGrid? _grid;
+    private DxContextMenu? _contextMenu;
+    private List<StoryDto> _stories = [];
+
+    private bool _isLoading;
+    private bool _isNew;
+    private bool _popupVisible;
+    private bool _isSaving;
+    private bool _deleteConfirmVisible;
+    private bool _isDeleting;
+    private bool _mediaPickerVisible;
+    private bool _isReordering;
+    private bool _canCreate;
+    private bool _canEdit;
+    private bool _canDelete;
+    private bool _canReorder;
+    private string? _formError;
+    private StoryDto? _itemToDelete;
+    private StoryDto? _selectedItem;
+    private FormModel _form = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPermissionsAsync();
+        await LoadDataAsync();
+    }
+
+    private async Task LoadPermissionsAsync()
+    {
+        var permissions = await PermissionService.GetCurrentPermissionsAsync();
+        _canCreate = permissions.Contains(PermissionCodes.Stories.Create);
+        _canEdit = permissions.Contains(PermissionCodes.Stories.Edit);
+        _canDelete = permissions.Contains(PermissionCodes.Stories.Delete);
+        _canReorder = permissions.Contains(PermissionCodes.Stories.Reorder);
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            _stories = (await StoryService.GetAllAsync())
+                .OrderBy(s => s.Order)
+                .ThenByDescending(s => s.Id)
+                .ToList();
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task ExportToExcelAsync()
+    {
+        if (_grid is not null)
+            await _grid.ExportToXlsxAsync("story-yonetimi");
+    }
+
+    private void OnNewClick()
+    {
+        if (!_canCreate)
+        {
+            Toast.Error("Story oluşturma yetkiniz yok.");
+            return;
+        }
+
+        _isNew = true;
+        _formError = null;
+        _form = new FormModel
+        {
+            StartsAt = DateTime.Today,
+            EndsAt = DateTime.Today.AddDays(7),
+            IsActive = true,
+            Order = (_stories.Count == 0 ? 0 : _stories.Max(s => s.Order)) + 1
+        };
+        _popupVisible = true;
+    }
+
+    private void OpenEditPopup(StoryDto item)
+    {
+        if (!_canEdit)
+        {
+            Toast.Error("Story düzenleme yetkiniz yok.");
+            return;
+        }
+
+        _isNew = false;
+        _formError = null;
+        _form = new FormModel
+        {
+            Id = item.Id,
+            Title = item.Title,
+            BrandName = item.BrandName,
+            LinkUrl = item.LinkUrl,
+            StartsAt = item.StartsAt,
+            EndsAt = item.EndsAt,
+            Order = item.Order,
+            IsActive = item.IsActive,
+            MediaAssetId = item.MediaAssetId,
+            ImageUrl = item.ImageUrl
+        };
+        _popupVisible = true;
+    }
+
+    private void OpenMediaPicker()
+        => _mediaPickerVisible = true;
+
+    private void ClearMedia()
+    {
+        _form.MediaAssetId = null;
+        _form.ImageUrl = null;
+    }
+
+    private Task OnMediaSelected(MediaAssetDto? asset)
+    {
+        _form.MediaAssetId = asset?.Id;
+        _form.ImageUrl = asset?.Url;
+        return Task.CompletedTask;
+    }
+
+    private async Task OnSave()
+    {
+        if (_isNew && !_canCreate)
+        {
+            Toast.Error("Story oluşturma yetkiniz yok.");
+            return;
+        }
+
+        if (!_isNew && !_canEdit)
+        {
+            Toast.Error("Story düzenleme yetkiniz yok.");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_form.Title))
+        {
+            _formError = "Başlık zorunludur.";
+            return;
+        }
+
+        if (!_form.MediaAssetId.HasValue)
+        {
+            _formError = "Görsel seçimi zorunludur.";
+            return;
+        }
+
+        if (_form.StartsAt > _form.EndsAt)
+        {
+            _formError = "Bitiş tarihi başlangıç tarihinden önce olamaz.";
+            return;
+        }
+
+        _isSaving = true;
+        _formError = null;
+        try
+        {
+            var order = _isNew ? ((_stories.Count == 0 ? 0 : _stories.Max(s => s.Order)) + 1) : _form.Order;
+            var dto = new CreateStoryDto(
+                _form.Title.Trim(),
+                NullIfWhiteSpace(_form.BrandName),
+                NullIfWhiteSpace(_form.LinkUrl),
+                _form.StartsAt,
+                _form.EndsAt,
+                order,
+                _form.IsActive,
+                _form.MediaAssetId,
+                null,
+                null);
+
+            if (_isNew)
+            {
+                await StoryService.CreateAsync(dto);
+                Toast.Success("Story kaydedildi.");
+            }
+            else
+            {
+                await StoryService.UpdateAsync(_form.Id, dto);
+                Toast.Success("Story güncellendi.");
+            }
+
+            _popupVisible = false;
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleOperation(ex, Toast);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private async Task OnItemsDropped(GridItemsDroppedEventArgs e)
+    {
+        if (!_canReorder)
+        {
+            Toast.Error("Story sıralama yetkiniz yok.");
+            return;
+        }
+
+        if (_isReordering || _stories.Count == 0 || e.DroppedItems.Count == 0)
+            return;
+
+        var dropped = (StoryDto)e.DroppedItems[0];
+        var target = (StoryDto?)e.TargetItem;
+
+        var oldIndex = _stories.FindIndex(s => s.Id == dropped.Id);
+        if (oldIndex < 0)
+            return;
+
+        int newIndex;
+        if (target is null)
+        {
+            newIndex = e.DropPosition == GridItemDropPosition.Before ? 0 : _stories.Count - 1;
+        }
+        else
+        {
+            newIndex = _stories.FindIndex(s => s.Id == target.Id);
+            if (newIndex < 0)
+                return;
+            if (e.DropPosition == GridItemDropPosition.After)
+                newIndex++;
+        }
+
+        if (newIndex > _stories.Count)
+            newIndex = _stories.Count;
+
+        if (oldIndex == newIndex)
+            return;
+
+        var movedItem = _stories[oldIndex];
+        _stories.RemoveAt(oldIndex);
+        if (newIndex > oldIndex)
+            newIndex--;
+        _stories.Insert(newIndex, movedItem);
+
+        await PersistOrderAsync();
+    }
+
+    private async Task PersistOrderAsync()
+    {
+        _isReordering = true;
+        try
+        {
+            var changedOrders = new List<OrderUpdateDto>();
+            for (var i = 0; i < _stories.Count; i++)
+            {
+                var expectedOrder = i + 1;
+                var current = _stories[i];
+                if (current.Order == expectedOrder)
+                    continue;
+
+                var updated = current with { Order = expectedOrder };
+                _stories[i] = updated;
+                changedOrders.Add(new OrderUpdateDto(updated.Id, expectedOrder));
+            }
+
+            if (changedOrders.Count > 0)
+            {
+                await StoryService.ReorderAsync(changedOrders);
+                Toast.Success("Story sırası güncellendi.");
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleOperation(ex, Toast);
+            await LoadDataAsync();
+        }
+        finally
+        {
+            _isReordering = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void ShowDeleteConfirm(StoryDto item)
+    {
+        if (!_canDelete)
+        {
+            Toast.Error("Story silme yetkiniz yok.");
+            return;
+        }
+
+        _itemToDelete = item;
+        _deleteConfirmVisible = true;
+    }
+
+    private async Task ShowMenuAsync(MouseEventArgs e, StoryDto item)
+    {
+        _selectedItem = item;
+        if (_contextMenu is not null)
+            await _contextMenu.ShowAsync(e);
+    }
+
+    private Task OnContextMenuItemClick(ContextMenuItemClickEventArgs e)
+    {
+        if (_selectedItem is null)
+            return Task.CompletedTask;
+
+        switch (e.ItemInfo.Name)
+        {
+            case "edit" when _canEdit:
+                OpenEditPopup(_selectedItem);
+                break;
+            case "delete" when _canDelete:
+                ShowDeleteConfirm(_selectedItem);
+                break;
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private async Task ConfirmDelete()
+    {
+        if (!_canDelete)
+        {
+            Toast.Error("Story silme yetkiniz yok.");
+            return;
+        }
+
+        if (_itemToDelete is null)
+            return;
+
+        _isDeleting = true;
+        try
+        {
+            await StoryService.DeleteAsync(_itemToDelete.Id);
+            Toast.Success("Story silindi.");
+            _deleteConfirmVisible = false;
+            _itemToDelete = null;
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleOperation(ex, Toast);
+        }
+        finally
+        {
+            _isDeleting = false;
+        }
+    }
+
+    private static string? NullIfWhiteSpace(string? value)
+        => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    private class FormModel
+    {
+        public int Id { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string? BrandName { get; set; }
+        public string? LinkUrl { get; set; }
+        public DateTime StartsAt { get; set; }
+        public DateTime EndsAt { get; set; }
+        public int Order { get; set; }
+        public bool IsActive { get; set; } = true;
+        public int? MediaAssetId { get; set; }
+        public string? ImageUrl { get; set; }
+    }
+}

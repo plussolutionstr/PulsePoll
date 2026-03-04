@@ -1,0 +1,78 @@
+@import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
+@import url('./icons.css');
+
+:root {
+    --pp-dark: #1A1535;
+    --pp-accent: #7C5CFC;
+    --pp-accent-dark: #5B3FD9;
+    --pp-accent-rgb: 124, 92, 252;
+    --pp-surface: #F7F5FF;
+    --pp-surface-soft: #FFFFFF;
+
+    --bs-primary: var(--pp-accent);
+    --bs-primary-rgb: var(--pp-accent-rgb);
+    --bs-link-color: var(--pp-accent-dark);
+    --bs-link-hover-color: #4d35be;
+}
+
+html, body {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
+body {
+    background: var(--pp-surface-soft);
+    color: var(--pp-dark);
+}
+
+.valid.modified:not([type=checkbox]) {
+    outline: 1px solid #26b050;
+}
+
+.invalid {
+    outline: 1px solid red;
+}
+
+.validation-message {
+    color: red;
+}
+
+.button-link {
+    text-decoration: unset;
+}
+
+.title {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1rem 0;
+}
+
+.title.title-secondary {
+    padding: 0.313rem 0 0;
+    color: var(--bs-secondary-color);
+}
+
+.title-header-text {
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: 0;
+    line-height: 2.5rem;
+}
+
+.title-content-text {
+    font-size: 1rem;
+    font-weight: 400;
+    letter-spacing: 0;
+    line-height: 1.375rem;
+}
+
+.main-content {
+    align-items: center;
+    display: flex;
+    height: 100%;
+    justify-content: center;
+    width: 100%;
+}

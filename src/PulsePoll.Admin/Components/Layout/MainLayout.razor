@@ -1,0 +1,304 @@
+﻿@inherits DrawerStateLayoutComponentBase
+@using System.ComponentModel.DataAnnotations
+@inject NavigationManager NavigationManager
+@inject IAccessControlService AccessControlService
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IAppToastService Toast
+
+<div class="page">
+    <Drawer CssClass="navigation-drawer" PanelWidth="240px">
+        <HeaderTemplate>
+            <div class="navigation-drawer-header">
+                <NavLink href="@AddDrawerStateToUrl("/")" class="brand-link">
+                    <span class="brand-text">PulsePool</span>
+                </NavLink>
+                <NavLink aria-label="Close menu" href="@AddDrawerStateToUrlToggled(LocalPath)">
+                    <DxButton aria-label="Close menu" RenderStyle="ButtonRenderStyle.Light" RenderStyleMode="ButtonRenderStyleMode.Text" CssClass="btn-icon-only" IconCssClass="@(ToggledDrawer ? "icon icon-close" : "icon icon-menu")"></DxButton>
+                </NavLink>
+            </div>
+        </HeaderTemplate>
+        <BodyTemplate>
+            <div class="w-100">
+                <NavMenu></NavMenu>
+            </div>
+        </BodyTemplate>
+        <TargetContent>
+            <div class="drawer-content">
+                <div class="nav-buttons-container">
+                    <div class="nav-actions-left">
+                        <NavLink aria-label="Open menu" href="@AddDrawerStateToUrlToggled(LocalPath)" class="menu-button">
+                            <DxButton aria-label="Open menu" RenderStyle="ButtonRenderStyle.Secondary" RenderStyleMode="ButtonRenderStyleMode.Text" CssClass="btn-icon-only" IconCssClass="icon icon-menu"></DxButton>
+                        </NavLink>
+                        @if (LocalPath != "/")
+                        {
+                            <NavLink href="@AddDrawerStateToUrl("/")" class="button-link">
+                                <DxButton Text="Back to Home" RenderStyle="ButtonRenderStyle.Secondary" RenderStyleMode="ButtonRenderStyleMode.Text" CssClass="back-button" IconCssClass="icon icon-back"></DxButton>
+                            </NavLink>
+                        }
+                    </div>
+                    <AuthorizeView>
+                        <Authorized Context="auth">
+                            <div class="user-menu-wrap">
+                                <button class="user-menu-trigger"
+                                        type="button"
+                                        @onclick="ToggleUserMenu"
+                                        @onclick:stopPropagation="true">
+                                    <i class="bi bi-person-circle"></i>
+                                    <span>@GetUserMenuCaption(auth.User)</span>
+                                    <i class="bi bi-chevron-down user-menu-chevron"></i>
+                                </button>
+                                @if (_userMenuOpen)
+                                {
+                                    <div class="user-menu-backdrop" @onclick="CloseUserMenu"></div>
+                                    <div class="user-menu-dropdown" @onclick:stopPropagation="true">
+                                        <button class="user-menu-item"
+                                                type="button"
+                                                @onclick="OpenProfile">
+                                            <i class="bi bi-person"></i>
+                                            <span>Profilim</span>
+                                        </button>
+                                        <button class="user-menu-item user-menu-item-danger"
+                                                type="button"
+                                                @onclick="Logout">
+                                            <i class="bi bi-box-arrow-right"></i>
+                                            <span>Çıkış Yap</span>
+                                        </button>
+                                    </div>
+                                }
+                            </div>
+                        </Authorized>
+                    </AuthorizeView>
+                </div>
+                <div class="page-content-container">
+                    @Body
+                </div>
+            </div>
+        </TargetContent>
+    </Drawer>
+</div>
+
+<DxToastProvider HorizontalAlignment="HorizontalAlignment.Right"
+                 VerticalAlignment="VerticalEdge.Bottom"
+                 DisplayTime="TimeSpan.FromSeconds(5)"
+                 ThemeMode="ToastThemeMode.Saturated"
+                 AnimationType="ToastAnimationType.Slide" />
+
+<DxPopup @bind-Visible="_profilePopupVisible"
+         HeaderText="Profilim"
+         Width="780px"
+         CloseOnOutsideClick="false"
+         ShowFooter="true">
+    <BodyContentTemplate Context="profilePopupCtx">
+        @if (_profileLoading)
+        {
+            <div class="alert alert-info py-2 mb-0">Profil bilgileri yükleniyor...</div>
+        }
+        else
+        {
+            @if (!string.IsNullOrWhiteSpace(_profileError))
+            {
+                <div class="alert alert-danger py-2 mb-3">@_profileError</div>
+            }
+
+            <EditForm Model="_profileForm" OnValidSubmit="SaveProfileAsync" Context="profileFormCtx">
+                <DataAnnotationsValidator />
+                <DxFormLayout>
+                    <DxFormLayoutItem Caption="Ad" ColSpanMd="6">
+                        <DxTextBox @bind-Text="_profileForm.FirstName" />
+                    </DxFormLayoutItem>
+                    <DxFormLayoutItem Caption="Soyad" ColSpanMd="6">
+                        <DxTextBox @bind-Text="_profileForm.LastName" />
+                    </DxFormLayoutItem>
+                    <DxFormLayoutItem Caption="E-posta" ColSpanMd="12">
+                        <DxTextBox @bind-Text="_profileForm.Email" />
+                    </DxFormLayoutItem>
+                    <DxFormLayoutItem Caption="Yeni Şifre" ColSpanMd="6">
+                        <DxTextBox @bind-Text="_profileForm.NewPassword"
+                                   Password="true"
+                                   NullText="Değiştirmek istemiyorsanız boş bırakın" />
+                    </DxFormLayoutItem>
+                    <DxFormLayoutItem Caption="Yeni Şifre (Tekrar)" ColSpanMd="6">
+                        <DxTextBox @bind-Text="_profileForm.ConfirmPassword"
+                                   Password="true"
+                                   NullText="Yeni şifreyi tekrar girin" />
+                    </DxFormLayoutItem>
+                </DxFormLayout>
+            </EditForm>
+        }
+    </BodyContentTemplate>
+    <FooterContentTemplate>
+        <DxButton Text="@(_isSavingProfile ? "Kaydediliyor..." : "Kaydet")"
+                  IconCssClass="@(_isSavingProfile ? "spinner-border spinner-border-sm" : "bi bi-check-lg")"
+                  RenderStyle="ButtonRenderStyle.Primary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Enabled="@(!_isSavingProfile && !_profileLoading)"
+                  Click="SaveProfileAsync" />
+        <DxButton Text="İptal"
+                  RenderStyle="ButtonRenderStyle.Secondary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Enabled="@(!_isSavingProfile)"
+                  Click="CloseProfilePopup" />
+    </FooterContentTemplate>
+</DxPopup>
+
+@code {
+    string LocalPath => new Uri(NavigationManager.Uri).LocalPath;
+
+    private bool _userMenuOpen;
+    private bool _profilePopupVisible;
+    private bool _profileLoading;
+    private bool _isSavingProfile;
+    private string? _profileError;
+    private int _profileAdminUserId;
+    private List<int> _profileRoleIds = [];
+    private bool _profileIsActive = true;
+    private readonly ProfileForm _profileForm = new();
+
+    private static string GetUserMenuCaption(System.Security.Claims.ClaimsPrincipal user)
+    {
+        var displayName = user.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value;
+        if (!string.IsNullOrWhiteSpace(displayName))
+            return displayName;
+
+        var email = user.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
+        return string.IsNullOrWhiteSpace(email) ? "Kullanıcı" : email;
+    }
+
+    private void ToggleUserMenu()
+    {
+        _userMenuOpen = !_userMenuOpen;
+    }
+
+    private void CloseUserMenu()
+    {
+        _userMenuOpen = false;
+    }
+
+    private void OpenProfile()
+    {
+        _userMenuOpen = false;
+        _ = OpenProfilePopupAsync();
+    }
+
+    private void Logout()
+    {
+        _userMenuOpen = false;
+        NavigationManager.NavigateTo("/logout", forceLoad: true);
+    }
+
+    private async Task OpenProfilePopupAsync()
+    {
+        _profilePopupVisible = true;
+        _profileLoading = true;
+        _profileError = null;
+        _profileForm.NewPassword = string.Empty;
+        _profileForm.ConfirmPassword = string.Empty;
+        StateHasChanged();
+
+        try
+        {
+            _profileAdminUserId = await GetCurrentAdminIdAsync();
+            if (_profileAdminUserId <= 0)
+            {
+                _profileError = "Kullanıcı bilgisi okunamadı.";
+                return;
+            }
+
+            var current = await AccessControlService.GetAdminUserAsync(_profileAdminUserId);
+            if (current is null)
+            {
+                _profileError = "Profil kaydı bulunamadı.";
+                return;
+            }
+
+            _profileForm.FirstName = current.FirstName;
+            _profileForm.LastName = current.LastName;
+            _profileForm.Email = current.Email;
+            _profileRoleIds = [.. current.RoleIds];
+            _profileIsActive = current.IsActive;
+        }
+        catch (Exception ex)
+        {
+            _profileError = ErrorHandler.HandleFormSave(ex, Toast);
+        }
+        finally
+        {
+            _profileLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task SaveProfileAsync()
+    {
+        if (_profileLoading || _isSavingProfile || _profileAdminUserId <= 0)
+            return;
+
+        if (!string.IsNullOrWhiteSpace(_profileForm.NewPassword) &&
+            !string.Equals(_profileForm.NewPassword, _profileForm.ConfirmPassword, StringComparison.Ordinal))
+        {
+            _profileError = "Yeni şifre ve tekrar alanı aynı olmalıdır.";
+            return;
+        }
+
+        _isSavingProfile = true;
+        _profileError = null;
+        try
+        {
+            var dto = new SaveAdminUserDto(
+                _profileAdminUserId,
+                _profileForm.FirstName,
+                _profileForm.LastName,
+                _profileForm.Email,
+                string.IsNullOrWhiteSpace(_profileForm.NewPassword) ? null : _profileForm.NewPassword,
+                _profileIsActive,
+                _profileRoleIds);
+
+            await AccessControlService.SaveAdminUserAsync(dto, _profileAdminUserId);
+            _profileForm.NewPassword = string.Empty;
+            _profileForm.ConfirmPassword = string.Empty;
+            Toast.Success("Profil bilgileri güncellendi.");
+            _profilePopupVisible = false;
+        }
+        catch (Exception ex)
+        {
+            _profileError = ErrorHandler.HandleFormSave(ex, Toast);
+        }
+        finally
+        {
+            _isSavingProfile = false;
+        }
+    }
+
+    private void CloseProfilePopup()
+    {
+        _profilePopupVisible = false;
+        _profileError = null;
+    }
+
+    private async Task<int> GetCurrentAdminIdAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        if (user.Identity?.IsAuthenticated != true)
+            return 0;
+
+        var claim = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+        return claim is not null && int.TryParse(claim.Value, out var id) ? id : 0;
+    }
+
+    private sealed class ProfileForm
+    {
+        [Required(ErrorMessage = "Ad zorunludur.")]
+        public string FirstName { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Soyad zorunludur.")]
+        public string LastName { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "E-posta zorunludur.")]
+        [EmailAddress(ErrorMessage = "Geçerli bir e-posta adresi girin.")]
+        public string Email { get; set; } = string.Empty;
+
+        public string NewPassword { get; set; } = string.Empty;
+        public string ConfirmPassword { get; set; } = string.Empty;
+    }
+}

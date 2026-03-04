@@ -1,0 +1,143 @@
+using Microsoft.EntityFrameworkCore;
+using PulsePoll.Application.Interfaces;
+using PulsePoll.Domain.Entities;
+
+namespace PulsePoll.Infrastructure.Persistence.Repositories;
+
+public class ProjectRepository(AppDbContext db) : IProjectRepository
+{
+    public Task<Project?> GetByIdAsync(int id)
+        => db.Projects
+             .Include(p => p.Customer)
+             .Include(p => p.CoverMedia)
+             .FirstOrDefaultAsync(p => p.Id == id && p.DeletedAt == null);
+
+    public Task<List<Project>> GetAllAsync()
+        => db.Projects
+             .Include(p => p.Customer)
+             .Include(p => p.CoverMedia)
+             .Where(p => p.DeletedAt == null)
+             .OrderByDescending(p => p.CreatedAt)
+             .ToListAsync();
+
+    public Task<List<Project>> GetAssignedToSubjectAsync(int subjectId)
+        => db.ProjectAssignments
+             .Where(a => a.SubjectId == subjectId)
+             .Include(a => a.Project).ThenInclude(p => p.Customer)
+             .Include(a => a.Project).ThenInclude(p => p.CoverMedia)
+             .Include(a => a.Project).ThenInclude(p => p.Assignments)
+             .Select(a => a.Project)
+             .Where(p => p.DeletedAt == null)
+             .ToListAsync();
+
+    public Task<bool> ExistsByCodeAsync(string code)
+        => db.Projects.AnyAsync(p => p.Code == code && p.DeletedAt == null);
+
+    public async Task AddAsync(Project project)
+    {
+        db.Projects.Add(project);
+        await db.SaveChangesAsync();
+    }
+
+    public async Task UpdateAsync(Project project)
+    {
+        db.Projects.Update(project);
+        await db.SaveChangesAsync();
+    }
+
+    public async Task DeleteAsync(Project project)
+    {
+        db.Projects.Update(project);
+        await db.SaveChangesAsync();
+    }
+
+    public Task<ProjectAssignment?> GetAssignmentAsync(int projectId, int subjectId)
+        => db.ProjectAssignments
+             .FirstOrDefaultAsync(a => a.ProjectId == projectId && a.SubjectId == subjectId);
+
+    public async Task AddAssignmentsAsync(IEnumerable<ProjectAssignment> assignments)
+    {
+        db.ProjectAssignments.AddRange(assignments);
+        await db.SaveChangesAsync();
+    }
+
+    public async Task UpdateAssignmentAsync(ProjectAssignment assignment)
+    {
+        db.ProjectAssignments.Update(assignment);
+        await db.SaveChangesAsync();
+    }
+
+    public Task<List<ProjectAssignment>> GetAssignmentsByProjectAsync(int projectId)
+        => db.ProjectAssignments
+             .Include(a => a.Subject).ThenInclude(s => s.City)
+             .Include(a => a.Subject).ThenInclude(s => s.SocioeconomicStatus)
+             .Where(a => a.ProjectId == projectId)
+             .OrderByDescending(a => a.AssignedAt)
+             .ToListAsync();
+
+    public Task<List<ProjectAssignment>> GetAssignmentsByProjectAndSubjectsAsync(int projectId, IEnumerable<int> subjectIds)
+    {
+        var ids = subjectIds.Distinct().ToArray();
+        if (ids.Length == 0)
+            return Task.FromResult(new List<ProjectAssignment>());
+
+        return db.ProjectAssignments
+            .Where(a => a.ProjectId == projectId && ids.Contains(a.SubjectId))
+            .ToListAsync();
+    }
+
+    public Task<List<ProjectAssignment>> GetAssignmentsBySubjectIdsAsync(IEnumerable<int> subjectIds)
+    {
+        var ids = subjectIds.Distinct().ToArray();
+        if (ids.Length == 0)
+            return Task.FromResult(new List<ProjectAssignment>());
+
+        return db.ProjectAssignments
+            .AsNoTracking()
+            .Where(a => ids.Contains(a.SubjectId))
+            .ToListAsync();
+    }
+
+    public Task<List<int>> GetAssignedSubjectIdsAsync(int projectId)
+        => db.ProjectAssignments
+             .Where(a => a.ProjectId == projectId)
+             .Select(a => a.SubjectId)
+             .ToListAsync();
+
+    public async Task RemoveAssignmentAsync(int projectId, int subjectId)
+    {
+        var assignment = await db.ProjectAssignments
+            .FirstOrDefaultAsync(a => a.ProjectId == projectId && a.SubjectId == subjectId);
+        if (assignment is not null)
+        {
+            db.ProjectAssignments.Remove(assignment);
+            await db.SaveChangesAsync();
+        }
+    }
+
+    public async Task<int> RemoveAssignmentsAsync(int projectId, IEnumerable<int> subjectIds)
+    {
+        var ids = subjectIds.Distinct().ToArray();
+        if (ids.Length == 0)
+            return 0;
+
+        var assignments = await db.ProjectAssignments
+            .Where(a => a.ProjectId == projectId && ids.Contains(a.SubjectId))
+            .ToListAsync();
+
+        if (assignments.Count == 0)
+            return 0;
+
+        db.ProjectAssignments.RemoveRange(assignments);
+        await db.SaveChangesAsync();
+        return assignments.Count;
+    }
+
+    public Task<List<ProjectAssignment>> GetSubjectAssignmentsAsync(int subjectId)
+        => db.ProjectAssignments
+             .AsNoTracking()
+             .Where(a => a.SubjectId == subjectId && a.DeletedAt == null)
+             .Include(a => a.Project).ThenInclude(p => p.Customer)
+             .OrderByDescending(a => a.AssignedAt)
+             .ToListAsync();
+}

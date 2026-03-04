@@ -1,0 +1,723 @@
+@page "/settings/roles"
+@using System.Security.Claims
+@attribute [HasPermission(PermissionCodes.Roles.View)]
+@inject IAccessControlService AccessControlService
+@inject IPermissionAuthorizationService PermissionService
+@inject IAppToastService Toast
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Nav
+
+<PageTitle>Rol & Yetki Yönetimi — PulsePoll Admin</PageTitle>
+
+<div class="d-flex align-items-center justify-content-between mb-3">
+    <h3 class="mb-0">Rol & Yetki Yönetimi</h3>
+    <div class="d-flex align-items-center gap-2">
+        <DxButton Text="Geri"
+                  IconCssClass="bi bi-arrow-left"
+                  RenderStyle="ButtonRenderStyle.Secondary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="@(() => Nav.NavigateTo("/settings"))" />
+        @if (_canCreate)
+        {
+            <DxButton Text="Yeni Rol"
+                      IconCssClass="bi bi-plus-lg"
+                      RenderStyle="ButtonRenderStyle.Primary"
+                      RenderStyleMode="ButtonRenderStyleMode.Outline"
+                      Click="OpenNewPopup" />
+        }
+    </div>
+</div>
+
+<DxGrid Data="@_items" ShowFilterRow="true" PageSize="20">
+    <Columns>
+        <DxGridDataColumn FieldName="Name" Caption="Rol Adı" MinWidth="160" />
+        <DxGridDataColumn FieldName="Description" Caption="Açıklama" MinWidth="220" />
+        <DxGridDataColumn FieldName="UserCount" Caption="Kullanıcı" Width="90px" />
+        <DxGridDataColumn FieldName="PermissionCount" Caption="Yetki" Width="90px" />
+        <DxGridDataColumn FieldName="IsActive" Caption="Durum" Width="110px">
+            <CellDisplayTemplate>
+                @{
+                    var row = (RoleListItemDto)context.DataItem;
+                }
+                <span class="badge @(row.IsActive ? "bg-success" : "bg-secondary")">
+                    @(row.IsActive ? "Aktif" : "Pasif")
+                </span>
+            </CellDisplayTemplate>
+        </DxGridDataColumn>
+        <DxGridDataColumn FieldName="CreatedAt" Caption="Kayıt" DisplayFormat="dd.MM.yyyy HH:mm" Width="150px" />
+        <DxGridCommandColumn NewButtonVisible="false"
+                             EditButtonVisible="false"
+                             DeleteButtonVisible="false"
+                             Width="50px"
+                             Caption=""
+                             TextAlignment="GridTextAlignment.Center">
+            <CellDisplayTemplate>
+                @{
+                    var row = (RoleListItemDto)context.DataItem;
+                }
+                @if (_canEdit || _canDelete || _canManagePermissions)
+                {
+                    <DxButton IconCssClass="bi bi-three-dots-vertical"
+                              RenderStyle="ButtonRenderStyle.Link"
+                              Click="@(async e => await ShowMenuAsync(e, row))"
+                              title="İşlemler" />
+                }
+            </CellDisplayTemplate>
+        </DxGridCommandColumn>
+    </Columns>
+</DxGrid>
+
+<DxContextMenu @ref="_contextMenu" ItemClick="OnContextMenuItemClick">
+    <Items>
+        @if (_canManagePermissions)
+        {
+            <DxContextMenuItem Text="Yetkiler" Name="permissions" IconCssClass="bi bi-shield-check" />
+        }
+        @if (_canEdit)
+        {
+            <DxContextMenuItem Text="Düzenle" Name="edit" IconCssClass="bi bi-pencil" />
+        }
+        @if (_canDelete)
+        {
+            <DxContextMenuItem Text="Sil" Name="delete" IconCssClass="bi bi-trash" CssClass="text-danger" BeginGroup="true" />
+        }
+    </Items>
+</DxContextMenu>
+
+<DxPopup @bind-Visible="_popupVisible"
+         HeaderText="@(_form.Id is null ? "Yeni Rol" : "Rol Düzenle")"
+         Width="640px"
+         CloseOnOutsideClick="false"
+         ShowFooter="true">
+    <BodyContentTemplate Context="_">
+        @if (!string.IsNullOrWhiteSpace(_formError))
+        {
+            <div class="alert alert-danger py-2 mb-3">@_formError</div>
+        }
+        <DxFormLayout>
+            <DxFormLayoutItem Caption="Rol Adı" ColSpanMd="12">
+                <DxTextBox @bind-Text="_form.Name" />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem Caption="Açıklama" ColSpanMd="12">
+                <DxMemo @bind-Text="_form.Description" Rows="3" />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem Caption="Aktif" ColSpanMd="6">
+                <DxCheckBox @bind-Checked="_form.IsActive" />
+            </DxFormLayoutItem>
+            @if (_form.Id is not null)
+            {
+                <DxFormLayoutItem ColSpanMd="12">
+                    <div class="small text-muted">
+                        Bu roldeki yetkileri düzenlemek için satırdaki <strong>Yetkiler</strong> aksiyonunu kullanabilirsiniz.
+                    </div>
+                </DxFormLayoutItem>
+            }
+        </DxFormLayout>
+    </BodyContentTemplate>
+    <FooterContentTemplate>
+        <DxButton Text="@(_isSaving ? "Kaydediliyor..." : "Kaydet")"
+                  IconCssClass="@(_isSaving ? "spinner-border spinner-border-sm" : "bi bi-check-lg")"
+                  RenderStyle="ButtonRenderStyle.Primary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Enabled="@(!_isSaving)"
+                  Click="SaveAsync" />
+        <DxButton Text="İptal"
+                  RenderStyle="ButtonRenderStyle.Secondary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Enabled="@(!_isSaving)"
+                  Click="ClosePopup" />
+    </FooterContentTemplate>
+</DxPopup>
+
+<DxPopup @bind-Visible="_permissionsPopupVisible"
+         HeaderText="Rol Yetkileri"
+         Width="920px"
+         CloseOnOutsideClick="false"
+         ShowFooter="true">
+    <BodyContentTemplate Context="_">
+        @if (!string.IsNullOrWhiteSpace(_permissionsError))
+        {
+            <div class="alert alert-danger py-2 mb-3">@_permissionsError</div>
+        }
+
+        <div class="permissions-popup-toolbar">
+            <div class="small text-muted permissions-selected-role">
+                Seçili rol: <strong>@_permissionsRoleName</strong>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge text-bg-primary permissions-total-badge">
+                    @($"{GetTotalSelectedPermissionCount()}/{_permissions.Count} yetki seçili")
+                </span>
+                <DxButton Text="Tümünü Seç"
+                          SizeMode="SizeMode.Small"
+                          RenderStyle="ButtonRenderStyle.Secondary"
+                          RenderStyleMode="ButtonRenderStyleMode.Outline"
+                          Enabled="@(!_isSavingPermissions)"
+                          Click="SelectAllPermissions" />
+                <DxButton Text="Temizle"
+                          SizeMode="SizeMode.Small"
+                          RenderStyle="ButtonRenderStyle.Secondary"
+                          RenderStyleMode="ButtonRenderStyleMode.Outline"
+                          Enabled="@(!_isSavingPermissions)"
+                          Click="ClearPermissions" />
+            </div>
+        </div>
+
+        <div class="permissions-popup-body">
+            @foreach (var group in _permissionGroups)
+            {
+                var module = group.Key;
+                var permissions = group.Value;
+                <div class="permissions-module-card">
+                    <div class="permissions-module-header">
+                        <label class="permissions-module-toggle">
+                            <input type="checkbox"
+                                   class="form-check-input mt-0"
+                                   checked="@IsModuleSelected(module)"
+                                   @onchange="(ChangeEventArgs e) => ToggleModule(module, ToBool(e.Value))" />
+                            <i class="bi bi-folder2-open permissions-module-icon"></i>
+                            <span class="permissions-module-title">@GetModuleDisplayName(module, permissions)</span>
+                        </label>
+                        <span class="badge text-bg-success permissions-module-count">
+                            @($"{GetSelectedPermissionCount(module)}/{permissions.Count}")
+                        </span>
+                    </div>
+                    <div class="permissions-module-grid">
+                        @foreach (var permission in permissions)
+                        {
+                            <label class="permissions-item">
+                                <input type="checkbox"
+                                       class="form-check-input mt-1"
+                                       checked="@_permissionSelections.Contains(permission.Id)"
+                                       @onchange="(ChangeEventArgs e) => TogglePermission(permission.Id, ToBool(e.Value))" />
+                                <span class="permissions-item-labels">
+                                    <span class="permissions-item-title">@GetPermissionDisplayName(permission)</span>
+                                    <span class="permissions-item-code">@permission.Code</span>
+                                </span>
+                            </label>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </BodyContentTemplate>
+    <FooterContentTemplate>
+        <DxButton Text="@(_isSavingPermissions ? "Kaydediliyor..." : "Kaydet")"
+                  IconCssClass="@(_isSavingPermissions ? "spinner-border spinner-border-sm" : "bi bi-check-lg")"
+                  RenderStyle="ButtonRenderStyle.Primary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Enabled="@(!_isSavingPermissions)"
+                  Click="SavePermissionsAsync" />
+        <DxButton Text="İptal"
+                  RenderStyle="ButtonRenderStyle.Secondary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Enabled="@(!_isSavingPermissions)"
+                  Click="ClosePermissionsPopup" />
+    </FooterContentTemplate>
+</DxPopup>
+
+<DxPopup @bind-Visible="_deleteConfirmVisible"
+         HeaderText="Silme Onayı"
+         Width="420px"
+         CloseOnOutsideClick="false"
+         ShowFooter="true">
+    <BodyContentTemplate Context="_">
+        <div class="d-flex align-items-start gap-3 p-2">
+            <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size:2.5rem; flex-shrink:0;"></i>
+            <div>
+                <p class="mb-1 fw-semibold">Bu rolü silmek istediğinize emin misiniz?</p>
+                <p class="mb-0 text-muted">@_roleToDelete?.Name</p>
+            </div>
+        </div>
+    </BodyContentTemplate>
+    <FooterContentTemplate>
+        <DxButton Text="Sil"
+                  IconCssClass="bi bi-trash"
+                  RenderStyle="ButtonRenderStyle.Danger"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Enabled="@(!_isDeleting)"
+                  Click="ConfirmDeleteAsync" />
+        <DxButton Text="İptal"
+                  RenderStyle="ButtonRenderStyle.Secondary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Enabled="@(!_isDeleting)"
+                  Click="@(() => _deleteConfirmVisible = false)" />
+    </FooterContentTemplate>
+</DxPopup>
+
+@code {
+    private DxContextMenu? _contextMenu;
+    private List<RoleListItemDto> _items = [];
+    private List<PermissionItemDto> _permissions = [];
+    private Dictionary<string, List<PermissionItemDto>> _permissionGroups = [];
+    private HashSet<int> _permissionSelections = [];
+    private RoleListItemDto? _selectedItem;
+    private RoleListItemDto? _roleToDelete;
+
+    private bool _popupVisible;
+    private bool _permissionsPopupVisible;
+    private bool _deleteConfirmVisible;
+    private bool _isSaving;
+    private bool _isSavingPermissions;
+    private bool _isDeleting;
+    private string? _formError;
+    private string? _permissionsError;
+    private int? _permissionsRoleId;
+    private string _permissionsRoleName = string.Empty;
+
+    private bool _canCreate;
+    private bool _canEdit;
+    private bool _canDelete;
+    private bool _canManagePermissions;
+
+    private RoleForm _form = new();
+    private static readonly Dictionary<string, int> MenuModuleSortOrder = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["Dashboard"] = 0,
+        ["Customers"] = 1,
+        ["Projects"] = 2,
+        ["Subjects"] = 3,
+        ["Payments"] = 4,
+        ["Communications"] = 5,
+        ["Notifications"] = 5,
+        ["MediaLibrary"] = 6,
+        ["Stories"] = 7,
+        ["News"] = 8,
+        ["Settings"] = 9,
+        ["AdminUsers"] = 10,
+        ["Roles"] = 11
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPermissionsAsync();
+        await LoadDataAsync();
+    }
+
+    private async Task LoadPermissionsAsync()
+    {
+        var permissions = await PermissionService.GetCurrentPermissionsAsync();
+        _canCreate = permissions.Contains(PermissionCodes.Roles.Create);
+        _canEdit = permissions.Contains(PermissionCodes.Roles.Edit);
+        _canDelete = permissions.Contains(PermissionCodes.Roles.Delete);
+        _canManagePermissions = permissions.Contains(PermissionCodes.Roles.ManagePermissions);
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _items = await AccessControlService.GetRolesAsync();
+        _permissions = await AccessControlService.GetPermissionsAsync();
+        _permissionGroups = _permissions
+            .GroupBy(GetPermissionModuleKey)
+            .OrderBy(x => GetModuleSortOrder(x.Key))
+            .ThenBy(x => GetModuleDisplayName(x.Key, x), StringComparer.CurrentCultureIgnoreCase)
+            .ToDictionary(x => x.Key, x => x.OrderBy(p => p.Name).ToList());
+    }
+
+    private void OpenNewPopup()
+    {
+        _form = new RoleForm { IsActive = true };
+        _formError = null;
+        _popupVisible = true;
+    }
+
+    private async Task OpenEditPopup(int id)
+    {
+        var row = await AccessControlService.GetRoleAsync(id);
+        if (row is null)
+        {
+            Toast.Error("Rol bulunamadı.");
+            return;
+        }
+
+        _form = new RoleForm
+        {
+            Id = row.Id,
+            Name = row.Name,
+            Description = row.Description,
+            IsActive = row.IsActive,
+            PermissionIds = row.PermissionIds
+        };
+        _formError = null;
+        _popupVisible = true;
+    }
+
+    private void ClosePopup()
+    {
+        _formError = null;
+        _popupVisible = false;
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_isSaving)
+            return;
+
+        _isSaving = true;
+        _formError = null;
+        try
+        {
+            var adminId = await GetAdminIdAsync();
+            await AccessControlService.SaveRoleAsync(_form.ToDto(), adminId);
+            _popupVisible = false;
+            await LoadDataAsync();
+            Toast.Success("Rol kaydedildi.");
+        }
+        catch (Exception ex)
+        {
+            _formError = ErrorHandler.HandleFormSave(ex, Toast);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private async Task ShowMenuAsync(MouseEventArgs e, RoleListItemDto item)
+    {
+        _selectedItem = item;
+        if (_contextMenu is not null)
+            await _contextMenu.ShowAsync(e);
+    }
+
+    private async Task OnContextMenuItemClick(ContextMenuItemClickEventArgs e)
+    {
+        if (_selectedItem is null)
+            return;
+
+        switch (e.ItemInfo.Name)
+        {
+            case "edit" when _canEdit:
+                await OpenEditPopup(_selectedItem.Id);
+                break;
+            case "permissions" when _canManagePermissions:
+                await OpenPermissionsPopupAsync(_selectedItem);
+                break;
+            case "delete" when _canDelete:
+                _roleToDelete = _selectedItem;
+                _deleteConfirmVisible = true;
+                break;
+        }
+    }
+
+    private async Task OpenPermissionsPopupAsync(RoleListItemDto role)
+    {
+        var detail = await AccessControlService.GetRoleAsync(role.Id);
+        if (detail is null)
+        {
+            Toast.Error("Rol bilgisi bulunamadı.");
+            return;
+        }
+
+        _permissionsRoleId = role.Id;
+        _permissionsRoleName = role.Name;
+        var allowedPermissionIds = _permissions.Select(x => x.Id).ToHashSet();
+        _permissionSelections = detail.PermissionIds
+            .Where(allowedPermissionIds.Contains)
+            .ToHashSet();
+        _permissionsError = null;
+        _permissionsPopupVisible = true;
+    }
+
+    private void ClosePermissionsPopup()
+    {
+        _permissionsError = null;
+        _permissionsPopupVisible = false;
+    }
+
+    private bool IsModuleSelected(string module)
+        => _permissionGroups.TryGetValue(module, out var list)
+           && list.All(p => _permissionSelections.Contains(p.Id));
+
+    private int GetSelectedPermissionCount(string module)
+        => _permissionGroups.TryGetValue(module, out var list)
+            ? list.Count(p => _permissionSelections.Contains(p.Id))
+            : 0;
+
+    private int GetTotalSelectedPermissionCount()
+    {
+        var visiblePermissionIds = _permissions.Select(x => x.Id).ToHashSet();
+        return _permissionSelections.Count(visiblePermissionIds.Contains);
+    }
+
+    private static bool ToBool(object? value)
+        => value is bool b && b;
+
+    private void ToggleModule(string module, bool isChecked)
+    {
+        if (!_permissionGroups.TryGetValue(module, out var list))
+            return;
+
+        foreach (var permission in list)
+        {
+            if (isChecked)
+                _permissionSelections.Add(permission.Id);
+            else
+                _permissionSelections.Remove(permission.Id);
+        }
+    }
+
+    private void TogglePermission(int permissionId, bool isChecked)
+    {
+        if (isChecked)
+            _permissionSelections.Add(permissionId);
+        else
+            _permissionSelections.Remove(permissionId);
+    }
+
+    private void SelectAllPermissions()
+    {
+        _permissionSelections = _permissions.Select(x => x.Id).ToHashSet();
+    }
+
+    private void ClearPermissions()
+    {
+        _permissionSelections.Clear();
+    }
+
+    private async Task SavePermissionsAsync()
+    {
+        if (_isSavingPermissions || _permissionsRoleId is null)
+            return;
+
+        _isSavingPermissions = true;
+        _permissionsError = null;
+        try
+        {
+            var role = await AccessControlService.GetRoleAsync(_permissionsRoleId.Value)
+                ?? throw new NotFoundException("Rol");
+            var visiblePermissionIds = _permissions.Select(x => x.Id).ToHashSet();
+            var selectedPermissionIds = _permissionSelections
+                .Where(visiblePermissionIds.Contains)
+                .Distinct()
+                .ToList();
+            var actorId = await GetAdminIdAsync();
+            var dto = new SaveRoleDto(
+                role.Id,
+                role.Name,
+                role.Description,
+                role.IsActive,
+                selectedPermissionIds);
+
+            await AccessControlService.SaveRoleAsync(dto, actorId);
+            PermissionService.InvalidateCache();
+            _permissionsPopupVisible = false;
+            await LoadPermissionsAsync();
+            await LoadDataAsync();
+            Toast.Success("Rol yetkileri kaydedildi.");
+        }
+        catch (Exception ex)
+        {
+            _permissionsError = ErrorHandler.HandleFormSave(ex, Toast);
+        }
+        finally
+        {
+            _isSavingPermissions = false;
+        }
+    }
+
+    private async Task ConfirmDeleteAsync()
+    {
+        if (_roleToDelete is null)
+            return;
+
+        _isDeleting = true;
+        try
+        {
+            var actorId = await GetAdminIdAsync();
+            await AccessControlService.DeleteRoleAsync(_roleToDelete.Id, actorId);
+            _deleteConfirmVisible = false;
+            _roleToDelete = null;
+            await LoadDataAsync();
+            Toast.Success("Rol silindi.");
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleOperation(ex, Toast);
+        }
+        finally
+        {
+            _isDeleting = false;
+        }
+    }
+
+    private async Task<int> GetAdminIdAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var claim = authState.User.FindFirst(ClaimTypes.NameIdentifier);
+        return claim is not null && int.TryParse(claim.Value, out var adminUserId)
+            ? adminUserId
+            : 0;
+    }
+
+    private static string GetPermissionModuleKey(PermissionItemDto permission)
+    {
+        var codePrefix = GetCodePrefix(permission.Code);
+        if (!string.IsNullOrWhiteSpace(codePrefix))
+            return codePrefix;
+
+        return string.IsNullOrWhiteSpace(permission.Module)
+            ? "General"
+            : permission.Module.Trim();
+    }
+
+    private static string GetModuleDisplayName(string module, IEnumerable<PermissionItemDto> permissions)
+    {
+        var normalized = NormalizeModuleName(module);
+        if (string.IsNullOrWhiteSpace(normalized))
+            normalized = NormalizeModuleName(permissions.FirstOrDefault()?.Module)
+                ?? GetCodePrefix(permissions.FirstOrDefault()?.Code)
+                ?? "General";
+
+        return normalized switch
+        {
+            "AdminUsers" => "Kullanıcılar",
+            "Communications" => "İletişim Otomasyonu",
+            "Customers" => "Müşteriler",
+            "Dashboard" => "Dashboard",
+            "MediaLibrary" => "Medya Kütüphanesi",
+            "News" => "Haber Yönetimi",
+            "Notifications" => "Bildirimler",
+            "Payments" => "Ödemeler",
+            "Projects" => "Projeler",
+            "Roles" => "Rol & Yetki Yönetimi",
+            "Settings" => "Ayarlar",
+            "Stories" => "Story Yönetimi",
+            "Subjects" => "Denekler",
+            "Surveys" => "Projeler",
+            "Withdrawals" => "Ödemeler",
+            _ => normalized
+        };
+    }
+
+    private static string GetPermissionDisplayName(PermissionItemDto permission)
+    {
+        if (!string.IsNullOrWhiteSpace(permission.Code))
+        {
+            return permission.Code.Trim() switch
+            {
+                PermissionCodes.Dashboard.View => "Dashboard Görüntüleme",
+
+                PermissionCodes.Customers.View => "Müşterileri Görüntüleme",
+                PermissionCodes.Customers.Create => "Müşteri Oluşturma",
+                PermissionCodes.Customers.Edit => "Müşteri Düzenleme",
+                PermissionCodes.Customers.Delete => "Müşteri Silme",
+
+                PermissionCodes.Projects.View => "Projeleri Görüntüleme",
+                PermissionCodes.Projects.Create => "Proje Oluşturma",
+                PermissionCodes.Projects.Edit => "Proje Düzenleme",
+                PermissionCodes.Projects.Delete => "Proje Silme",
+                PermissionCodes.Projects.ManageSubjects => "Proje Deneklerini Yönetme",
+                PermissionCodes.Projects.ManageRewards => "Anket Onaylarını Yönetme",
+                PermissionCodes.Projects.ToggleStatus => "Proje Durumunu Değiştirme",
+                PermissionCodes.Projects.StatementView => "Proje Ekstresi Görüntüleme",
+
+                PermissionCodes.Subjects.View => "Denekleri Görüntüleme",
+                PermissionCodes.Subjects.Create => "Denek Oluşturma",
+                PermissionCodes.Subjects.Edit => "Denek Düzenleme",
+                PermissionCodes.Subjects.Approve => "Denek Onaylama",
+                PermissionCodes.Subjects.Reject => "Denek Reddetme",
+                PermissionCodes.Subjects.SendSms => "Denek SMS Gönderme",
+                PermissionCodes.Subjects.SendPush => "Denek Push Gönderme",
+                PermissionCodes.Subjects.LedgerView => "Denek Ekstresi Görüntüleme",
+                PermissionCodes.Subjects.LedgerManage => "Denek Ekstresi Yönetme",
+                PermissionCodes.Subjects.ProjectsView => "Denek Projeleri Görüntüleme",
+                PermissionCodes.Subjects.ReferralsView => "Denek Referansları Görüntüleme",
+                PermissionCodes.Subjects.ScoringSettings => "Denek Puanlama Ayarları",
+                PermissionCodes.Subjects.RewardUnitSettings => "Ödül Birimi Ayarları",
+
+                PermissionCodes.MediaLibrary.View => "Medya Kütüphanesi Görüntüleme",
+                PermissionCodes.MediaLibrary.Upload => "Medya Yükleme",
+                PermissionCodes.MediaLibrary.Delete => "Medya Silme",
+
+                PermissionCodes.Stories.View => "Story Yönetimi Görüntüleme",
+                PermissionCodes.Stories.Create => "Story Oluşturma",
+                PermissionCodes.Stories.Edit => "Story Düzenleme",
+                PermissionCodes.Stories.Delete => "Story Silme",
+                PermissionCodes.Stories.Reorder => "Story Sıralama",
+
+                PermissionCodes.News.View => "Haber Yönetimi Görüntüleme",
+                PermissionCodes.News.Create => "Haber Oluşturma",
+                PermissionCodes.News.Edit => "Haber Düzenleme",
+                PermissionCodes.News.Delete => "Haber Silme",
+                PermissionCodes.News.Reorder => "Haber Sıralama",
+
+                PermissionCodes.Payments.WithdrawalsView => "Çekim Taleplerini Görüntüleme",
+                PermissionCodes.Payments.WithdrawalsApprove => "Çekim Talebini Onaylama",
+                PermissionCodes.Payments.WithdrawalsReject => "Çekim Talebini Reddetme",
+                PermissionCodes.Payments.WithdrawalsExport => "Çekim Taleplerini Dışa Aktarma",
+                PermissionCodes.Payments.BatchesView => "Ödeme Paketlerini Görüntüleme",
+                PermissionCodes.Payments.BatchesCreate => "Ödeme Paketi Oluşturma",
+                PermissionCodes.Payments.BatchesManage => "Ödeme Paketini Yönetme",
+                PermissionCodes.Payments.BatchesExport => "Ödeme Paketlerini Dışa Aktarma",
+                PermissionCodes.Payments.SettingsView => "Ödeme Ayarları Görüntüleme",
+                PermissionCodes.Payments.SettingsEdit => "Ödeme Ayarları Düzenleme",
+
+                PermissionCodes.Notifications.View => "Bildirim Geçmişi Görüntüleme",
+
+                PermissionCodes.Communications.View => "İletişim Otomasyonu Görüntüleme",
+                PermissionCodes.Communications.Edit => "İletişim Otomasyonu Düzenleme",
+                PermissionCodes.Communications.Sync => "Özel Gün Senkronizasyonu Çalıştırma",
+                PermissionCodes.Communications.Run => "Kampanya Çalıştırma",
+
+                PermissionCodes.Settings.View => "Genel Ayarlar Görüntüleme",
+                PermissionCodes.Settings.ReferralRewardEdit => "Referans Ödül Ayarları Düzenleme",
+                PermissionCodes.Settings.AppContentEdit => "Mobil İçerik Ayarları Düzenleme",
+
+                PermissionCodes.AdminUsers.View => "Kullanıcıları Görüntüleme",
+                PermissionCodes.AdminUsers.Create => "Kullanıcı Oluşturma",
+                PermissionCodes.AdminUsers.Edit => "Kullanıcı Düzenleme",
+                PermissionCodes.AdminUsers.Activate => "Kullanıcı Aktif/Pasif",
+
+                PermissionCodes.Roles.View => "Rolleri Görüntüleme",
+                PermissionCodes.Roles.Create => "Rol Oluşturma",
+                PermissionCodes.Roles.Edit => "Rol Düzenleme",
+                PermissionCodes.Roles.Delete => "Rol Silme",
+                PermissionCodes.Roles.ManagePermissions => "Rol Yetkilerini Yönetme",
+
+                _ => permission.Code.Trim()
+            };
+        }
+
+        if (!string.IsNullOrWhiteSpace(permission.Name))
+            return permission.Name.Trim();
+
+        if (!string.IsNullOrWhiteSpace(permission.Code))
+            return permission.Code.Trim();
+
+        return "Yetki";
+    }
+
+    private static string? NormalizeModuleName(string? value)
+        => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    private static int GetModuleSortOrder(string module)
+    {
+        var normalized = NormalizeModuleName(module) ?? "General";
+        return MenuModuleSortOrder.TryGetValue(normalized, out var order)
+            ? order
+            : int.MaxValue;
+    }
+
+    private static string? GetCodePrefix(string? code)
+    {
+        if (string.IsNullOrWhiteSpace(code))
+            return null;
+
+        var normalized = code.Trim();
+        var dotIndex = normalized.IndexOf('.');
+        return dotIndex > 0 ? normalized[..dotIndex] : normalized;
+    }
+
+    private sealed class RoleForm
+    {
+        public int? Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string? Description { get; set; }
+        public bool IsActive { get; set; } = true;
+        public List<int> PermissionIds { get; set; } = [];
+
+        public SaveRoleDto ToDto()
+            => new(Id, Name, Description, IsActive, PermissionIds);
+    }
+}

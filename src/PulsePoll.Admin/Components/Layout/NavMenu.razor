@@ -1,0 +1,214 @@
+@inject NavigationManager NavigationManager
+@inject IPermissionAuthorizationService PermissionService
+@using Microsoft.AspNetCore.WebUtilities
+@implements IDisposable
+
+<div>
+    <DxMenu @key="_menuRenderKey" Orientation="@Orientation.Vertical" CssClass="menu">
+        <Items>
+            @if (Has(PermissionCodes.Dashboard.View))
+            {
+                <DxMenuItem NavigateUrl="/" Text="Dashboard" CssClass="@MenuItemCssClass("/")" IconCssClass="icon icon-home"/>
+            }
+            @if (Has(PermissionCodes.Customers.View))
+            {
+                <DxMenuItem NavigateUrl="/customers" Text="Müşteriler" CssClass="@MenuItemCssClass("/customers")" IconCssClass="bi bi-building"/>
+            }
+            @if (Has(PermissionCodes.Projects.View))
+            {
+                <DxMenuItem NavigateUrl="/projects" Text="Projeler" CssClass="@MenuItemCssClass("/projects")" IconCssClass="bi bi-kanban"/>
+            }
+            @if (Has(PermissionCodes.Subjects.View))
+            {
+                <DxMenuItem NavigateUrl="/subjects" Text="Denekler" CssClass="@MenuItemCssClass("/subjects")" IconCssClass="bi bi-people"/>
+            }
+            @if (Has(PermissionCodes.Payments.WithdrawalsView) || Has(PermissionCodes.Payments.BatchesView) || Has(PermissionCodes.Payments.SettingsView))
+            {
+                <DxMenuItem Text="Ödemeler" IconCssClass="bi bi-cash-stack" CssClass="@MenuItemCssClass("/payments")">
+                    <Items>
+                        @if (Has(PermissionCodes.Payments.WithdrawalsView))
+                        {
+                            <DxMenuItem NavigateUrl="/payments/withdrawals" Text="Çekim Talepleri" CssClass="@MenuItemCssClass("/payments/withdrawals")" IconCssClass="bi bi-arrow-down-circle"/>
+                        }
+                        @if (Has(PermissionCodes.Payments.BatchesView))
+                        {
+                            <DxMenuItem NavigateUrl="/payments/batches" Text="Ödeme Paketleri" CssClass="@MenuItemCssClass("/payments/batches")" IconCssClass="bi bi-collection"/>
+                        }
+                        @if (Has(PermissionCodes.Payments.SettingsView))
+                        {
+                            <DxMenuItem NavigateUrl="/payments/settings" Text="Ödeme Ayarları" CssClass="@MenuItemCssClass("/payments/settings")" IconCssClass="bi bi-gear"/>
+                        }
+                    </Items>
+                </DxMenuItem>
+            }
+            @if (Has(PermissionCodes.Communications.View) || Has(PermissionCodes.Notifications.View))
+            {
+                <DxMenuItem Text="İletişim Otomasyonu" IconCssClass="bi bi-megaphone" CssClass="@CommunicationsMenuCssClass()">
+                    <Items>
+                        @if (Has(PermissionCodes.Communications.View))
+                        {
+                            <DxMenuItem NavigateUrl="/communications/calendar" Text="Özel Gün Takvimi" CssClass="@MenuItemCssClass("/communications/calendar")" IconCssClass="bi bi-calendar3"/>
+                            <DxMenuItem NavigateUrl="/communications/automations" Text="Mesaj Ayarları" CssClass="@MenuItemCssClass("/communications/automations")" IconCssClass="bi bi-send"/>
+                        }
+                        @if (Has(PermissionCodes.Notifications.View))
+                        {
+                            <DxMenuItem NavigateUrl="/notifications" Text="Bildirim Geçmişi" CssClass="@MenuItemCssClass("/notifications")" IconCssClass="bi bi-bell"/>
+                        }
+                    </Items>
+                </DxMenuItem>
+            }
+            @if (Has(PermissionCodes.MediaLibrary.View))
+            {
+                <DxMenuItem NavigateUrl="/media-library" Text="Medya Kütüphanesi" CssClass="@MenuItemCssClass("/media-library")" IconCssClass="bi bi-images"/>
+            }
+            @if (Has(PermissionCodes.Stories.View))
+            {
+                <DxMenuItem NavigateUrl="/stories" Text="Story Yönetimi" CssClass="@MenuItemCssClass("/stories")" IconCssClass="bi bi-collection-play"/>
+            }
+            @if (Has(PermissionCodes.News.View))
+            {
+                <DxMenuItem NavigateUrl="/news" Text="Haber Yönetimi" CssClass="@MenuItemCssClass("/news")" IconCssClass="bi bi-newspaper"/>
+            }
+            @if (Has(PermissionCodes.Settings.View) || Has(PermissionCodes.AdminUsers.View) || Has(PermissionCodes.Roles.View))
+            {
+                <DxMenuItem Text="Ayarlar" IconCssClass="bi bi-sliders" CssClass="@MenuItemCssClass("/settings")">
+                    <Items>
+                        @if (Has(PermissionCodes.Settings.View))
+                        {
+                            <DxMenuItem NavigateUrl="/settings" Text="Genel Ayarlar" CssClass="@MenuItemCssClass("/settings")" IconCssClass="bi bi-gear"/>
+                        }
+                        @if (Has(PermissionCodes.AdminUsers.View))
+                        {
+                            <DxMenuItem NavigateUrl="/settings/admin-users" Text="Kullanıcı Yönetimi" CssClass="@MenuItemCssClass("/settings/admin-users")" IconCssClass="bi bi-person-badge"/>
+                        }
+                        @if (Has(PermissionCodes.Roles.View))
+                        {
+                            <DxMenuItem NavigateUrl="/settings/roles" Text="Rol & Yetki Yönetimi" CssClass="@MenuItemCssClass("/settings/roles")" IconCssClass="bi bi-shield-lock"/>
+                        }
+                    </Items>
+                </DxMenuItem>
+            }
+        </Items>
+    </DxMenu>
+</div>
+
+@code {
+    private string? currentLocalPath;
+    private string? currentMenuHint;
+    private HashSet<string> _permissions = [];
+    private string _menuRenderKey = string.Empty;
+    private readonly SemaphoreSlim _reloadLock = new(1, 1);
+    private bool _isDisposed;
+
+    protected override async Task OnInitializedAsync()
+    {
+        UpdateCurrentLocation(NavigationManager.Uri);
+        await ReloadPermissionsAsync();
+        NavigationManager.LocationChanged += OnLocationChanged;
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        UpdateCurrentLocation(e.Location);
+        _ = InvokeAsync(async () =>
+        {
+            if (_isDisposed)
+                return;
+
+            try
+            {
+                await ReloadPermissionsAsync();
+                StateHasChanged();
+            }
+            catch
+            {
+                // Prevent layout-circuit break on transient permission reload failures.
+            }
+        });
+    }
+
+    private async Task ReloadPermissionsAsync()
+    {
+        await _reloadLock.WaitAsync();
+        try
+        {
+            _permissions = await PermissionService.GetCurrentPermissionsAsync();
+            _menuRenderKey = string.Join('|',
+                _permissions.OrderBy(x => x, StringComparer.OrdinalIgnoreCase));
+        }
+        finally
+        {
+            _reloadLock.Release();
+        }
+    }
+
+    private bool Has(string permissionCode)
+        => _permissions.Contains(permissionCode);
+
+    private string? MenuItemCssClass(string itemPath)
+    {
+        var effectivePath = EffectivePathForMenu();
+        if (string.IsNullOrWhiteSpace(effectivePath))
+            return null;
+
+        if (itemPath == "/")
+            return string.Equals(effectivePath, "/", StringComparison.OrdinalIgnoreCase)
+                ? "menu-item-active"
+                : null;
+
+        return effectivePath.Equals(itemPath, StringComparison.OrdinalIgnoreCase) ||
+               effectivePath.StartsWith($"{itemPath}/", StringComparison.OrdinalIgnoreCase)
+            ? "menu-item-active"
+            : null;
+    }
+
+    private string? EffectivePathForMenu()
+    {
+        if (string.IsNullOrWhiteSpace(currentLocalPath))
+            return currentLocalPath;
+
+        if (currentMenuHint?.Equals("settings", StringComparison.OrdinalIgnoreCase) == true)
+        {
+            if (currentLocalPath.Equals("/subjects/scoring-settings", StringComparison.OrdinalIgnoreCase))
+                return "/settings/scoring-settings";
+
+            if (currentLocalPath.Equals("/subjects/reward-unit-settings", StringComparison.OrdinalIgnoreCase))
+                return "/settings/reward-unit-settings";
+
+            if (currentLocalPath.Equals("/payments/settings", StringComparison.OrdinalIgnoreCase))
+                return "/settings/payment-settings";
+        }
+
+        return currentLocalPath;
+    }
+
+    private string? CommunicationsMenuCssClass()
+    {
+        var effectivePath = EffectivePathForMenu();
+        if (string.IsNullOrWhiteSpace(effectivePath))
+            return null;
+
+        return effectivePath.Equals("/notifications", StringComparison.OrdinalIgnoreCase) ||
+               effectivePath.StartsWith("/notifications/", StringComparison.OrdinalIgnoreCase)
+            ? "menu-item-active"
+            : MenuItemCssClass("/communications");
+    }
+
+    private void UpdateCurrentLocation(string uri)
+    {
+        var absoluteUri = new Uri(uri, UriKind.Absolute);
+        currentLocalPath = absoluteUri.LocalPath;
+
+        var query = QueryHelpers.ParseQuery(absoluteUri.Query);
+        currentMenuHint = query.TryGetValue("menu", out var menuHint)
+            ? menuHint.ToString()
+            : null;
+    }
+
+    public void Dispose()
+    {
+        _isDisposed = true;
+        NavigationManager.LocationChanged -= OnLocationChanged;
+        _reloadLock.Dispose();
+    }
+}

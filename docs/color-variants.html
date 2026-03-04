@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PulsePoll — Renk Varyantları</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #1a1a2e;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  padding: 48px 32px 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+
+.page-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.4);
+  margin-bottom: 8px;
+}
+
+/* Phones row */
+.phones-row {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.phone-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.variant-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.5);
+  text-align: center;
+}
+
+svg { display:block; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+
+/* ── PHONE SHELL ── */
+.phone {
+  width: 280px;
+  border-radius: 44px;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.06),
+    0 0 0 8px rgba(255,255,255,0.04),
+    0 32px 64px rgba(0,0,0,0.6);
+  position: relative;
+}
+
+.status-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 24px 0;
+  font-size: 11px;
+  font-weight: 700;
+  position: relative;
+}
+.notch {
+  width: 90px; height: 26px;
+  border-radius: 0 0 14px 14px;
+  position: absolute;
+  top: 0; left: 50%;
+  transform: translateX(-50%);
+}
+.sr { display:flex; gap:4px; align-items:center; }
+.sr svg { width:13px; height:13px; }
+
+.screen { height: 640px; display:flex; flex-direction:column; overflow:hidden; }
+
+.sa { flex:1; overflow-y:auto; overflow-x:hidden; scrollbar-width:none; }
+.sa::-webkit-scrollbar { display:none; }
+
+/* TOP BAR */
+.topbar { display:flex; align-items:center; justify-content:space-between; padding:14px 16px 10px; }
+.logo { font-size:17px; font-weight:800; letter-spacing:-0.5px; }
+.ibt { width:34px; height:34px; border-radius:10px; display:flex; align-items:center; justify-content:center; cursor:pointer; position:relative; border:1px solid; }
+.ibt svg { width:15px; height:15px; }
+.ndot { position:absolute; top:5px; right:5px; width:7px; height:7px; border-radius:50%; border:2px solid; }
+
+/* STORIES */
+.stories { display:flex; gap:11px; padding:2px 16px 16px; overflow-x:auto; scrollbar-width:none; }
+.stories::-webkit-scrollbar { display:none; }
+.si { display:flex; flex-direction:column; align-items:center; gap:5px; flex-shrink:0; }
+.sring { width:48px; height:48px; border-radius:50%; padding:2px; display:flex; align-items:center; justify-content:center; }
+.savatar { width:100%; height:100%; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:800; border:2px solid; }
+.sname { font-size:9px; font-weight:600; text-align:center; max-width:48px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+/* NEWS */
+.nfeat { margin:0 16px 4px; border-radius:16px; padding:16px; position:relative; overflow:hidden; cursor:pointer; }
+.nfeat::after { content:''; position:absolute; bottom:-24px; right:-24px; width:100px; height:100px; border-radius:50%; background:rgba(255,255,255,0.08); }
+.ntag { display:inline-block; font-size:9px; font-weight:700; letter-spacing:1px; text-transform:uppercase; background:rgba(255,255,255,0.2); padding:2px 7px; border-radius:5px; margin-bottom:8px; color:white; }
+.ntitle { font-size:13px; font-weight:700; line-height:1.4; color:white; margin-bottom:10px; position:relative; }
+.ndots { display:flex; gap:4px; position:relative; }
+.nd { width:5px; height:5px; border-radius:50%; background:rgba(255,255,255,0.35); }
+.nd.a { width:14px; border-radius:3px; background:white; }
+
+/* SECTION */
+.sh { display:flex; align-items:center; justify-content:space-between; padding:14px 16px 10px; }
+.sh-t { font-size:13px; font-weight:700; }
+.sh-l { font-size:11px; font-weight:600; cursor:pointer; }
+
+/* SURVEY CARD */
+.sc { margin:0 16px 10px; border-radius:16px; padding:13px; cursor:pointer; border:1px solid; }
+.sc-top { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+.brand { width:38px; height:38px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:800; flex-shrink:0; border:1px solid; }
+.sm { flex:1; }
+.sm-b { font-size:10px; font-weight:600; margin-bottom:2px; }
+.sm-t { font-size:12px; font-weight:700; line-height:1.3; }
+.earn { font-size:11px; font-weight:700; padding:3px 8px; border-radius:8px; flex-shrink:0; border:1px solid; }
+.sc-bot { display:flex; align-items:center; gap:6px; }
+.chip { display:flex; align-items:center; gap:3px; font-size:10px; font-weight:500; padding:3px 8px; border-radius:7px; }
+.chip svg { width:10px; height:10px; }
+.cat { margin-left:auto; font-size:9px; font-weight:600; padding:3px 8px; border-radius:7px; }
+
+/* BOTTOM NAV */
+.bnav { display:flex; justify-content:space-around; align-items:center; padding:10px 6px 16px; border-top:1px solid; }
+.ni { display:flex; flex-direction:column; align-items:center; gap:3px; flex:1; }
+.ni-icon { width:36px; height:26px; display:flex; align-items:center; justify-content:center; border-radius:8px; }
+.ni-icon svg { width:17px; height:17px; }
+.ni-lbl { font-size:9px; font-weight:600; }
+
+/* ════════════════════════════════════
+   1. CORAL & CREAM
+════════════════════════════════════ */
+.v1 {
+  --bg: #FFF8F5;
+  --white: #FFFFFF;
+  --s2: #FFF0EB;
+  --bdr: #FFDDD1;
+  --acc: #FF6B47;
+  --acc-l: #FFF0EB;
+  --acc-m: #FFBFAD;
+  --text: #2D1A14;
+  --t2: #7A5A52;
+  --t3: #C4A49C;
+  --amber: #F59E0B;
+  --amb-l: #FFFBEB;
+}
+.v1 .phone { background: var(--bg); }
+.v1 .status-bar { background: var(--bg); color: var(--text); }
+.v1 .notch { background: var(--text); }
+.v1 .topbar { background: var(--bg); }
+.v1 .logo { color: var(--acc); }
+.v1 .ibt { background: var(--white); border-color: var(--bdr); }
+.v1 .ibt svg { color: var(--t2); }
+.v1 .ndot { background: #FF5C7A; border-color: var(--white); }
+.v1 .sring { background: linear-gradient(135deg, var(--acc), #FF9B7A); }
+.v1 .sring.seen { background: var(--bdr); }
+.v1 .sring.off { background: linear-gradient(135deg, #FF6B47, #FF9B7A); }
+.v1 .savatar { background: var(--white); border-color: var(--bg); }
+.v1 .sname { color: var(--t2); }
+.v1 .nfeat { background: linear-gradient(135deg, #FF6B47, #FF9B7A); }
+.v1 .sh-t { color: var(--text); }
+.v1 .sh-l { color: var(--acc); }
+.v1 .sc { background: var(--white); border-color: var(--bdr); }
+.v1 .brand { background: var(--s2); border-color: var(--bdr); }
+.v1 .sm-b { color: var(--t3); }
+.v1 .sm-t { color: var(--text); }
+.v1 .earn { background: var(--amb-l); border-color: #FDE68A; color: var(--amber); }
+.v1 .chip { background: var(--s2); color: var(--t2); }
+.v1 .chip svg { color: var(--t3); }
+.v1 .cat { background: var(--acc-l); color: var(--acc); }
+.v1 .bnav { background: var(--white); border-color: var(--bdr); }
+.v1 .ni-icon svg { color: var(--t3); }
+.v1 .ni-lbl { color: var(--t3); }
+.v1 .ni.active .ni-icon { background: var(--acc-l); }
+.v1 .ni.active .ni-icon svg { color: var(--acc); }
+.v1 .ni.active .ni-lbl { color: var(--acc); }
+.v1 .sa { background: var(--bg); }
+
+/* ════════════════════════════════════
+   2. SLATE BLUE & MINT
+════════════════════════════════════ */
+.v2 {
+  --bg: #F2F5FB;
+  --white: #FFFFFF;
+  --s2: #E8EDF7;
+  --bdr: #D5DDEE;
+  --acc: #3D5A99;
+  --acc-l: #E8EDF7;
+  --acc-m: #99AACC;
+  --mint: #2EC4A0;
+  --mint-l: #E6F7F4;
+  --text: #0F1D35;
+  --t2: #5A6B8A;
+  --t3: #9AAABE;
+  --amber: #F59E0B;
+  --amb-l: #FFFBEB;
+}
+.v2 .phone { background: var(--bg); }
+.v2 .status-bar { background: var(--bg); color: var(--text); }
+.v2 .notch { background: var(--text); }
+.v2 .topbar { background: var(--bg); }
+.v2 .logo { color: var(--acc); }
+.v2 .ibt { background: var(--white); border-color: var(--bdr); }
+.v2 .ibt svg { color: var(--t2); }
+.v2 .ndot { background: #FF5C7A; border-color: var(--white); }
+.v2 .sring { background: linear-gradient(135deg, var(--acc), #6B88CC); }
+.v2 .sring.seen { background: var(--bdr); }
+.v2 .sring.off { background: linear-gradient(135deg, #3D5A99, #6B88CC); }
+.v2 .savatar { background: var(--white); border-color: var(--bg); }
+.v2 .sname { color: var(--t2); }
+.v2 .nfeat { background: linear-gradient(135deg, #3D5A99, #6B88CC); }
+.v2 .sh-t { color: var(--text); }
+.v2 .sh-l { color: var(--mint); }
+.v2 .sc { background: var(--white); border-color: var(--bdr); }
+.v2 .brand { background: var(--s2); border-color: var(--bdr); }
+.v2 .sm-b { color: var(--t3); }
+.v2 .sm-t { color: var(--text); }
+.v2 .earn { background: var(--mint-l); border-color: #A7EFE2; color: var(--mint); }
+.v2 .chip { background: var(--s2); color: var(--t2); }
+.v2 .chip svg { color: var(--t3); }
+.v2 .cat { background: var(--acc-l); color: var(--acc); }
+.v2 .bnav { background: var(--white); border-color: var(--bdr); }
+.v2 .ni-icon svg { color: var(--t3); }
+.v2 .ni-lbl { color: var(--t3); }
+.v2 .ni.active .ni-icon { background: var(--acc-l); }
+.v2 .ni.active .ni-icon svg { color: var(--acc); }
+.v2 .ni.active .ni-lbl { color: var(--acc); }
+.v2 .sa { background: var(--bg); }
+
+/* ════════════════════════════════════
+   3. DEEP TEAL & AMBER
+════════════════════════════════════ */
+.v3 {
+  --bg: #F2FAF8;
+  --white: #FFFFFF;
+  --s2: #E4F5F1;
+  --bdr: #C8E8E2;
+  --acc: #0D7A6A;
+  --acc-l: #E4F5F1;
+  --acc-m: #7EC8BC;
+  --amber: #F59E0B;
+  --amb-l: #FFFBEB;
+  --text: #0A2622;
+  --t2: #3D6E68;
+  --t3: #90BFBA;
+}
+.v3 .phone { background: var(--bg); }
+.v3 .status-bar { background: var(--bg); color: var(--text); }
+.v3 .notch { background: var(--text); }
+.v3 .topbar { background: var(--bg); }
+.v3 .logo { color: var(--acc); }
+.v3 .ibt { background: var(--white); border-color: var(--bdr); }
+.v3 .ibt svg { color: var(--t2); }
+.v3 .ndot { background: #FF5C7A; border-color: var(--white); }
+.v3 .sring { background: linear-gradient(135deg, var(--acc), #2AADA0); }
+.v3 .sring.seen { background: var(--bdr); }
+.v3 .sring.off { background: linear-gradient(135deg, #0D7A6A, #2AADA0); }
+.v3 .savatar { background: var(--white); border-color: var(--bg); }
+.v3 .sname { color: var(--t2); }
+.v3 .nfeat { background: linear-gradient(135deg, #0D7A6A, #2AADA0); }
+.v3 .sh-t { color: var(--text); }
+.v3 .sh-l { color: var(--amber); }
+.v3 .sc { background: var(--white); border-color: var(--bdr); }
+.v3 .brand { background: var(--s2); border-color: var(--bdr); }
+.v3 .sm-b { color: var(--t3); }
+.v3 .sm-t { color: var(--text); }
+.v3 .earn { background: var(--amb-l); border-color: #FDE68A; color: var(--amber); }
+.v3 .chip { background: var(--s2); color: var(--t2); }
+.v3 .chip svg { color: var(--t3); }
+.v3 .cat { background: var(--acc-l); color: var(--acc); }
+.v3 .bnav { background: var(--white); border-color: var(--bdr); }
+.v3 .ni-icon svg { color: var(--t3); }
+.v3 .ni-lbl { color: var(--t3); }
+.v3 .ni.active .ni-icon { background: var(--acc-l); }
+.v3 .ni.active .ni-icon svg { color: var(--acc); }
+.v3 .ni.active .ni-lbl { color: var(--acc); }
+.v3 .sa { background: var(--bg); }
+
+/* ════════════════════════════════════
+   4. ROSE & INDIGO
+════════════════════════════════════ */
+.v4 {
+  --bg: #FDF4F7;
+  --white: #FFFFFF;
+  --s2: #F9EBF1;
+  --bdr: #F0D5E3;
+  --acc: #4338CA;
+  --acc-l: #EEF2FF;
+  --acc-m: #A5B4FC;
+  --rose: #E11D6A;
+  --rose-l: #FFF0F6;
+  --text: #1E1535;
+  --t2: #6B5580;
+  --t3: #C0A8BC;
+  --amber: #F59E0B;
+  --amb-l: #FFFBEB;
+}
+.v4 .phone { background: var(--bg); }
+.v4 .status-bar { background: var(--bg); color: var(--text); }
+.v4 .notch { background: var(--text); }
+.v4 .topbar { background: var(--bg); }
+.v4 .logo { color: var(--acc); }
+.v4 .ibt { background: var(--white); border-color: var(--bdr); }
+.v4 .ibt svg { color: var(--t2); }
+.v4 .ndot { background: var(--rose); border-color: var(--white); }
+.v4 .sring { background: linear-gradient(135deg, var(--rose), #F472B6); }
+.v4 .sring.seen { background: var(--bdr); }
+.v4 .sring.off { background: linear-gradient(135deg, var(--acc), #818CF8); }
+.v4 .savatar { background: var(--white); border-color: var(--bg); }
+.v4 .sname { color: var(--t2); }
+.v4 .nfeat { background: linear-gradient(135deg, var(--acc), #818CF8); }
+.v4 .sh-t { color: var(--text); }
+.v4 .sh-l { color: var(--rose); }
+.v4 .sc { background: var(--white); border-color: var(--bdr); }
+.v4 .brand { background: var(--s2); border-color: var(--bdr); }
+.v4 .sm-b { color: var(--t3); }
+.v4 .sm-t { color: var(--text); }
+.v4 .earn { background: var(--amb-l); border-color: #FDE68A; color: var(--amber); }
+.v4 .chip { background: var(--s2); color: var(--t2); }
+.v4 .chip svg { color: var(--t3); }
+.v4 .cat { background: var(--acc-l); color: var(--acc); }
+.v4 .bnav { background: var(--white); border-color: var(--bdr); }
+.v4 .ni-icon svg { color: var(--t3); }
+.v4 .ni-lbl { color: var(--t3); }
+.v4 .ni.active .ni-icon { background: var(--acc-l); }
+.v4 .ni.active .ni-icon svg { color: var(--acc); }
+.v4 .ni.active .ni-lbl { color: var(--acc); }
+.v4 .sa { background: var(--bg); }
+
+/* ════════════════════════════════════
+   5. MEVCUT MOR / LAVANTA
+════════════════════════════════════ */
+.v5 {
+  --bg: #F7F5FF;
+  --white: #FFFFFF;
+  --s2: #F0EDF9;
+  --bdr: #E8E3F5;
+  --acc: #7C5CFC;
+  --acc-l: #EDE8FF;
+  --acc-m: #C4B5FD;
+  --text: #1A1535;
+  --t2: #6B6589;
+  --t3: #B0AABE;
+  --amber: #F59E0B;
+  --amb-l: #FFFBEB;
+}
+.v5 .phone { background: var(--bg); }
+.v5 .status-bar { background: var(--bg); color: var(--text); }
+.v5 .notch { background: var(--text); }
+.v5 .topbar { background: var(--bg); }
+.v5 .logo { color: var(--acc); }
+.v5 .ibt { background: var(--white); border-color: var(--bdr); }
+.v5 .ibt svg { color: var(--t2); }
+.v5 .ndot { background: #FF5C7A; border-color: var(--white); }
+.v5 .sring { background: linear-gradient(135deg, var(--acc), #A78BFA); }
+.v5 .sring.seen { background: var(--bdr); }
+.v5 .sring.off { background: linear-gradient(135deg, #7C5CFC, #C084FC); }
+.v5 .savatar { background: var(--white); border-color: var(--bg); }
+.v5 .sname { color: var(--t2); }
+.v5 .nfeat { background: linear-gradient(135deg, var(--acc), #A78BFA); }
+.v5 .sh-t { color: var(--text); }
+.v5 .sh-l { color: var(--acc); }
+.v5 .sc { background: var(--white); border-color: var(--bdr); }
+.v5 .brand { background: var(--s2); border-color: var(--bdr); }
+.v5 .sm-b { color: var(--t3); }
+.v5 .sm-t { color: var(--text); }
+.v5 .earn { background: var(--amb-l); border-color: #FDE68A; color: var(--amber); }
+.v5 .chip { background: var(--s2); color: var(--t2); }
+.v5 .chip svg { color: var(--t3); }
+.v5 .cat { background: var(--acc-l); color: var(--acc); }
+.v5 .bnav { background: var(--white); border-color: var(--bdr); }
+.v5 .ni-icon svg { color: var(--t3); }
+.v5 .ni-lbl { color: var(--t3); }
+.v5 .ni.active .ni-icon { background: var(--acc-l); }
+.v5 .ni.active .ni-icon svg { color: var(--acc); }
+.v5 .ni.active .ni-lbl { color: var(--acc); }
+.v5 .sa { background: var(--bg); }
+</style>
+</head>
+<body>
+
+<div class="page-title">PulsePoll — Renk Varyantları</div>
+
+<div class="phones-row">
+
+<!-- ══ 1. CORAL & CREAM ══ -->
+<div class="phone-wrap">
+  <div class="variant-label">1 — Coral & Cream</div>
+  <div class="phone v1">
+    <div class="status-bar"><span>09:41</span><div class="notch"></div><div class="sr"><svg viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1" fill="currentColor" stroke="none"/></svg><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="11" rx="2"/></svg></div></div>
+    <div class="screen">
+      <div class="topbar"><div class="logo">PulsePoll</div><div class="ibt"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><div class="ndot"></div></div></div>
+      <div class="sa">
+        <div class="stories">
+          <div class="si"><div class="sring off"><div class="savatar" style="font-size:11px;color:#FF6B47;">PP</div></div><div class="sname">PulsePoll</div></div>
+          <div class="si"><div class="sring"><div class="savatar" style="color:#E04A2F;">A</div></div><div class="sname">Arçelik</div></div>
+          <div class="si"><div class="sring"><div class="savatar" style="color:#0060AF;">T</div></div><div class="sname">Turkcell</div></div>
+          <div class="si"><div class="sring seen"><div class="savatar" style="color:#007A33;">M</div></div><div class="sname">Migros</div></div>
+          <div class="si"><div class="sring seen"><div class="savatar" style="color:#1F4E79;font-size:12px;">B</div></div><div class="sname">BMW TR</div></div>
+        </div>
+        <div class="nfeat">
+          <div class="ntag">Duyuru</div>
+          <div class="ntitle">Yeni Platin Üyelik<br>Sistemi Geliyor 🎉</div>
+          <div class="ndots"><div class="nd a"></div><div class="nd"></div><div class="nd"></div></div>
+        </div>
+        <div class="sh"><div class="sh-t">Sana Özel</div><div class="sh-l">Tümü</div></div>
+        <div class="sc">
+          <div class="sc-top"><div class="brand" style="color:#E04A2F;">A</div><div class="sm"><div class="sm-b">Arçelik A.Ş.</div><div class="sm-t">Beyaz Eşya Deneyimi</div></div><div class="earn">₺15</div></div>
+          <div class="sc-bot"><div class="chip"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>~8 dk</div><div class="chip"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/></svg>12 soru</div><div class="cat">Teknoloji</div></div>
+        </div>
+        <div class="sc">
+          <div class="sc-top"><div class="brand" style="color:#0060AF;">T</div><div class="sm"><div class="sm-b">Turkcell</div><div class="sm-t">5G Kullanım Alışkanlıkları</div></div><div class="earn">₺8</div></div>
+          <div class="sc-bot"><div class="chip"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>~5 dk</div><div class="chip"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/></svg>8 soru</div><div class="cat">Telekom</div></div>
+        </div>
+        <div class="sc">
+          <div class="sc-top"><div class="brand" style="color:#007A33;">M</div><div class="sm"><div class="sm-b">Migros</div><div class="sm-t">Online Market Deneyimi</div></div><div class="earn">₺22</div></div>
+          <div class="sc-bot"><div class="chip"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>~10 dk</div><div class="chip"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/></svg>15 soru</div><div class="cat">Perakende</div></div>
+        </div>
+      </div>
+      <div class="bnav">
+        <div class="ni active"><div class="ni-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><div class="ni-lbl">Anasayfa</div></div>
+        <div class="ni"><div class="ni-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div><div class="ni-lbl">Anketler</div></div>
+        <div class="ni"><div class="ni-icon"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div class="ni-lbl">Geçmiş</div></div>
+        <div class="ni"><div class="ni-icon"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></div><div class="ni-lbl">Cüzdan</div></div>
+        <div class="ni"><div class="ni-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div class="ni-lbl">Profil</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 2. SLATE BLUE & MINT ══ -->
+<div class="phone-wrap">
+  <div class="variant-label">2 — Slate Blue & Mint</div>
+  <div class="phone v2">
+    <div class="status-bar"><span>09:41</span><div class="notch"></div><div class="sr"><svg viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1" fill="currentColor" stroke="none"/></svg><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="11" rx="2"/></svg></div></div>
+    <div class="screen">
+      <div class="topbar"><div class="logo">PulsePoll</div><div class="ibt"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><div class="ndot"></div></div></div>
+      <div class="sa">
+        <div class="stories">
+          <div class="si"><div class="sring off"><div class="savatar" style="font-size:11px;color:#3D5A99;">PP</div></div><div class="sname">PulsePoll</div></div>
+          <div class="si"><div class="sring"><div class="savatar" style="color:#E04A2F;">A</div></div><div class="sname">Arçelik</div></div>
+          <div class="si"><div class="sring"><div class="savatar" style="color:#0060AF;">T</div></div><div class="sname">Turkcell</div></div>
+          <div class="si"><div class="sring seen"><div class="savatar" style="color:#007A33;">M</div></div><div class="sname">Migros</div></div>
+          <div class="si"><div class="sring seen"><div class="savatar" style="color:#1F4E79;font-size:12px;">B</div></div><div class="sname">BMW TR</div></div>
+        </div>
+        <div class="nfeat">
+          <div class="ntag">Duyuru</div>
+          <div class="ntitle">Yeni Platin Üyelik<br>Sistemi Geliyor 🎉</div>
+          <div class="ndots"><div class="nd a"></div><div class="nd"></div><div class="nd"></div></div>
+        </div>
+        <div class="sh"><div class="sh-t">Sana Özel</div><div class="sh-l">Tümü</div></div>
+        <div class="sc">
+          <div class="sc-top"><div class="brand" style="color:#E04A2F;">A</div><div class="sm"><div class="sm-b">Arçelik A.Ş.</div><div class="sm-t">Beyaz Eşya Deneyimi</div></div><div class="earn">₺15</div></div>
+          <div class="sc-bot"><div class="chip"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>~8 dk</div><div class="chip"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/></svg>12 soru</div><div class="cat">Teknoloji</div></div>
+        </div>
+        <div class="sc">
+          <div class="sc-top"><div class="brand" style="color:#0060AF;">T</div><div class="sm"><div class="sm-b">Turkcell</div><div class="sm-t">5G Kullanım Alışkanlıkları</div></div><div class="earn">₺8</div></div>
+          <div class="sc-bot"><div class="chip"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>~5 dk</div><div class="chip"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/></svg>8 soru</div><div class="cat">Telekom</div></div>
+        </div>
+        <div class="sc">
+          <div class="sc-top"><div class="brand" style="color:#007A33;">M</div><div class="sm"><div class="sm-b">Migros</div><div class="sm-t">Online Market Deneyimi</div></div><div class="earn">₺22</div></div>
+          <div class="sc-bot"><div class="chip"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>~10 dk</div><div class="chip"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/></svg>15 soru</div><div class="cat">Perakende</div></div>
+        </div>
+      </div>
+      <div class="bnav">
+        <div class="ni active"><div class="ni-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><div class="ni-lbl">Anasayfa</div></div>
+        <div class="ni"><div class="ni-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div><div class="ni-lbl">Anketler</div></div>
+        <div class="ni"><div class="ni-icon"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div class="ni-lbl">Geçmiş</div></div>
+        <div class="ni"><div class="ni-icon"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></div><div class="ni-lbl">Cüzdan</div></div>
+        <div class="ni"><div class="ni-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div class="ni-lbl">Profil</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 3. DEEP TEAL & AMBER ══ -->
+<div class="phone-wrap">
+  <div class="variant-label">3 — Deep Teal & Amber</div>
+  <div class="phone v3">
+    <div class="status-bar"><span>09:41</span><div class="notch"></div><div class="sr"><svg viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1" fill="currentColor" stroke="none"/></svg><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="11" rx="2"/></svg></div></div>
+    <div class="screen">
+      <div class="topbar"><div class="logo">PulsePoll</div><div class="ibt"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><div class="ndot"></div></div></div>
+      <div class="sa">
+        <div class="stories">
+          <div class="si"><div class="sring off"><div class="savatar" style="font-size:11px;color:#0D7A6A;">PP</div></div><div class="sname">PulsePoll</div></div>
+          <div class="si"><div class="sring"><div class="savatar" style="color:#E04A2F;">A</div></div><div class="sname">Arçelik</div></div>
+          <div class="si"><div class="sring"><div class="savatar" style="color:#0060AF;">T</div></div><div class="sname">Turkcell</div></div>
+          <div class="si"><div class="sring seen"><div class="savatar" style="color:#007A33;">M</div></div><div class="sname">Migros</div></div>
+          <div class="si"><div class="sring seen"><div class="savatar" style="color:#1F4E79;font-size:12px;">B</div></div><div class="sname">BMW TR</div></div>
+        </div>
+        <div class="nfeat">
+          <div class="ntag">Duyuru</div>
+          <div class="ntitle">Yeni Platin Üyelik<br>Sistemi Geliyor 🎉</div>
+          <div class="ndots"><div class="nd a"></div><div class="nd"></div><div class="nd"></div></div>
+        </div>
+        <div class="sh"><div class="sh-t">Sana Özel</div><div class="sh-l">Tümü</div></div>
+        <div class="sc">
+          <div class="sc-top"><div class="brand" style="color:#E04A2F;">A</div><div class="sm"><div class="sm-b">Arçelik A.Ş.</div><div class="sm-t">Beyaz Eşya Deneyimi</div></div><div class="earn">₺15</div></div>
+          <div class="sc-bot"><div class="chip"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>~8 dk</div><div class="chip"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/></svg>12 soru</div><div class="cat">Teknoloji</div></div>
+        </div>
+        <div class="sc">
+          <div class="sc-top"><div class="brand" style="color:#0060AF;">T</div><div class="sm"><div class="sm-b">Turkcell</div><div class="sm-t">5G Kullanım Alışkanlıkları</div></div><div class="earn">₺8</div></div>
+          <div class="sc-bot"><div class="chip"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>~5 dk</div><div class="chip"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/></svg>8 soru</div><div class="cat">Telekom</div></div>
+        </div>
+        <div class="sc">
+          <div class="sc-top"><div class="brand" style="color:#007A33;">M</div><div class="sm"><div class="sm-b">Migros</div><div class="sm-t">Online Market Deneyimi</div></div><div class="earn">₺22</div></div>
+          <div class="sc-bot"><div class="chip"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>~10 dk</div><div class="chip"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/></svg>15 soru</div><div class="cat">Perakende</div></div>
+        </div>
+      </div>
+      <div class="bnav">
+        <div class="ni active"><div class="ni-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><div class="ni-lbl">Anasayfa</div></div>
+        <div class="ni"><div class="ni-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div><div class="ni-lbl">Anketler</div></div>
+        <div class="ni"><div class="ni-icon"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div class="ni-lbl">Geçmiş</div></div>
+        <div class="ni"><div class="ni-icon"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></div><div class="ni-lbl">Cüzdan</div></div>
+        <div class="ni"><div class="ni-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div class="ni-lbl">Profil</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 4. ROSE & INDIGO ══ -->
+<div class="phone-wrap">
+  <div class="variant-label">4 — Rose & Indigo</div>
+  <div class="phone v4">
+    <div class="status-bar"><span>09:41</span><div class="notch"></div><div class="sr"><svg viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1" fill="currentColor" stroke="none"/></svg><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="11" rx="2"/></svg></div></div>
+    <div class="screen">
+      <div class="topbar"><div class="logo">PulsePoll</div><div class="ibt"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><div class="ndot"></div></div></div>
+      <div class="sa">
+        <div class="stories">
+          <div class="si"><div class="sring off"><div class="savatar" style="font-size:11px;color:#4338CA;">PP</div></div><div class="sname">PulsePoll</div></div>
+          <div class="si"><div class="sring"><div class="savatar" style="color:#E04A2F;">A</div></div><div class="sname">Arçelik</div></div>
+          <div class="si"><div class="sring"><div class="savatar" style="color:#0060AF;">T</div></div><div class="sname">Turkcell</div></div>
+          <div class="si"><div class="sring seen"><div class="savatar" style="color:#007A33;">M</div></div><div class="sname">Migros</div></div>
+          <div class="si"><div class="sring seen"><div class="savatar" style="color:#1F4E79;font-size:12px;">B</div></div><div class="sname">BMW TR</div></div>
+        </div>
+        <div class="nfeat">
+          <div class="ntag">Duyuru</div>
+          <div class="ntitle">Yeni Platin Üyelik<br>Sistemi Geliyor 🎉</div>
+          <div class="ndots"><div class="nd a"></div><div class="nd"></div><div class="nd"></div></div>
+        </div>
+        <div class="sh"><div class="sh-t">Sana Özel</div><div class="sh-l">Tümü</div></div>
+        <div class="sc">
+          <div class="sc-top"><div class="brand" style="color:#E04A2F;">A</div><div class="sm"><div class="sm-b">Arçelik A.Ş.</div><div class="sm-t">Beyaz Eşya Deneyimi</div></div><div class="earn">₺15</div></div>
+          <div class="sc-bot"><div class="chip"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>~8 dk</div><div class="chip"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/></svg>12 soru</div><div class="cat">Teknoloji</div></div>
+        </div>
+        <div class="sc">
+          <div class="sc-top"><div class="brand" style="color:#0060AF;">T</div><div class="sm"><div class="sm-b">Turkcell</div><div class="sm-t">5G Kullanım Alışkanlıkları</div></div><div class="earn">₺8</div></div>
+          <div class="sc-bot"><div class="chip"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>~5 dk</div><div class="chip"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/></svg>8 soru</div><div class="cat">Telekom</div></div>
+        </div>
+        <div class="sc">
+          <div class="sc-top"><div class="brand" style="color:#007A33;">M</div><div class="sm"><div class="sm-b">Migros</div><div class="sm-t">Online Market Deneyimi</div></div><div class="earn">₺22</div></div>
+          <div class="sc-bot"><div class="chip"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>~10 dk</div><div class="chip"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/></svg>15 soru</div><div class="cat">Perakende</div></div>
+        </div>
+      </div>
+      <div class="bnav">
+        <div class="ni active"><div class="ni-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><div class="ni-lbl">Anasayfa</div></div>
+        <div class="ni"><div class="ni-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div><div class="ni-lbl">Anketler</div></div>
+        <div class="ni"><div class="ni-icon"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div class="ni-lbl">Geçmiş</div></div>
+        <div class="ni"><div class="ni-icon"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></div><div class="ni-lbl">Cüzdan</div></div>
+        <div class="ni"><div class="ni-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div class="ni-lbl">Profil</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 5. MOR / LAVANTA (mevcut) ══ -->
+<div class="phone-wrap">
+  <div class="variant-label">5 — Mor & Lavanta ✦ Mevcut</div>
+  <div class="phone v5">
+    <div class="status-bar"><span>09:41</span><div class="notch"></div><div class="sr"><svg viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1" fill="currentColor" stroke="none"/></svg><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="11" rx="2"/></svg></div></div>
+    <div class="screen">
+      <div class="topbar"><div class="logo">PulsePoll</div><div class="ibt"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><div class="ndot"></div></div></div>
+      <div class="sa">
+        <div class="stories">
+          <div class="si"><div class="sring off"><div class="savatar" style="font-size:11px;color:#7C5CFC;">PP</div></div><div class="sname">PulsePoll</div></div>
+          <div class="si"><div class="sring"><div class="savatar" style="color:#E04A2F;">A</div></div><div class="sname">Arçelik</div></div>
+          <div class="si"><div class="sring"><div class="savatar" style="color:#0060AF;">T</div></div><div class="sname">Turkcell</div></div>
+          <div class="si"><div class="sring seen"><div class="savatar" style="color:#007A33;">M</div></div><div class="sname">Migros</div></div>
+          <div class="si"><div class="sring seen"><div class="savatar" style="color:#1F4E79;font-size:12px;">B</div></div><div class="sname">BMW TR</div></div>
+        </div>
+        <div class="nfeat">
+          <div class="ntag">Duyuru</div>
+          <div class="ntitle">Yeni Platin Üyelik<br>Sistemi Geliyor 🎉</div>
+          <div class="ndots"><div class="nd a"></div><div class="nd"></div><div class="nd"></div></div>
+        </div>
+        <div class="sh"><div class="sh-t">Sana Özel</div><div class="sh-l">Tümü</div></div>
+        <div class="sc">
+          <div class="sc-top"><div class="brand" style="color:#E04A2F;">A</div><div class="sm"><div class="sm-b">Arçelik A.Ş.</div><div class="sm-t">Beyaz Eşya Deneyimi</div></div><div class="earn">₺15</div></div>
+          <div class="sc-bot"><div class="chip"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>~8 dk</div><div class="chip"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/></svg>12 soru</div><div class="cat">Teknoloji</div></div>
+        </div>
+        <div class="sc">
+          <div class="sc-top"><div class="brand" style="color:#0060AF;">T</div><div class="sm"><div class="sm-b">Turkcell</div><div class="sm-t">5G Kullanım Alışkanlıkları</div></div><div class="earn">₺8</div></div>
+          <div class="sc-bot"><div class="chip"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>~5 dk</div><div class="chip"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/></svg>8 soru</div><div class="cat">Telekom</div></div>
+        </div>
+        <div class="sc">
+          <div class="sc-top"><div class="brand" style="color:#007A33;">M</div><div class="sm"><div class="sm-b">Migros</div><div class="sm-t">Online Market Deneyimi</div></div><div class="earn">₺22</div></div>
+          <div class="sc-bot"><div class="chip"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>~10 dk</div><div class="chip"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/></svg>15 soru</div><div class="cat">Perakende</div></div>
+        </div>
+      </div>
+      <div class="bnav">
+        <div class="ni active"><div class="ni-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><div class="ni-lbl">Anasayfa</div></div>
+        <div class="ni"><div class="ni-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div><div class="ni-lbl">Anketler</div></div>
+        <div class="ni"><div class="ni-icon"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div class="ni-lbl">Geçmiş</div></div>
+        <div class="ni"><div class="ni-icon"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></div><div class="ni-lbl">Cüzdan</div></div>
+        <div class="ni"><div class="ni-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div class="ni-lbl">Profil</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /phones-row -->
+</body>
+</html>

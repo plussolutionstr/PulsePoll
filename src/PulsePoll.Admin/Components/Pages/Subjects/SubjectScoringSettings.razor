@@ -1,0 +1,259 @@
+@page "/subjects/scoring-settings"
+@attribute [HasPermission(PermissionCodes.Subjects.ScoringSettings)]
+@using System.Security.Claims
+@inject ISubjectScoreConfigService ScoreConfigService
+@inject ISubjectScoreService SubjectScoreService
+@inject IAppToastService Toast
+@inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthStateProvider
+
+<PageTitle>Denek Skor Ayarları — PulsePoll Admin</PageTitle>
+
+<div class="d-flex align-items-center justify-content-between gap-2 mb-3">
+    <div class="d-flex align-items-center gap-2">
+        <DxButton Text="← Ayarlar"
+                  RenderStyle="ButtonRenderStyle.Link"
+                  Click="@(() => Nav.NavigateTo("/settings"))" />
+        <span class="text-muted">/</span>
+        <h3 class="mb-0">Denek Skor Ayarları</h3>
+    </div>
+    <div class="d-flex gap-2">
+        <DxButton Text="@(_isRecalculating ? "Hesaplanıyor..." : "Tüm Skorları Yeniden Hesapla")"
+                  IconCssClass="bi bi-arrow-repeat"
+                  RenderStyle="ButtonRenderStyle.Secondary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Enabled="@(!_isRecalculating && !_isSaving)"
+                  Click="RecalculateAllAsync" />
+        <DxButton Text="@(_isSaving ? "Kaydediliyor..." : "Ayarları Kaydet")"
+                  IconCssClass="bi bi-check-lg"
+                  RenderStyle="ButtonRenderStyle.Primary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Enabled="@(!_isSaving && !_isRecalculating)"
+                  Click="SaveAsync" />
+    </div>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(_error))
+{
+    <div class="alert alert-danger py-2">@_error</div>
+}
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <DxFormLayout>
+            <DxFormLayoutGroup Caption="Temel Ağırlıklar" ColSpanMd="12">
+                <DxFormLayoutItem ColSpanMd="4" Caption="Katılım">
+                    <DxSpinEdit @bind-Value="_form.ParticipationWeight" Increment="0.01m" MinValue="0m" MaxValue="1m" DisplayFormat="N2" />
+                </DxFormLayoutItem>
+                <DxFormLayoutItem ColSpanMd="4" Caption="Tamamlama">
+                    <DxSpinEdit @bind-Value="_form.CompletionWeight" Increment="0.01m" MinValue="0m" MaxValue="1m" DisplayFormat="N2" />
+                </DxFormLayoutItem>
+                <DxFormLayoutItem ColSpanMd="4" Caption="Kalite">
+                    <DxSpinEdit @bind-Value="_form.QualityWeight" Increment="0.01m" MinValue="0m" MaxValue="1m" DisplayFormat="N2" />
+                </DxFormLayoutItem>
+                <DxFormLayoutItem ColSpanMd="4" Caption="Onay Güveni">
+                    <DxSpinEdit @bind-Value="_form.ApprovalTrustWeight" Increment="0.01m" MinValue="0m" MaxValue="1m" DisplayFormat="N2" />
+                </DxFormLayoutItem>
+                <DxFormLayoutItem ColSpanMd="4" Caption="Hız">
+                    <DxSpinEdit @bind-Value="_form.SpeedWeight" Increment="0.01m" MinValue="0m" MaxValue="1m" DisplayFormat="N2" />
+                </DxFormLayoutItem>
+                <DxFormLayoutItem ColSpanMd="4" Caption="Confidence Pivot">
+                    <DxSpinEdit @bind-Value="_form.ConfidencePivot" Increment="1" MinValue="1" MaxValue="200" />
+                </DxFormLayoutItem>
+                <DxFormLayoutItem ColSpanMd="4" Caption="Skor Baseline">
+                    <DxSpinEdit @bind-Value="_form.ScoreBaseline" Increment="1m" MinValue="0m" MaxValue="100m" DisplayFormat="N0" />
+                </DxFormLayoutItem>
+            </DxFormLayoutGroup>
+
+            <DxFormLayoutGroup Caption="Yıldız Eşikleri" ColSpanMd="12">
+                <DxFormLayoutItem ColSpanMd="3" Caption="1★ Üst Sınır">
+                    <DxSpinEdit @bind-Value="_form.Star1Max" Increment="1m" MinValue="0m" MaxValue="100m" DisplayFormat="N0" />
+                </DxFormLayoutItem>
+                <DxFormLayoutItem ColSpanMd="3" Caption="2★ Üst Sınır">
+                    <DxSpinEdit @bind-Value="_form.Star2Max" Increment="1m" MinValue="0m" MaxValue="100m" DisplayFormat="N0" />
+                </DxFormLayoutItem>
+                <DxFormLayoutItem ColSpanMd="3" Caption="3★ Üst Sınır">
+                    <DxSpinEdit @bind-Value="_form.Star3Max" Increment="1m" MinValue="0m" MaxValue="100m" DisplayFormat="N0" />
+                </DxFormLayoutItem>
+                <DxFormLayoutItem ColSpanMd="3" Caption="4★ Üst Sınır">
+                    <DxSpinEdit @bind-Value="_form.Star4Max" Increment="1m" MinValue="0m" MaxValue="100m" DisplayFormat="N0" />
+                </DxFormLayoutItem>
+            </DxFormLayoutGroup>
+
+            <DxFormLayoutGroup Caption="Aktivite Çarpanları" ColSpanMd="12">
+                <DxFormLayoutItem ColSpanMd="4" Caption="Çok Aktif Son Görülme (gün)">
+                    <DxSpinEdit @bind-Value="_form.VeryActiveLastSeenDays" Increment="1" MinValue="1" MaxValue="90" />
+                </DxFormLayoutItem>
+                <DxFormLayoutItem ColSpanMd="4" Caption="Aktif Son Görülme (gün)">
+                    <DxSpinEdit @bind-Value="_form.ActiveLastSeenDays" Increment="1" MinValue="1" MaxValue="90" />
+                </DxFormLayoutItem>
+                <DxFormLayoutItem ColSpanMd="4" Caption="Sıcak Son Görülme (gün)">
+                    <DxSpinEdit @bind-Value="_form.WarmLastSeenDays" Increment="1" MinValue="1" MaxValue="120" />
+                </DxFormLayoutItem>
+                <DxFormLayoutItem ColSpanMd="4" Caption="Soğuma Son Görülme (gün)">
+                    <DxSpinEdit @bind-Value="_form.CoolingLastSeenDays" Increment="1" MinValue="1" MaxValue="365" />
+                </DxFormLayoutItem>
+                <DxFormLayoutItem ColSpanMd="4" Caption="Çok Aktif Min Gün (30g)">
+                    <DxSpinEdit @bind-Value="_form.VeryActiveMinDays30" Increment="1" MinValue="1" MaxValue="30" />
+                </DxFormLayoutItem>
+
+                <DxFormLayoutItem ColSpanMd="4" Caption="Çok Aktif Çarpan">
+                    <DxSpinEdit @bind-Value="_form.VeryActiveMultiplier" Increment="0.01m" MinValue="0.10m" MaxValue="3m" DisplayFormat="N2" />
+                </DxFormLayoutItem>
+                <DxFormLayoutItem ColSpanMd="4" Caption="Aktif Çarpan">
+                    <DxSpinEdit @bind-Value="_form.ActiveMultiplier" Increment="0.01m" MinValue="0.10m" MaxValue="3m" DisplayFormat="N2" />
+                </DxFormLayoutItem>
+                <DxFormLayoutItem ColSpanMd="4" Caption="Sıcak Çarpan">
+                    <DxSpinEdit @bind-Value="_form.WarmMultiplier" Increment="0.01m" MinValue="0.10m" MaxValue="3m" DisplayFormat="N2" />
+                </DxFormLayoutItem>
+                <DxFormLayoutItem ColSpanMd="4" Caption="Soğuma Çarpan">
+                    <DxSpinEdit @bind-Value="_form.CoolingMultiplier" Increment="0.01m" MinValue="0.10m" MaxValue="3m" DisplayFormat="N2" />
+                </DxFormLayoutItem>
+                <DxFormLayoutItem ColSpanMd="4" Caption="Uyuyan Çarpan">
+                    <DxSpinEdit @bind-Value="_form.DormantMultiplier" Increment="0.01m" MinValue="0.10m" MaxValue="3m" DisplayFormat="N2" />
+                </DxFormLayoutItem>
+                <DxFormLayoutItem ColSpanMd="4" Caption="Telemetry Yok Çarpan">
+                    <DxSpinEdit @bind-Value="_form.NoTelemetryMultiplier" Increment="0.01m" MinValue="0.10m" MaxValue="3m" DisplayFormat="N2" />
+                </DxFormLayoutItem>
+            </DxFormLayoutGroup>
+        </DxFormLayout>
+    </div>
+</div>
+
+@code {
+    private ScoreConfigForm _form = new();
+    private bool _isSaving;
+    private bool _isRecalculating;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var dto = await ScoreConfigService.GetAsync();
+        _form = ScoreConfigForm.FromDto(dto);
+    }
+
+    private async Task SaveAsync()
+    {
+        _error = null;
+        _isSaving = true;
+        try
+        {
+            var adminId = await GetAdminIdAsync();
+            await ScoreConfigService.SaveAsync(_form.ToDto(), adminId);
+            Toast.Success("Skor ayarları kaydedildi.");
+        }
+        catch (Exception ex)
+        {
+            _error = ErrorHandler.HandleFormSave(ex, Toast);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private async Task RecalculateAllAsync()
+    {
+        _isRecalculating = true;
+        try
+        {
+            await SubjectScoreService.RecalculateAllAsync();
+            Toast.Success("Tüm denek skorları yeniden hesaplandı.");
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleOperation(ex, Toast, "Skorlar yeniden hesaplanamadı.");
+        }
+        finally
+        {
+            _isRecalculating = false;
+        }
+    }
+
+    private async Task<int> GetAdminIdAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var claim = authState.User.FindFirst(ClaimTypes.NameIdentifier);
+        return claim is not null && int.TryParse(claim.Value, out var adminUserId)
+            ? adminUserId
+            : 0;
+    }
+
+    private sealed class ScoreConfigForm
+    {
+        public decimal ParticipationWeight { get; set; } = 0.25m;
+        public decimal CompletionWeight { get; set; } = 0.30m;
+        public decimal QualityWeight { get; set; } = 0.20m;
+        public decimal ApprovalTrustWeight { get; set; } = 0.15m;
+        public decimal SpeedWeight { get; set; } = 0.10m;
+        public int ConfidencePivot { get; set; } = 20;
+        public decimal ScoreBaseline { get; set; } = 60m;
+        public decimal Star1Max { get; set; } = 44m;
+        public decimal Star2Max { get; set; } = 59m;
+        public decimal Star3Max { get; set; } = 74m;
+        public decimal Star4Max { get; set; } = 89m;
+        public int VeryActiveLastSeenDays { get; set; } = 3;
+        public int ActiveLastSeenDays { get; set; } = 7;
+        public int WarmLastSeenDays { get; set; } = 14;
+        public int CoolingLastSeenDays { get; set; } = 30;
+        public int VeryActiveMinDays30 { get; set; } = 10;
+        public decimal VeryActiveMultiplier { get; set; } = 1.15m;
+        public decimal ActiveMultiplier { get; set; } = 1.08m;
+        public decimal WarmMultiplier { get; set; } = 1.00m;
+        public decimal CoolingMultiplier { get; set; } = 0.93m;
+        public decimal DormantMultiplier { get; set; } = 0.85m;
+        public decimal NoTelemetryMultiplier { get; set; } = 1.00m;
+
+        public SubjectScoreConfigDto ToDto()
+            => new(
+                ParticipationWeight,
+                CompletionWeight,
+                QualityWeight,
+                ApprovalTrustWeight,
+                SpeedWeight,
+                ConfidencePivot,
+                ScoreBaseline,
+                Star1Max,
+                Star2Max,
+                Star3Max,
+                Star4Max,
+                VeryActiveLastSeenDays,
+                ActiveLastSeenDays,
+                WarmLastSeenDays,
+                CoolingLastSeenDays,
+                VeryActiveMinDays30,
+                VeryActiveMultiplier,
+                ActiveMultiplier,
+                WarmMultiplier,
+                CoolingMultiplier,
+                DormantMultiplier,
+                NoTelemetryMultiplier);
+
+        public static ScoreConfigForm FromDto(SubjectScoreConfigDto x)
+            => new()
+            {
+                ParticipationWeight = x.ParticipationWeight,
+                CompletionWeight = x.CompletionWeight,
+                QualityWeight = x.QualityWeight,
+                ApprovalTrustWeight = x.ApprovalTrustWeight,
+                SpeedWeight = x.SpeedWeight,
+                ConfidencePivot = x.ConfidencePivot,
+                ScoreBaseline = x.ScoreBaseline,
+                Star1Max = x.Star1Max,
+                Star2Max = x.Star2Max,
+                Star3Max = x.Star3Max,
+                Star4Max = x.Star4Max,
+                VeryActiveLastSeenDays = x.VeryActiveLastSeenDays,
+                ActiveLastSeenDays = x.ActiveLastSeenDays,
+                WarmLastSeenDays = x.WarmLastSeenDays,
+                CoolingLastSeenDays = x.CoolingLastSeenDays,
+                VeryActiveMinDays30 = x.VeryActiveMinDays30,
+                VeryActiveMultiplier = x.VeryActiveMultiplier,
+                ActiveMultiplier = x.ActiveMultiplier,
+                WarmMultiplier = x.WarmMultiplier,
+                CoolingMultiplier = x.CoolingMultiplier,
+                DormantMultiplier = x.DormantMultiplier,
+                NoTelemetryMultiplier = x.NoTelemetryMultiplier
+            };
+    }
+}

@@ -1,0 +1,67 @@
+@using System.Reflection
+@using Microsoft.AspNetCore.Authorization
+@using PulsePoll.Application.Attributes
+@inject PulsePoll.Admin.Services.IPermissionAuthorizationService PermissionService
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+
+@if (_isAuthorized)
+{
+    @ChildContent
+}
+else if (_isDenied)
+{
+    <LayoutView Layout="@typeof(Layout.MainLayout)">
+        <div class="d-flex flex-column justify-content-center align-items-center" style="height: 100%; min-height: 60vh;">
+            <h3 class="text-danger mb-3">Erişim Reddedildi</h3>
+            <p class="text-muted text-center">Bu sayfayı görüntülemek için gerekli yetkiye sahip değilsiniz.</p>
+            <a href="/" class="btn btn-outline-secondary mt-3">Ana Sayfaya Dön</a>
+        </div>
+    </LayoutView>
+}
+
+@code {
+    [Parameter] public RenderFragment ChildContent { get; set; } = default!;
+    [Parameter] public RouteData? RouteData { get; set; }
+
+    private bool _isAuthorized;
+    private bool _isDenied;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _isAuthorized = false;
+        _isDenied = false;
+
+        // Allow [AllowAnonymous] pages without auth check
+        if (RouteData?.PageType?.GetCustomAttribute<AllowAnonymousAttribute>() is not null)
+        {
+            _isAuthorized = true;
+            return;
+        }
+
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+
+        if (authState.User.Identity?.IsAuthenticated != true)
+        {
+            var returnUrl = Uri.EscapeDataString(Navigation.Uri);
+            Navigation.NavigateTo($"/login?returnUrl={returnUrl}", forceLoad: true);
+            return;
+        }
+
+        if (RouteData?.PageType is null)
+        {
+            _isAuthorized = true;
+            return;
+        }
+
+        var attr = RouteData.PageType.GetCustomAttribute<HasPermissionAttribute>();
+        if (attr is null)
+        {
+            _isAuthorized = true;
+            return;
+        }
+
+        _isAuthorized = await PermissionService.HasAnyPermissionAsync(attr.Permissions);
+        _isDenied = !_isAuthorized;
+    }
+}

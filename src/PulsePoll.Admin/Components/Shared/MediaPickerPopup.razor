@@ -1,0 +1,257 @@
+@using System.Security.Claims
+@inject IMediaAssetService MediaAssetService
+@inject IAppToastService Toast
+@inject AuthenticationStateProvider AuthStateProvider
+
+<DxPopup Visible="@Visible"
+         VisibleChanged="OnDxPopupVisibleChanged"
+         HeaderText="Görsel Seç"
+         Width="860px"
+         MaxHeight="80vh"
+         CloseOnOutsideClick="false"
+         ShowFooter="true">
+    <BodyContentTemplate Context="_">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <span class="text-muted small">Bir görsel seçin veya yeni görsel yükleyin.</span>
+            <DxButton Text="Görsel Yükle" IconCssClass="bi bi-upload"
+                      RenderStyle="ButtonRenderStyle.Secondary"
+                      RenderStyleMode="ButtonRenderStyleMode.Outline"
+                      SizeMode="SizeMode.Small"
+                      Click="OnUploadClick" />
+        </div>
+
+        @if (_isLoading)
+        {
+            <div class="text-center py-4 text-muted">Yükleniyor...</div>
+        }
+        else if (_assets.Count == 0)
+        {
+            <div class="text-center text-muted py-4">
+                <i class="bi bi-images" style="font-size:2.5rem;"></i>
+                <p class="mt-2">Henüz görsel yok.</p>
+            </div>
+        }
+        else
+        {
+            <div class="row row-cols-2 row-cols-md-4 g-3" style="max-height:50vh; overflow-y:auto;">
+                @foreach (var asset in _assets)
+                {
+                    var isSelected = _selected?.Id == asset.Id;
+                    <div class="col" @onclick="() => SelectAsset(asset)" style="cursor:pointer; position:relative;">
+                        <div class="card h-100 @(isSelected ? "border-success border-2" : "")">
+                            @if (isSelected)
+                            {
+                                <span class="position-absolute top-0 end-0 badge bg-success m-1" style="z-index:1;">
+                                    <i class="bi bi-check-lg"></i>
+                                </span>
+                            }
+                            <div style="width:100px; height:100px; margin:auto; background:#f8f9fa; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+                                <img src="@asset.Url"
+                                     style="max-width:100px; max-height:100px; object-fit:contain;"
+                                     alt="@asset.Name" />
+                            </div>
+                            <div class="card-body p-2">
+                                <p class="small mb-0 text-truncate" title="@asset.Name">@asset.Name</p>
+                                <p class="text-muted mb-0" style="font-size:0.7rem;">@FormatSize(asset.Size)</p>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+
+        @if (_uploadPanelVisible)
+        {
+            <div class="border rounded p-3 mt-3 bg-light">
+                <div class="mb-2 fw-semibold small">Yeni Görsel Yükle</div>
+                <DxFileInput MaxFileSize="5242880"
+                             MaxFileCount="1"
+                             FilesUploading="OnFileUploading"
+                             AcceptedFileTypes="@_acceptedTypes" />
+                <div class="small text-muted mt-1">
+                    JPG, PNG, GIF, WebP — maks. 5 MB &nbsp;|&nbsp; Önerilen: <strong>900×300px</strong>
+                </div>
+                @if (_pendingBytes != null)
+                {
+                    <div class="mt-2 d-flex gap-2 align-items-center">
+                        <img src="@($"data:{_pendingFileType};base64,{Convert.ToBase64String(_pendingBytes)}")"
+                             style="max-height:60px; max-width:160px; object-fit:contain; border:1px solid #dee2e6; border-radius:4px;"
+                             alt="Önizleme" />
+                        <div>
+                            <div class="small fw-semibold">@_pendingFileName</div>
+                            <div class="small text-muted">@FormatSize(_pendingBytes.LongLength)</div>
+                            <DxButton Text="Yükle" IconCssClass="bi bi-upload"
+                                      RenderStyle="ButtonRenderStyle.Primary"
+                                      RenderStyleMode="ButtonRenderStyleMode.Outline"
+                                      SizeMode="SizeMode.Small"
+                                      Click="DoUpload"
+                                      Enabled="!_isUploading" />
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </BodyContentTemplate>
+    <FooterContentTemplate>
+        <DxButton Text="Seç" IconCssClass="bi bi-check-lg"
+                  RenderStyle="ButtonRenderStyle.Primary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="ConfirmSelection"
+                  Enabled="@(_selected != null)" />
+        <DxButton Text="Temizle" IconCssClass="bi bi-x-circle"
+                  RenderStyle="ButtonRenderStyle.Secondary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="ClearSelection"
+                  Enabled="@(CurrentMediaId.HasValue || _selected != null)" />
+        <DxButton Text="İptal"
+                  RenderStyle="ButtonRenderStyle.Secondary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="CancelAsync" />
+    </FooterContentTemplate>
+</DxPopup>
+
+@code {
+    [Parameter] public bool Visible { get; set; }
+    [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
+    [Parameter] public int? CurrentMediaId { get; set; }
+    [Parameter] public EventCallback<MediaAssetDto?> OnSelected { get; set; }
+
+    private List<MediaAssetDto> _assets = [];
+    private MediaAssetDto? _selected;
+    private bool _isLoading;
+    private bool _previousVisible;
+
+    // Upload inline
+    private bool _uploadPanelVisible;
+    private bool _isUploading;
+    private byte[]? _pendingBytes;
+    private string? _pendingFileName;
+    private string? _pendingFileType;
+    private readonly List<string> _acceptedTypes = [".jpg", ".jpeg", ".png", ".gif", ".webp"];
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Visible && !_previousVisible)
+            await LoadAssetsAsync();
+        _previousVisible = Visible;
+    }
+
+    private async Task OnDxPopupVisibleChanged(bool value)
+    {
+        // DxPopup istedi ki kapansın (örn. X butonu)
+        await VisibleChanged.InvokeAsync(value);
+    }
+
+    private async Task LoadAssetsAsync()
+    {
+        _isLoading = true;
+        _assets    = await MediaAssetService.GetAllAsync();
+        _selected  = CurrentMediaId.HasValue
+            ? _assets.FirstOrDefault(a => a.Id == CurrentMediaId.Value)
+            : null;
+        _uploadPanelVisible = false;
+        _pendingBytes       = null;
+        _pendingFileName    = null;
+        _pendingFileType    = null;
+        _isLoading = false;
+    }
+
+    private void SelectAsset(MediaAssetDto asset)
+        => _selected = _selected?.Id == asset.Id ? null : asset;
+
+    private async Task ConfirmSelection()
+    {
+        await OnSelected.InvokeAsync(_selected);
+        await VisibleChanged.InvokeAsync(false);
+    }
+
+    private async Task ClearSelection()
+    {
+        _selected = null;
+        await OnSelected.InvokeAsync(null);
+        await VisibleChanged.InvokeAsync(false);
+    }
+
+    private async Task CancelAsync()
+        => await VisibleChanged.InvokeAsync(false);
+
+    private void OnUploadClick()
+    {
+        _uploadPanelVisible = !_uploadPanelVisible;
+        _pendingBytes       = null;
+        _pendingFileName    = null;
+        _pendingFileType    = null;
+    }
+
+    private async Task OnFileUploading(FilesUploadingEventArgs args)
+    {
+        var file = args.Files[0];
+        _pendingFileName = file.Name;
+        _pendingFileType = string.IsNullOrEmpty(file.Type)
+            ? GetContentTypeFromExtension(file.Name)
+            : file.Type;
+        _pendingBytes    = new byte[(int)file.Size];
+
+        var stream = file.OpenReadStream((long)file.Size);
+        try
+        {
+            int read, offset = 0;
+            while ((read = await stream.ReadAsync(_pendingBytes, offset, (int)file.Size - offset)) > 0)
+                offset += read;
+        }
+        finally
+        {
+            stream.Close();
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task DoUpload()
+    {
+        if (_pendingBytes is null || _pendingFileName is null || _pendingFileType is null) return;
+
+        _isUploading = true;
+        try
+        {
+            var adminId = await GetAdminIdAsync();
+            using var ms = new MemoryStream(_pendingBytes, false);
+            var newAsset = await MediaAssetService.UploadAsync(ms, _pendingFileName, _pendingFileType, _pendingBytes.LongLength, adminId);
+            Toast.Success("Görsel yüklendi.");
+            await LoadAssetsAsync();
+            _selected = newAsset;
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleOperation(ex, Toast);
+        }
+        finally
+        {
+            _isUploading = false;
+        }
+    }
+
+    private async Task<int> GetAdminIdAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var claim = authState.User.FindFirst(ClaimTypes.NameIdentifier);
+        return claim is not null && int.TryParse(claim.Value, out var adminId)
+            ? adminId
+            : 0;
+    }
+
+    private static string FormatSize(long bytes) =>
+        bytes >= 1024 * 1024
+            ? $"{bytes / 1024.0 / 1024.0:F1} MB"
+            : $"{bytes / 1024.0:F0} KB";
+
+    private static string GetContentTypeFromExtension(string fileName) =>
+        Path.GetExtension(fileName).ToLowerInvariant() switch
+        {
+            ".jpg" or ".jpeg" => "image/jpeg",
+            ".png"            => "image/png",
+            ".gif"            => "image/gif",
+            ".webp"           => "image/webp",
+            _                 => "application/octet-stream"
+        };
+}

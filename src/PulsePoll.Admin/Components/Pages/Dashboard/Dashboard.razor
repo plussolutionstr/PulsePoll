@@ -1,0 +1,201 @@
+@page "/"
+@attribute [HasPermission(PermissionCodes.Dashboard.View)]
+@using PulsePoll.Application.Interfaces
+@using PulsePoll.Domain.Enums
+@inject IProjectService ProjectService
+@inject ISubjectService SubjectService
+@inject ICustomerService CustomerService
+@inject IPaymentBatchService PaymentBatchService
+@inject IAppToastService Toast
+
+<PageTitle>Dashboard — PulsePoll Admin</PageTitle>
+
+<h3 class="mb-3">Dashboard</h3>
+
+@if (_isLoading)
+{
+    <div class="alert alert-info py-2">Dashboard verileri yükleniyor...</div>
+}
+else if (!string.IsNullOrWhiteSpace(_loadError))
+{
+    <div class="alert alert-danger py-2">@_loadError</div>
+}
+else
+{
+    <div class="row g-3 mb-3">
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="card dashboard-card h-100">
+                <div class="card-body">
+                    <div class="dashboard-card-label">Denekler</div>
+                    <div class="dashboard-card-value">@_stats.TotalSubjects</div>
+                    <div class="dashboard-card-sub">
+                        <span>Onaylı: @_stats.ApprovedSubjects</span>
+                        <span>Bekleyen: @_stats.PendingSubjects</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="card dashboard-card h-100">
+                <div class="card-body">
+                    <div class="dashboard-card-label">Projeler</div>
+                    <div class="dashboard-card-value">@_stats.TotalProjects</div>
+                    <div class="dashboard-card-sub">
+                        <span>Aktif: @_stats.ActiveProjects</span>
+                        <span>Taslak: @_stats.DraftProjects</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="card dashboard-card h-100">
+                <div class="card-body">
+                    <div class="dashboard-card-label">Müşteriler</div>
+                    <div class="dashboard-card-value">@_stats.TotalCustomers</div>
+                    <div class="dashboard-card-sub">
+                        <span>Toplam kayıt</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="card dashboard-card h-100">
+                <div class="card-body">
+                    <div class="dashboard-card-label">Çekim Talepleri</div>
+                    <div class="dashboard-card-value">@_stats.PendingWithdrawalCount</div>
+                    <div class="dashboard-card-sub">
+                        <span>Onaylanan: @_stats.ApprovedWithdrawalCount</span>
+                        <span>Bekleyenler gösteriliyor</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-12 col-xl-6">
+            <div class="card dashboard-panel h-100">
+                <div class="card-header fw-semibold">Ödeme Paketleri</div>
+                <div class="card-body">
+                    <div class="dashboard-kpi-row">
+                        <div class="dashboard-kpi-item">
+                            <div class="dashboard-kpi-title">Taslak</div>
+                            <div class="dashboard-kpi-value">@_stats.DraftBatchCount</div>
+                        </div>
+                        <div class="dashboard-kpi-item">
+                            <div class="dashboard-kpi-title">Gönderildi</div>
+                            <div class="dashboard-kpi-value">@_stats.SentBatchCount</div>
+                        </div>
+                        <div class="dashboard-kpi-item">
+                            <div class="dashboard-kpi-title">Tamamlandı</div>
+                            <div class="dashboard-kpi-value">@_stats.CompletedBatchCount</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-xl-6">
+            <div class="card dashboard-panel h-100">
+                <div class="card-header fw-semibold">Operasyon Özeti</div>
+                <div class="card-body">
+                    <div class="dashboard-metrics">
+                        <div class="dashboard-metric-row">
+                            <span>Denek onay oranı</span>
+                            <strong>@ToPercent(_stats.ApprovedSubjects, _stats.TotalSubjects)</strong>
+                        </div>
+                        <div class="dashboard-metric-row">
+                            <span>Aktif proje oranı</span>
+                            <strong>@ToPercent(_stats.ActiveProjects, _stats.TotalProjects)</strong>
+                        </div>
+                        <div class="dashboard-metric-row">
+                            <span>Paket tamamlanma oranı</span>
+                            <strong>@ToPercent(_stats.CompletedBatchCount, _stats.DraftBatchCount + _stats.SentBatchCount + _stats.CompletedBatchCount)</strong>
+                        </div>
+                        <div class="dashboard-metric-row">
+                            <span>Bekleyen çekim oranı</span>
+                            <strong>@ToPercent(_stats.PendingWithdrawalCount, _stats.PendingWithdrawalCount + _stats.ApprovedWithdrawalCount)</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private bool _isLoading = true;
+    private string? _loadError;
+    private DashboardStats _stats = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Blazor Server'da aynı scoped DbContext'in eşzamanlı kullanılmaması için
+            // servis çağrılarını paralel değil sıralı çalıştırıyoruz.
+            var customers = await CustomerService.GetAllPagedAsync(1, 1);
+            var subjects = await SubjectService.GetAllAsync();
+            var projects = await ProjectService.GetAllAsync();
+
+            var pendingWithdrawals = await PaymentBatchService.GetPendingWithdrawalsAsync(0, 1);
+            var approvedWithdrawals = await PaymentBatchService.GetApprovedWithdrawalsAsync(0, 1);
+
+            var draftBatches = await PaymentBatchService.GetBatchesAsync(PaymentBatchStatus.Draft, 0, 1);
+            var sentBatches = await PaymentBatchService.GetBatchesAsync(PaymentBatchStatus.Sent, 0, 1);
+            var completedBatches = await PaymentBatchService.GetBatchesAsync(PaymentBatchStatus.Completed, 0, 1);
+
+            _stats = new DashboardStats
+            {
+                TotalCustomers = customers.TotalCount,
+                TotalSubjects = subjects.Count,
+                ApprovedSubjects = subjects.Count(x => x.Status == ApprovalStatus.Approved),
+                PendingSubjects = subjects.Count(x => x.Status == ApprovalStatus.Pending),
+                TotalProjects = projects.Count,
+                ActiveProjects = projects.Count(x => x.Status == ProjectStatus.Active),
+                DraftProjects = projects.Count(x => x.Status == ProjectStatus.Draft),
+                PendingWithdrawalCount = pendingWithdrawals.Total,
+                ApprovedWithdrawalCount = approvedWithdrawals.Total,
+                DraftBatchCount = draftBatches.Total,
+                SentBatchCount = sentBatches.Total,
+                CompletedBatchCount = completedBatches.Total
+            };
+        }
+        catch (Exception ex)
+        {
+            _loadError = ErrorHandler.HandleFormSave(ex, Toast);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private sealed class DashboardStats
+    {
+        public int TotalCustomers { get; set; }
+        public int TotalSubjects { get; set; }
+        public int ApprovedSubjects { get; set; }
+        public int PendingSubjects { get; set; }
+        public int TotalProjects { get; set; }
+        public int ActiveProjects { get; set; }
+        public int DraftProjects { get; set; }
+        public int PendingWithdrawalCount { get; set; }
+        public int ApprovedWithdrawalCount { get; set; }
+        public int DraftBatchCount { get; set; }
+        public int SentBatchCount { get; set; }
+        public int CompletedBatchCount { get; set; }
+    }
+
+    private static string ToPercent(int value, int total)
+    {
+        if (total <= 0)
+            return "%0";
+
+        var ratio = (decimal)value / total * 100m;
+        return $"%{ratio:0.#}";
+    }
+}

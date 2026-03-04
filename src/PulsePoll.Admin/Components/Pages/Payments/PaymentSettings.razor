@@ -1,0 +1,197 @@
+@page "/payments/settings"
+@attribute [HasPermission(PermissionCodes.Payments.SettingsView)]
+@using System.Security.Claims
+@using System.Globalization
+@using PulsePoll.Application.Constants
+@inject IPaymentBatchService PaymentBatchService
+@inject IAppToastService Toast
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IPermissionAuthorizationService PermissionService
+
+<PageTitle>Ödeme Ayarları - PulsePoll Admin</PageTitle>
+
+<div class="d-flex align-items-center justify-content-between mb-2">
+    <h3 class="mb-0">Ödeme Ayarları</h3>
+    <DxButton Text="@(_isSaving ? "Kaydediliyor..." : "Ayarları Kaydet")"
+              IconCssClass="bi bi-check-lg"
+              RenderStyle="ButtonRenderStyle.Primary"
+              RenderStyleMode="ButtonRenderStyleMode.Outline"
+              Enabled="@(_canEdit && !_isSaving && !_isLoading)"
+              Click="SaveAsync" />
+</div>
+
+@if (!string.IsNullOrWhiteSpace(_error))
+{
+    <div class="alert alert-danger py-2">@_error</div>
+}
+
+<DxLoadingPanel @bind-Visible="_isLoading"
+                IsContentBlocked="true"
+                ApplyBackgroundShading="true"
+                IndicatorAreaVisible="false"
+                Text="Yükleniyor...">
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <DxFormLayout>
+                <DxFormLayoutGroup Caption="Banka Dosyası Ayarları" ColSpanMd="12">
+                    <DxFormLayoutItem Caption="Dosya Şablonu (3 satır: Header / Detail / Trailer)" ColSpanMd="12">
+                        <DxMemo @bind-Text="_form.BankTransferTemplate"
+                                Rows="8"
+                                Enabled="@_canEdit"
+                                NullText="Header, Detail ve Trailer satırlarını yazın..." />
+                    </DxFormLayoutItem>
+                    <DxFormLayoutItem ColSpanMd="12">
+                        <div class="text-muted small">
+                            Kullanılabilir değişkenler:
+                            <code>{DATE_DDMMYYYY}</code>,
+                            <code>{DATE_YYYYMMDD}</code>,
+                            <code>{BATCH_NUMBER}</code>,
+                            <code>{IBAN}</code>,
+                            <code>{REFERENCE_7}</code>,
+                            <code>{NAME_130}</code>,
+                            <code>{DESCRIPTION_56}</code>,
+                            <code>{EMAIL_40}</code>,
+                            <code>{AMOUNT_18}</code>,
+                            <code>{COUNT_5}</code>.
+                        </div>
+                    </DxFormLayoutItem>
+
+                    <DxFormLayoutItem Caption="Dosya Adı Şablonu" ColSpanMd="12">
+                        <DxTextBox @bind-Text="_form.BankTransferFileNameTemplate"
+                                   Enabled="@_canEdit"
+                                   NullText="Örn: OD{DATE_YYYYMMDD}{BATCH_NUMBER}.txt" />
+                    </DxFormLayoutItem>
+                </DxFormLayoutGroup>
+
+                <DxFormLayoutGroup Caption="Çekim Ayarları" ColSpanMd="12">
+                    <DxFormLayoutItem Caption="Minimum Çekim Eşiği (TL)" ColSpanMd="4">
+                        <DxSpinEdit @bind-Value="_form.WithdrawalMinAmountTry"
+                                    MinValue="0m"
+                                    Increment="1m"
+                                    DisplayFormat="N2"
+                                    Enabled="@_canEdit" />
+                    </DxFormLayoutItem>
+                </DxFormLayoutGroup>
+            </DxFormLayout>
+        </div>
+    </div>
+</DxLoadingPanel>
+
+@code {
+    bool _isLoading;
+    bool _isSaving;
+    bool _canEdit;
+    string? _error;
+    PaymentSettingsForm _form = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPermissionsAsync();
+        await LoadAsync();
+    }
+
+    private async Task LoadPermissionsAsync()
+    {
+        var permissions = await PermissionService.GetCurrentPermissionsAsync();
+        _canEdit = permissions.Contains(PermissionCodes.Payments.SettingsEdit);
+    }
+
+    private async Task LoadAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            var settings = await PaymentBatchService.GetSettingsAsync();
+            var map = settings.ToDictionary(s => s.Key, s => s.Value, StringComparer.OrdinalIgnoreCase);
+
+            _form.BankTransferTemplate = GetValueOrDefault(
+                map,
+                PaymentSettingKeys.BankTransferFileTemplate,
+                PaymentFileTemplateDefaults.BankTransferTemplate);
+            _form.BankTransferFileNameTemplate = GetValueOrDefault(
+                map,
+                PaymentSettingKeys.BankTransferFileNameTemplate,
+                PaymentFileTemplateDefaults.BankTransferFileNameTemplate);
+            _form.WithdrawalMinAmountTry = ParseDecimalOrZero(GetValueOrDefault(
+                map,
+                PaymentSettingKeys.WithdrawalMinAmountTry,
+                "0"));
+        }
+        finally { _isLoading = false; }
+    }
+
+    private async Task SaveAsync()
+    {
+        if (!_canEdit)
+        {
+            Toast.Error("Ödeme ayarlarını düzenleme yetkiniz yok.");
+            return;
+        }
+
+        _error = null;
+        var adminId = await GetAdminIdAsync();
+        _isSaving = true;
+        try
+        {
+            await PaymentBatchService.UpsertSettingAsync(
+                PaymentSettingKeys.BankTransferFileTemplate,
+                _form.BankTransferTemplate,
+                adminId,
+                "Banka dosya şablonu (Header/Detail/Trailer).");
+
+            await PaymentBatchService.UpsertSettingAsync(
+                PaymentSettingKeys.BankTransferFileNameTemplate,
+                _form.BankTransferFileNameTemplate,
+                adminId,
+                "Banka dosya adı şablonu.");
+
+            await PaymentBatchService.UpsertSettingAsync(
+                PaymentSettingKeys.WithdrawalMinAmountTry,
+                _form.WithdrawalMinAmountTry.ToString("0.##", CultureInfo.InvariantCulture),
+                adminId,
+                "Minimum çekim eşiği (TL).");
+
+            Toast.Success("Ödeme ayarları kaydedildi.");
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            _error = ErrorHandler.HandleFormSave(ex, Toast);
+        }
+        finally { _isSaving = false; }
+    }
+
+    private async Task<int> GetAdminIdAsync()
+    {
+        var state = await AuthStateProvider.GetAuthenticationStateAsync();
+        var claimValue = state.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        return int.TryParse(claimValue, out var adminUserId) ? adminUserId : 0;
+    }
+
+    private static string GetValueOrDefault(
+        IReadOnlyDictionary<string, string> settings,
+        string key,
+        string fallback)
+        => settings.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value)
+            ? value
+            : fallback;
+
+    private static decimal ParseDecimalOrZero(string? rawValue)
+    {
+        if (string.IsNullOrWhiteSpace(rawValue))
+            return 0m;
+
+        if (decimal.TryParse(rawValue, NumberStyles.Number, CultureInfo.InvariantCulture, out var parsed))
+            return parsed;
+        if (decimal.TryParse(rawValue, NumberStyles.Number, new CultureInfo("tr-TR"), out parsed))
+            return parsed;
+        return decimal.TryParse(rawValue, NumberStyles.Number, CultureInfo.CurrentCulture, out parsed) ? parsed : 0m;
+    }
+
+    private sealed class PaymentSettingsForm
+    {
+        public string BankTransferTemplate { get; set; } = PaymentFileTemplateDefaults.BankTransferTemplate;
+        public string BankTransferFileNameTemplate { get; set; } = PaymentFileTemplateDefaults.BankTransferFileNameTemplate;
+        public decimal WithdrawalMinAmountTry { get; set; }
+    }
+}

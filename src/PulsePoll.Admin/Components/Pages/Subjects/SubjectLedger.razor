@@ -1,0 +1,466 @@
+@page "/subjects/{SubjectId:int}/ledger"
+@attribute [HasPermission(PermissionCodes.Subjects.LedgerView)]
+@using System.Security.Claims
+@using PulsePoll.Application.DTOs
+@using PulsePoll.Domain.Enums
+@using PulsePoll.Application.Extensions
+@inject IWalletService WalletService
+@inject ISubjectService SubjectService
+@inject IRewardUnitConfigService RewardUnitConfigService
+@inject IAppToastService Toast
+@inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IPermissionAuthorizationService PermissionService
+
+<PageTitle>Hesap Ekstresi — PulsePoll Admin</PageTitle>
+
+<div class="d-flex align-items-center gap-2 mb-3">
+    <DxButton Text="← Denekler"
+              RenderStyle="ButtonRenderStyle.Link"
+              Click="@(() => Nav.NavigateTo("/subjects"))" />
+    <span class="text-muted">/</span>
+    <span class="fw-semibold">@_subjectName — Hesap Ekstresi</span>
+</div>
+
+<div class="card shadow-sm mb-3">
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="text-muted small">Kullanılabilir Bakiye</div>
+                <div class="fs-5 fw-bold text-primary">@FormatAmount(_availableBalance)</div>
+                <div class="small text-muted">TL Karşılığı: @FormatAmountTry(_availableBalance)</div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-muted small">Bekleyen Bakiye</div>
+                <div class="fs-5 fw-bold text-warning">@FormatAmount(_pendingBalance)</div>
+                <div class="small text-muted">TL Karşılığı: @FormatAmountTry(_pendingBalance)</div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-muted small">Reddedilen Bakiye</div>
+                <div class="fs-5 fw-bold text-danger">@FormatAmount(_rejectedBalance)</div>
+                <div class="small text-muted">TL Karşılığı: @FormatAmountTry(_rejectedBalance)</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-header py-2 d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center gap-2">
+            <span class="fw-semibold">İşlemler</span>
+            <span class="badge bg-secondary">@_ledger.Count</span>
+        </div>
+        <div class="d-flex gap-2">
+            <DxButton Text="Excel"
+                      IconCssClass="bi bi-file-earmark-excel"
+                      RenderStyle="ButtonRenderStyle.Secondary"
+                      RenderStyleMode="ButtonRenderStyleMode.Outline"
+                      SizeMode="SizeMode.Small"
+                      Click="ExportToExcelAsync" />
+            <DxButton Text="Hareket Ekle"
+                      IconCssClass="bi bi-plus-circle"
+                      RenderStyle="ButtonRenderStyle.Primary"
+                      RenderStyleMode="ButtonRenderStyleMode.Outline"
+                      SizeMode="SizeMode.Small"
+                      Visible="@_canManageLedger"
+                      Click="ShowAddMovementPopup" />
+            <DxButton IconCssClass="bi bi-arrow-clockwise"
+                      RenderStyle="ButtonRenderStyle.Link"
+                      SizeMode="SizeMode.Small"
+                      title="Yenile"
+                      Click="RefreshAsync" />
+        </div>
+    </div>
+    <div class="card-body p-0">
+        @if (_isLoading)
+        {
+            <div class="text-center py-5 text-muted">
+                <span class="spinner-border spinner-border-sm me-2"></span>Yükleniyor...
+            </div>
+        }
+        else if (_ledger.Count == 0)
+        {
+            <div class="text-center py-5 text-muted">Henüz işlem yoktur.</div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 small">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Tarih</th>
+                            <th>Açıklama</th>
+                            <th class="text-end">Tutar</th>
+                            <th class="text-end">Tutar (TL)</th>
+                            <th class="text-end">Bakiye</th>
+                            <th class="text-end">Bakiye (TL)</th>
+                            <th class="text-end" style="width:80px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var txn in _ledger)
+                        {
+                            var (amountText, amountClass) = txn.Type switch
+                            {
+                                WalletTransactionType.Credit => ($"+{txn.Amount:N2}", "text-success fw-semibold"),
+                                WalletTransactionType.Withdrawal => ($"-{txn.Amount:N2}", "text-danger fw-semibold"),
+                                _ => ($"{txn.Amount:N2}", "")
+                            };
+                            var amountTryText = txn.Type switch
+                            {
+                                WalletTransactionType.Credit => $"+{ToTry(txn.Amount):N2}",
+                                WalletTransactionType.Withdrawal => $"-{ToTry(txn.Amount):N2}",
+                                _ => $"{ToTry(txn.Amount):N2}"
+                            };
+                            <tr>
+                                <td>@txn.CreatedAt.ToString("dd.MM.yyyy HH:mm")</td>
+                                <td>@(txn.Description ?? "—")</td>
+                                <td class="text-end @amountClass">@amountText @_unitLabel</td>
+                                <td class="text-end @amountClass">@amountTryText TL</td>
+                                <td class="text-end">@FormatAmount(txn.CumulativeBalance)</td>
+                                <td class="text-end">@FormatAmountTry(txn.CumulativeBalance)</td>
+                                <td class="text-end">
+                                    @if (txn.IsManual)
+                                    {
+                                        <DxButton IconCssClass="bi bi-trash"
+                                                  RenderStyle="ButtonRenderStyle.Danger"
+                                                  RenderStyleMode="ButtonRenderStyleMode.Text"
+                                                  SizeMode="SizeMode.Small"
+                                                  Visible="@_canManageLedger"
+                                                  title="Manuel hareketi sil"
+                                                  Click="@(() => ShowDeleteMovementPopup(txn.Id))" />
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+<div style="display:none;">
+    <DxGrid @ref="_exportGrid" Data="@_ledger" PageSize="1000">
+        <Columns>
+            <DxGridDataColumn FieldName="CreatedAt" Caption="Tarih" DisplayFormat="dd.MM.yyyy HH:mm" />
+            <DxGridDataColumn FieldName="Description" Caption="Açıklama" />
+            <DxGridDataColumn FieldName="Type" Caption="Tip" />
+            <DxGridDataColumn FieldName="Amount" Caption="@($"Tutar ({_unitLabel})")" DisplayFormat="N2" />
+            <DxGridDataColumn Caption="Tutar (TL)">
+                <CellDisplayTemplate>
+                    @{
+                        var item = (WalletLedgerDto)context.DataItem;
+                    }
+                    @($"{ToTry(item.Amount):N2}")
+                </CellDisplayTemplate>
+            </DxGridDataColumn>
+            <DxGridDataColumn FieldName="CumulativeBalance" Caption="@($"Bakiye ({_unitLabel})")" DisplayFormat="N2" />
+            <DxGridDataColumn Caption="Bakiye (TL)">
+                <CellDisplayTemplate>
+                    @{
+                        var item = (WalletLedgerDto)context.DataItem;
+                    }
+                    @($"{ToTry(item.CumulativeBalance):N2}")
+                </CellDisplayTemplate>
+            </DxGridDataColumn>
+        </Columns>
+    </DxGrid>
+</div>
+
+<DxPopup @bind-Visible="_movementPopupVisible"
+         HeaderText="Hareket Ekle"
+         Width="520px"
+         CloseOnOutsideClick="false"
+         ShowFooter="true">
+    <BodyContentTemplate Context="_">
+        @if (!string.IsNullOrWhiteSpace(_movementError))
+        {
+            <div class="alert alert-danger py-2 mb-3">@_movementError</div>
+        }
+        <DxFormLayout>
+            <DxFormLayoutItem ColSpanMd="6">
+                <label class="form-label">Hareket Tipi *</label>
+                <DxComboBox Data="@_movementTypes"
+                            @bind-Value="_movementForm.Type"
+                            ValueFieldName="Value"
+                            TextFieldName="Text" />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanMd="6">
+                <label class="form-label">Tutar (@_unitLabel) *</label>
+                <DxSpinEdit @bind-Value="_movementForm.Amount"
+                            MinValue="0.01m"
+                            DisplayFormat="N2" />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanMd="12">
+                <label class="form-label">Açıklama *</label>
+                <DxMemo @bind-Text="_movementForm.Description" Rows="4" />
+            </DxFormLayoutItem>
+        </DxFormLayout>
+    </BodyContentTemplate>
+    <FooterContentTemplate>
+        <DxButton Text="@(_isSavingMovement ? "Kaydediliyor..." : "Kaydet")"
+                  IconCssClass="bi bi-check-lg"
+                  Enabled="@(!_isSavingMovement)"
+                  RenderStyle="ButtonRenderStyle.Primary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="SaveMovementAsync" />
+        <DxButton Text="İptal"
+                  IconCssClass="bi bi-x-lg"
+                  RenderStyle="ButtonRenderStyle.Secondary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="@(() => _movementPopupVisible = false)"
+                  Enabled="@(!_isSavingMovement)" />
+    </FooterContentTemplate>
+</DxPopup>
+
+<DxPopup @bind-Visible="_deleteMovementPopupVisible"
+         HeaderText="Manuel Hareketi Sil"
+         Width="420px"
+         CloseOnOutsideClick="false"
+         ShowFooter="true">
+    <BodyContentTemplate Context="_">
+        <div>Seçili manuel hareketi silmek istediğinize emin misiniz?</div>
+    </BodyContentTemplate>
+    <FooterContentTemplate>
+        <DxButton Text="@(_isDeletingMovement ? "Siliniyor..." : "Sil")"
+                  IconCssClass="bi bi-trash"
+                  Enabled="@(!_isDeletingMovement)"
+                  RenderStyle="ButtonRenderStyle.Danger"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="ConfirmDeleteMovementAsync" />
+        <DxButton Text="İptal"
+                  IconCssClass="bi bi-x-lg"
+                  RenderStyle="ButtonRenderStyle.Secondary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="@(() => _deleteMovementPopupVisible = false)"
+                  Enabled="@(!_isDeletingMovement)" />
+    </FooterContentTemplate>
+</DxPopup>
+
+@code {
+    [Parameter] public int SubjectId { get; set; }
+
+    private List<WalletLedgerDto> _ledger = [];
+    private string _subjectName = string.Empty;
+    private decimal _availableBalance;
+    private decimal _pendingBalance;
+    private decimal _rejectedBalance;
+    private string _unitLabel = "TL";
+    private decimal _unitTryMultiplier = 1m;
+    private bool _isLoading = true;
+    private bool _movementPopupVisible;
+    private bool _isSavingMovement;
+    private string? _movementError;
+    private bool _deleteMovementPopupVisible;
+    private bool _isDeletingMovement;
+    private bool _canManageLedger;
+    private int? _transactionToDelete;
+    private IGrid? _exportGrid;
+    private MovementForm _movementForm = new();
+    private readonly List<MovementTypeOption> _movementTypes =
+    [
+        new("credit", "Artı (+)"),
+        new("debit", "Eksi (-)")
+    ];
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPermissionsAsync();
+
+        var subject = await SubjectService.GetByIdAsync(SubjectId);
+        if (subject is null)
+        {
+            Nav.NavigateTo("/subjects");
+            return;
+        }
+
+        _subjectName = subject.FullName;
+        await LoadDataAsync();
+    }
+
+    private async Task LoadPermissionsAsync()
+    {
+        var permissions = await PermissionService.GetCurrentPermissionsAsync();
+        _canManageLedger = permissions.Contains(PermissionCodes.Subjects.LedgerManage);
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            var rewardUnit = await RewardUnitConfigService.GetAsync();
+            _unitLabel = rewardUnit.UnitLabel;
+            _unitTryMultiplier = rewardUnit.TryMultiplier;
+
+            var wallet = await WalletService.GetBySubjectIdAsync(SubjectId);
+            _availableBalance = wallet.Balance;
+            _pendingBalance = wallet.PendingBalance;
+            _rejectedBalance = wallet.RejectedBalance;
+
+            _ledger = await WalletService.GetLedgerAsync(SubjectId);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task RefreshAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task ExportToExcelAsync()
+    {
+        try
+        {
+            if (_exportGrid is not null)
+                await _exportGrid.ExportToXlsxAsync($"denek-ekstresi-{SubjectId}");
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleOperation(ex, Toast, "Excel dışa aktarma başarısız.");
+        }
+    }
+
+    private void ShowAddMovementPopup()
+    {
+        if (!_canManageLedger)
+        {
+            Toast.Error("Manuel hareket ekleme yetkiniz yok.");
+            return;
+        }
+
+        _movementForm = new MovementForm();
+        _movementError = null;
+        _movementPopupVisible = true;
+    }
+
+    private async Task SaveMovementAsync()
+    {
+        if (!_canManageLedger)
+        {
+            _movementError = "Manuel hareket ekleme yetkiniz yok.";
+            return;
+        }
+
+        _movementError = null;
+
+        if (_movementForm.Amount <= 0)
+        {
+            _movementError = "Tutar 0'dan büyük olmalıdır.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_movementForm.Description))
+        {
+            _movementError = "Açıklama zorunludur.";
+            return;
+        }
+
+        _isSavingMovement = true;
+        try
+        {
+            var adminId = await GetAdminIdAsync();
+            var signedAmount = _movementForm.Type == "debit"
+                ? -_movementForm.Amount
+                : _movementForm.Amount;
+
+            await WalletService.AddManualTransactionAsync(
+                SubjectId,
+                signedAmount,
+                _movementForm.Description,
+                adminId);
+
+            _movementPopupVisible = false;
+            _movementForm = new MovementForm();
+            Toast.Success("Hareket kaydedildi.");
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            _movementError = ErrorHandler.HandleFormSave(ex, Toast);
+        }
+        finally
+        {
+            _isSavingMovement = false;
+        }
+    }
+
+    private void ShowDeleteMovementPopup(int transactionId)
+    {
+        if (!_canManageLedger)
+        {
+            Toast.Error("Manuel hareket silme yetkiniz yok.");
+            return;
+        }
+
+        _transactionToDelete = transactionId;
+        _deleteMovementPopupVisible = true;
+    }
+
+    private async Task ConfirmDeleteMovementAsync()
+    {
+        if (!_canManageLedger)
+        {
+            Toast.Error("Manuel hareket silme yetkiniz yok.");
+            return;
+        }
+
+        if (_transactionToDelete is null)
+            return;
+
+        _isDeletingMovement = true;
+        try
+        {
+            var adminId = await GetAdminIdAsync();
+            await WalletService.DeleteManualTransactionAsync(SubjectId, _transactionToDelete.Value, adminId);
+
+            _deleteMovementPopupVisible = false;
+            _transactionToDelete = null;
+            Toast.Success("Manuel hareket silindi.");
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleOperation(ex, Toast, "Manuel hareket silinemedi.");
+        }
+        finally
+        {
+            _isDeletingMovement = false;
+        }
+    }
+
+    private async Task<int> GetAdminIdAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var claim = authState.User.FindFirst(ClaimTypes.NameIdentifier);
+        return claim is not null && int.TryParse(claim.Value, out var adminUserId)
+            ? adminUserId
+            : 0;
+    }
+
+    private string FormatAmount(decimal amount)
+        => $"{amount:N2} {_unitLabel}";
+
+    private string FormatAmountTry(decimal amount)
+        => $"{ToTry(amount):N2} TL";
+
+    private decimal ToTry(decimal amount)
+        => decimal.Round(amount * _unitTryMultiplier, 2, MidpointRounding.AwayFromZero);
+
+    private sealed class MovementTypeOption(string value, string text)
+    {
+        public string Value { get; } = value;
+        public string Text { get; } = text;
+    }
+
+    private sealed class MovementForm
+    {
+        public string Type { get; set; } = "credit";
+        public decimal Amount { get; set; }
+        public string Description { get; set; } = string.Empty;
+    }
+}

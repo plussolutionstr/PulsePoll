@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PulsePoll — v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #F7F5FF;
+  --white: #FFFFFF;
+  --surface2: #F0EDF9;
+  --border: #E8E3F5;
+
+  --purple: #7C5CFC;
+  --purple-light: #EDE8FF;
+  --purple-mid: #C4B5FD;
+  --purple-dark: #5B3FD9;
+
+  --text: #1A1535;
+  --text2: #6B6589;
+  --text3: #B0AABE;
+
+  --green: #22C988;
+  --green-light: #E6FBF4;
+  --red: #FF5C7A;
+  --red-light: #FFF0F3;
+  --amber: #F59E0B;
+  --amber-light: #FFFBEB;
+  --blue: #3B82F6;
+  --blue-light: #EFF6FF;
+
+  --font: 'Plus Jakarta Sans', sans-serif;
+  --r: 20px;
+  --rs: 12px;
+}
+
+body {
+  background: #EEEAF8;
+  font-family: var(--font);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48px 24px 80px;
+  gap: 64px;
+}
+
+svg { display: block; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+.lbl {
+  font-size: 11px; font-weight: 700; letter-spacing: 2.5px;
+  text-transform: uppercase; color: var(--purple);
+  margin-bottom: 14px; text-align: center; opacity: 0.7;
+}
+
+/* PHONE */
+.phone {
+  width: 375px;
+  background: var(--bg);
+  border-radius: 50px;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px rgba(124,92,252,0.08),
+    0 0 0 10px #E5E0F5,
+    0 0 0 11px rgba(124,92,252,0.06),
+    0 32px 64px rgba(90,60,200,0.18);
+}
+
+.status-bar {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 16px 28px 0; font-size: 12px; font-weight: 700;
+  color: var(--text); background: var(--bg); position: relative;
+}
+.notch {
+  width: 110px; height: 32px; background: var(--text);
+  border-radius: 0 0 18px 18px;
+  position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+}
+.sr { display: flex; gap: 5px; align-items: center; }
+.sr svg { width: 15px; height: 15px; }
+
+.screen { height: 780px; display: flex; flex-direction: column; overflow: hidden; }
+
+.sa { flex: 1; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; }
+.sa::-webkit-scrollbar { display: none; }
+
+/* BOTTOM NAV */
+.bnav {
+  display: flex; justify-content: space-around; align-items: center;
+  padding: 12px 8px 20px; background: var(--white);
+  border-top: 1px solid var(--border);
+}
+.ni { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; cursor: pointer; }
+.ni-icon { width: 42px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 10px; }
+.ni.active .ni-icon { background: var(--purple-light); }
+.ni-icon svg { width: 20px; height: 20px; color: var(--text3); }
+.ni.active .ni-icon svg { color: var(--purple); }
+.ni-lbl { font-size: 10px; font-weight: 600; color: var(--text3); }
+.ni.active .ni-lbl { color: var(--purple); }
+
+/* TOP BAR */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 20px 12px; background: var(--bg);
+}
+.logo { font-size: 20px; font-weight: 800; color: var(--purple); letter-spacing: -0.5px; }
+.ibt {
+  width: 38px; height: 38px; border-radius: var(--rs);
+  background: var(--white); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; position: relative;
+}
+.ibt svg { width: 17px; height: 17px; color: var(--text2); }
+.ndot {
+  position: absolute; top: 6px; right: 6px;
+  width: 8px; height: 8px; background: var(--red);
+  border-radius: 50%; border: 2px solid var(--white);
+}
+
+/* STORIES */
+.stories {
+  display: flex; gap: 14px; padding: 4px 20px 20px;
+  overflow-x: auto; scrollbar-width: none;
+}
+.stories::-webkit-scrollbar { display: none; }
+.si { display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0; cursor: pointer; }
+.sring {
+  width: 58px; height: 58px; border-radius: 50%; padding: 2.5px;
+  background: linear-gradient(135deg, var(--purple), #A78BFA);
+  display: flex; align-items: center; justify-content: center;
+}
+.sring.seen { background: var(--border); }
+.sring.off { background: linear-gradient(135deg, #7C5CFC, #C084FC); }
+.savatar {
+  width: 100%; height: 100%; border-radius: 50%;
+  background: var(--white); border: 2px solid var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 800; overflow: hidden;
+}
+.sname { font-size: 10px; font-weight: 600; color: var(--text2); text-align: center; max-width: 58px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* NEWS FEATURED */
+.nfeat {
+  margin: 0 20px 4px;
+  background: linear-gradient(135deg, var(--purple) 0%, #A78BFA 100%);
+  border-radius: var(--r); padding: 20px; color: white;
+  position: relative; overflow: hidden; cursor: pointer;
+}
+.nfeat::after { content:''; position:absolute; bottom:-30px; right:-30px; width:120px; height:120px; border-radius:50%; background:rgba(255,255,255,0.08); }
+.nfeat::before { content:''; position:absolute; top:-20px; right:40px; width:80px; height:80px; border-radius:50%; background:rgba(255,255,255,0.06); }
+.ntag { display:inline-block; font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase; background:rgba(255,255,255,0.2); padding:3px 8px; border-radius:6px; margin-bottom:10px; }
+.ntitle { font-size:16px; font-weight:700; line-height:1.4; margin-bottom:12px; position:relative; }
+.ndots { display:flex; gap:5px; position:relative; }
+.ndot2 { width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,0.4); }
+.ndot2.a { width:18px; border-radius:3px; background:white; }
+
+/* SECTION HEADER */
+.sh { display:flex; align-items:center; justify-content:space-between; padding:20px 20px 12px; }
+.sh-t { font-size:16px; font-weight:700; }
+.sh-l { font-size:13px; font-weight:600; color:var(--purple); cursor:pointer; }
+
+/* SURVEY CARD */
+.sc {
+  margin:0 20px 12px; background:var(--white);
+  border:1px solid var(--border); border-radius:var(--r); padding:16px; cursor:pointer;
+}
+.sc-top { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+.brand { width:44px; height:44px; border-radius:14px; background:var(--surface2); display:flex; align-items:center; justify-content:center; font-size:17px; font-weight:800; flex-shrink:0; border:1px solid var(--border); }
+.sm { flex:1; }
+.sm-brand { font-size:11px; font-weight:600; color:var(--text3); margin-bottom:2px; }
+.sm-title { font-size:14px; font-weight:700; line-height:1.35; }
+.earn { background:var(--amber-light); border:1px solid #FDE68A; color:var(--amber); font-size:13px; font-weight:700; padding:4px 10px; border-radius:10px; flex-shrink:0; }
+.sc-bot { display:flex; align-items:center; gap:8px; }
+.chip { display:flex; align-items:center; gap:4px; font-size:12px; font-weight:500; color:var(--text2); background:var(--surface2); padding:4px 10px; border-radius:8px; }
+.chip svg { width:12px; height:12px; color:var(--text3); }
+.cat { margin-left:auto; font-size:11px; font-weight:600; padding:4px 10px; border-radius:8px; }
+.cp { background:var(--purple-light); color:var(--purple); }
+.cb { background:var(--blue-light); color:var(--blue); }
+.cg { background:var(--green-light); color:var(--green); }
+
+/* BACK ROW */
+.back { display:flex; align-items:center; gap:8px; padding:16px 20px 0; cursor:pointer; color:var(--text2); font-size:14px; font-weight:600; }
+.back svg { width:18px; height:18px; }
+
+/* HERO CARD */
+.hcard { margin:14px 20px 16px; background:var(--white); border-radius:var(--r); border:1px solid var(--border); overflow:hidden; }
+.hbanner { height:110px; background:linear-gradient(135deg, var(--purple-light), #E9D5FF); display:flex; align-items:center; justify-content:center; }
+.hlogo { width:64px; height:64px; border-radius:18px; background:var(--white); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:800; box-shadow:0 4px 16px rgba(124,92,252,0.12); }
+.hbody { padding:16px; }
+.hbrand { font-size:11px; font-weight:700; color:var(--purple); letter-spacing:0.8px; text-transform:uppercase; margin-bottom:4px; }
+.htitle { font-size:18px; font-weight:800; line-height:1.3; margin-bottom:8px; }
+.hdesc { font-size:13px; color:var(--text2); line-height:1.6; }
+
+/* META ROW */
+.mrow { display:flex; gap:8px; padding:0 20px 16px; }
+.mbox { flex:1; background:var(--white); border:1px solid var(--border); border-radius:var(--rs); padding:12px 10px; display:flex; flex-direction:column; align-items:center; gap:4px; }
+.mico { width:30px; height:30px; border-radius:9px; display:flex; align-items:center; justify-content:center; margin-bottom:2px; }
+.mico svg { width:15px; height:15px; }
+.mip { background:var(--purple-light); color:var(--purple); }
+.mia { background:var(--amber-light); color:var(--amber); }
+.mib { background:var(--blue-light); color:var(--blue); }
+.mval { font-size:15px; font-weight:700; }
+.mlbl { font-size:10px; color:var(--text3); font-weight:500; }
+
+/* CRITERIA */
+.cricard { margin:0 20px 16px; background:var(--white); border-radius:var(--r); border:1px solid var(--border); padding:16px; }
+.crtitle { font-size:13px; font-weight:700; margin-bottom:12px; }
+.crow { display:flex; align-items:center; gap:10px; margin-bottom:10px; font-size:13px; color:var(--text2); }
+.crow:last-child { margin-bottom:0; }
+.cico { width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.cico svg { width:11px; height:11px; }
+.cok  { background:var(--green-light); color:var(--green); }
+.cfail { background:var(--red-light); color:var(--red); }
+.cft { text-decoration:line-through; color:var(--text3); }
+
+/* CTA */
+.ctawrap { padding:0 20px 8px; }
+.ctabtn { width:100%; height:52px; border-radius:16px; background:var(--purple); border:none; font-family:var(--font); font-size:15px; font-weight:700; color:white; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 6px 20px rgba(124,92,252,0.3); }
+.ctabtn svg { width:17px; height:17px; }
+.ctanote { text-align:center; font-size:11px; color:var(--text3); padding:10px 20px 16px; line-height:1.6; }
+
+/* QUESTION */
+.qtop { display:flex; align-items:center; justify-content:space-between; padding:16px 20px 0; }
+.qbc { display:flex; align-items:center; gap:8px; }
+.qbm { width:28px; height:28px; border-radius:8px; background:var(--surface2); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; color:var(--purple); }
+.qbl { font-size:13px; font-weight:600; color:var(--text2); }
+.qcl { width:32px; height:32px; border-radius:10px; background:var(--surface2); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; cursor:pointer; }
+.qcl svg { width:15px; height:15px; color:var(--text2); }
+.qprog { padding:14px 20px 0; }
+.qpmeta { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+.qpfrac { font-size:12px; font-weight:600; color:var(--text3); }
+.qpearn { font-size:12px; font-weight:700; color:var(--amber); }
+.qpbar { height:5px; background:var(--surface2); border-radius:3px; overflow:hidden; }
+.qpfill { height:100%; background:linear-gradient(90deg, var(--purple), #A78BFA); border-radius:3px; width:42%; }
+.qsec { padding:24px 20px 16px; }
+.qnlbl { font-size:11px; font-weight:700; color:var(--purple); letter-spacing:1.5px; text-transform:uppercase; margin-bottom:8px; opacity:0.7; }
+.qtext { font-size:18px; font-weight:700; line-height:1.4; }
+.opts { padding:0 20px; display:flex; flex-direction:column; gap:10px; }
+.opt { display:flex; align-items:center; gap:12px; padding:14px 16px; background:var(--white); border:1.5px solid var(--border); border-radius:var(--rs); cursor:pointer; }
+.opt.sel { background:var(--purple-light); border-color:var(--purple-mid); }
+.orad { width:20px; height:20px; border-radius:50%; border:2px solid var(--border); flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+.opt.sel .orad { border-color:var(--purple); background:var(--purple); }
+.opt.sel .orad::after { content:''; width:7px; height:7px; border-radius:50%; background:white; }
+.otxt { font-size:14px; font-weight:500; flex:1; }
+.opt.sel .otxt { color:var(--purple-dark); font-weight:600; }
+.qnav { display:flex; gap:10px; padding:20px 20px 0; }
+.qbk { width:50px; height:50px; border-radius:14px; background:var(--white); border:1.5px solid var(--border); display:flex; align-items:center; justify-content:center; flex-shrink:0; cursor:pointer; }
+.qbk svg { width:18px; height:18px; color:var(--text2); }
+.qnx { flex:1; height:50px; border-radius:14px; background:var(--purple); border:none; font-family:var(--font); font-size:15px; font-weight:700; color:white; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; box-shadow:0 4px 16px rgba(124,92,252,0.25); }
+.qnx svg { width:15px; height:15px; }
+
+/* PROFILE */
+.ptopbar { display:flex; align-items:center; justify-content:space-between; padding:18px 20px 16px; }
+.pttitle { font-size:20px; font-weight:800; }
+.pebt { width:36px; height:36px; border-radius:var(--rs); background:var(--white); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; cursor:pointer; }
+.pebt svg { width:16px; height:16px; color:var(--text2); }
+.phero { margin:0 20px 16px; background:var(--white); border-radius:var(--r); border:1px solid var(--border); padding:20px; display:flex; flex-direction:column; align-items:center; gap:8px; }
+.avwrap { position:relative; width:74px; height:74px; }
+.av { width:74px; height:74px; border-radius:50%; background:var(--purple-light); border:3px solid var(--purple-mid); display:flex; align-items:center; justify-content:center; }
+.av svg { width:32px; height:32px; color:var(--purple); }
+.aved { position:absolute; bottom:0; right:-2px; width:22px; height:22px; border-radius:50%; background:var(--purple); display:flex; align-items:center; justify-content:center; border:2px solid var(--white); }
+.aved svg { width:10px; height:10px; color:white; stroke-width:2.5; }
+.pname { font-size:18px; font-weight:700; margin-top:4px; }
+.pemail { font-size:13px; color:var(--text2); }
+.rpill { display:flex; align-items:center; gap:6px; background:var(--amber-light); border:1px solid #FDE68A; padding:5px 12px; border-radius:20px; font-size:12px; font-weight:600; color:var(--amber); margin-top:4px; }
+.pstats { display:flex; width:100%; margin-top:12px; padding-top:16px; border-top:1px solid var(--border); }
+.pst { flex:1; text-align:center; }
+.pst+.pst { border-left:1px solid var(--border); }
+.psv { font-size:20px; font-weight:700; }
+.psl { font-size:11px; color:var(--text3); margin-top:2px; }
+.scard { margin:0 20px 12px; background:var(--white); border-radius:var(--r); border:1px solid var(--border); padding:16px; }
+.scardtitle { font-size:13px; font-weight:700; margin-bottom:12px; }
+.pgrid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.pf { background:var(--surface2); border-radius:10px; padding:10px 12px; }
+.pf.w { grid-column:span 2; }
+.pflbl { font-size:10px; font-weight:700; color:var(--text3); letter-spacing:0.5px; text-transform:uppercase; margin-bottom:2px; }
+.pfval { font-size:13px; font-weight:600; }
+.iw { display:flex; flex-wrap:wrap; gap:7px; }
+.itag { background:var(--purple-light); color:var(--purple); font-size:12px; font-weight:600; padding:5px 12px; border-radius:20px; border:1px solid var(--purple-mid); }
+.itag.add { background:var(--surface2); color:var(--text3); border-color:var(--border); border-style:dashed; display:flex; align-items:center; gap:4px; }
+.itag.add svg { width:11px; height:11px; }
+
+/* HISTORY */
+.sumrow { display:flex; gap:8px; padding:0 20px 16px; }
+.sumbox { flex:1; border-radius:var(--rs); padding:12px; text-align:center; }
+.sbg { background:var(--green-light); border:1px solid #A7F3D0; }
+.sbr { background:var(--red-light); border:1px solid #FECDD3; }
+.sba { background:var(--amber-light); border:1px solid #FDE68A; }
+.sbv { font-size:20px; font-weight:700; }
+.sbv.g { color:var(--green); } .sbv.r { color:var(--red); } .sbv.a { color:var(--amber); }
+.sbl { font-size:11px; color:var(--text3); font-weight:500; margin-top:2px; }
+.ftabs { display:flex; gap:7px; padding:0 20px 16px; overflow-x:auto; scrollbar-width:none; }
+.ftabs::-webkit-scrollbar { display:none; }
+.ft { flex-shrink:0; padding:6px 14px; border-radius:20px; font-size:12px; font-weight:600; cursor:pointer; border:1.5px solid var(--border); background:var(--white); color:var(--text2); }
+.ft.a { background:var(--purple); border-color:var(--purple); color:white; }
+.mlbl { font-size:11px; font-weight:700; color:var(--text3); letter-spacing:1px; text-transform:uppercase; padding:0 20px 8px; }
+.hrow { margin:0 20px 8px; background:var(--white); border:1px solid var(--border); border-radius:var(--rs); padding:14px; display:flex; align-items:center; gap:12px; }
+.hst { width:40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.hst svg { width:18px; height:18px; }
+.hok  { background:var(--green-light); color:var(--green); }
+.hfl  { background:var(--red-light); color:var(--red); }
+.hwt  { background:var(--blue-light); color:var(--blue); }
+.hi { flex:1; }
+.ht { font-size:13px; font-weight:600; margin-bottom:2px; }
+.hm { font-size:11px; color:var(--text3); }
+.he { text-align:right; }
+.hev { font-size:14px; font-weight:700; }
+.hev.ok { color:var(--green); } .hev.fl { color:var(--text3); } .hev.wt { color:var(--blue); }
+.hel { font-size:11px; color:var(--text3); margin-top:1px; }
+.hel.fail { color:var(--red); font-weight:600; }
+
+/* WALLET */
+.wcrd { margin:0 20px 16px; background:linear-gradient(135deg, var(--purple), #A78BFA); border-radius:var(--r); padding:24px 20px; color:white; position:relative; overflow:hidden; }
+.wcrd::before { content:''; position:absolute; top:-40px; right:-40px; width:160px; height:160px; border-radius:50%; background:rgba(255,255,255,0.08); }
+.wlbl { font-size:12px; opacity:0.75; margin-bottom:6px; }
+.wamt { font-size:38px; font-weight:800; letter-spacing:-1px; margin-bottom:4px; position:relative; }
+.wsub { font-size:13px; opacity:0.7; margin-bottom:20px; }
+.wbtns { display:flex; gap:10px; position:relative; }
+.wb { flex:1; height:42px; border-radius:12px; font-family:var(--font); font-size:13px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; border:none; }
+.wb svg { width:14px; height:14px; }
+.wbp { background:white; color:var(--purple); }
+.wbs { background:rgba(255,255,255,0.2); color:white; border:1.5px solid rgba(255,255,255,0.3); }
+.bsec { margin:0 20px 16px; }
+.bstitle { font-size:13px; font-weight:700; margin-bottom:10px; }
+.bitem { background:var(--white); border:1px solid var(--border); border-radius:var(--rs); padding:12px 14px; display:flex; align-items:center; gap:12px; margin-bottom:8px; cursor:pointer; }
+.blogo { width:40px; height:40px; border-radius:12px; background:var(--surface2); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; color:var(--purple); border:1px solid var(--border); }
+.binfo { flex:1; }
+.bname { font-size:13px; font-weight:600; }
+.biban { font-size:11px; color:var(--text3); margin-top:1px; }
+.barrow svg { width:15px; height:15px; color:var(--text3); }
+.addb { width:100%; height:42px; border-radius:var(--rs); border:1.5px dashed var(--border); background:transparent; font-family:var(--font); font-size:13px; font-weight:600; color:var(--text2); cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; }
+.addb svg { width:14px; height:14px; }
+.txsec { margin:0 20px; }
+.txstitle { font-size:13px; font-weight:700; margin-bottom:10px; }
+.txrow { display:flex; align-items:center; gap:12px; padding:11px 0; border-bottom:1px solid var(--border); }
+.txrow:last-child { border-bottom:none; }
+.txic { width:36px; height:36px; border-radius:11px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.txic svg { width:15px; height:15px; }
+.txin  { background:var(--green-light); color:var(--green); }
+.txout { background:var(--purple-light); color:var(--purple); }
+.txi { flex:1; }
+.txt { font-size:13px; font-weight:500; }
+.txd { font-size:11px; color:var(--text3); }
+.txa { font-size:14px; font-weight:700; }
+.tain  { color:var(--green); } .taout { color:var(--purple); }
+
+.sw { display:flex; flex-direction:column; align-items:center; }
+.sg { display:flex; flex-direction:column; gap:64px; align-items:center; width:100%; }
+</style>
+</head>
+<body>
+<div class="sg">
+
+<!-- ══════════════════ 01 ANA SAYFA ══════════════════ -->
+<div class="sw">
+  <div class="lbl">01 — Ana Sayfa</div>
+  <div class="phone">
+    <div class="status-bar"><span>09:41</span><div class="notch"></div><div class="sr"><svg viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1" fill="currentColor" stroke="none"/></svg><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="11" rx="2"/></svg></div></div>
+    <div class="screen">
+      <div class="topbar">
+        <div class="logo">PulsePoll</div>
+        <div class="ibt"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><div class="ndot"></div></div>
+      </div>
+
+      <div class="sa">
+        <!-- Stories -->
+        <div class="stories">
+          <div class="si"><div class="sring off"><div class="savatar" style="font-size:13px; color:var(--purple);">PP</div></div><div class="sname">PulsePoll</div></div>
+          <div class="si"><div class="sring"><div class="savatar" style="color:#E04A2F;">A</div></div><div class="sname">Arçelik</div></div>
+          <div class="si"><div class="sring"><div class="savatar" style="color:#0060AF;">T</div></div><div class="sname">Turkcell</div></div>
+          <div class="si"><div class="sring seen"><div class="savatar" style="color:#007A33;">M</div></div><div class="sname">Migros</div></div>
+          <div class="si"><div class="sring seen"><div class="savatar" style="color:#1F4E79; font-size:14px;">B</div></div><div class="sname">BMW TR</div></div>
+          <div class="si"><div class="sring seen"><div class="savatar" style="color:var(--purple); font-size:13px;">AK</div></div><div class="sname">Akbank</div></div>
+        </div>
+
+        <!-- News featured slider -->
+        <div class="nfeat">
+          <div class="ntag">Duyuru</div>
+          <div class="ntitle">Yeni Platin Üyelik<br>Sistemi Geliyor 🎉</div>
+          <div class="ndots"><div class="ndot2 a"></div><div class="ndot2"></div><div class="ndot2"></div></div>
+        </div>
+
+        <!-- Surveys -->
+        <div class="sh"><div class="sh-t">Sana Özel</div><div class="sh-l">Tümü</div></div>
+
+        <div class="sc">
+          <div class="sc-top">
+            <div class="brand" style="color:#E04A2F;">A</div>
+            <div class="sm"><div class="sm-brand">Arçelik A.Ş.</div><div class="sm-title">Beyaz Eşya Satın Alma Deneyimi</div></div>
+            <div class="earn">₺15</div>
+          </div>
+          <div class="sc-bot">
+            <div class="chip"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>~8 dk</div>
+            <div class="chip"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/></svg>12 soru</div>
+            <div class="cat cp">Teknoloji</div>
+          </div>
+        </div>
+
+        <div class="sc">
+          <div class="sc-top">
+            <div class="brand" style="color:#0060AF;">T</div>
+            <div class="sm"><div class="sm-brand">Turkcell</div><div class="sm-title">5G Kullanım Alışkanlıkları</div></div>
+            <div class="earn">₺8</div>
+          </div>
+          <div class="sc-bot">
+            <div class="chip"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>~5 dk</div>
+            <div class="chip"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/></svg>8 soru</div>
+            <div class="cat cb">Telekom</div>
+          </div>
+        </div>
+
+        <div class="sc">
+          <div class="sc-top">
+            <div class="brand" style="color:#007A33;">M</div>
+            <div class="sm"><div class="sm-brand">Migros</div><div class="sm-title">Online Market Deneyimi</div></div>
+            <div class="earn">₺22</div>
+          </div>
+          <div class="sc-bot">
+            <div class="chip"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>~10 dk</div>
+            <div class="chip"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/></svg>15 soru</div>
+            <div class="cat cg">Perakende</div>
+          </div>
+        </div>
+        <div style="height:16px"></div>
+      </div>
+
+      <div class="bnav">
+        <div class="ni active"><div class="ni-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><div class="ni-lbl">Anasayfa</div></div>
+        <div class="ni"><div class="ni-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div><div class="ni-lbl">Anketler</div></div>
+        <div class="ni"><div class="ni-icon"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div class="ni-lbl">Geçmiş</div></div>
+        <div class="ni"><div class="ni-icon"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></div><div class="ni-lbl">Cüzdan</div></div>
+        <div class="ni"><div class="ni-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div class="ni-lbl">Profil</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ 01b ANA SAYFA — GÖRSELLİ ══════════════════ -->
+<div class="sw">
+  <div class="lbl">01b — Ana Sayfa (Görsel Versiyonu)</div>
+  <div class="phone">
+    <div class="status-bar"><span>09:41</span><div class="notch"></div><div class="sr"><svg viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1" fill="currentColor" stroke="none"/></svg><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="11" rx="2"/></svg></div></div>
+    <div class="screen">
+      <div class="topbar">
+        <div class="logo">PulsePoll</div>
+        <div class="ibt"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><div class="ndot"></div></div>
+      </div>
+
+      <div class="sa">
+        <!-- Stories — aynı -->
+        <div class="stories">
+          <div class="si"><div class="sring off"><div class="savatar" style="font-size:13px; color:var(--purple);">PP</div></div><div class="sname">PulsePoll</div></div>
+          <div class="si"><div class="sring"><div class="savatar" style="color:#E04A2F;">A</div></div><div class="sname">Arçelik</div></div>
+          <div class="si"><div class="sring"><div class="savatar" style="color:#0060AF;">T</div></div><div class="sname">Turkcell</div></div>
+          <div class="si"><div class="sring seen"><div class="savatar" style="color:#007A33;">M</div></div><div class="sname">Migros</div></div>
+          <div class="si"><div class="sring seen"><div class="savatar" style="color:#1F4E79; font-size:14px;">B</div></div><div class="sname">BMW TR</div></div>
+          <div class="si"><div class="sring seen"><div class="savatar" style="color:var(--purple); font-size:13px;">AK</div></div><div class="sname">Akbank</div></div>
+        </div>
+
+        <!-- News featured — GÖRSELLİ -->
+        <div style="margin:0 20px 4px; border-radius:var(--r); overflow:hidden; cursor:pointer; position:relative; height:160px; background:#1a1535;">
+          <!-- Görsel placeholder — gerçekte img etiketi olur -->
+          <div style="position:absolute;inset:0; background:linear-gradient(135deg,#2d1b6e,#6d3fc0,#a78bfa); opacity:0.85;"></div>
+          <!-- Görsel simüle: abstract shapes -->
+          <div style="position:absolute;top:-20px;right:-20px;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,0.07);"></div>
+          <div style="position:absolute;bottom:-30px;left:20px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,0.05);"></div>
+          <!-- Görsel ikonu (img placeholder) -->
+          <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);opacity:0.15;">
+            <svg width="56" height="56" viewBox="0 0 24 24" style="stroke:white;fill:none;stroke-width:1.2;"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          </div>
+          <!-- Overlay text -->
+          <div style="position:absolute;bottom:0;left:0;right:0;padding:14px 16px; background:linear-gradient(to top,rgba(15,10,40,0.85),transparent);">
+            <div style="display:inline-block;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:rgba(255,255,255,0.2);padding:3px 8px;border-radius:6px;color:white;margin-bottom:6px;">Duyuru</div>
+            <div style="font-size:15px;font-weight:700;color:white;line-height:1.35;">Yeni Platin Üyelik Sistemi Geliyor 🎉</div>
+          </div>
+          <!-- Dots -->
+          <div style="position:absolute;bottom:12px;right:16px;display:flex;gap:5px;">
+            <div style="width:18px;height:4px;border-radius:2px;background:white;opacity:0.9;"></div>
+            <div style="width:6px;height:4px;border-radius:2px;background:white;opacity:0.4;"></div>
+            <div style="width:6px;height:4px;border-radius:2px;background:white;opacity:0.4;"></div>
+          </div>
+        </div>
+
+        <!-- Surveys — GÖRSELLİ -->
+        <div class="sh"><div class="sh-t">Sana Özel</div><div class="sh-l">Tümü</div></div>
+
+        <!-- Kart 1 — görsel üstte -->
+        <div class="sc" style="padding:0; overflow:hidden;">
+          <!-- Görsel banner -->
+          <div style="height:100px; background:linear-gradient(135deg,#fff1ee,#ffe4dc); position:relative; overflow:hidden;">
+            <div style="position:absolute;top:-10px;right:-10px;width:100px;height:100px;border-radius:50%;background:rgba(224,74,47,0.08);"></div>
+            <div style="position:absolute;bottom:-20px;left:30px;width:80px;height:80px;border-radius:50%;background:rgba(224,74,47,0.05);"></div>
+            <!-- img placeholder -->
+            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0.2;">
+              <svg width="40" height="40" viewBox="0 0 24 24" style="stroke:#E04A2F;fill:none;stroke-width:1.2;"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            </div>
+            <!-- Brand badge -->
+            <div style="position:absolute;top:12px;left:12px;display:flex;align-items:center;gap:8px;">
+              <div style="width:32px;height:32px;border-radius:10px;background:white;border:1px solid #f0d0c8;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#E04A2F;box-shadow:0 2px 8px rgba(0,0,0,0.08);">A</div>
+              <span style="font-size:12px;font-weight:700;color:#E04A2F;">Arçelik A.Ş.</span>
+            </div>
+            <div style="position:absolute;top:12px;right:12px;background:#FFFBEB;border:1px solid #FDE68A;color:#F59E0B;font-size:13px;font-weight:700;padding:3px 10px;border-radius:10px;">₺15</div>
+          </div>
+          <!-- Alt kısım -->
+          <div style="padding:12px 16px 14px;">
+            <div style="font-size:14px;font-weight:700;margin-bottom:10px;">Beyaz Eşya Satın Alma Deneyimi</div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div class="chip"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>~8 dk</div>
+              <div class="chip"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/></svg>12 soru</div>
+              <div class="cat cp" style="margin-left:auto;">Teknoloji</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Kart 2 -->
+        <div class="sc" style="padding:0; overflow:hidden;">
+          <div style="height:100px; background:linear-gradient(135deg,#eef4ff,#dbeafe); position:relative; overflow:hidden;">
+            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0.2;">
+              <svg width="40" height="40" viewBox="0 0 24 24" style="stroke:#0060AF;fill:none;stroke-width:1.2;"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            </div>
+            <div style="position:absolute;top:12px;left:12px;display:flex;align-items:center;gap:8px;">
+              <div style="width:32px;height:32px;border-radius:10px;background:white;border:1px solid #c8dcf0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#0060AF;box-shadow:0 2px 8px rgba(0,0,0,0.08);">T</div>
+              <span style="font-size:12px;font-weight:700;color:#0060AF;">Turkcell</span>
+            </div>
+            <div style="position:absolute;top:12px;right:12px;background:#FFFBEB;border:1px solid #FDE68A;color:#F59E0B;font-size:13px;font-weight:700;padding:3px 10px;border-radius:10px;">₺8</div>
+          </div>
+          <div style="padding:12px 16px 14px;">
+            <div style="font-size:14px;font-weight:700;margin-bottom:10px;">5G Kullanım Alışkanlıkları</div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div class="chip"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>~5 dk</div>
+              <div class="chip"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/></svg>8 soru</div>
+              <div class="cat cb" style="margin-left:auto;">Telekom</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Kart 3 -->
+        <div class="sc" style="padding:0; overflow:hidden;">
+          <div style="height:100px; background:linear-gradient(135deg,#edfdf5,#d1fae5); position:relative; overflow:hidden;">
+            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0.2;">
+              <svg width="40" height="40" viewBox="0 0 24 24" style="stroke:#007A33;fill:none;stroke-width:1.2;"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            </div>
+            <div style="position:absolute;top:12px;left:12px;display:flex;align-items:center;gap:8px;">
+              <div style="width:32px;height:32px;border-radius:10px;background:white;border:1px solid #b0e0c0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#007A33;box-shadow:0 2px 8px rgba(0,0,0,0.08);">M</div>
+              <span style="font-size:12px;font-weight:700;color:#007A33;">Migros</span>
+            </div>
+            <div style="position:absolute;top:12px;right:12px;background:#FFFBEB;border:1px solid #FDE68A;color:#F59E0B;font-size:13px;font-weight:700;padding:3px 10px;border-radius:10px;">₺22</div>
+          </div>
+          <div style="padding:12px 16px 14px;">
+            <div style="font-size:14px;font-weight:700;margin-bottom:10px;">Online Market Deneyimi</div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div class="chip"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>~10 dk</div>
+              <div class="chip"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/></svg>15 soru</div>
+              <div class="cat cg" style="margin-left:auto;">Perakende</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="height:16px"></div>
+      </div>
+
+      <div class="bnav">
+        <div class="ni active"><div class="ni-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><div class="ni-lbl">Anasayfa</div></div>
+        <div class="ni"><div class="ni-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div><div class="ni-lbl">Anketler</div></div>
+        <div class="ni"><div class="ni-icon"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div class="ni-lbl">Geçmiş</div></div>
+        <div class="ni"><div class="ni-icon"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></div><div class="ni-lbl">Cüzdan</div></div>
+        <div class="ni"><div class="ni-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div class="ni-lbl">Profil</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ 02 ANKET BİLGİ ══════════════════ -->
+<div class="sw">
+  <div class="lbl">02 — Anket Bilgi</div>
+  <div class="phone">
+    <div class="status-bar"><span>09:41</span><div class="notch"></div><div class="sr"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="11" rx="2"/></svg></div></div>
+    <div class="screen">
+      <div class="back"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>Geri</div>
+      <div class="sa">
+        <div class="hcard">
+          <div class="hbanner"><div class="hlogo" style="color:#E04A2F;">A</div></div>
+          <div class="hbody">
+            <div class="hbrand">Arçelik A.Ş.</div>
+            <div class="htitle">Beyaz Eşya Satın Alma Deneyimi</div>
+            <div class="hdesc">Son 12 ayda beyaz eşya deneyiminiz hakkında 12 kısa soru. Yaklaşık 8 dakika sürer.</div>
+          </div>
+        </div>
+
+        <div class="mrow">
+          <div class="mbox"><div class="mico mip"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class="mval">~8 dk</div><div class="mlbl">Süre</div></div>
+          <div class="mbox"><div class="mico mia"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div class="mval" style="color:var(--amber);">₺15</div><div class="mlbl">Kazanç</div></div>
+          <div class="mbox"><div class="mico mib"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/></svg></div><div class="mval">12</div><div class="mlbl">Soru</div></div>
+        </div>
+
+        <div class="cricard">
+          <div class="crtitle">Uygunluk Durumun</div>
+          <div class="crow"><div class="cico cok"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>Yaş grubu 30–50</div>
+          <div class="crow"><div class="cico cok"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>Son 2 yılda beyaz eşya alımı</div>
+          <div class="crow"><div class="cico cok"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>Ev sahibi veya kiracı</div>
+          <div class="crow"><div class="cico cfail"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div><span class="cft">Üst gelir segmenti</span></div>
+        </div>
+
+        <div class="ctawrap"><button class="ctabtn"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>Ankete Başla</button></div>
+        <div class="ctanote">Anketi tamamlayamazsanız kazanç aktarılmaz.<br>Verileriniz gizlilik politikamız kapsamında korunur.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ 03 SORU ══════════════════ -->
+<div class="sw">
+  <div class="lbl">03 — Aktif Soru</div>
+  <div class="phone">
+    <div class="status-bar"><span>09:41</span><div class="notch"></div><div class="sr"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="11" rx="2"/></svg></div></div>
+    <div class="screen">
+      <div class="qtop">
+        <div class="qbc"><div class="qbm">A</div><div class="qbl">Arçelik A.Ş.</div></div>
+        <div class="qcl"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+      </div>
+      <div class="qprog">
+        <div class="qpmeta"><div class="qpfrac">5 / 12</div><div class="qpearn">₺15 kazanacaksın</div></div>
+        <div class="qpbar"><div class="qpfill"></div></div>
+      </div>
+      <div class="qsec">
+        <div class="qnlbl">Soru 5</div>
+        <div class="qtext">Beyaz eşya alırken en çok hangi faktör sizi etkiler?</div>
+      </div>
+      <div class="opts">
+        <div class="opt"><div class="orad"></div><div class="otxt">Fiyat / Bütçe uygunluğu</div></div>
+        <div class="opt sel"><div class="orad"></div><div class="otxt">Enerji verimliliği (A+++)</div></div>
+        <div class="opt"><div class="orad"></div><div class="otxt">Marka güvenilirliği</div></div>
+        <div class="opt"><div class="orad"></div><div class="otxt">Teknik özellikler ve kapasite</div></div>
+        <div class="opt"><div class="orad"></div><div class="otxt">Garanti ve servis ağı</div></div>
+      </div>
+      <div class="qnav">
+        <div class="qbk"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+        <button class="qnx">Devam Et <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ 04 PROFİL ══════════════════ -->
+<div class="sw">
+  <div class="lbl">04 — Profil & Persona</div>
+  <div class="phone">
+    <div class="status-bar"><span>09:41</span><div class="notch"></div><div class="sr"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="11" rx="2"/></svg></div></div>
+    <div class="screen">
+      <div class="ptopbar"><div class="pttitle">Profilim</div><div class="pebt"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div></div>
+      <div class="sa">
+        <div class="phero">
+          <div class="avwrap">
+            <div class="av"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+            <div class="aved"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div>
+          </div>
+          <div class="pname">İlhan Bey</div>
+          <div class="pemail"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="771e1b1f161937120f161a071b125914181a">[email&#160;protected]</a></div>
+          <div class="rpill">🥇 Gold Üye &nbsp;·&nbsp; 4.250 Puan</div>
+          <div class="pstats">
+            <div class="pst"><div class="psv">48</div><div class="psl">Tamamlanan</div></div>
+            <div class="pst"><div class="psv">3</div><div class="psl">Elenen</div></div>
+            <div class="pst"><div class="psv">94%</div><div class="psl">Başarı</div></div>
+          </div>
+        </div>
+
+        <div class="scard">
+          <div class="scardtitle">Demografi</div>
+          <div class="pgrid">
+            <div class="pf"><div class="pflbl">Yaş</div><div class="pfval">44</div></div>
+            <div class="pf"><div class="pflbl">Cinsiyet</div><div class="pfval">Erkek</div></div>
+            <div class="pf"><div class="pflbl">Eğitim</div><div class="pfval">Üniversite</div></div>
+            <div class="pf"><div class="pflbl">Medeni Durum</div><div class="pfval">Bekar</div></div>
+            <div class="pf w"><div class="pflbl">Konum</div><div class="pfval">İstanbul, Anadolu Yakası</div></div>
+            <div class="pf"><div class="pflbl">Meslek</div><div class="pfval">Yazılım Gel.</div></div>
+            <div class="pf"><div class="pflbl">Gelir</div><div class="pfval">Orta-Üst</div></div>
+          </div>
+        </div>
+
+        <div class="scard" style="margin-bottom:20px;">
+          <div class="scardtitle">İlgi Alanları</div>
+          <div class="iw">
+            <span class="itag">Teknoloji</span><span class="itag">Otomotiv</span><span class="itag">Fintech</span><span class="itag">Yazılım</span><span class="itag">Yatırım</span>
+            <span class="itag add"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Ekle</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="bnav">
+        <div class="ni"><div class="ni-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><div class="ni-lbl">Anasayfa</div></div>
+        <div class="ni"><div class="ni-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div><div class="ni-lbl">Anketler</div></div>
+        <div class="ni"><div class="ni-icon"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div class="ni-lbl">Geçmiş</div></div>
+        <div class="ni"><div class="ni-icon"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></div><div class="ni-lbl">Cüzdan</div></div>
+        <div class="ni active"><div class="ni-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div class="ni-lbl">Profil</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ 05 GEÇMİŞ ══════════════════ -->
+<div class="sw">
+  <div class="lbl">05 — Geçmiş</div>
+  <div class="phone">
+    <div class="status-bar"><span>09:41</span><div class="notch"></div><div class="sr"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="11" rx="2"/></svg></div></div>
+    <div class="screen">
+      <div style="padding:18px 20px 12px; font-size:20px; font-weight:800;">Geçmişim</div>
+      <div class="sumrow">
+        <div class="sumbox sbg"><div class="sbv g">48</div><div class="sbl">Tamamlanan</div></div>
+        <div class="sumbox sbr"><div class="sbv r">3</div><div class="sbl">Elenen</div></div>
+        <div class="sumbox sba"><div class="sbv a">₺380</div><div class="sbl">Toplam</div></div>
+      </div>
+      <div class="ftabs">
+        <div class="ft a">Tümü</div><div class="ft">Tamamlanan</div><div class="ft">Elenen</div><div class="ft">Devam Eden</div>
+      </div>
+      <div class="sa">
+        <div class="mlbl">Şubat 2026</div>
+        <div class="hrow"><div class="hst hok"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div class="hi"><div class="ht">Arçelik — Beyaz Eşya</div><div class="hm">22 Şub · 12 soru</div></div><div class="he"><div class="hev ok">+₺15</div><div class="hel">Tamamlandı</div></div></div>
+        <div class="hrow"><div class="hst hwt"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class="hi"><div class="ht">Turkcell — 5G</div><div class="hm">21 Şub · 5/8 soruda</div></div><div class="he"><div class="hev wt">Devam</div><div class="hel">₺8 bekliyor</div></div></div>
+        <div class="hrow"><div class="hst hfl"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div><div class="hi"><div class="ht">Vakko — Premium Moda</div><div class="hm">19 Şub · Eleme sorusu</div></div><div class="he"><div class="hev fl">₺0</div><div class="hel fail">Elendi</div></div></div>
+        <div class="hrow"><div class="hst hok"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div class="hi"><div class="ht">Migros — Alışveriş</div><div class="hm">17 Şub · 15 soru</div></div><div class="he"><div class="hev ok">+₺22</div><div class="hel">Tamamlandı</div></div></div>
+        <div class="mlbl" style="margin-top:8px;">Ocak 2026</div>
+        <div class="hrow"><div class="hst hok"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div class="hi"><div class="ht">BMW — Otomobil</div><div class="hm">28 Oca · 18 soru</div></div><div class="he"><div class="hev ok">+₺35</div><div class="hel">Tamamlandı</div></div></div>
+        <div class="hrow"><div class="hst hfl"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div><div class="hi"><div class="ht">Akbank — Dijital Bankacılık</div><div class="hm">20 Oca · Eleme sorusu</div></div><div class="he"><div class="hev fl">₺0</div><div class="hel fail">Elendi</div></div></div>
+        <div style="height:16px"></div>
+      </div>
+      <div class="bnav">
+        <div class="ni"><div class="ni-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><div class="ni-lbl">Anasayfa</div></div>
+        <div class="ni"><div class="ni-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div><div class="ni-lbl">Anketler</div></div>
+        <div class="ni active"><div class="ni-icon"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div class="ni-lbl">Geçmiş</div></div>
+        <div class="ni"><div class="ni-icon"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></div><div class="ni-lbl">Cüzdan</div></div>
+        <div class="ni"><div class="ni-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div class="ni-lbl">Profil</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ 06 CÜZDAN ══════════════════ -->
+<div class="sw">
+  <div class="lbl">06 — Cüzdan</div>
+  <div class="phone">
+    <div class="status-bar"><span>09:41</span><div class="notch"></div><div class="sr"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="11" rx="2"/></svg></div></div>
+    <div class="screen">
+      <div style="padding:18px 20px 12px; font-size:20px; font-weight:800;">Cüzdanım</div>
+      <div class="sa">
+        <div class="wcrd">
+          <div class="wlbl">Çekilebilir Bakiye</div>
+          <div class="wamt">₺215,00</div>
+          <div class="wsub">4.250 Puan &nbsp;·&nbsp; ₺380 toplam kazanıldı</div>
+          <div class="wbtns">
+            <button class="wb wbp"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg>Para Çek</button>
+            <button class="wb wbs"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Geçmiş</button>
+          </div>
+        </div>
+
+        <div class="bsec">
+          <div class="bstitle">Banka Hesaplarım</div>
+          <div class="bitem"><div class="blogo">AK</div><div class="binfo"><div class="bname">Akbank</div><div class="biban">TR•• •••• •••• 4821</div></div><div class="barrow"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+          <div class="bitem"><div class="blogo" style="color:var(--green);">GB</div><div class="binfo"><div class="bname">Garanti BBVA</div><div class="biban">TR•• •••• •••• 7754</div></div><div class="barrow"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+          <button class="addb"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Yeni Hesap Ekle</button>
+        </div>
+
+        <div class="txsec">
+          <div class="txstitle">Son İşlemler</div>
+          <div class="txrow"><div class="txic txin"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div class="txi"><div class="txt">Arçelik — Anket</div><div class="txd">22 Şubat</div></div><div class="txa tain">+₺15</div></div>
+          <div class="txrow"><div class="txic txout"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg></div><div class="txi"><div class="txt">Akbank'a Çekim</div><div class="txd">18 Şubat</div></div><div class="txa taout">-₺100</div></div>
+          <div class="txrow"><div class="txic txin"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div class="txi"><div class="txt">Migros — Anket</div><div class="txd">17 Şubat</div></div><div class="txa tain">+₺22</div></div>
+          <div class="txrow"><div class="txic txout"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg></div><div class="txi"><div class="txt">Garanti'ye Çekim</div><div class="txd">15 Ocak</div></div><div class="txa taout">-₺80</div></div>
+          <div style="height:16px"></div>
+        </div>
+      </div>
+      <div class="bnav">
+        <div class="ni"><div class="ni-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><div class="ni-lbl">Anasayfa</div></div>
+        <div class="ni"><div class="ni-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div><div class="ni-lbl">Anketler</div></div>
+        <div class="ni"><div class="ni-icon"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div class="ni-lbl">Geçmiş</div></div>
+        <div class="ni active"><div class="ni-icon"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></div><div class="ni-lbl">Cüzdan</div></div>
+        <div class="ni"><div class="ni-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div class="ni-lbl">Profil</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ 07 BİLDİRİMLER ══════════════════ -->
+<div class="sw">
+  <div class="lbl">07 — Bildirimler</div>
+  <div class="phone">
+    <div class="status-bar"><span>09:41</span><div class="notch"></div><div class="sr"><svg viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1" fill="currentColor" stroke="none"/></svg><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="11" rx="2"/></svg></div></div>
+    <div class="screen">
+
+      <!-- Header -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px 16px;">
+        <div style="font-size:20px;font-weight:800;">Bildirimler</div>
+        <button style="font-size:12px;font-weight:600;color:var(--purple);background:none;border:none;cursor:pointer;font-family:var(--font);">Tümünü Okundu İşaretle</button>
+      </div>
+
+      <!-- Filter tabs -->
+      <div style="display:flex;gap:7px;padding:0 20px 16px;overflow-x:auto;scrollbar-width:none;">
+        <div style="flex-shrink:0;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;background:var(--purple);border:1.5px solid var(--purple);color:white;">Tümü</div>
+        <div style="flex-shrink:0;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;background:var(--white);border:1.5px solid var(--border);color:var(--text2);">Anketler</div>
+        <div style="flex-shrink:0;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;background:var(--white);border:1.5px solid var(--border);color:var(--text2);">Kazançlar</div>
+        <div style="flex-shrink:0;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;background:var(--white);border:1.5px solid var(--border);color:var(--text2);">Sistem</div>
+      </div>
+
+      <div class="sa">
+
+        <!-- BUGÜN -->
+        <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:1px;text-transform:uppercase;padding:0 20px 8px;">Bugün</div>
+
+        <!-- Okunmamış — yeni anket -->
+        <div style="margin:0 20px 8px;background:var(--purple-light);border:1px solid var(--purple-mid);border-radius:var(--rs);padding:14px;display:flex;align-items:flex-start;gap:12px;cursor:pointer;">
+          <div style="width:42px;height:42px;border-radius:13px;background:var(--purple);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="20" height="20" viewBox="0 0 24 24" style="stroke:white;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          </div>
+          <div style="flex:1;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;">
+              <div style="font-size:13px;font-weight:700;color:var(--purple-dark);">Yeni Anket Geldi!</div>
+              <div style="width:8px;height:8px;border-radius:50%;background:var(--purple);flex-shrink:0;"></div>
+            </div>
+            <div style="font-size:12px;color:var(--text2);line-height:1.5;">Arçelik'in yeni anketi seni bekliyor. <strong style="color:var(--purple-dark);">₺15</strong> kazanabilirsin.</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:5px;">Az önce</div>
+          </div>
+        </div>
+
+        <!-- Okunmamış — kazanç -->
+        <div style="margin:0 20px 8px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:var(--rs);padding:14px;display:flex;align-items:flex-start;gap:12px;cursor:pointer;">
+          <div style="width:42px;height:42px;border-radius:13px;background:var(--amber);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="20" height="20" viewBox="0 0 24 24" style="stroke:white;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
+          <div style="flex:1;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;">
+              <div style="font-size:13px;font-weight:700;color:#92400E;">Kazancın Yatırıldı</div>
+              <div style="width:8px;height:8px;border-radius:50%;background:var(--amber);flex-shrink:0;"></div>
+            </div>
+            <div style="font-size:12px;color:var(--text2);line-height:1.5;">Turkcell anketinden <strong style="color:#92400E;">₺8,00</strong> cüzdanına eklendi.</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:5px;">2 saat önce</div>
+          </div>
+        </div>
+
+        <!-- Okunmamış — rank -->
+        <div style="margin:0 20px 8px;background:var(--green-light);border:1px solid #A7F3D0;border-radius:var(--rs);padding:14px;display:flex;align-items:flex-start;gap:12px;cursor:pointer;">
+          <div style="width:42px;height:42px;border-radius:13px;background:var(--green);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="20" height="20" viewBox="0 0 24 24" style="stroke:white;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          </div>
+          <div style="flex:1;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;">
+              <div style="font-size:13px;font-weight:700;color:#065F46;">Platin'e Çok Yakınsın!</div>
+              <div style="width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0;"></div>
+            </div>
+            <div style="font-size:12px;color:var(--text2);line-height:1.5;">Platin üyeliğe yükselmek için sadece <strong style="color:#065F46;">750 puan</strong> kaldı.</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:5px;">5 saat önce</div>
+          </div>
+        </div>
+
+        <!-- DÜN -->
+        <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:1px;text-transform:uppercase;padding:8px 20px 8px;">Dün</div>
+
+        <!-- Okunmuş — elendi -->
+        <div style="margin:0 20px 8px;background:var(--white);border:1px solid var(--border);border-radius:var(--rs);padding:14px;display:flex;align-items:flex-start;gap:12px;cursor:pointer;">
+          <div style="width:42px;height:42px;border-radius:13px;background:var(--red-light);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="20" height="20" viewBox="0 0 24 24" style="stroke:var(--red);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+          </div>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px;">Anketten Elendi</div>
+            <div style="font-size:12px;color:var(--text3);line-height:1.5;">Vakko Premium Moda anketine uygun profil bulunmadı.</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:5px;">Dün · 14:32</div>
+          </div>
+        </div>
+
+        <!-- Okunmuş — sistem -->
+        <div style="margin:0 20px 8px;background:var(--white);border:1px solid var(--border);border-radius:var(--rs);padding:14px;display:flex;align-items:flex-start;gap:12px;cursor:pointer;">
+          <div style="width:42px;height:42px;border-radius:13px;background:var(--surface2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="20" height="20" viewBox="0 0 24 24" style="stroke:var(--text2);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </div>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px;">Profil Tamamlama Hatırlatması</div>
+            <div style="font-size:12px;color:var(--text3);line-height:1.5;">Profilini %100 tamamlarsan daha fazla ankete eşleşebilirsin.</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:5px;">Dün · 09:15</div>
+          </div>
+        </div>
+
+        <!-- Okunmuş — para çekimi -->
+        <div style="margin:0 20px 8px;background:var(--white);border:1px solid var(--border);border-radius:var(--rs);padding:14px;display:flex;align-items:flex-start;gap:12px;cursor:pointer;">
+          <div style="width:42px;height:42px;border-radius:13px;background:var(--blue-light);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="20" height="20" viewBox="0 0 24 24" style="stroke:var(--blue);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+          </div>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px;">Para Çekimi Tamamlandı</div>
+            <div style="font-size:12px;color:var(--text3);line-height:1.5;">₺100,00 Akbank hesabına başarıyla aktarıldı.</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:5px;">Dün · 08:44</div>
+          </div>
+        </div>
+
+        <!-- BU HAFTA -->
+        <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:1px;text-transform:uppercase;padding:8px 20px 8px;">Bu Hafta</div>
+
+        <div style="margin:0 20px 8px;background:var(--white);border:1px solid var(--border);border-radius:var(--rs);padding:14px;display:flex;align-items:flex-start;gap:12px;cursor:pointer;">
+          <div style="width:42px;height:42px;border-radius:13px;background:var(--purple-light);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="20" height="20" viewBox="0 0 24 24" style="stroke:var(--purple);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          </div>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px;">Migros Anketi Tamamlandı</div>
+            <div style="font-size:12px;color:var(--text3);line-height:1.5;">Tebrikler! ₺22,00 cüzdanına eklendi.</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:5px;">17 Şubat · 16:20</div>
+          </div>
+        </div>
+
+        <div style="height:16px;"></div>
+      </div>
+
+      <!-- Bottom nav — bildirimler modal/push olduğu için nav yok, back ile çıkılır -->
+      <div style="padding:12px 20px 28px;background:var(--white);border-top:1px solid var(--border);">
+        <div style="display:flex;align-items:center;justify-content:center;gap:8px;color:var(--text2);font-size:14px;font-weight:600;cursor:pointer;">
+          <svg width="18" height="18" viewBox="0 0 24 24" style="stroke:var(--text2);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;"><polyline points="15 18 9 12 15 6"/></svg>
+          Geri Dön
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+</body>
+</html>

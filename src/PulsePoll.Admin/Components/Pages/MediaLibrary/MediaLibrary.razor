@@ -1,0 +1,321 @@
+@page "/media-library"
+@attribute [HasPermission(PermissionCodes.MediaLibrary.View)]
+@using System.Security.Claims
+@inject IMediaAssetService MediaAssetService
+@inject IAppToastService Toast
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IPermissionAuthorizationService PermissionService
+
+<PageTitle>Medya Kütüphanesi — PulsePoll Admin</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">Medya Kütüphanesi</h3>
+    @if (_canUpload)
+    {
+        <DxButton Text="Görsel Yükle" IconCssClass="bi bi-upload"
+                  RenderStyle="ButtonRenderStyle.Primary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="OnUploadClick" />
+    }
+</div>
+
+<DxLoadingPanel @bind-Visible="_isLoading"
+                IsContentBlocked="true"
+                ApplyBackgroundShading="true"
+                IndicatorAreaVisible="false"
+                Text="Yükleniyor...">
+    @if (_assets.Count == 0 && !_isLoading)
+    {
+        <div class="text-center text-muted py-5">
+            <i class="bi bi-images" style="font-size:3rem;"></i>
+            <p class="mt-2">Henüz görsel yüklenmedi.</p>
+        </div>
+    }
+    else
+    {
+        <div class="row row-cols-2 row-cols-md-4 g-3">
+            @foreach (var asset in _assets)
+            {
+                <div class="col">
+                    <div class="card h-100 shadow-sm">
+                        <div style="width:120px; height:120px; margin:auto; background:#f8f9fa; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+                            <img src="@asset.Url"
+                                 style="max-width:120px; max-height:120px; object-fit:contain;"
+                                 alt="@asset.Name" />
+                        </div>
+                        <div class="card-body p-2">
+                            <p class="card-title mb-1 small fw-semibold text-truncate" title="@asset.Name">@asset.Name</p>
+                            <p class="card-text text-muted" style="font-size:0.75rem;">
+                                @FormatSize(asset.Size)
+                                @if (asset.UsageCount > 0)
+                                {
+                                    <span class="ms-2 badge bg-info text-dark">@asset.UsageCount projede</span>
+                                }
+                            </p>
+                        </div>
+                        <div class="card-footer p-1 text-end border-top-0">
+                            <DxButton IconCssClass="bi bi-trash"
+                                      RenderStyle="ButtonRenderStyle.Danger"
+                                      RenderStyleMode="ButtonRenderStyleMode.Text"
+                                      SizeMode="SizeMode.Small"
+                                      Visible="@_canDelete"
+                                      title="Sil"
+                                      Click="@(() => ShowDeleteConfirm(asset))" />
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</DxLoadingPanel>
+
+<!-- Yükleme Popup -->
+<DxPopup @bind-Visible="_uploadPopupVisible"
+         HeaderText="Görsel Yükle"
+         Width="480px"
+         CloseOnOutsideClick="false"
+         ShowFooter="true">
+    <BodyContentTemplate Context="_">
+        <div class="mb-3">
+            <DxFileInput MaxFileSize="5242880"
+                         MaxFileCount="1"
+                         FilesUploading="OnFileUploading"
+                         AcceptedFileTypes="@_acceptedTypes" />
+            <div class="small text-muted mt-1">
+                <i class="bi bi-info-circle me-1"></i>JPG, PNG, GIF, WebP — maks. 5 MB<br/>
+                <i class="bi bi-aspect-ratio me-1"></i>Önerilen boyut: <strong>900×300px (3:1 oran)</strong>
+            </div>
+        </div>
+        @if (_pendingBytes != null)
+        {
+            <div class="mt-2">
+                <img src="@($"data:{_pendingFileType};base64,{Convert.ToBase64String(_pendingBytes)}")"
+                     style="max-height:120px; max-width:100%; object-fit:contain; border:1px solid #dee2e6; border-radius:4px;"
+                     alt="Önizleme" />
+                <div class="small text-muted mt-1">@_pendingFileName — @FormatSize(_pendingBytes.LongLength)</div>
+            </div>
+        }
+    </BodyContentTemplate>
+    <FooterContentTemplate>
+        <DxButton Text="Yükle" IconCssClass="bi bi-upload"
+                  RenderStyle="ButtonRenderStyle.Primary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="DoUpload"
+                  Enabled="@(_pendingBytes != null && !_isUploading)" />
+        <DxButton Text="İptal"
+                  RenderStyle="ButtonRenderStyle.Secondary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="CloseUploadPopup" />
+    </FooterContentTemplate>
+</DxPopup>
+
+<!-- Silme Onay Popup -->
+<DxPopup @bind-Visible="_deleteConfirmVisible"
+         HeaderText="Silme Onayı"
+         Width="420px"
+         CloseOnOutsideClick="false"
+         ShowFooter="true">
+    <BodyContentTemplate Context="_">
+        <div class="d-flex align-items-start gap-3 p-2">
+            <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size:2.5rem; flex-shrink:0;"></i>
+            <div>
+                <p class="mb-1 fw-semibold">Bu görseli silmek istediğinize emin misiniz?</p>
+                <p class="mb-0 text-muted">@_assetToDelete?.Name</p>
+            </div>
+        </div>
+    </BodyContentTemplate>
+    <FooterContentTemplate>
+        <DxButton Text="Sil" IconCssClass="bi bi-trash"
+                  RenderStyle="ButtonRenderStyle.Danger"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="ConfirmDelete"
+                  Enabled="!_isDeleting" />
+        <DxButton Text="İptal"
+                  RenderStyle="ButtonRenderStyle.Secondary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="() => _deleteConfirmVisible = false" />
+    </FooterContentTemplate>
+</DxPopup>
+
+@code {
+    private List<MediaAssetDto> _assets = [];
+    private bool _isLoading = true;
+    private bool _canUpload;
+    private bool _canDelete;
+
+    // Yükleme
+    private bool _uploadPopupVisible;
+    private bool _isUploading;
+    private byte[]? _pendingBytes;
+    private string? _pendingFileName;
+    private string? _pendingFileType;
+    private readonly List<string> _acceptedTypes = [".jpg", ".jpeg", ".png", ".gif", ".webp"];
+
+    // Silme
+    private bool _deleteConfirmVisible;
+    private bool _isDeleting;
+    private MediaAssetDto? _assetToDelete;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPermissionsAsync();
+        await LoadDataAsync();
+    }
+
+    private async Task LoadPermissionsAsync()
+    {
+        var permissions = await PermissionService.GetCurrentPermissionsAsync();
+        _canUpload = permissions.Contains(PermissionCodes.MediaLibrary.Upload);
+        _canDelete = permissions.Contains(PermissionCodes.MediaLibrary.Delete);
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _isLoading = true;
+        _assets = await MediaAssetService.GetAllAsync();
+        _isLoading = false;
+    }
+
+    private void OnUploadClick()
+    {
+        if (!_canUpload)
+        {
+            Toast.Error("Medya yükleme yetkiniz yok.");
+            return;
+        }
+
+        _pendingBytes    = null;
+        _pendingFileName = null;
+        _pendingFileType = null;
+        _uploadPopupVisible = true;
+    }
+
+    private void CloseUploadPopup()
+    {
+        _uploadPopupVisible = false;
+        _pendingBytes       = null;
+        _pendingFileName    = null;
+        _pendingFileType    = null;
+    }
+
+    private async Task OnFileUploading(FilesUploadingEventArgs args)
+    {
+        var file = args.Files[0];
+        _pendingFileName = file.Name;
+        // Tarayıcı bazen Type'ı boş döner; uzantıdan türet
+        _pendingFileType = string.IsNullOrEmpty(file.Type)
+            ? GetContentTypeFromExtension(file.Name)
+            : file.Type;
+        _pendingBytes    = new byte[(int)file.Size];
+
+        var stream = file.OpenReadStream((long)file.Size);
+        try
+        {
+            int read, offset = 0;
+            while ((read = await stream.ReadAsync(_pendingBytes, offset, (int)file.Size - offset)) > 0)
+                offset += read;
+        }
+        finally
+        {
+            stream.Close();
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task DoUpload()
+    {
+        if (!_canUpload)
+        {
+            Toast.Error("Medya yükleme yetkiniz yok.");
+            return;
+        }
+
+        if (_pendingBytes is null || _pendingFileName is null || _pendingFileType is null) return;
+
+        _isUploading = true;
+        try
+        {
+            var adminId = await GetAdminIdAsync();
+            using var ms = new MemoryStream(_pendingBytes, false);
+            await MediaAssetService.UploadAsync(ms, _pendingFileName, _pendingFileType, _pendingBytes.LongLength, adminId);
+            Toast.Success("Görsel yüklendi.");
+            CloseUploadPopup();
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleOperation(ex, Toast);
+        }
+        finally
+        {
+            _isUploading = false;
+        }
+    }
+
+    private void ShowDeleteConfirm(MediaAssetDto asset)
+    {
+        if (!_canDelete)
+        {
+            Toast.Error("Medya silme yetkiniz yok.");
+            return;
+        }
+
+        _assetToDelete        = asset;
+        _deleteConfirmVisible = true;
+    }
+
+    private async Task ConfirmDelete()
+    {
+        if (!_canDelete)
+        {
+            Toast.Error("Medya silme yetkiniz yok.");
+            return;
+        }
+
+        if (_assetToDelete is null) return;
+
+        _isDeleting = true;
+        try
+        {
+            var adminId = await GetAdminIdAsync();
+            await MediaAssetService.DeleteAsync(_assetToDelete.Id, adminId);
+            _deleteConfirmVisible = false;
+            _assetToDelete        = null;
+            await LoadDataAsync();
+            Toast.Success("Görsel silindi.");
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleOperation(ex, Toast, "Silme işlemi başarısız.");
+        }
+        finally
+        {
+            _isDeleting = false;
+        }
+    }
+
+    private async Task<int> GetAdminIdAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var claim = authState.User.FindFirst(ClaimTypes.NameIdentifier);
+        return claim is not null && int.TryParse(claim.Value, out var adminUserId)
+            ? adminUserId
+            : 0;
+    }
+
+    private static string FormatSize(long bytes) =>
+        bytes >= 1024 * 1024
+            ? $"{bytes / 1024.0 / 1024.0:F1} MB"
+            : $"{bytes / 1024.0:F0} KB";
+
+    private static string GetContentTypeFromExtension(string fileName) =>
+        Path.GetExtension(fileName).ToLowerInvariant() switch
+        {
+            ".jpg" or ".jpeg" => "image/jpeg",
+            ".png"            => "image/png",
+            ".gif"            => "image/gif",
+            ".webp"           => "image/webp",
+            _                 => "application/octet-stream"
+        };
+}

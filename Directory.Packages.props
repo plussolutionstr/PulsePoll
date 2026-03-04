@@ -1,0 +1,97 @@
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+
+  <!-- EF Core (10.0.1 — EFCore.NamingConventions 10.0.1 ile uyumlu) -->
+  <ItemGroup>
+    <PackageVersion Include="EFCore.NamingConventions"                              Version="10.0.1" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore"                         Version="10.0.1" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design"                  Version="10.0.1" />
+    <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL"                 Version="10.0.0" />
+  </ItemGroup>
+
+  <!-- ASP.NET Core -->
+  <ItemGroup>
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer"        Version="10.0.3" />
+    <PackageVersion Include="Microsoft.AspNetCore.Identity"                        Version="2.3.9"  />
+  </ItemGroup>
+
+  <!-- Microsoft Extensions -->
+  <ItemGroup>
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.3" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions"             Version="10.0.3" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Debug"                    Version="10.0.0" />
+  </ItemGroup>
+
+  <!-- MassTransit -->
+  <ItemGroup>
+    <PackageVersion Include="MassTransit.RabbitMQ"                                  Version="8.5.8" />
+  </ItemGroup>
+
+  <!-- Hangfire -->
+  <ItemGroup>
+    <PackageVersion Include="Hangfire.AspNetCore"                                   Version="1.8.23" />
+    <PackageVersion Include="Hangfire.PostgreSql"                                   Version="1.21.1" />
+  </ItemGroup>
+
+  <!-- Serilog -->
+  <ItemGroup>
+    <PackageVersion Include="Serilog.AspNetCore"                                    Version="9.0.0" />
+    <PackageVersion Include="Serilog.Extensions.Hosting"                            Version="9.0.0" />
+    <PackageVersion Include="Serilog.Settings.Configuration"                        Version="9.0.0" />
+    <PackageVersion Include="Serilog.Sinks.Console"                                 Version="6.1.1" />
+    <PackageVersion Include="Serilog.Sinks.Seq"                                     Version="9.0.0" />
+  </ItemGroup>
+
+  <!-- JWT -->
+  <ItemGroup>
+    <PackageVersion Include="System.IdentityModel.Tokens.Jwt"                       Version="8.16.0" />
+  </ItemGroup>
+
+  <!-- Storage & Cache -->
+  <ItemGroup>
+    <PackageVersion Include="Minio"                                                  Version="6.0.5"  />
+    <PackageVersion Include="StackExchange.Redis"                                    Version="2.11.8" />
+  </ItemGroup>
+
+  <!-- Firebase -->
+  <ItemGroup>
+    <PackageVersion Include="FirebaseAdmin"                                          Version="3.4.0" />
+  </ItemGroup>
+
+  <!-- Validation -->
+  <ItemGroup>
+    <PackageVersion Include="FluentValidation"                                       Version="11.12.0" />
+    <PackageVersion Include="FluentValidation.AspNetCore"                            Version="11.3.1"  />
+  </ItemGroup>
+
+  <!-- API -->
+  <ItemGroup>
+    <PackageVersion Include="Swashbuckle.AspNetCore"                                 Version="7.3.2" />
+  </ItemGroup>
+
+  <!-- Admin -->
+  <ItemGroup>
+    <PackageVersion Include="DevExpress.Blazor"                                      Version="25.2.4" />
+  </ItemGroup>
+
+  <!-- MAUI -->
+  <ItemGroup>
+    <PackageVersion Include="CommunityToolkit.Maui"                                  Version="12.3.0" />
+    <PackageVersion Include="CommunityToolkit.Mvvm"                                  Version="8.3.2"  />
+    <PackageVersion Include="Microsoft.Maui.Controls"                                Version="10.0.0" />
+    <PackageVersion Include="Microsoft.Data.Sqlite.Core"                             Version="8.0.8"  />
+    <PackageVersion Include="SQLitePCLRaw.bundle_green"                              Version="2.1.10" />
+    <PackageVersion Include="Syncfusion.Maui.Toolkit"                                Version="1.0.8"  />
+  </ItemGroup>
+
+  <!-- Test -->
+  <ItemGroup>
+    <PackageVersion Include="FluentAssertions"                                        Version="6.12.1"  />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk"                                  Version="17.13.0" />
+    <PackageVersion Include="Moq"                                                     Version="4.20.72" />
+    <PackageVersion Include="xunit"                                                   Version="2.9.3"   />
+    <PackageVersion Include="xunit.runner.visualstudio"                               Version="2.8.2"   />
+  </ItemGroup>
+</Project>

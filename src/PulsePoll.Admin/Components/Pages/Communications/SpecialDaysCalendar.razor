@@ -1,0 +1,454 @@
+@page "/communications/calendar"
+@attribute [HasPermission(PermissionCodes.Communications.View)]
+@using System.Security.Claims
+@using PulsePoll.Application.DTOs
+@using PulsePoll.Application.Extensions
+@using PulsePoll.Domain.Enums
+@inject ISpecialDayCalendarService SpecialDayCalendarService
+@inject IAppToastService Toast
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Nav
+@inject IPermissionAuthorizationService PermissionService
+
+<PageTitle>Özel Gün Takvimi — PulsePoll Admin</PageTitle>
+
+<div class="d-flex align-items-center justify-content-between mb-3 gap-2 flex-wrap">
+    <h3 class="mb-0">Özel Gün Takvimi</h3>
+    <div class="d-flex align-items-center gap-2 special-days-actions">
+        @if (_canEdit)
+        {
+            <DxButton Text="Yeni Gün Ekle"
+                      RenderStyle="ButtonRenderStyle.Primary"
+                      RenderStyleMode="ButtonRenderStyleMode.Outline"
+                      SizeMode="SizeMode.Small"
+                      CssClass="special-days-action-btn"
+                      Enabled="@(!_isSyncing)"
+                      Click="OpenNewPopup" />
+        }
+        <DxButton Text="Mesaj Ayarları"
+                  IconCssClass="bi bi-chat-left-text"
+                  RenderStyle="ButtonRenderStyle.Secondary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  SizeMode="SizeMode.Small"
+                  CssClass="special-days-action-btn"
+                  Click="@(() => Nav.NavigateTo("/communications/templates"))" />
+        <DxSpinEdit @bind-Value="_year" MinValue="2020" MaxValue="2100" Enabled="@(!_isSyncing)" />
+        <DxButton Text="Getir"
+                  RenderStyle="ButtonRenderStyle.Secondary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Enabled="@(!_isSyncing)"
+                  Click="LoadAsync"
+                  SizeMode="SizeMode.Small" />
+        @if (_canSync)
+        {
+            <DxButton Text="@(_isSyncing ? "Senkronize Ediliyor..." : "Yılı Senkronize Et")"
+                      IconCssClass="@(_isSyncing ? "spinner-border spinner-border-sm" : "bi bi-arrow-repeat")"
+                      RenderStyle="ButtonRenderStyle.Primary"
+                      RenderStyleMode="ButtonRenderStyleMode.Outline"
+                      SizeMode="SizeMode.Small"
+                      CssClass="special-days-action-btn"
+                      Enabled="@(!_isSyncing)"
+                      Click="SyncAsync" />
+        }
+    </div>
+</div>
+
+<DxGrid Data="@_items" ShowFilterRow="true" PageSize="25">
+    <Columns>
+        <DxGridDataColumn FieldName="Date" Caption="Tarih" DisplayFormat="dd.MM.yyyy" Width="120px" />
+        <DxGridDataColumn FieldName="Category" Caption="Kategori" Width="110px">
+            <CellDisplayTemplate>
+                @{
+                    var row = (SpecialDayDto)context.DataItem;
+                }
+                @row.Category.GetDescription()
+            </CellDisplayTemplate>
+        </DxGridDataColumn>
+        <DxGridDataColumn FieldName="Name" Caption="Gün" MinWidth="220" />
+        <DxGridDataColumn FieldName="EventCode" Caption="Kod" Width="220px" />
+        <DxGridDataColumn FieldName="Source" Caption="Kaynak" Width="100px">
+            <CellDisplayTemplate>
+                @{
+                    var row = (SpecialDayDto)context.DataItem;
+                }
+                @(IsManual(row) ? "manuel" : "system")
+            </CellDisplayTemplate>
+        </DxGridDataColumn>
+        <DxGridDataColumn FieldName="IsActive" Caption="Aktif" Width="80px" />
+        <DxGridCommandColumn NewButtonVisible="false" EditButtonVisible="false" DeleteButtonVisible="false"
+                             Width="50px" Caption="" TextAlignment="GridTextAlignment.Center">
+            <CellDisplayTemplate>
+                @{
+                    var row = (SpecialDayDto)context.DataItem;
+                }
+                @if (IsManual(row))
+                {
+                    <DxButton IconCssClass="bi bi-three-dots-vertical"
+                              RenderStyle="ButtonRenderStyle.Link"
+                              Visible="@_canEdit"
+                              Click="@(async e => await ShowMenuAsync(e, row))"
+                              title="İşlemler" />
+                }
+            </CellDisplayTemplate>
+        </DxGridCommandColumn>
+    </Columns>
+</DxGrid>
+
+<DxContextMenu @ref="_contextMenu" ItemClick="OnContextMenuItemClick">
+    <Items>
+        @if (_canEdit)
+        {
+            <DxContextMenuItem Text="Düzenle" Name="edit" IconCssClass="bi bi-pencil" />
+            <DxContextMenuItem Text="Sil" Name="delete" IconCssClass="bi bi-trash" CssClass="text-danger" BeginGroup="true" />
+        }
+    </Items>
+</DxContextMenu>
+
+<DxPopup @bind-Visible="_popupVisible"
+         HeaderText="@(_isNew ? "Yeni Özel Gün" : "Özel Gün Düzenle")"
+         Width="600px"
+         CloseOnOutsideClick="false"
+         ShowFooter="true">
+    <BodyContentTemplate Context="_">
+        @if (!string.IsNullOrWhiteSpace(_formError))
+        {
+            <div class="alert alert-danger py-2 mb-3">@_formError</div>
+        }
+        <DxFormLayout>
+            <DxFormLayoutItem ColSpanMd="6">
+                <label class="form-label">Tarih *</label>
+                <DxDateEdit @bind-Date="_form.Date" />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanMd="6">
+                <label class="form-label">Kategori *</label>
+                <DxComboBox Data="@_categoryOptions"
+                            ValueFieldName="Value"
+                            TextFieldName="Label"
+                            @bind-Value="_form.Category" />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanMd="12">
+                <label class="form-label">Gün Adı *</label>
+                <DxTextBox @bind-Text="_form.Name" />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanMd="12">
+                <label class="form-label">Kod *</label>
+                <DxTextBox @bind-Text="_form.EventCode" />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanMd="12">
+                <DxCheckBox @bind-Checked="_form.IsActive" Text="Aktif" />
+            </DxFormLayoutItem>
+        </DxFormLayout>
+    </BodyContentTemplate>
+    <FooterContentTemplate>
+        <DxButton Text="@(_isSaving ? "Kaydediliyor..." : "Kaydet")"
+                  IconCssClass="@(_isSaving ? "spinner-border spinner-border-sm" : "bi bi-check-lg")"
+                  RenderStyle="ButtonRenderStyle.Primary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Enabled="@(!_isSaving)"
+                  Click="SaveAsync" />
+        <DxButton Text="İptal"
+                  RenderStyle="ButtonRenderStyle.Secondary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Enabled="@(!_isSaving)"
+                  Click="ClosePopup" />
+    </FooterContentTemplate>
+</DxPopup>
+
+<DxPopup @bind-Visible="_deleteConfirmVisible"
+         HeaderText="Silme Onayı"
+         Width="420px"
+         CloseOnOutsideClick="false"
+         ShowFooter="true">
+    <BodyContentTemplate Context="_">
+        <div class="d-flex align-items-start gap-3 p-2">
+            <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size:2.5rem; flex-shrink:0;"></i>
+            <div>
+                <p class="mb-1 fw-semibold">Bu özel günü silmek istediğinize emin misiniz?</p>
+                <p class="mb-0 text-muted">@_itemToDelete?.Name (@_itemToDelete?.Date.ToString("dd.MM.yyyy"))</p>
+            </div>
+        </div>
+    </BodyContentTemplate>
+    <FooterContentTemplate>
+        <DxButton Text="Sil"
+                  IconCssClass="bi bi-trash"
+                  RenderStyle="ButtonRenderStyle.Danger"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="ConfirmDeleteAsync"
+                  Enabled="@(!_isDeleting)" />
+        <DxButton Text="İptal"
+                  RenderStyle="ButtonRenderStyle.Secondary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="() => _deleteConfirmVisible = false"
+                  Enabled="@(!_isDeleting)" />
+    </FooterContentTemplate>
+</DxPopup>
+
+<style>
+    .special-days-actions .special-days-action-btn {
+        flex-shrink: 0;
+    }
+
+    .special-days-actions .special-days-action-btn,
+    .special-days-actions .special-days-action-btn .dxbl-btn,
+    .special-days-actions .special-days-action-btn .dxbl-btn-text {
+        white-space: nowrap !important;
+    }
+
+    .special-days-actions .special-days-action-btn .dxbl-btn {
+        min-width: max-content;
+    }
+</style>
+
+@code {
+    private DxContextMenu? _contextMenu;
+    private int _year = DateTime.Now.Year;
+    private List<SpecialDayDto> _items = [];
+    private bool _isSyncing;
+    private bool _popupVisible;
+    private bool _deleteConfirmVisible;
+    private bool _isSaving;
+    private bool _isDeleting;
+    private bool _isNew;
+    private bool _canEdit;
+    private bool _canSync;
+    private string? _formError;
+    private SpecialDayDto? _selectedItem;
+    private SpecialDayDto? _itemToDelete;
+    private DayForm _form = new();
+    private readonly List<EnumOption<SpecialDayCategory>> _categoryOptions = Enum.GetValues<SpecialDayCategory>()
+        .Select(x => new EnumOption<SpecialDayCategory>(x, x.GetDescription()))
+        .ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPermissionsAsync();
+        await LoadAsync();
+    }
+
+    private async Task LoadPermissionsAsync()
+    {
+        var permissions = await PermissionService.GetCurrentPermissionsAsync();
+        _canEdit = permissions.Contains(PermissionCodes.Communications.Edit);
+        _canSync = permissions.Contains(PermissionCodes.Communications.Sync);
+    }
+
+    private async Task LoadAsync()
+    {
+        _items = await SpecialDayCalendarService.GetByYearAsync(_year);
+    }
+
+    private void OpenNewPopup()
+    {
+        if (!_canEdit)
+        {
+            Toast.Error("Takvim düzenleme yetkiniz yok.");
+            return;
+        }
+
+        _isNew = true;
+        _formError = null;
+        _form = new DayForm
+        {
+            Date = new DateTime(_year, 1, 1),
+            Category = SpecialDayCategory.Special,
+            IsActive = true
+        };
+        _popupVisible = true;
+    }
+
+    private void OpenEditPopup(SpecialDayDto row)
+    {
+        if (!_canEdit)
+        {
+            Toast.Error("Takvim düzenleme yetkiniz yok.");
+            return;
+        }
+
+        _isNew = false;
+        _formError = null;
+        _form = new DayForm
+        {
+            Id = row.Id,
+            EventCode = row.EventCode,
+            Name = row.Name,
+            Date = row.Date.ToDateTime(TimeOnly.MinValue),
+            Category = row.Category,
+            IsActive = row.IsActive
+        };
+        _popupVisible = true;
+    }
+
+    private void ClosePopup()
+    {
+        _formError = null;
+        _popupVisible = false;
+    }
+
+    private async Task SaveAsync()
+    {
+        if (!_canEdit)
+        {
+            _formError = "Takvim düzenleme yetkiniz yok.";
+            return;
+        }
+
+        if (_isSaving)
+            return;
+
+        if (string.IsNullOrWhiteSpace(_form.Name))
+        {
+            _formError = "Gün adı zorunludur.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_form.EventCode))
+        {
+            _formError = "Kod zorunludur.";
+            return;
+        }
+
+        _isSaving = true;
+        _formError = null;
+        try
+        {
+            var adminId = await GetAdminIdAsync();
+            var dto = new SaveSpecialDayDto(
+                _form.Id,
+                _form.EventCode.Trim(),
+                _form.Name.Trim(),
+                DateOnly.FromDateTime(_form.Date),
+                _form.Category,
+                _form.IsActive);
+
+            await SpecialDayCalendarService.SaveManualDayAsync(dto, adminId);
+            _popupVisible = false;
+            await LoadAsync();
+            Toast.Success(_isNew ? "Özel gün eklendi." : "Özel gün güncellendi.");
+        }
+        catch (Exception ex)
+        {
+            _formError = ErrorHandler.HandleFormSave(ex, Toast);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private async Task ShowMenuAsync(MouseEventArgs e, SpecialDayDto row)
+    {
+        if (!_canEdit)
+            return;
+
+        _selectedItem = row;
+        if (_contextMenu is not null)
+            await _contextMenu.ShowAsync(e);
+    }
+
+    private Task OnContextMenuItemClick(ContextMenuItemClickEventArgs e)
+    {
+        if (_selectedItem is null)
+            return Task.CompletedTask;
+
+        switch (e.ItemInfo.Name)
+        {
+            case "edit":
+                if (!_canEdit)
+                    break;
+                OpenEditPopup(_selectedItem);
+                break;
+            case "delete":
+                if (!_canEdit)
+                    break;
+                _itemToDelete = _selectedItem;
+                _deleteConfirmVisible = true;
+                break;
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private async Task ConfirmDeleteAsync()
+    {
+        if (!_canEdit)
+        {
+            Toast.Error("Takvim düzenleme yetkiniz yok.");
+            return;
+        }
+
+        if (_itemToDelete is null)
+            return;
+
+        _isDeleting = true;
+        try
+        {
+            var adminId = await GetAdminIdAsync();
+            await SpecialDayCalendarService.DeleteManualDayAsync(_itemToDelete.Id, adminId);
+            _deleteConfirmVisible = false;
+            _itemToDelete = null;
+            await LoadAsync();
+            Toast.Success("Özel gün silindi.");
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleFormSave(ex, Toast);
+        }
+        finally
+        {
+            _isDeleting = false;
+        }
+    }
+
+    private async Task SyncAsync()
+    {
+        if (!_canSync)
+        {
+            Toast.Error("Takvim senkronizasyonu yetkiniz yok.");
+            return;
+        }
+
+        if (_isSyncing)
+            return;
+
+        _isSyncing = true;
+        try
+        {
+            var adminId = await GetAdminIdAsync();
+            var result = await SpecialDayCalendarService.SyncYearAsync(_year, adminId);
+            await LoadAsync();
+            Toast.Success($"Takvim senkronize edildi. Toplam: {result.Count}");
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleFormSave(ex, Toast);
+        }
+        finally
+        {
+            _isSyncing = false;
+        }
+    }
+
+    private async Task<int> GetAdminIdAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var claim = authState.User.FindFirst(ClaimTypes.NameIdentifier);
+        return claim is not null && int.TryParse(claim.Value, out var adminUserId)
+            ? adminUserId
+            : 0;
+    }
+
+    private static bool IsManual(SpecialDayDto row)
+        => string.Equals(row.Source, "manual", StringComparison.OrdinalIgnoreCase);
+
+    private sealed class DayForm
+    {
+        public int? Id { get; set; }
+        public string EventCode { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public DateTime Date { get; set; } = DateTime.Today;
+        public SpecialDayCategory Category { get; set; } = SpecialDayCategory.Special;
+        public bool IsActive { get; set; } = true;
+    }
+
+    private sealed record EnumOption<T>(T Value, string Label);
+}

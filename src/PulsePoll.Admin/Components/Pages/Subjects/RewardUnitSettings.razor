@@ -1,0 +1,119 @@
+@page "/subjects/reward-unit-settings"
+@attribute [HasPermission(PermissionCodes.Subjects.RewardUnitSettings)]
+@using System.Security.Claims
+@using PulsePoll.Application.DTOs
+@inject IRewardUnitConfigService RewardUnitConfigService
+@inject IAppToastService Toast
+@inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthStateProvider
+
+<PageTitle>Ödül Birimi Ayarları — PulsePoll Admin</PageTitle>
+
+<div class="d-flex align-items-center justify-content-between gap-2 mb-3">
+    <div class="d-flex align-items-center gap-2">
+        <DxButton Text="← Ayarlar"
+                  RenderStyle="ButtonRenderStyle.Link"
+                  Click="@(() => Nav.NavigateTo("/settings"))" />
+        <span class="text-muted">/</span>
+        <h3 class="mb-0">Ödül Birimi Ayarları</h3>
+    </div>
+    <DxButton Text="@(_isSaving ? "Kaydediliyor..." : "Ayarları Kaydet")"
+              IconCssClass="bi bi-check-lg"
+              RenderStyle="ButtonRenderStyle.Primary"
+              RenderStyleMode="ButtonRenderStyleMode.Outline"
+              Enabled="@(!_isSaving)"
+              Click="SaveAsync" />
+</div>
+
+@if (!string.IsNullOrWhiteSpace(_error))
+{
+    <div class="alert alert-danger py-2">@_error</div>
+}
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <DxFormLayout>
+            <DxFormLayoutGroup Caption="Birim Tanımı" ColSpanMd="12">
+                <DxFormLayoutItem ColSpanMd="4" Caption="Birim Kodu">
+                    <DxTextBox @bind-Text="_form.UnitCode" />
+                </DxFormLayoutItem>
+                <DxFormLayoutItem ColSpanMd="4" Caption="Birim Etiketi">
+                    <DxTextBox @bind-Text="_form.UnitLabel" />
+                </DxFormLayoutItem>
+                <DxFormLayoutItem ColSpanMd="4" Caption="1 Birim Kaç TL">
+                    <DxSpinEdit @bind-Value="_form.TryMultiplier"
+                                MinValue="0.000001m"
+                                Increment="0.01m"
+                                DisplayFormat="N4" />
+                </DxFormLayoutItem>
+            </DxFormLayoutGroup>
+        </DxFormLayout>
+
+        <div class="mt-3 text-muted">
+            <strong>Önizleme:</strong>
+            1 @_form.UnitLabel = @_form.TryMultiplier.ToString("N4") TL
+        </div>
+    </div>
+</div>
+
+@code {
+    private RewardUnitForm _form = new();
+    private bool _isSaving;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var dto = await RewardUnitConfigService.GetAsync();
+        _form = RewardUnitForm.FromDto(dto);
+    }
+
+    private async Task SaveAsync()
+    {
+        _error = null;
+        _isSaving = true;
+        try
+        {
+            var adminId = await GetAdminIdAsync();
+            await RewardUnitConfigService.SaveAsync(_form.ToDto(), adminId);
+            Toast.Success("Ödül birimi ayarları kaydedildi.");
+        }
+        catch (Exception ex)
+        {
+            _error = ErrorHandler.HandleFormSave(ex, Toast);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private async Task<int> GetAdminIdAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var claim = authState.User.FindFirst(ClaimTypes.NameIdentifier);
+        return claim is not null && int.TryParse(claim.Value, out var adminUserId)
+            ? adminUserId
+            : 0;
+    }
+
+    private sealed class RewardUnitForm
+    {
+        public string UnitCode { get; set; } = "TRY";
+        public string UnitLabel { get; set; } = "TL";
+        public decimal TryMultiplier { get; set; } = 1m;
+
+        public RewardUnitConfigDto ToDto()
+            => new(
+                UnitCode,
+                UnitLabel,
+                TryMultiplier);
+
+        public static RewardUnitForm FromDto(RewardUnitConfigDto dto)
+            => new()
+            {
+                UnitCode = dto.UnitCode,
+                UnitLabel = dto.UnitLabel,
+                TryMultiplier = dto.TryMultiplier
+            };
+    }
+}

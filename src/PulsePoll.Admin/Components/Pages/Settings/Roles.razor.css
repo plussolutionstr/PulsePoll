@@ -1,0 +1,102 @@
+.permissions-popup-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.permissions-selected-role {
+    margin-right: auto;
+}
+
+.permissions-total-badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.permissions-popup-body {
+    max-height: 62vh;
+    overflow-y: auto;
+    padding-right: 0.25rem;
+}
+
+.permissions-module-card {
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+    margin-bottom: 0.75rem;
+    overflow: hidden;
+    background: #fff;
+}
+
+.permissions-module-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+    padding: 0.6rem 0.75rem;
+}
+
+.permissions-module-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+}
+
+.permissions-module-icon {
+    color: #6c757d;
+    font-size: 0.95rem;
+}
+
+.permissions-module-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #212529;
+}
+
+.permissions-module-count {
+    font-size: 0.75rem;
+    min-width: 2.7rem;
+    text-align: center;
+}
+
+.permissions-module-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.5rem 1rem;
+    padding: 0.75rem;
+}
+
+.permissions-item {
+    display: inline-flex;
+    align-items: flex-start;
+    gap: 0.55rem;
+    margin: 0;
+    padding: 0.25rem 0.2rem;
+    border-radius: 0.35rem;
+}
+
+.permissions-item:hover {
+    background: #f8f9fa;
+}
+
+.permissions-item-labels {
+    display: inline-flex;
+    flex-direction: column;
+    line-height: 1.2;
+}
+
+.permissions-item-title {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: #212529;
+}
+
+.permissions-item-code {
+    font-size: 0.78rem;
+    color: #6c757d;
+}

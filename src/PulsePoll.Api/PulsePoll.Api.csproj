@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <!-- Prevent recursive content/static-asset discovery under output folders on macOS/Linux -->
+        <DefaultItemExcludes>$(DefaultItemExcludes);bin/**;obj/**;**/bin/**;**/obj/**</DefaultItemExcludes>
+        <DefaultExcludesInProjectFolder>$(DefaultExcludesInProjectFolder);bin/**;obj/**</DefaultExcludesInProjectFolder>
+        <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\PulsePoll.Application\PulsePoll.Application.csproj" />
+        <ProjectReference Include="..\PulsePoll.Infrastructure\PulsePoll.Infrastructure.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" PrivateAssets="all" />
+        <PackageReference Include="FluentValidation.AspNetCore" />
+        <PackageReference Include="Serilog.AspNetCore" />
+        <PackageReference Include="Swashbuckle.AspNetCore" />
+    </ItemGroup>
+</Project>

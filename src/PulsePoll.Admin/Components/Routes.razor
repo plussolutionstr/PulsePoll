@@ -1,0 +1,12 @@
+<Router AppAssembly="typeof(Program).Assembly">
+    <Found Context="routeData">
+        <PermissionChecker RouteData="routeData">
+            <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />
+        </PermissionChecker>
+    </Found>
+    <NotFound>
+        <LayoutView Layout="@typeof(MainLayout)">
+            <p>Sayfa bulunamadı.</p>
+        </LayoutView>
+    </NotFound>
+</Router>

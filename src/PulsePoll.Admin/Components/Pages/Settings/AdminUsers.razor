@@ -1,0 +1,314 @@
+@page "/settings/admin-users"
+@using System.Security.Claims
+@attribute [HasPermission(PermissionCodes.AdminUsers.View)]
+@inject IAccessControlService AccessControlService
+@inject IPermissionAuthorizationService PermissionService
+@inject IAppToastService Toast
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Nav
+
+<PageTitle>Kullanıcı Yönetimi — PulsePoll Admin</PageTitle>
+
+<div class="d-flex align-items-center justify-content-between mb-3">
+    <h3 class="mb-0">Kullanıcı Yönetimi</h3>
+    <div class="d-flex align-items-center gap-2">
+        <DxButton Text="Geri"
+                  IconCssClass="bi bi-arrow-left"
+                  RenderStyle="ButtonRenderStyle.Secondary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="@(() => Nav.NavigateTo("/settings"))" />
+        @if (_canCreate)
+        {
+            <DxButton Text="Yeni Kullanıcı"
+                      IconCssClass="bi bi-plus-lg"
+                      RenderStyle="ButtonRenderStyle.Primary"
+                      RenderStyleMode="ButtonRenderStyleMode.Outline"
+                      Click="OpenNewPopup" />
+        }
+    </div>
+</div>
+
+<DxGrid Data="@_items" ShowFilterRow="true" PageSize="20">
+    <Columns>
+        <DxGridDataColumn Caption="Ad Soyad" MinWidth="180">
+            <CellDisplayTemplate>
+                @{
+                    var row = (AdminUserListItemDto)context.DataItem;
+                }
+                @($"{row.FirstName} {row.LastName}")
+            </CellDisplayTemplate>
+        </DxGridDataColumn>
+        <DxGridDataColumn FieldName="Email" Caption="E-posta" MinWidth="220" />
+        <DxGridDataColumn FieldName="RoleNames" Caption="Roller" MinWidth="200" />
+        <DxGridDataColumn FieldName="IsActive" Caption="Durum" Width="110px">
+            <CellDisplayTemplate>
+                @{
+                    var row = (AdminUserListItemDto)context.DataItem;
+                }
+                <span class="badge @(row.IsActive ? "bg-success" : "bg-secondary")">
+                    @(row.IsActive ? "Aktif" : "Pasif")
+                </span>
+            </CellDisplayTemplate>
+        </DxGridDataColumn>
+        <DxGridDataColumn FieldName="CreatedAt" Caption="Kayıt" DisplayFormat="dd.MM.yyyy HH:mm" Width="150px" />
+        <DxGridCommandColumn NewButtonVisible="false"
+                             EditButtonVisible="false"
+                             DeleteButtonVisible="false"
+                             Width="50px"
+                             Caption=""
+                             TextAlignment="GridTextAlignment.Center">
+            <CellDisplayTemplate>
+                @{
+                    var row = (AdminUserListItemDto)context.DataItem;
+                }
+                @if (_canEdit || _canActivate)
+                {
+                    <DxButton IconCssClass="bi bi-three-dots-vertical"
+                              RenderStyle="ButtonRenderStyle.Link"
+                              Click="@(async e => await ShowMenuAsync(e, row))"
+                              title="İşlemler" />
+                }
+            </CellDisplayTemplate>
+        </DxGridCommandColumn>
+    </Columns>
+</DxGrid>
+
+<DxContextMenu @ref="_contextMenu" ItemClick="OnContextMenuItemClick">
+    <Items>
+        @if (_canEdit)
+        {
+            <DxContextMenuItem Text="Düzenle" Name="edit" IconCssClass="bi bi-pencil" />
+        }
+        @if (_canActivate)
+        {
+            <DxContextMenuItem Text="Durumu Değiştir" Name="toggle-active" IconCssClass="bi bi-arrow-repeat" BeginGroup="@_canEdit" />
+        }
+    </Items>
+</DxContextMenu>
+
+<DxPopup @bind-Visible="_popupVisible"
+         HeaderText="@(_form.Id is null ? "Yeni Kullanıcı" : "Kullanıcı Düzenle")"
+         Width="760px"
+         CloseOnOutsideClick="false"
+         ShowFooter="true">
+    <BodyContentTemplate Context="_">
+        @if (!string.IsNullOrWhiteSpace(_formError))
+        {
+            <div class="alert alert-danger py-2 mb-3">@_formError</div>
+        }
+        <DxFormLayout>
+            <DxFormLayoutItem Caption="Ad" ColSpanMd="6">
+                <DxTextBox @bind-Text="_form.FirstName" />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem Caption="Soyad" ColSpanMd="6">
+                <DxTextBox @bind-Text="_form.LastName" />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem Caption="E-posta" ColSpanMd="12">
+                <DxTextBox @bind-Text="_form.Email" />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem Caption="@(_form.Id is null ? "Şifre" : "Yeni Şifre (opsiyonel)")" ColSpanMd="12">
+                <DxTextBox @bind-Text="_form.Password" Password="true" />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem Caption="Roller" ColSpanMd="12">
+                @if (_roles.Count == 0)
+                {
+                    <div class="alert alert-warning py-2 mb-0">Aktif rol bulunamadı.</div>
+                }
+                else
+                {
+                    <DxTagBox Data="@_roles"
+                              @bind-Values="_form.RoleIds"
+                              ValueFieldName="Id"
+                              TextFieldName="Name"
+                              CssClass="w-100"
+                              NullText="Rol seçiniz"
+                              HideSelectedItems="false"
+                              AllowCustomTags="false" />
+                    <div class="small text-muted mt-1">Birden fazla rol seçebilirsiniz.</div>
+                }
+            </DxFormLayoutItem>
+            <DxFormLayoutItem Caption="Aktif" ColSpanMd="6">
+                <DxCheckBox @bind-Checked="_form.IsActive" />
+            </DxFormLayoutItem>
+        </DxFormLayout>
+    </BodyContentTemplate>
+    <FooterContentTemplate>
+        <DxButton Text="@(_isSaving ? "Kaydediliyor..." : "Kaydet")"
+                  IconCssClass="@(_isSaving ? "spinner-border spinner-border-sm" : "bi bi-check-lg")"
+                  RenderStyle="ButtonRenderStyle.Primary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Enabled="@(!_isSaving)"
+                  Click="SaveAsync" />
+        <DxButton Text="İptal"
+                  RenderStyle="ButtonRenderStyle.Secondary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Enabled="@(!_isSaving)"
+                  Click="ClosePopup" />
+    </FooterContentTemplate>
+</DxPopup>
+
+@code {
+    private DxContextMenu? _contextMenu;
+    private List<AdminUserListItemDto> _items = [];
+    private List<RoleLookupDto> _roles = [];
+    private AdminUserListItemDto? _selectedItem;
+    private bool _popupVisible;
+    private bool _isSaving;
+    private string? _formError;
+    private bool _canCreate;
+    private bool _canEdit;
+    private bool _canActivate;
+    private UserForm _form = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPermissionsAsync();
+        await LoadDataAsync();
+    }
+
+    private async Task LoadPermissionsAsync()
+    {
+        var permissions = await PermissionService.GetCurrentPermissionsAsync();
+        _canCreate = permissions.Contains(PermissionCodes.AdminUsers.Create);
+        _canEdit = permissions.Contains(PermissionCodes.AdminUsers.Edit);
+        _canActivate = permissions.Contains(PermissionCodes.AdminUsers.Activate);
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _items = await AccessControlService.GetAdminUsersAsync();
+        _roles = await AccessControlService.GetRoleLookupsAsync();
+    }
+
+    private void OpenNewPopup()
+    {
+        _form = new UserForm { IsActive = true };
+        _formError = null;
+        _popupVisible = true;
+    }
+
+    private async Task OpenEditPopup(int id)
+    {
+        var row = await AccessControlService.GetAdminUserAsync(id);
+        if (row is null)
+        {
+            Toast.Error("Kullanıcı bulunamadı.");
+            return;
+        }
+
+        _form = new UserForm
+        {
+            Id = row.Id,
+            FirstName = row.FirstName,
+            LastName = row.LastName,
+            Email = row.Email,
+            IsActive = row.IsActive,
+            RoleIds = row.RoleIds
+        };
+        _formError = null;
+        _popupVisible = true;
+    }
+
+    private void ClosePopup()
+    {
+        _formError = null;
+        _popupVisible = false;
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_isSaving)
+            return;
+
+        _isSaving = true;
+        _formError = null;
+        try
+        {
+            var adminId = await GetAdminIdAsync();
+            await AccessControlService.SaveAdminUserAsync(_form.ToDto(), adminId);
+            PermissionService.InvalidateCache();
+            _popupVisible = false;
+            await LoadDataAsync();
+            Toast.Success("Kullanıcı kaydedildi.");
+        }
+        catch (Exception ex)
+        {
+            _formError = ErrorHandler.HandleFormSave(ex, Toast);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private async Task ShowMenuAsync(MouseEventArgs e, AdminUserListItemDto item)
+    {
+        _selectedItem = item;
+        if (_contextMenu is not null)
+            await _contextMenu.ShowAsync(e);
+    }
+
+    private async Task OnContextMenuItemClick(ContextMenuItemClickEventArgs e)
+    {
+        if (_selectedItem is null)
+            return;
+
+        switch (e.ItemInfo.Name)
+        {
+            case "edit" when _canEdit:
+                await OpenEditPopup(_selectedItem.Id);
+                break;
+            case "toggle-active" when _canActivate:
+                await ToggleActiveAsync(_selectedItem);
+                break;
+        }
+    }
+
+    private async Task ToggleActiveAsync(AdminUserListItemDto user)
+    {
+        try
+        {
+            var adminId = await GetAdminIdAsync();
+            var dto = new SaveAdminUserDto(
+                user.Id,
+                user.FirstName,
+                user.LastName,
+                user.Email,
+                null,
+                !user.IsActive,
+                user.RoleIds);
+
+            await AccessControlService.SaveAdminUserAsync(dto, adminId);
+            PermissionService.InvalidateCache();
+            await LoadDataAsync();
+            Toast.Success("Kullanıcı durumu güncellendi.");
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleOperation(ex, Toast);
+        }
+    }
+
+    private async Task<int> GetAdminIdAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var claim = authState.User.FindFirst(ClaimTypes.NameIdentifier);
+        return claim is not null && int.TryParse(claim.Value, out var adminUserId)
+            ? adminUserId
+            : 0;
+    }
+
+    private sealed class UserForm
+    {
+        public int? Id { get; set; }
+        public string FirstName { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string? Password { get; set; }
+        public bool IsActive { get; set; } = true;
+        public IEnumerable<int> RoleIds { get; set; } = [];
+
+        public SaveAdminUserDto ToDto()
+            => new(Id, FirstName, LastName, Email, Password, IsActive, RoleIds.Distinct().ToList());
+    }
+}

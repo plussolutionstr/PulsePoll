@@ -1,0 +1,254 @@
+@page "/notifications"
+@attribute [HasPermission(PermissionCodes.Notifications.View)]
+@using PulsePoll.Application.Attributes
+@using PulsePoll.Application.Extensions
+@inject IDbContextFactory<AppDbContext> ContextFactory
+@inject IAppToastService Toast
+@implements IDisposable
+
+<PageTitle>Bildirim Geçmişi - PulsePoll Admin</PageTitle>
+
+<div class="d-flex align-items-center justify-content-between mb-2">
+    <h3 class="mb-0">Bildirim Geçmişi</h3>
+</div>
+
+<ul class="nav nav-tabs mb-3">
+    <li class="nav-item">
+        <button class="nav-link @(_activeTab == "sms" ? "active" : "")" @onclick='() => _activeTab = "sms"'>
+            SMS Geçmişi
+        </button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link @(_activeTab == "push" ? "active" : "")" @onclick='() => _activeTab = "push"'>
+            Push Geçmişi
+        </button>
+    </li>
+</ul>
+
+@if (_activeTab == "sms")
+{
+    <DxGrid Data="@_smsDataSource"
+            KeyFieldName="Id"
+            ShowFilterRow="true"
+            PageSize="25"
+            ColumnResizeMode="GridColumnResizeMode.ColumnsContainer">
+        <Columns>
+            <DxGridDataColumn FieldName="PhoneNumber" Caption="Telefon" Width="130px"/>
+            <DxGridDataColumn FieldName="Subject.FullName" Caption="Denek" MinWidth="150"/>
+            <DxGridDataColumn FieldName="Message" Caption="Mesaj" MinWidth="250">
+                <CellDisplayTemplate>
+                    @{
+                        var item = (SmsLog)context.DataItem;
+                    }
+                    <span class="text-truncate d-inline-block" style="max-width:320px;" title="@item.Message">@item.Message</span>
+                </CellDisplayTemplate>
+            </DxGridDataColumn>
+            <DxGridDataColumn FieldName="Source" Caption="Kaynak" Width="110px">
+                <CellDisplayTemplate>
+                    @{
+                        var item = (SmsLog)context.DataItem;
+                    }
+                    @item.Source.GetDescription()
+                </CellDisplayTemplate>
+            </DxGridDataColumn>
+            <DxGridDataColumn FieldName="DeliveryStatus" Caption="Durum" Width="110px">
+                <CellDisplayTemplate>
+                    @{
+                        var item = (SmsLog)context.DataItem;
+                    }
+                    <span class="badge @StatusBadge(item.DeliveryStatus)">@item.DeliveryStatus.GetDescription()</span>
+                </CellDisplayTemplate>
+            </DxGridDataColumn>
+            <DxGridDataColumn FieldName="ErrorMessage" Caption="Hata" MinWidth="180"/>
+            <DxGridDataColumn FieldName="CreatedAt" Caption="Tarih" DisplayFormat="dd.MM.yyyy HH:mm" Width="150px"/>
+            <DxGridCommandColumn Width="90px" Caption="İşlem" NewButtonVisible="false">
+                <CellDisplayTemplate>
+                    @{
+                        var rowItem = (SmsLog)context.DataItem;
+                    }
+                    <DxButton Text="Detay"
+                              IconCssClass="bi bi-eye"
+                              RenderStyle="ButtonRenderStyle.Secondary"
+                              RenderStyleMode="ButtonRenderStyleMode.Text"
+                              SizeMode="SizeMode.Small"
+                              Click="@(() => ShowSmsDetail(rowItem))"/>
+                </CellDisplayTemplate>
+            </DxGridCommandColumn>
+        </Columns>
+    </DxGrid>
+}
+else
+{
+    <DxGrid Data="@_pushDataSource"
+            KeyFieldName="Id"
+            ShowFilterRow="true"
+            PageSize="25"
+            ColumnResizeMode="GridColumnResizeMode.ColumnsContainer">
+        <Columns>
+            <DxGridDataColumn FieldName="Subject.FullName" Caption="Denek" MinWidth="150"/>
+            <DxGridDataColumn FieldName="Title" Caption="Başlık" MinWidth="150"/>
+            <DxGridDataColumn FieldName="Body" Caption="İçerik" MinWidth="220">
+                <CellDisplayTemplate>
+                    @{
+                        var item = (Notification)context.DataItem;
+                    }
+                    <span class="text-truncate d-inline-block" style="max-width:320px;" title="@item.Body">@item.Body</span>
+                </CellDisplayTemplate>
+            </DxGridDataColumn>
+            <DxGridDataColumn FieldName="Type" Caption="Tip" Width="120px"/>
+            <DxGridDataColumn FieldName="IsRead" Caption="Okundu" Width="90px">
+                <CellDisplayTemplate>
+                    @{
+                        var item = (Notification)context.DataItem;
+                    }
+                    @if (item.IsRead)
+                    {
+                        <span class="badge bg-success">Evet</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary">Hayır</span>
+                    }
+                </CellDisplayTemplate>
+            </DxGridDataColumn>
+            <DxGridDataColumn FieldName="DeliveryStatus" Caption="Gönderim" Width="110px">
+                <CellDisplayTemplate>
+                    @{
+                        var item = (Notification)context.DataItem;
+                    }
+                    <span class="badge @StatusBadge(item.DeliveryStatus)">@item.DeliveryStatus.GetDescription()</span>
+                </CellDisplayTemplate>
+            </DxGridDataColumn>
+            <DxGridDataColumn FieldName="ErrorMessage" Caption="Hata" MinWidth="180"/>
+            <DxGridDataColumn FieldName="CreatedAt" Caption="Tarih" DisplayFormat="dd.MM.yyyy HH:mm" Width="150px"/>
+            <DxGridCommandColumn Width="90px" Caption="İşlem" NewButtonVisible="false">
+                <CellDisplayTemplate>
+                    @{
+                        var rowItem = (Notification)context.DataItem;
+                    }
+                    <DxButton Text="Detay"
+                              IconCssClass="bi bi-eye"
+                              RenderStyle="ButtonRenderStyle.Secondary"
+                              RenderStyleMode="ButtonRenderStyleMode.Text"
+                              SizeMode="SizeMode.Small"
+                              Click="@(() => ShowPushDetail(rowItem))"/>
+                </CellDisplayTemplate>
+            </DxGridCommandColumn>
+        </Columns>
+    </DxGrid>
+}
+
+<DxPopup Visible="@_detailPopupVisible"
+         VisibleChanged="@(v => _detailPopupVisible = v)"
+         HeaderText="@_detailPopupHeader"
+         Width="700px"
+         CloseOnOutsideClick="true"
+         ShowFooter="true">
+    <BodyContentTemplate Context="popupCtx">
+        @if (_detailIsSms)
+        {
+            <DxFormLayout>
+                <DxFormLayoutItem Caption="Denek" ColSpanMd="12">
+                    <DxTextBox Text="@_detailSubjectName" ReadOnly="true"/>
+                </DxFormLayoutItem>
+                <DxFormLayoutItem Caption="Telefon" ColSpanMd="12">
+                    <DxTextBox Text="@_detailPhoneNumber" ReadOnly="true"/>
+                </DxFormLayoutItem>
+                <DxFormLayoutItem Caption="Mesaj" ColSpanMd="12">
+                    <DxMemo Text="@_detailMessageBody" ReadOnly="true" Rows="8"/>
+                </DxFormLayoutItem>
+            </DxFormLayout>
+        }
+        else
+        {
+            <DxFormLayout>
+                <DxFormLayoutItem Caption="Denek" ColSpanMd="12">
+                    <DxTextBox Text="@_detailSubjectName" ReadOnly="true"/>
+                </DxFormLayoutItem>
+                <DxFormLayoutItem Caption="Başlık" ColSpanMd="12">
+                    <DxTextBox Text="@_detailMessageTitle" ReadOnly="true"/>
+                </DxFormLayoutItem>
+                <DxFormLayoutItem Caption="İçerik" ColSpanMd="12">
+                    <DxMemo Text="@_detailMessageBody" ReadOnly="true" Rows="8"/>
+                </DxFormLayoutItem>
+            </DxFormLayout>
+        }
+    </BodyContentTemplate>
+    <FooterContentTemplate>
+        <DxButton Text="Kapat"
+                  RenderStyle="ButtonRenderStyle.Secondary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="() => _detailPopupVisible = false"/>
+    </FooterContentTemplate>
+</DxPopup>
+
+@code {
+    private string _activeTab = "sms";
+
+    private AppDbContext? _smsContext;
+    private AppDbContext? _pushContext;
+    private GridDevExtremeDataSource<SmsLog>? _smsDataSource;
+    private GridDevExtremeDataSource<Notification>? _pushDataSource;
+
+    private bool _detailPopupVisible;
+    private bool _detailIsSms;
+    private string _detailPopupHeader = "Detay";
+    private string _detailSubjectName = string.Empty;
+    private string _detailPhoneNumber = string.Empty;
+    private string _detailMessageTitle = string.Empty;
+    private string _detailMessageBody = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _smsContext = await ContextFactory.CreateDbContextAsync();
+        _smsDataSource = new GridDevExtremeDataSource<SmsLog>(
+            _smsContext.SmsLogs
+                .Include(s => s.Subject)
+                .OrderByDescending(s => s.CreatedAt)
+                .AsNoTracking());
+
+        _pushContext = await ContextFactory.CreateDbContextAsync();
+        _pushDataSource = new GridDevExtremeDataSource<Notification>(
+            _pushContext.Notifications
+                .Include(n => n.Subject)
+                .OrderByDescending(n => n.CreatedAt)
+                .AsNoTracking());
+    }
+
+    private static string StatusBadge(DeliveryStatus status) => status switch
+    {
+        DeliveryStatus.Pending => "bg-warning text-dark",
+        DeliveryStatus.Sent => "bg-success",
+        DeliveryStatus.Failed => "bg-danger",
+        DeliveryStatus.Skipped => "bg-secondary",
+        _ => "bg-secondary"
+    };
+
+    private void ShowSmsDetail(SmsLog item)
+    {
+        _detailIsSms = true;
+        _detailPopupHeader = "SMS Detayı";
+        _detailSubjectName = item.Subject?.FullName ?? string.Empty;
+        _detailPhoneNumber = item.PhoneNumber;
+        _detailMessageTitle = string.Empty;
+        _detailMessageBody = item.Message;
+        _detailPopupVisible = true;
+    }
+
+    private void ShowPushDetail(Notification item)
+    {
+        _detailIsSms = false;
+        _detailPopupHeader = "Push Detayı";
+        _detailSubjectName = item.Subject?.FullName ?? string.Empty;
+        _detailPhoneNumber = string.Empty;
+        _detailMessageTitle = item.Title;
+        _detailMessageBody = item.Body;
+        _detailPopupVisible = true;
+    }
+
+    public void Dispose()
+    {
+        _smsContext?.Dispose();
+        _pushContext?.Dispose();
+    }
+}

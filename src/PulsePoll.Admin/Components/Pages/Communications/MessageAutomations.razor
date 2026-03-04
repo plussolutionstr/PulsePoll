@@ -1,0 +1,738 @@
+@page "/communications/automations"
+@page "/communications/templates"
+@attribute [HasPermission(PermissionCodes.Communications.View)]
+@using System.Security.Claims
+@using PulsePoll.Application.DTOs
+@using PulsePoll.Application.Extensions
+@using PulsePoll.Domain.Enums
+@inject IMessageAutomationService MessageAutomationService
+@inject ISpecialDayCalendarService SpecialDayCalendarService
+@inject IAppToastService Toast
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Nav
+@inject IPermissionAuthorizationService PermissionService
+
+<PageTitle>Mesaj Ayarları — PulsePoll Admin</PageTitle>
+
+<div class="d-flex align-items-center justify-content-between mb-2">
+    <h3 class="mb-0">Mesaj Ayarları</h3>
+</div>
+
+<ul class="nav nav-tabs mb-3">
+    <li class="nav-item">
+        <button class="nav-link @(_activeTab == "templates" ? "active" : "")" @onclick="ActivateTemplates">
+            Şablonlar
+        </button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link @(_activeTab == "campaigns" ? "active" : "")" @onclick="ActivateCampaigns">
+            Kampanyalar
+        </button>
+    </li>
+</ul>
+
+@if (_activeTab == "templates")
+{
+    <div class="d-flex justify-content-end mb-2">
+        @if (_canEdit)
+        {
+            <DxButton Text="Yeni Şablon"
+                      RenderStyle="ButtonRenderStyle.Primary"
+                      Click="OpenNewTemplate" />
+        }
+    </div>
+
+    <DxGrid Data="@_templates" ShowFilterRow="true" PageSize="20">
+        <Columns>
+            <DxGridDataColumn FieldName="Name" Caption="Ad" />
+            <DxGridDataColumn FieldName="ChannelType" Caption="Kanal" Width="120px">
+                <CellDisplayTemplate>
+                    @{
+                        var row = (MessageTemplateDto)context.DataItem;
+                    }
+                    @row.ChannelType.GetDescription()
+                </CellDisplayTemplate>
+            </DxGridDataColumn>
+            <DxGridDataColumn FieldName="IsActive" Caption="Aktif" Width="80px" />
+            <DxGridDataColumn FieldName="CreatedAt" Caption="Tarih" DisplayFormat="dd.MM.yyyy HH:mm" Width="150px" />
+            <DxGridCommandColumn NewButtonVisible="false" EditButtonVisible="false" DeleteButtonVisible="false"
+                                 Width="50px" Caption="" TextAlignment="GridTextAlignment.Center">
+                <CellDisplayTemplate>
+                    @{
+                        var row = (MessageTemplateDto)context.DataItem;
+                    }
+                    <DxButton IconCssClass="bi bi-three-dots-vertical"
+                              RenderStyle="ButtonRenderStyle.Link"
+                              Visible="@_canEdit"
+                              Click="@(async e => await ShowTemplateMenuAsync(e, row))"
+                              title="İşlemler" />
+                </CellDisplayTemplate>
+            </DxGridCommandColumn>
+        </Columns>
+    </DxGrid>
+}
+else
+{
+    <div class="d-flex justify-content-end mb-2 gap-2">
+        @if (_canSync)
+        {
+            <DxButton Text="@(_isSyncingCalendar ? "Senkronize Ediliyor..." : "Bu Yılı Senkronize Et")"
+                      IconCssClass="@(_isSyncingCalendar ? "spinner-border spinner-border-sm" : "bi bi-arrow-repeat")"
+                      RenderStyle="ButtonRenderStyle.Secondary"
+                      RenderStyleMode="ButtonRenderStyleMode.Outline"
+                      CssClass="text-nowrap"
+                      Enabled="@(!_isSyncingCalendar)"
+                      Click="SyncCalendarAsync" />
+        }
+        @if (_canEdit)
+        {
+            <DxButton Text="Yeni Kampanya"
+                      RenderStyle="ButtonRenderStyle.Primary"
+                      Click="OpenNewCampaign" />
+        }
+    </div>
+
+    <DxGrid Data="@_campaigns" ShowFilterRow="true" PageSize="20">
+        <Columns>
+            <DxGridDataColumn FieldName="Name" Caption="Ad" />
+            <DxGridDataColumn FieldName="TriggerType" Caption="Tetikleyici" Width="130px">
+                <CellDisplayTemplate>
+                    @{
+                        var row = (MessageCampaignDto)context.DataItem;
+                    }
+                    @row.TriggerType.GetDescription()
+                </CellDisplayTemplate>
+            </DxGridDataColumn>
+            <DxGridDataColumn FieldName="TriggerKey" Caption="Tetikleyici Kod" Width="140px" />
+            <DxGridDataColumn FieldName="TargetGender" Caption="Cinsiyet" Width="120px">
+                <CellDisplayTemplate>
+                    @{
+                        var row = (MessageCampaignDto)context.DataItem;
+                    }
+                    @row.TargetGender.GetDescription()
+                </CellDisplayTemplate>
+            </DxGridDataColumn>
+            <DxGridDataColumn FieldName="TemplateName" Caption="Şablon" Width="180px" />
+            <DxGridDataColumn FieldName="ChannelType" Caption="Kanal" Width="120px">
+                <CellDisplayTemplate>
+                    @{
+                        var row = (MessageCampaignDto)context.DataItem;
+                    }
+                    @row.ChannelType.GetDescription()
+                </CellDisplayTemplate>
+            </DxGridDataColumn>
+            <DxGridDataColumn FieldName="IsActive" Caption="Aktif" Width="80px" />
+            <DxGridCommandColumn NewButtonVisible="false" EditButtonVisible="false" DeleteButtonVisible="false"
+                                 Caption="İşlem" Width="220px">
+                <CellDisplayTemplate>
+                    @{
+                        var row = (MessageCampaignDto)context.DataItem;
+                    }
+                    <DxButton Text="Düzenle"
+                              IconCssClass="bi bi-pencil"
+                              RenderStyleMode="ButtonRenderStyleMode.Text"
+                              Visible="@_canEdit"
+                              Click="@(() => OpenEditCampaign(row))" />
+                    <DxButton Text="@(_runningCampaignId == row.Id ? "Çalışıyor..." : "Bugün Çalıştır")"
+                              IconCssClass="@(_runningCampaignId == row.Id ? "spinner-border spinner-border-sm" : "bi bi-play-circle")"
+                              RenderStyleMode="ButtonRenderStyleMode.Text"
+                              Visible="@_canRun"
+                              Enabled="@(_runningCampaignId is null && _canRun)"
+                              Click="@(() => RunCampaignNowAsync(row.Id))" />
+                </CellDisplayTemplate>
+            </DxGridCommandColumn>
+        </Columns>
+    </DxGrid>
+}
+
+<DxContextMenu @ref="_templateContextMenu" ItemClick="OnTemplateContextMenuItemClick">
+    <Items>
+        @if (_canEdit)
+        {
+            <DxContextMenuItem Text="Düzenle" Name="edit" IconCssClass="bi bi-pencil" />
+            <DxContextMenuItem Text="Sil" Name="delete" IconCssClass="bi bi-trash" CssClass="text-danger" BeginGroup="true" />
+        }
+    </Items>
+</DxContextMenu>
+
+<DxPopup @bind-Visible="_templatePopupVisible"
+         HeaderText="@(_templateForm.Id is null ? "Yeni Şablon" : "Şablon Düzenle")"
+         Width="760px"
+         CloseOnOutsideClick="false"
+         ShowFooter="true">
+    <BodyContentTemplate Context="templatePopupCtx">
+        @if (!string.IsNullOrWhiteSpace(_templateFormError))
+        {
+            <div class="alert alert-danger py-2 mb-3">@_templateFormError</div>
+        }
+        <DxFormLayout>
+            <DxFormLayoutItem Caption="Ad" ColSpanMd="6">
+                <DxTextBox @bind-Text="_templateForm.Name"
+                           NullText="Örn. Kadınlar Günü Mesajı" />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem Caption="Kanal" ColSpanMd="6">
+                <DxComboBox Data="@_channelOptions"
+                            ValueFieldName="Value"
+                            TextFieldName="Label"
+                            @bind-Value="_templateForm.ChannelType" />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanMd="12">
+                <div class="small text-muted">
+                    Kullanılabilir alanlar:
+                    <code>{{name}}</code>,
+                    <code>{{surname}}</code>,
+                    <code>{{fullName}}</code>,
+                    <code>{{birthDate}}</code>,
+                    <code>{{today}}</code>
+                </div>
+            </DxFormLayoutItem>
+            <DxFormLayoutItem Caption="SMS Metni"
+                              ColSpanMd="12"
+                              Visible="@(_templateForm.ChannelType is MessageChannelType.Sms or MessageChannelType.SmsAndPush)">
+                <DxMemo @bind-Text="_templateForm.SmsText"
+                        Rows="4"
+                        NullText="Örn. Sayın {{name}} {{surname}}, kadınlar gününüz kutlu olsun." />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem Caption="Push Başlık"
+                              ColSpanMd="12"
+                              Visible="@(_templateForm.ChannelType is MessageChannelType.Push or MessageChannelType.SmsAndPush)">
+                <DxTextBox @bind-Text="_templateForm.PushTitle"
+                           NullText="Örn. {{name}}, sizin için bir kutlama mesajımız var" />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem Caption="Push İçerik"
+                              ColSpanMd="12"
+                              Visible="@(_templateForm.ChannelType is MessageChannelType.Push or MessageChannelType.SmsAndPush)">
+                <DxMemo @bind-Text="_templateForm.PushBody"
+                        Rows="4"
+                        NullText="Örn. Merhaba {{fullName}}, bugün sizin için özel bir gün. Mutlu günler dileriz." />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem Caption="Aktif" ColSpanMd="6">
+                <DxCheckBox @bind-Checked="_templateForm.IsActive" />
+            </DxFormLayoutItem>
+        </DxFormLayout>
+    </BodyContentTemplate>
+    <FooterContentTemplate>
+        <DxButton Text="@(_isSavingTemplate ? "Kaydediliyor..." : "Kaydet")"
+                  IconCssClass="@(_isSavingTemplate ? "spinner-border spinner-border-sm" : "bi bi-check-lg")"
+                  RenderStyle="ButtonRenderStyle.Primary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Enabled="@(!_isSavingTemplate)"
+                  Click="SaveTemplateAsync" />
+        <DxButton Text="İptal"
+                  RenderStyle="ButtonRenderStyle.Secondary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Enabled="@(!_isSavingTemplate)"
+                  Click="CloseTemplatePopup" />
+    </FooterContentTemplate>
+</DxPopup>
+
+<DxPopup @bind-Visible="_campaignPopupVisible"
+         HeaderText="@(_campaignForm.Id is null ? "Yeni Kampanya" : "Kampanya Düzenle")"
+         Width="760px"
+         CloseOnOutsideClick="false"
+         ShowFooter="true">
+    <BodyContentTemplate Context="campaignPopupCtx">
+        @if (!string.IsNullOrWhiteSpace(_campaignFormError))
+        {
+            <div class="alert alert-danger py-2 mb-3">@_campaignFormError</div>
+        }
+        <DxFormLayout>
+            <DxFormLayoutItem Caption="Ad" ColSpanMd="6">
+                <DxTextBox @bind-Text="_campaignForm.Name" />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem Caption="Tetikleyici" ColSpanMd="6">
+                <DxComboBox Data="@_triggerOptions"
+                            ValueFieldName="Value"
+                            TextFieldName="Label"
+                            @bind-Value="_campaignForm.TriggerType" />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem Caption="Tetikleyici Kod"
+                              ColSpanMd="6"
+                              Visible="@(_campaignForm.TriggerType == MessageTriggerType.SpecialDay)">
+                <DxComboBox Data="@_specialDayOptions"
+                            ValueFieldName="Code"
+                            TextFieldName="Label"
+                            @bind-Value="_campaignForm.TriggerKey"
+                            NullText="Özel gün seçiniz..." />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem Caption="Hedef Cinsiyet" ColSpanMd="6">
+                <DxComboBox Data="@_genderOptions"
+                            ValueFieldName="Value"
+                            TextFieldName="Label"
+                            @bind-Value="_campaignForm.TargetGender" />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem Caption="Şablon" ColSpanMd="12">
+                <DxComboBox Data="@_templates"
+                            ValueFieldName="Id"
+                            TextFieldName="Name"
+                            @bind-Value="_campaignForm.TemplateId" />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem Caption="Aktif" ColSpanMd="6">
+                <DxCheckBox @bind-Checked="_campaignForm.IsActive" />
+            </DxFormLayoutItem>
+        </DxFormLayout>
+    </BodyContentTemplate>
+    <FooterContentTemplate>
+        <DxButton Text="@(_isSavingCampaign ? "Kaydediliyor..." : "Kaydet")"
+                  IconCssClass="@(_isSavingCampaign ? "spinner-border spinner-border-sm" : "bi bi-check-lg")"
+                  RenderStyle="ButtonRenderStyle.Primary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Enabled="@(!_isSavingCampaign)"
+                  Click="SaveCampaignAsync" />
+        <DxButton Text="İptal"
+                  RenderStyle="ButtonRenderStyle.Secondary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Enabled="@(!_isSavingCampaign)"
+                  Click="CloseCampaignPopup" />
+    </FooterContentTemplate>
+</DxPopup>
+
+<DxPopup @bind-Visible="_templateDeleteConfirmVisible"
+         HeaderText="Silme Onayı"
+         Width="420px"
+         CloseOnOutsideClick="false"
+         ShowFooter="true">
+    <BodyContentTemplate Context="_">
+        <div class="d-flex align-items-start gap-3 p-2">
+            <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size:2.5rem; flex-shrink:0;"></i>
+            <div>
+                <p class="mb-1 fw-semibold">Bu şablonu silmek istediğinize emin misiniz?</p>
+                <p class="mb-0 text-muted">@_templateToDelete?.Name</p>
+            </div>
+        </div>
+    </BodyContentTemplate>
+    <FooterContentTemplate>
+        <DxButton Text="Sil"
+                  IconCssClass="bi bi-trash"
+                  RenderStyle="ButtonRenderStyle.Danger"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="ConfirmTemplateDeleteAsync"
+                  Enabled="@(!_isDeletingTemplate)" />
+        <DxButton Text="İptal"
+                  RenderStyle="ButtonRenderStyle.Secondary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="() => _templateDeleteConfirmVisible = false"
+                  Enabled="@(!_isDeletingTemplate)" />
+    </FooterContentTemplate>
+</DxPopup>
+
+@code {
+    private string _activeTab = "templates";
+    private DxContextMenu? _templateContextMenu;
+    private List<MessageTemplateDto> _templates = [];
+    private List<MessageCampaignDto> _campaigns = [];
+    private bool _isSyncingCalendar;
+    private bool _isSavingTemplate;
+    private bool _isSavingCampaign;
+    private bool _templateDeleteConfirmVisible;
+    private bool _isDeletingTemplate;
+    private bool _canEdit;
+    private bool _canRun;
+    private bool _canSync;
+    private int? _runningCampaignId;
+    private MessageTemplateDto? _selectedTemplate;
+    private MessageTemplateDto? _templateToDelete;
+    private string? _templateFormError;
+    private string? _campaignFormError;
+
+    private bool _templatePopupVisible;
+    private bool _campaignPopupVisible;
+
+    private TemplateForm _templateForm = new();
+    private CampaignForm _campaignForm = new();
+
+    private readonly List<EnumOption<MessageChannelType>> _channelOptions = Enum.GetValues<MessageChannelType>()
+        .Select(x => new EnumOption<MessageChannelType>(x, x.GetDescription()))
+        .ToList();
+
+    private readonly List<EnumOption<MessageTriggerType>> _triggerOptions = Enum.GetValues<MessageTriggerType>()
+        .Select(x => new EnumOption<MessageTriggerType>(x, x.GetDescription()))
+        .ToList();
+
+    private readonly List<EnumOption<MessageTargetGender>> _genderOptions = Enum.GetValues<MessageTargetGender>()
+        .Select(x => new EnumOption<MessageTargetGender>(x, x.GetDescription()))
+        .ToList();
+    private List<SpecialDayOption> _specialDayOptions = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPermissionsAsync();
+        _activeTab = IsTemplatesRoute() ? "templates" : "campaigns";
+        await LoadAsync();
+        await LoadSpecialDayOptionsAsync(DateTime.Now.Year);
+    }
+
+    private async Task LoadPermissionsAsync()
+    {
+        var permissions = await PermissionService.GetCurrentPermissionsAsync();
+        _canEdit = permissions.Contains(PermissionCodes.Communications.Edit);
+        _canRun = permissions.Contains(PermissionCodes.Communications.Run);
+        _canSync = permissions.Contains(PermissionCodes.Communications.Sync);
+    }
+
+    protected override void OnParametersSet()
+    {
+        _activeTab = IsTemplatesRoute() ? "templates" : "campaigns";
+    }
+
+    private Task ActivateTemplates()
+    {
+        _activeTab = "templates";
+        if (!IsTemplatesRoute())
+            Nav.NavigateTo("/communications/templates");
+        return Task.CompletedTask;
+    }
+
+    private Task ActivateCampaigns()
+    {
+        _activeTab = "campaigns";
+        if (IsTemplatesRoute())
+            Nav.NavigateTo("/communications/automations");
+        return Task.CompletedTask;
+    }
+
+    private async Task LoadAsync()
+    {
+        _templates = await MessageAutomationService.GetTemplatesAsync();
+        _campaigns = await MessageAutomationService.GetCampaignsAsync();
+    }
+
+    private async Task LoadSpecialDayOptionsAsync(int year)
+    {
+        var rows = await SpecialDayCalendarService.GetByYearAsync(year);
+        _specialDayOptions = rows
+            .OrderBy(x => x.Date)
+            .Select(x => new SpecialDayOption(x.EventCode, $"{x.Date:dd.MM} - {x.Name} ({x.EventCode})"))
+            .ToList();
+    }
+
+    private void OpenNewTemplate()
+    {
+        if (!_canEdit)
+        {
+            Toast.Error("Şablon düzenleme yetkiniz yok.");
+            return;
+        }
+
+        _templateForm = new TemplateForm();
+        _templateFormError = null;
+        _templatePopupVisible = true;
+    }
+
+    private void OpenEditTemplate(MessageTemplateDto row)
+    {
+        if (!_canEdit)
+        {
+            Toast.Error("Şablon düzenleme yetkiniz yok.");
+            return;
+        }
+
+        _templateForm = TemplateForm.FromDto(row);
+        _templateFormError = null;
+        _templatePopupVisible = true;
+    }
+
+    private void CloseTemplatePopup()
+    {
+        _templateFormError = null;
+        _templatePopupVisible = false;
+    }
+
+    private async Task ShowTemplateMenuAsync(MouseEventArgs e, MessageTemplateDto row)
+    {
+        if (!_canEdit)
+            return;
+
+        _selectedTemplate = row;
+        if (_templateContextMenu is not null)
+            await _templateContextMenu.ShowAsync(e);
+    }
+
+    private Task OnTemplateContextMenuItemClick(ContextMenuItemClickEventArgs e)
+    {
+        if (_selectedTemplate is null)
+            return Task.CompletedTask;
+
+        switch (e.ItemInfo.Name)
+        {
+            case "edit":
+                if (!_canEdit)
+                    break;
+                OpenEditTemplate(_selectedTemplate);
+                break;
+            case "delete":
+                if (!_canEdit)
+                    break;
+                ShowTemplateDeleteConfirm(_selectedTemplate);
+                break;
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private void ShowTemplateDeleteConfirm(MessageTemplateDto row)
+    {
+        if (!_canEdit)
+        {
+            Toast.Error("Şablon silme yetkiniz yok.");
+            return;
+        }
+
+        _templateToDelete = row;
+        _templateDeleteConfirmVisible = true;
+    }
+
+    private async Task ConfirmTemplateDeleteAsync()
+    {
+        if (!_canEdit)
+        {
+            Toast.Error("Şablon silme yetkiniz yok.");
+            return;
+        }
+
+        if (_templateToDelete is null)
+            return;
+
+        _isDeletingTemplate = true;
+        try
+        {
+            var adminId = await GetAdminIdAsync();
+            await MessageAutomationService.DeleteTemplateAsync(_templateToDelete.Id, adminId);
+            _templateDeleteConfirmVisible = false;
+            _templateToDelete = null;
+            await LoadAsync();
+            Toast.Success("Şablon silindi.");
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleFormSave(ex, Toast);
+        }
+        finally
+        {
+            _isDeletingTemplate = false;
+        }
+    }
+
+    private async Task SaveTemplateAsync()
+    {
+        if (!_canEdit)
+        {
+            _templateFormError = "Şablon düzenleme yetkiniz yok.";
+            return;
+        }
+
+        if (_isSavingTemplate)
+            return;
+
+        _isSavingTemplate = true;
+        _templateFormError = null;
+        try
+        {
+            var adminId = await GetAdminIdAsync();
+            await MessageAutomationService.SaveTemplateAsync(_templateForm.ToDto(), adminId);
+            _templatePopupVisible = false;
+            await LoadAsync();
+            Toast.Success("Şablon kaydedildi.");
+        }
+        catch (Exception ex)
+        {
+            _templateFormError = ErrorHandler.HandleFormSave(ex, Toast);
+        }
+        finally
+        {
+            _isSavingTemplate = false;
+        }
+    }
+
+    private void OpenNewCampaign()
+    {
+        if (!_canEdit)
+        {
+            Toast.Error("Kampanya düzenleme yetkiniz yok.");
+            return;
+        }
+
+        _campaignForm = new CampaignForm();
+        _campaignFormError = null;
+        _campaignPopupVisible = true;
+    }
+
+    private void OpenEditCampaign(MessageCampaignDto row)
+    {
+        if (!_canEdit)
+        {
+            Toast.Error("Kampanya düzenleme yetkiniz yok.");
+            return;
+        }
+
+        _campaignForm = CampaignForm.FromDto(row);
+        _campaignFormError = null;
+        _campaignPopupVisible = true;
+    }
+
+    private void CloseCampaignPopup()
+    {
+        _campaignFormError = null;
+        _campaignPopupVisible = false;
+    }
+
+    private async Task SaveCampaignAsync()
+    {
+        if (!_canEdit)
+        {
+            _campaignFormError = "Kampanya düzenleme yetkiniz yok.";
+            return;
+        }
+
+        if (_isSavingCampaign)
+            return;
+
+        _isSavingCampaign = true;
+        _campaignFormError = null;
+        try
+        {
+            var adminId = await GetAdminIdAsync();
+            await MessageAutomationService.SaveCampaignAsync(_campaignForm.ToDto(), adminId);
+            _campaignPopupVisible = false;
+            await LoadAsync();
+            Toast.Success("Kampanya kaydedildi.");
+        }
+        catch (Exception ex)
+        {
+            _campaignFormError = ErrorHandler.HandleFormSave(ex, Toast);
+        }
+        finally
+        {
+            _isSavingCampaign = false;
+        }
+    }
+
+    private async Task RunCampaignNowAsync(int campaignId)
+    {
+        if (!_canRun)
+        {
+            Toast.Error("Kampanya çalıştırma yetkiniz yok.");
+            return;
+        }
+
+        if (_runningCampaignId is not null)
+            return;
+
+        _runningCampaignId = campaignId;
+        try
+        {
+            var adminId = await GetAdminIdAsync();
+            var date = DateOnly.FromDateTime(DateTime.Now);
+            var result = await MessageAutomationService.RunCampaignAsync(campaignId, date, adminId);
+            Toast.Success($"Kampanya çalıştı. Hedef: {result.TargetCount}, Kuyruk: {result.QueuedCount}, Atlanan: {result.SkippedCount}");
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleFormSave(ex, Toast);
+        }
+        finally
+        {
+            _runningCampaignId = null;
+        }
+    }
+
+    private async Task SyncCalendarAsync()
+    {
+        if (!_canSync)
+        {
+            Toast.Error("Takvim senkronizasyon yetkiniz yok.");
+            return;
+        }
+
+        if (_isSyncingCalendar)
+            return;
+
+        _isSyncingCalendar = true;
+        try
+        {
+            var adminId = await GetAdminIdAsync();
+            var year = DateTime.Now.Year;
+            var result = await SpecialDayCalendarService.SyncYearAsync(year, adminId);
+            await LoadSpecialDayOptionsAsync(year);
+            Toast.Success($"Takvim senkronize edildi. Yıl: {result.Year}, Toplam gün: {result.Count}");
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleFormSave(ex, Toast);
+        }
+        finally
+        {
+            _isSyncingCalendar = false;
+        }
+    }
+
+    private bool IsTemplatesRoute()
+    {
+        var path = new Uri(Nav.Uri).AbsolutePath;
+        return path.Equals("/communications/templates", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private async Task<int> GetAdminIdAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var claim = authState.User.FindFirst(ClaimTypes.NameIdentifier);
+        return claim is not null && int.TryParse(claim.Value, out var adminUserId)
+            ? adminUserId
+            : 0;
+    }
+
+    private sealed class TemplateForm
+    {
+        public int? Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public MessageChannelType ChannelType { get; set; } = MessageChannelType.Push;
+        public string? SmsText { get; set; }
+        public string? PushTitle { get; set; }
+        public string? PushBody { get; set; }
+        public bool IsActive { get; set; } = true;
+
+        public SaveMessageTemplateDto ToDto()
+            => new(Id, Name, ChannelType, SmsText, PushTitle, PushBody, IsActive);
+
+        public static TemplateForm FromDto(MessageTemplateDto dto)
+            => new()
+            {
+                Id = dto.Id,
+                Name = dto.Name,
+                ChannelType = dto.ChannelType,
+                SmsText = dto.SmsText,
+                PushTitle = dto.PushTitle,
+                PushBody = dto.PushBody,
+                IsActive = dto.IsActive
+            };
+    }
+
+    private sealed class CampaignForm
+    {
+        public int? Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public MessageTriggerType TriggerType { get; set; } = MessageTriggerType.SpecialDay;
+        public string? TriggerKey { get; set; }
+        public MessageTargetGender TargetGender { get; set; } = MessageTargetGender.All;
+        public int TemplateId { get; set; }
+        public bool IsActive { get; set; } = true;
+
+        public SaveMessageCampaignDto ToDto()
+            => new(Id, Name, TriggerType, TriggerKey, TargetGender, TemplateId, IsActive);
+
+        public static CampaignForm FromDto(MessageCampaignDto dto)
+            => new()
+            {
+                Id = dto.Id,
+                Name = dto.Name,
+                TriggerType = dto.TriggerType,
+                TriggerKey = dto.TriggerKey,
+                TargetGender = dto.TargetGender,
+                TemplateId = dto.TemplateId,
+                IsActive = dto.IsActive
+            };
+    }
+
+    private sealed record EnumOption<T>(T Value, string Label);
+    private sealed record SpecialDayOption(string Code, string Label);
+}

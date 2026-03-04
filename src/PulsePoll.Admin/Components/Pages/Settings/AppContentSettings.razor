@@ -1,0 +1,134 @@
+@page "/settings/app-content"
+@attribute [HasPermission(PermissionCodes.Settings.AppContentEdit)]
+@using System.Security.Claims
+@using PulsePoll.Application.DTOs
+@inject IAppContentConfigService AppContentConfigService
+@inject IAppToastService Toast
+@inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthStateProvider
+
+<PageTitle>Mobil İçerik Ayarları — PulsePoll Admin</PageTitle>
+
+<div class="d-flex align-items-center justify-content-between gap-2 mb-3">
+    <div class="d-flex align-items-center gap-2">
+        <DxButton Text="← Ayarlar"
+                  RenderStyle="ButtonRenderStyle.Link"
+                  Click="@(() => Nav.NavigateTo("/settings"))" />
+        <span class="text-muted">/</span>
+        <h3 class="mb-0">Mobil İçerik Ayarları</h3>
+    </div>
+    <DxButton Text="@(_isSaving ? "Kaydediliyor..." : "Ayarları Kaydet")"
+              IconCssClass="bi bi-check-lg"
+              RenderStyle="ButtonRenderStyle.Primary"
+              RenderStyleMode="ButtonRenderStyleMode.Outline"
+              Enabled="@(!_isSaving)"
+              Click="SaveAsync" />
+</div>
+
+@if (!string.IsNullOrWhiteSpace(_error))
+{
+    <div class="alert alert-danger py-2">@_error</div>
+}
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <DxFormLayout>
+            <DxFormLayoutGroup Caption="KVKK Aydınlatma Metni" ColSpanMd="12">
+                <DxFormLayoutItem ColSpanMd="12">
+                    <DxMemo @bind-Text="_form.KvkkText"
+                            Rows="10" />
+                </DxFormLayoutItem>
+            </DxFormLayoutGroup>
+
+            <DxFormLayoutGroup Caption="Bize Ulaşın" ColSpanMd="12">
+                <DxFormLayoutItem ColSpanMd="6" Caption="Başlık">
+                    <DxTextBox @bind-Text="_form.ContactTitle" />
+                </DxFormLayoutItem>
+                <DxFormLayoutItem ColSpanMd="6" Caption="E-posta">
+                    <DxTextBox @bind-Text="_form.ContactEmail" />
+                </DxFormLayoutItem>
+                <DxFormLayoutItem ColSpanMd="6" Caption="Telefon">
+                    <DxTextBox @bind-Text="_form.ContactPhone" />
+                </DxFormLayoutItem>
+                <DxFormLayoutItem ColSpanMd="6" Caption="WhatsApp">
+                    <DxTextBox @bind-Text="_form.ContactWhatsapp" />
+                </DxFormLayoutItem>
+                <DxFormLayoutItem ColSpanMd="12" Caption="Açıklama">
+                    <DxMemo @bind-Text="_form.ContactBody"
+                            Rows="6" />
+                </DxFormLayoutItem>
+            </DxFormLayoutGroup>
+        </DxFormLayout>
+    </div>
+</div>
+
+@code {
+    private AppContentForm _form = new();
+    private bool _isSaving;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var dto = await AppContentConfigService.GetAsync();
+        _form = AppContentForm.FromDto(dto);
+    }
+
+    private async Task SaveAsync()
+    {
+        _error = null;
+        _isSaving = true;
+        try
+        {
+            var adminId = await GetAdminIdAsync();
+            await AppContentConfigService.SaveAsync(_form.ToDto(), adminId);
+            Toast.Success("Mobil içerik ayarları kaydedildi.");
+        }
+        catch (Exception ex)
+        {
+            _error = ErrorHandler.HandleFormSave(ex, Toast);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private async Task<int> GetAdminIdAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var claim = authState.User.FindFirst(ClaimTypes.NameIdentifier);
+        return claim is not null && int.TryParse(claim.Value, out var adminUserId)
+            ? adminUserId
+            : 0;
+    }
+
+    private sealed class AppContentForm
+    {
+        public string KvkkText { get; set; } = "KVKK metni henüz tanımlanmadı.";
+        public string ContactTitle { get; set; } = "Bize Ulaşın";
+        public string ContactBody { get; set; } = string.Empty;
+        public string? ContactEmail { get; set; }
+        public string? ContactPhone { get; set; }
+        public string? ContactWhatsapp { get; set; }
+
+        public AppContentConfigDto ToDto()
+            => new(
+                KvkkText,
+                ContactTitle,
+                ContactBody,
+                ContactEmail,
+                ContactPhone,
+                ContactWhatsapp);
+
+        public static AppContentForm FromDto(AppContentConfigDto dto)
+            => new()
+            {
+                KvkkText = dto.KvkkText,
+                ContactTitle = dto.ContactTitle,
+                ContactBody = dto.ContactBody,
+                ContactEmail = dto.ContactEmail,
+                ContactPhone = dto.ContactPhone,
+                ContactWhatsapp = dto.ContactWhatsapp
+            };
+    }
+}

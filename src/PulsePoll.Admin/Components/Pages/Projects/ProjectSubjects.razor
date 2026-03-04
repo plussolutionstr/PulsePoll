@@ -1,0 +1,1087 @@
+@page "/projects/{ProjectId:int}/subjects"
+@attribute [HasPermission(PermissionCodes.Projects.ManageSubjects)]
+@using System.Security.Claims
+@using PulsePoll.Application.Extensions
+@implements IDisposable
+@inject IDbContextFactory<AppDbContext> ContextFactory
+@inject IAdminAssignmentService AssignmentService
+@inject IProjectService ProjectService
+@inject IAppToastService Toast
+@inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IPermissionAuthorizationService PermissionService
+
+<PageTitle>Denek Atama — PulsePoll Admin</PageTitle>
+
+<div class="d-flex align-items-center justify-content-between gap-2 mb-3">
+    <div class="d-flex align-items-center gap-2">
+        <DxButton Text="← Projeler"
+                  RenderStyle="ButtonRenderStyle.Link"
+                  Click="@(() => Nav.NavigateTo("/projects"))" />
+        <span class="text-muted">/</span>
+        <span class="fw-semibold">@_projectName — Denek Atama</span>
+        <span class="badge @ProjectStatusBadge(_projectStatus)">@_projectStatus.GetDescription()</span>
+    </div>
+    @if (_canToggleStatus)
+    {
+        <DxButton Text="@(IsProjectClosed ? "Projeyi Aç" : "Projeyi Kapat")"
+                  IconCssClass="@(IsProjectClosed ? "bi bi-unlock" : "bi bi-lock")"
+                  RenderStyle="@(IsProjectClosed ? ButtonRenderStyle.Success : ButtonRenderStyle.Warning)"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  SizeMode="SizeMode.Small"
+                  Click="ToggleProjectStatusAsync" />
+    }
+</div>
+
+<!-- Filtre Paneli -->
+@if (_filterPanelVisible)
+{
+    <div class="card mb-3 border-secondary-subtle shadow-sm">
+        <div class="card-body">
+            <DxFilterBuilder @bind-FilterCriteria="_builderCriteria"
+                             ViewMode="FilterBuilderViewMode.VisualAndText">
+                <Fields>
+                    <DxFilterBuilderField FieldName="Id" Caption="ID" Type="@typeof(int)"/>
+                    <DxFilterBuilderField FieldName="FirstName" Caption="Ad" Type="@typeof(string)"/>
+                    <DxFilterBuilderField FieldName="LastName" Caption="Soyad" Type="@typeof(string)"/>
+                    <DxFilterBuilderField FieldName="PhoneNumber" Caption="Telefon" Type="@typeof(string)"/>
+                    <DxFilterBuilderField FieldName="Email" Caption="E-posta" Type="@typeof(string)"/>
+                    <DxFilterBuilderField FieldName="Age" Caption="Yaş" Type="@typeof(int)"/>
+                    <DxFilterBuilderField FieldName="BirthDate" Caption="Doğum Tarihi" Type="@typeof(DateOnly)"/>
+                    <DxFilterBuilderField FieldName="CreatedAt" Caption="Kayıt Tarihi" Type="@typeof(DateTime)"/>
+                    <DxFilterBuilderField FieldName="City.Name" Caption="Şehir" Type="@typeof(string)"/>
+                    <DxFilterBuilderField FieldName="District.Name" Caption="İlçe" Type="@typeof(string)"/>
+                    <DxFilterBuilderField FieldName="Profession.Name" Caption="Meslek" Type="@typeof(string)"/>
+                    <DxFilterBuilderField FieldName="EducationLevel.Name" Caption="Eğitim Seviyesi" Type="@typeof(string)"/>
+                    <DxFilterBuilderField FieldName="IsRetired" Caption="Emekli mi" Type="@typeof(bool)"/>
+                    <DxFilterBuilderField FieldName="IsHeadOfFamily" Caption="Aile Reisi mi" Type="@typeof(bool)"/>
+                    <DxFilterBuilderField FieldName="IsHeadOfFamilyRetired" Caption="A.R. Emekli mi" Type="@typeof(bool)"/>
+                    <DxFilterBuilderField FieldName="HeadOfFamilyProfession.Name" Caption="A.R. Meslek" Type="@typeof(string)"/>
+                    <DxFilterBuilderField FieldName="HeadOfFamilyEducationLevel.Name" Caption="A.R. Eğitim" Type="@typeof(string)"/>
+                    <DxFilterBuilderField FieldName="SocioeconomicStatus.Code" Caption="SES" Type="@typeof(string)"/>
+                    <DxFilterBuilderField FieldName="LSMSocioeconomicStatus.Code" Caption="LSM SES" Type="@typeof(string)"/>
+                    <DxFilterBuilderField FieldName="Bank.Name" Caption="Banka" Type="@typeof(string)"/>
+                    <DxFilterBuilderField FieldName="IBAN" Caption="IBAN" Type="@typeof(string)"/>
+                    <DxFilterBuilderField FieldName="ReferenceCode" Caption="Referans Kodu" Type="@typeof(string)"/>
+                    <DxFilterBuilderField FieldName="ReferralCode" Caption="Davet Kodu" Type="@typeof(string)"/>
+
+                    <DxFilterBuilderField FieldName="Status" Caption="Durum" Type="@typeof(ApprovalStatus)">
+                        <EditSettings>
+                            <DxComboBoxSettings Data="@_statusOpts" ValueFieldName="Value" TextFieldName="Label"/>
+                        </EditSettings>
+                    </DxFilterBuilderField>
+
+                    <DxFilterBuilderField FieldName="Gender" Caption="Cinsiyet" Type="@typeof(Gender)">
+                        <EditSettings>
+                            <DxComboBoxSettings Data="@_genderOpts" ValueFieldName="Value" TextFieldName="Label"/>
+                        </EditSettings>
+                    </DxFilterBuilderField>
+
+                    <DxFilterBuilderField FieldName="MaritalStatus" Caption="Medeni Hal" Type="@typeof(MaritalStatus)">
+                        <EditSettings>
+                            <DxComboBoxSettings Data="@_maritalOpts" ValueFieldName="Value" TextFieldName="Label"/>
+                        </EditSettings>
+                    </DxFilterBuilderField>
+
+                    <DxFilterBuilderField FieldName="GsmOperator" Caption="GSM Operatörü" Type="@typeof(GsmOperator)">
+                        <EditSettings>
+                            <DxComboBoxSettings Data="@_gsmOpts" ValueFieldName="Value" TextFieldName="Label"/>
+                        </EditSettings>
+                    </DxFilterBuilderField>
+                </Fields>
+            </DxFilterBuilder>
+
+            <div class="d-flex gap-2 mt-3">
+                <DxButton Text="Uygula" IconCssClass="bi bi-check-lg"
+                          RenderStyle="ButtonRenderStyle.Primary"
+                          RenderStyleMode="ButtonRenderStyleMode.Outline"
+                          Click="ApplyFilter" />
+                <DxButton Text="Temizle" IconCssClass="bi bi-x-lg"
+                          RenderStyle="ButtonRenderStyle.Secondary"
+                          RenderStyleMode="ButtonRenderStyleMode.Outline"
+                          Click="ClearFilter" />
+            </div>
+        </div>
+    </div>
+}
+
+<div class="row g-3">
+    <!-- Sol: Denek Grid -->
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header d-flex align-items-center justify-content-between py-2">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="fw-semibold">Denekler</span>
+                    @if (_filterActive)
+                    {
+                        <span class="badge bg-primary">Filtre aktif</span>
+                    }
+                </div>
+                <div class="d-flex gap-2">
+                    <DxButton Text="@(_filterPanelVisible ? "Filtreyi Kapat" : "Filtrele")"
+                              IconCssClass="@(_filterPanelVisible ? "bi bi-funnel-fill" : "bi bi-funnel")"
+                              RenderStyle="@(_filterActive ? ButtonRenderStyle.Primary : ButtonRenderStyle.Secondary)"
+                              RenderStyleMode="ButtonRenderStyleMode.Outline"
+                              SizeMode="SizeMode.Small"
+                              Click="ToggleFilterPanel" />
+                    <DxButton Text="Tümünü Seç" IconCssClass="bi bi-check-all"
+                              RenderStyle="ButtonRenderStyle.Secondary"
+                              RenderStyleMode="ButtonRenderStyleMode.Outline"
+                              SizeMode="SizeMode.Small"
+                              Click="SelectAllAsync" />
+                    <DxButton Text="Seçimi Temizle" IconCssClass="bi bi-dash-square"
+                              RenderStyle="ButtonRenderStyle.Secondary"
+                              RenderStyleMode="ButtonRenderStyleMode.Outline"
+                              SizeMode="SizeMode.Small"
+                              Click="DeselectAllAsync" />
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <DxLoadingPanel @bind-Visible="_isLoading"
+                                IsContentBlocked="true"
+                                ApplyBackgroundShading="true"
+                                IndicatorAreaVisible="false"
+                                Text="Yükleniyor...">
+                    <DxGrid @ref="_grid"
+                            Data="@_dataSource"
+                            KeyFieldName="Id"
+                            @bind-SelectedDataItems="@_selectedSubjects"
+                            SelectAllCheckboxMode="GridSelectAllCheckboxMode.Page"
+                            ShowFilterRow="true"
+                            PageSize="25"
+                            ColumnResizeMode="GridColumnResizeMode.ColumnsContainer">
+                        <Columns>
+                            <DxGridSelectionColumn Width="40px" FixedPosition="GridColumnFixedPosition.Left"/>
+                            <DxGridDataColumn FieldName="Id" Caption="ID" Width="65px"
+                                              FixedPosition="GridColumnFixedPosition.Left"
+                                              TextAlignment="GridTextAlignment.Center"/>
+                            <DxGridDataColumn FieldName="FullName" Caption="Ad Soyad" MinWidth="160"
+                                              FixedPosition="GridColumnFixedPosition.Left"
+                                              UnboundType="GridUnboundColumnType.String"
+                                              UnboundExpression="[FirstName] + ' ' + [LastName]"
+                                              AllowSort="false"/>
+                            <DxGridDataColumn FieldName="PhoneNumber" Caption="Telefon" Width="130px"/>
+                            <DxGridDataColumn FieldName="Email" Caption="E-posta" MinWidth="180"/>
+                            <DxGridDataColumn FieldName="City.Name" Caption="Şehir" Width="110px"/>
+                            <DxGridDataColumn FieldName="District.Name" Caption="İlçe" Width="110px"/>
+                            <DxGridDataColumn FieldName="Age" Caption="Yaş" Width="60px" TextAlignment="GridTextAlignment.Center"
+                                              UnboundType="GridUnboundColumnType.Integer"
+                                              AllowSort="false">
+                                <CellDisplayTemplate>
+                                    @{ var r = (Subject)context.DataItem; }
+                                    @r.Age
+                                </CellDisplayTemplate>
+                            </DxGridDataColumn>
+                            <DxGridDataColumn FieldName="BirthDate" Caption="Doğum Tarihi" Width="115px" DisplayFormat="dd.MM.yyyy"/>
+                            <DxGridDataColumn FieldName="Gender" Caption="Cinsiyet" Width="85px">
+                                <CellDisplayTemplate>
+                                    @{ var s = (Subject)context.DataItem; }
+                                    @s.Gender.GetDescription()
+                                </CellDisplayTemplate>
+                            </DxGridDataColumn>
+                            <DxGridDataColumn FieldName="MaritalStatus" Caption="Medeni Hal" Width="105px">
+                                <CellDisplayTemplate>
+                                    @{ var s = (Subject)context.DataItem; }
+                                    @s.MaritalStatus.GetDescription()
+                                </CellDisplayTemplate>
+                            </DxGridDataColumn>
+                            <DxGridDataColumn FieldName="GsmOperator" Caption="GSM Op." Width="95px">
+                                <CellDisplayTemplate>
+                                    @{ var s = (Subject)context.DataItem; }
+                                    @s.GsmOperator.GetDescription()
+                                </CellDisplayTemplate>
+                            </DxGridDataColumn>
+                            <DxGridDataColumn FieldName="Profession.Name" Caption="Meslek" Width="140px"/>
+                            <DxGridDataColumn FieldName="EducationLevel.Name" Caption="Eğitim" Width="140px"/>
+                            <DxGridDataColumn FieldName="IsRetired" Caption="Emekli" Width="75px"
+                                              TextAlignment="GridTextAlignment.Center">
+                                <CellDisplayTemplate>
+                                    @{ var s = (Subject)context.DataItem; }
+                                    @(s.IsRetired ? "Evet" : "Hayır")
+                                </CellDisplayTemplate>
+                            </DxGridDataColumn>
+                            <DxGridDataColumn FieldName="IsHeadOfFamily" Caption="Aile Reisi" Width="90px"
+                                              TextAlignment="GridTextAlignment.Center">
+                                <CellDisplayTemplate>
+                                    @{ var s = (Subject)context.DataItem; }
+                                    @(s.IsHeadOfFamily ? "Evet" : "Hayır")
+                                </CellDisplayTemplate>
+                            </DxGridDataColumn>
+                            <DxGridDataColumn FieldName="IsHeadOfFamilyRetired" Caption="A.R. Emekli" Width="95px"
+                                              TextAlignment="GridTextAlignment.Center">
+                                <CellDisplayTemplate>
+                                    @{ var s = (Subject)context.DataItem; }
+                                    @(s.IsHeadOfFamily ? (s.IsHeadOfFamilyRetired ? "Evet" : "Hayır") : "—")
+                                </CellDisplayTemplate>
+                            </DxGridDataColumn>
+                            <DxGridDataColumn FieldName="HeadOfFamilyProfession.Name" Caption="A.R. Meslek" Width="140px"/>
+                            <DxGridDataColumn FieldName="HeadOfFamilyEducationLevel.Name" Caption="A.R. Eğitim" Width="140px"/>
+                            <DxGridDataColumn FieldName="SocioeconomicStatus.Code" Caption="SES" Width="65px"
+                                              TextAlignment="GridTextAlignment.Center"/>
+                            <DxGridDataColumn FieldName="LSMSocioeconomicStatus.Code" Caption="LSM SES" Width="80px"
+                                              TextAlignment="GridTextAlignment.Center"/>
+                            <DxGridDataColumn FieldName="Bank.Name" Caption="Banka" Width="120px"/>
+                            <DxGridDataColumn FieldName="IBAN" Caption="IBAN" Width="200px"/>
+                            <DxGridDataColumn FieldName="ReferenceCode" Caption="Referans Kodu" Width="115px"
+                                              TextAlignment="GridTextAlignment.Center"/>
+                            <DxGridDataColumn FieldName="ReferralCode" Caption="Davet Kodu" Width="110px"
+                                              TextAlignment="GridTextAlignment.Center"/>
+                            <DxGridDataColumn FieldName="Status" Caption="Durum" Width="110px" TextAlignment="GridTextAlignment.Center">
+                                <CellDisplayTemplate>
+                                    @{ var s = (Subject)context.DataItem; }
+                                    <span class="badge @ApprovalBadgeClass(s.Status)">@s.Status.GetDescription()</span>
+                                </CellDisplayTemplate>
+                            </DxGridDataColumn>
+                            <DxGridDataColumn FieldName="CreatedAt" Caption="Kayıt Tarihi" Width="110px" DisplayFormat="dd.MM.yyyy"/>
+                        </Columns>
+                    </DxGrid>
+                </DxLoadingPanel>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sağ: Özet + Ata + Son İşler -->
+    <div class="col-lg-4">
+        <div class="card shadow-sm mb-3">
+            <div class="card-header py-2 fw-semibold">Atama Özeti</div>
+            <div class="card-body">
+                <dl class="row mb-0 small">
+                    <dt class="col-7">Seçili denek:</dt>
+                    <dd class="col-5 text-end fw-semibold">@SelectedCount</dd>
+
+                    <dt class="col-7">Zaten atanmış:</dt>
+                    <dd class="col-5 text-end text-muted">@AlreadyAssignedCount</dd>
+
+                    <dt class="col-7 fw-bold text-success">Yeni atanacak:</dt>
+                    <dd class="col-5 text-end fw-bold text-success">@NewToAssignCount</dd>
+                </dl>
+                <hr class="my-2" />
+                <DxButton Text="@($"Ata ({NewToAssignCount} denek)")"
+                          IconCssClass="bi bi-person-plus"
+                          RenderStyle="ButtonRenderStyle.Primary"
+                          RenderStyleMode="ButtonRenderStyleMode.Outline"
+                          CssClass="w-100"
+                          Visible="@_canManageSubjects"
+                          Enabled="@(NewToAssignCount > 0 && !_isAssigning && !IsProjectClosed && _canManageSubjects)"
+                          Click="AssignAsync" />
+                @if (IsProjectClosed)
+                {
+                    <div class="text-danger small mt-2">
+                        Proje kapalı olduğu için yeni denek ataması yapılamaz.
+                    </div>
+                }
+                @if (_isAssigning)
+                {
+                    <div class="text-center small text-muted mt-2">
+                        <span class="spinner-border spinner-border-sm me-1"></span>Kuyruğa gönderiliyor...
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Son İşler -->
+        <div class="card shadow-sm">
+            <div class="card-header py-2 d-flex justify-content-between align-items-center">
+                <span class="fw-semibold">Son Atama İşlemleri</span>
+                <DxButton IconCssClass="bi bi-arrow-clockwise"
+                          RenderStyle="ButtonRenderStyle.Link"
+                          SizeMode="SizeMode.Small"
+                          title="Yenile"
+                          Click="RefreshJobsAsync" />
+            </div>
+            <div class="card-body p-0">
+                @if (_jobs.Count == 0)
+                {
+                    <div class="text-center text-muted py-3 small">Henüz atama yapılmadı.</div>
+                }
+                else
+                {
+                    <ul class="list-group list-group-flush">
+                        @foreach (var job in _jobs)
+                        {
+                            <li class="list-group-item px-3 py-2 small">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <span class="badge @JobStatusBadge(job.Status) me-1">@job.Status.GetDescription()</span>
+                                        <span class="text-muted">@job.CreatedAt.ToLocalTime().ToString("dd.MM HH:mm")</span>
+                                    </div>
+                                    @if (job.Status is AssignmentJobStatus.Pending or AssignmentJobStatus.Processing)
+                                    {
+                                        <DxButton IconCssClass="bi bi-x-circle"
+                                                  RenderStyle="ButtonRenderStyle.Danger"
+                                                  RenderStyleMode="ButtonRenderStyleMode.Text"
+                                                  SizeMode="SizeMode.Small"
+                                                  Visible="@_canManageSubjects"
+                                                  title="İptal et"
+                                                  Click="@(() => CancelJobAsync(job.Id))" />
+                                    }
+                                </div>
+                                @if (job.Status == AssignmentJobStatus.Completed)
+                                {
+                                    <div class="text-muted mt-1">
+                                        <i class="bi bi-person-check text-success"></i> @job.AssignedCount atandı
+                                        @if (job.SkippedCount > 0)
+                                        {
+                                            <span class="ms-2"><i class="bi bi-skip-forward text-secondary"></i> @job.SkippedCount atlandı</span>
+                                        }
+                                    </div>
+                                }
+                                else if (job.Status == AssignmentJobStatus.Pending || job.Status == AssignmentJobStatus.Processing)
+                                {
+                                    <div class="text-muted mt-1">
+                                        <span class="spinner-border spinner-border-sm me-1"></span>@job.RequestedCount denek işleniyor...
+                                    </div>
+                                }
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Mevcut Atamalar -->
+<div class="card shadow-sm mt-3">
+    <div class="card-header py-2 d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center gap-2">
+            <span class="fw-semibold">Mevcut Atamalar</span>
+            <span class="badge bg-secondary">@_assignments.Count</span>
+            @if (_selectedAssignments.Count > 0)
+            {
+                <span class="badge bg-primary">@_selectedAssignments.Count seçili</span>
+            }
+        </div>
+        <div class="d-flex gap-2">
+            <DxButton Text="Seçimi Onayla"
+                      IconCssClass="bi bi-check-circle"
+                      RenderStyle="ButtonRenderStyle.Success"
+                      RenderStyleMode="ButtonRenderStyleMode.Outline"
+                      SizeMode="SizeMode.Small"
+                      Visible="@_canManageRewards"
+                      Enabled="@(PendingRewardSelectionCount > 0 && !_isRewardProcessing && _canManageRewards)"
+                      Click="ApproveSelectedRewardsAsync" />
+            <DxButton Text="Seçimi Reddet"
+                      IconCssClass="bi bi-x-circle"
+                      RenderStyle="ButtonRenderStyle.Danger"
+                      RenderStyleMode="ButtonRenderStyleMode.Outline"
+                      SizeMode="SizeMode.Small"
+                      Visible="@_canManageRewards"
+                      Enabled="@(PendingRewardSelectionCount > 0 && !_isRewardProcessing && _canManageRewards)"
+                      Click="ShowRewardRejectPopup" />
+            <DxButton Text="Seçimi Çıkar"
+                      IconCssClass="bi bi-person-dash"
+                      RenderStyle="ButtonRenderStyle.Danger"
+                      RenderStyleMode="ButtonRenderStyleMode.Outline"
+                      SizeMode="SizeMode.Small"
+                      Visible="@_canManageSubjects"
+                      Enabled="@(RemovableSelectionCount > 0 && !_isRemoving && _canManageSubjects)"
+                      Click="ShowBulkRemoveConfirm" />
+            <DxButton Text="Seçimi Temizle"
+                      IconCssClass="bi bi-dash-square"
+                      RenderStyle="ButtonRenderStyle.Secondary"
+                      RenderStyleMode="ButtonRenderStyleMode.Outline"
+                      SizeMode="SizeMode.Small"
+                      Enabled="@(_selectedAssignments.Count > 0)"
+                      Click="DeselectAssignmentsAsync" />
+            <DxButton IconCssClass="bi bi-arrow-clockwise"
+                      RenderStyle="ButtonRenderStyle.Link"
+                      SizeMode="SizeMode.Small"
+                      title="Yenile"
+                      Click="RefreshAssignmentsAsync" />
+        </div>
+    </div>
+    <div class="card-body p-0">
+        @if (_isLoadingAssignments)
+        {
+            <div class="text-center py-3 text-muted small">
+                <span class="spinner-border spinner-border-sm me-1"></span>Yükleniyor...
+            </div>
+        }
+        else if (_assignments.Count == 0)
+        {
+            <div class="text-center py-3 text-muted small">Bu projeye henüz denek atanmadı.</div>
+        }
+        else
+        {
+            <DxGrid @ref="_assignmentsGrid"
+                    Data="@_assignments"
+                    ShowFilterRow="true"
+                    PageSize="15"
+                    SelectionMode="GridSelectionMode.Multiple"
+                    @bind-SelectedDataItems="_selectedAssignments">
+                <Columns>
+                    <DxGridSelectionColumn Width="40px" />
+                    <DxGridDataColumn FieldName="FullName" Caption="Ad Soyad" />
+                    <DxGridDataColumn FieldName="PhoneNumber" Caption="Telefon" Width="120px" />
+                    <DxGridDataColumn FieldName="CityName" Caption="Şehir" Width="110px" />
+                    <DxGridDataColumn FieldName="Age" Caption="Yaş" Width="55px" TextAlignment="GridTextAlignment.Center" />
+                    <DxGridDataColumn FieldName="SocioeconomicStatusCode" Caption="SES" Width="55px" TextAlignment="GridTextAlignment.Center" />
+                    <DxGridDataColumn FieldName="Status" Caption="Anket Durumu" Width="100px" TextAlignment="GridTextAlignment.Center">
+                        <CellDisplayTemplate>
+                            @{ var a = (ProjectAssignmentDto)context.DataItem; }
+                            <span class="badge @AssignmentStatusBadge(a.Status)">@a.Status.GetDescription()</span>
+                        </CellDisplayTemplate>
+                    </DxGridDataColumn>
+                    <DxGridDataColumn FieldName="RewardStatus" Caption="Onay Durumu" Width="110px" TextAlignment="GridTextAlignment.Center">
+                        <CellDisplayTemplate>
+                            @{ var a = (ProjectAssignmentDto)context.DataItem; }
+                            <span class="badge @RewardStatusBadge(a.RewardStatus)">@a.RewardStatus.GetDescription()</span>
+                        </CellDisplayTemplate>
+                    </DxGridDataColumn>
+                    <DxGridDataColumn FieldName="EarnedAmount" Caption="Kazanç" DisplayFormat="N2" Width="95px" TextAlignment="GridTextAlignment.Right" />
+                    <DxGridDataColumn FieldName="AssignedAt" Caption="Atanma Tarihi" DisplayFormat="dd.MM.yyyy HH:mm" Width="140px" />
+                    <DxGridDataColumn FieldName="CompletedAt" Caption="Tamamlanma Tarihi" DisplayFormat="dd.MM.yyyy HH:mm" Width="150px" />
+                    <DxGridCommandColumn NewButtonVisible="false" EditButtonVisible="false" DeleteButtonVisible="false"
+                                        Width="80px" Caption="" TextAlignment="GridTextAlignment.Center">
+                        <CellDisplayTemplate>
+                            @{ var a = (ProjectAssignmentDto)context.DataItem; }
+                            @if (a.Status == AssignmentStatus.NotStarted)
+                            {
+                                <DxButton Text="Kaldır" IconCssClass="bi bi-person-dash"
+                                          RenderStyle="ButtonRenderStyle.Danger"
+                                          RenderStyleMode="ButtonRenderStyleMode.Text"
+                                          SizeMode="SizeMode.Small"
+                                          Visible="@_canManageSubjects"
+                                          Click="@(() => ShowRemoveConfirm(a))" />
+                            }
+                        </CellDisplayTemplate>
+                    </DxGridCommandColumn>
+                </Columns>
+            </DxGrid>
+        }
+    </div>
+</div>
+
+<!-- Kaldır Onay Popup -->
+<DxPopup @bind-Visible="_removeConfirmVisible"
+         HeaderText="Atamayı Kaldır"
+         Width="420px"
+         CloseOnOutsideClick="false"
+         ShowFooter="true">
+    <BodyContentTemplate Context="_">
+        <div class="d-flex align-items-start gap-3 p-2">
+            <i class="bi bi-person-dash-fill text-danger" style="font-size:2.5rem; flex-shrink:0;"></i>
+            <div>
+                <p class="mb-1 fw-semibold">@RemoveConfirmTitle</p>
+                <p class="mb-0 text-muted">@RemoveConfirmDetail</p>
+            </div>
+        </div>
+    </BodyContentTemplate>
+    <FooterContentTemplate>
+        <DxButton Text="Kaldır" IconCssClass="bi bi-person-dash"
+                  RenderStyle="ButtonRenderStyle.Danger"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="ConfirmRemoveAsync"
+                  Enabled="!_isRemoving" />
+        <DxButton Text="İptal"
+                  RenderStyle="ButtonRenderStyle.Secondary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="() => _removeConfirmVisible = false" />
+    </FooterContentTemplate>
+</DxPopup>
+
+<DxPopup @bind-Visible="_rewardRejectPopupVisible"
+         HeaderText="Kazancı Toplu Reddet"
+         Width="480px"
+         CloseOnOutsideClick="false"
+         ShowFooter="true">
+    <BodyContentTemplate Context="_">
+        <DxFormLayout>
+            <DxFormLayoutItem Caption="Red Nedeni" ColSpanMd="12">
+                <DxMemo @bind-Text="_rewardRejectReason" Rows="4" />
+            </DxFormLayoutItem>
+        </DxFormLayout>
+    </BodyContentTemplate>
+    <FooterContentTemplate>
+        <DxButton Text="Reddet"
+                  IconCssClass="bi bi-x-circle"
+                  RenderStyle="ButtonRenderStyle.Danger"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Enabled="!_isRewardProcessing"
+                  Click="RejectSelectedRewardsAsync" />
+        <DxButton Text="İptal"
+                  RenderStyle="ButtonRenderStyle.Secondary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="() => _rewardRejectPopupVisible = false" />
+    </FooterContentTemplate>
+</DxPopup>
+
+@code {
+    [Parameter] public int ProjectId { get; set; }
+
+    private DxGrid? _grid;
+    private DxGrid? _assignmentsGrid;
+
+    private AppDbContext? _context;
+    private GridDevExtremeDataSource<Subject>? _dataSource;
+
+    private string _projectName = string.Empty;
+    private string _rewardUnitLabel = "TL";
+    private ProjectStatus _projectStatus = ProjectStatus.Draft;
+    private IReadOnlyList<object> _selectedSubjects = [];
+    private List<ProjectAssignmentDto> _assignments = [];
+    private IReadOnlyList<object> _selectedAssignments = [];
+    private HashSet<int> _assignedSubjectIds = [];
+    private List<SubjectAssignmentJobDto> _jobs = [];
+
+    private bool _isLoading = true;
+    private bool _isLoadingAssignments;
+    private bool _isAssigning;
+    private bool _isRemoving;
+    private bool _isRewardProcessing;
+    private bool _filterPanelVisible;
+    private bool _filterActive;
+    private bool _removeConfirmVisible;
+    private bool _rewardRejectPopupVisible;
+    private bool _canManageSubjects;
+    private bool _canManageRewards;
+    private bool _canToggleStatus;
+
+    private CriteriaOperator? _builderCriteria;
+    private ProjectAssignmentDto? _assignmentToRemove;
+    private List<int> _removeSubjectIds = [];
+    private List<int> _rewardRejectTargetSubjectIds = [];
+    private string _rewardRejectReason = string.Empty;
+    private CancellationTokenSource? _pollCts;
+
+    private record EnumOpt<T>(T Value, string Label) where T : struct, Enum;
+    private static List<EnumOpt<T>> MakeOpts<T>() where T : struct, Enum
+        => Enum.GetValues<T>().Select(v => new EnumOpt<T>(v, v.GetDescription())).ToList();
+
+    private readonly List<EnumOpt<ApprovalStatus>> _statusOpts  = MakeOpts<ApprovalStatus>();
+    private readonly List<EnumOpt<Gender>>        _genderOpts  = MakeOpts<Gender>();
+    private readonly List<EnumOpt<MaritalStatus>> _maritalOpts = MakeOpts<MaritalStatus>();
+    private readonly List<EnumOpt<GsmOperator>>   _gsmOpts     = MakeOpts<GsmOperator>();
+
+    private int SelectedCount          => _selectedSubjects.Count;
+    private int AlreadyAssignedCount   => _selectedSubjects.Cast<Subject>().Count(s => _assignedSubjectIds.Contains(s.Id));
+    private int NewToAssignCount       => _selectedSubjects.Cast<Subject>()
+        .Count(s => s.Status == ApprovalStatus.Approved && !_assignedSubjectIds.Contains(s.Id));
+    private bool IsProjectClosed => _projectStatus is ProjectStatus.Completed or ProjectStatus.Cancelled;
+    private int PendingRewardSelectionCount => _selectedAssignments.Cast<ProjectAssignmentDto>()
+        .Count(a => a.Status == AssignmentStatus.Completed && a.RewardStatus is RewardStatus.Pending or RewardStatus.None);
+    private int RemovableSelectionCount => _selectedAssignments.Cast<ProjectAssignmentDto>()
+        .Count(a => a.Status == AssignmentStatus.NotStarted);
+    private string RemoveConfirmTitle => _removeSubjectIds.Count > 1
+        ? $"{_removeSubjectIds.Count} deneği projeden çıkarmak istediğinize emin misiniz?"
+        : "Bu deneği projeden kaldırmak istediğinize emin misiniz?";
+    private string RemoveConfirmDetail => _removeSubjectIds.Count > 1
+        ? "Sadece başlanmamış atamalar kaldırılır."
+        : _assignmentToRemove?.FullName ?? string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPermissionsAsync();
+        _isLoading = true;
+        var project = await ProjectService.GetByIdAsync(ProjectId);
+        if (project is null) { Nav.NavigateTo("/projects"); return; }
+        _projectName = project.Name;
+        _rewardUnitLabel = string.IsNullOrWhiteSpace(project.RewardUnitLabel) ? "TL" : project.RewardUnitLabel;
+        _projectStatus = project.Status;
+
+        _context = await ContextFactory.CreateDbContextAsync();
+        var query = _context.Subjects
+            .Include(s => s.City)
+            .Include(s => s.District)
+            .Include(s => s.Profession)
+            .Include(s => s.EducationLevel)
+            .Include(s => s.HeadOfFamilyProfession)
+            .Include(s => s.HeadOfFamilyEducationLevel)
+            .Include(s => s.SocioeconomicStatus)
+            .Include(s => s.LSMSocioeconomicStatus)
+            .Include(s => s.Bank)
+            .AsNoTracking();
+        _dataSource = new GridDevExtremeDataSource<Subject>(query);
+
+        await LoadAssignmentsAsync();
+        await RefreshJobsAsync();
+
+        _isLoading = false;
+    }
+
+    private async Task LoadPermissionsAsync()
+    {
+        var permissions = await PermissionService.GetCurrentPermissionsAsync();
+        _canManageSubjects = permissions.Contains(PermissionCodes.Projects.ManageSubjects);
+        _canManageRewards = permissions.Contains(PermissionCodes.Projects.ManageRewards);
+        _canToggleStatus = permissions.Contains(PermissionCodes.Projects.ToggleStatus);
+    }
+
+    private async Task LoadAssignmentsAsync()
+    {
+        _isLoadingAssignments = true;
+        _assignments      = await AssignmentService.GetAssignmentsAsync(ProjectId);
+        _assignedSubjectIds = _assignments.Select(a => a.SubjectId).ToHashSet();
+        _selectedAssignments = [];
+        _isLoadingAssignments = false;
+    }
+
+    private async Task RefreshAssignmentsAsync()
+    {
+        await LoadAssignmentsAsync();
+        StateHasChanged();
+    }
+
+    private async Task RefreshJobsAsync()
+    {
+        _jobs = await AssignmentService.GetJobsAsync(ProjectId);
+        StateHasChanged();
+    }
+
+    private void ToggleFilterPanel() => _filterPanelVisible = !_filterPanelVisible;
+
+    private void ApplyFilter()
+    {
+        var criteria = TransformAgeToBirthDate(_builderCriteria);
+        _grid?.SetFilterCriteria(criteria);
+        _filterActive = _builderCriteria is not null;
+    }
+
+    private void ClearFilter()
+    {
+        _builderCriteria = null;
+        _grid?.SetFilterCriteria(null);
+        _filterActive = false;
+    }
+
+    // Age (NotMapped) → BirthDate dönüşümü: yaş kriterini tarih kriterine çevir
+    private static CriteriaOperator? TransformAgeToBirthDate(CriteriaOperator? criteria)
+    {
+        if (criteria is null) return null;
+
+        return criteria switch
+        {
+            BinaryOperator binary when binary.LeftOperand is OperandProperty { PropertyName: "Age" }
+                && binary.RightOperand is OperandValue { Value: int age }
+                => TransformAgeBinary(binary.OperatorType, age),
+
+            BetweenOperator between when between.TestExpression is OperandProperty { PropertyName: "Age" }
+                && between.BeginExpression is OperandValue { Value: int minAge }
+                && between.EndExpression is OperandValue { Value: int maxAge }
+                => new GroupOperator(GroupOperatorType.And,
+                    new BinaryOperator("BirthDate", DateOnly.FromDateTime(DateTime.Today).AddYears(-maxAge - 1), BinaryOperatorType.Greater),
+                    new BinaryOperator("BirthDate", DateOnly.FromDateTime(DateTime.Today).AddYears(-minAge), BinaryOperatorType.LessOrEqual)),
+
+            GroupOperator group => new GroupOperator(group.OperatorType,
+                group.Operands.Select(o => TransformAgeToBirthDate(o)!).ToList()),
+
+            UnaryOperator unary => new UnaryOperator(unary.OperatorType, TransformAgeToBirthDate(unary.Operand)),
+
+            _ => criteria
+        };
+    }
+
+    private static CriteriaOperator TransformAgeBinary(BinaryOperatorType opType, int age)
+    {
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        return opType switch
+        {
+            BinaryOperatorType.Equal => new GroupOperator(GroupOperatorType.And,
+                new BinaryOperator("BirthDate", today.AddYears(-(age + 1)), BinaryOperatorType.Greater),
+                new BinaryOperator("BirthDate", today.AddYears(-age), BinaryOperatorType.LessOrEqual)),
+            BinaryOperatorType.GreaterOrEqual =>
+                new BinaryOperator("BirthDate", today.AddYears(-age), BinaryOperatorType.LessOrEqual),
+            BinaryOperatorType.Greater =>
+                new BinaryOperator("BirthDate", today.AddYears(-(age + 1)), BinaryOperatorType.LessOrEqual),
+            BinaryOperatorType.LessOrEqual =>
+                new BinaryOperator("BirthDate", today.AddYears(-(age + 1)), BinaryOperatorType.Greater),
+            BinaryOperatorType.Less =>
+                new BinaryOperator("BirthDate", today.AddYears(-age), BinaryOperatorType.Greater),
+            BinaryOperatorType.NotEqual => new UnaryOperator(UnaryOperatorType.Not,
+                new GroupOperator(GroupOperatorType.And,
+                    new BinaryOperator("BirthDate", today.AddYears(-(age + 1)), BinaryOperatorType.Greater),
+                    new BinaryOperator("BirthDate", today.AddYears(-age), BinaryOperatorType.LessOrEqual))),
+            _ => new BinaryOperator("BirthDate", today.AddYears(-age), BinaryOperatorType.LessOrEqual)
+        };
+    }
+
+    private async Task SelectAllAsync()
+    {
+        if (_grid is not null)
+            await _grid.SelectAllAsync();
+    }
+
+    private async Task DeselectAllAsync()
+    {
+        if (_grid is not null)
+            await _grid.DeselectAllAsync();
+    }
+
+    private async Task AssignAsync()
+    {
+        if (!_canManageSubjects)
+        {
+            Toast.Error("Denek atama yetkiniz yok.");
+            return;
+        }
+
+        if (IsProjectClosed)
+        {
+            Toast.Warning("Kapalı projeye yeni denek atanamaz.");
+            return;
+        }
+
+        var selected = _selectedSubjects.Cast<Subject>().ToList();
+
+        var ids = selected
+            .Where(s => s.Status == ApprovalStatus.Approved && !_assignedSubjectIds.Contains(s.Id))
+            .Select(s => s.Id)
+            .ToList();
+
+        var skippedNotApproved = selected
+            .Count(s => s.Status != ApprovalStatus.Approved && !_assignedSubjectIds.Contains(s.Id));
+
+        if (skippedNotApproved > 0)
+            Toast.Warning($"{skippedNotApproved} onaylanmamış denek atlamaya alındı.");
+
+        if (ids.Count == 0) return;
+
+        _isAssigning = true;
+        try
+        {
+            var adminId = await GetAdminIdAsync();
+            var jobId = await AssignmentService.RequestBulkAssignAsync(ProjectId, ids, adminId);
+            Toast.Success($"{ids.Count} denek kuyruğa gönderildi. (İş #{jobId})");
+            await _grid!.DeselectAllAsync();
+            await RefreshJobsAsync();
+            StartPolling();
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleOperation(ex, Toast);
+        }
+        finally
+        {
+            _isAssigning = false;
+        }
+    }
+
+    private async Task ToggleProjectStatusAsync()
+    {
+        if (!_canToggleStatus)
+        {
+            Toast.Error("Proje durumu değiştirme yetkiniz yok.");
+            return;
+        }
+
+        try
+        {
+            var wasClosed = IsProjectClosed;
+            var adminId = await GetAdminIdAsync();
+            var targetStatus = wasClosed ? ProjectStatus.Active : ProjectStatus.Completed;
+            await ProjectService.SetStatusAsync(ProjectId, targetStatus, adminId);
+            _projectStatus = targetStatus;
+
+            Toast.Success(wasClosed
+                ? "Proje tekrar aktifleştirildi."
+                : "Proje kapatıldı.");
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleOperation(ex, Toast);
+        }
+    }
+
+    private async Task DeselectAssignmentsAsync()
+    {
+        if (_assignmentsGrid is not null)
+            await _assignmentsGrid.DeselectAllAsync();
+    }
+
+    private async Task ApproveSelectedRewardsAsync()
+    {
+        if (!_canManageRewards)
+        {
+            Toast.Error("Ödül onaylama yetkiniz yok.");
+            return;
+        }
+
+        var ids = _selectedAssignments.Cast<ProjectAssignmentDto>()
+            .Where(a => a.Status == AssignmentStatus.Completed && a.RewardStatus is RewardStatus.Pending or RewardStatus.None)
+            .Select(a => a.SubjectId)
+            .ToList();
+
+        if (ids.Count == 0)
+        {
+            Toast.Warning("Onaylanacak bekleyen kazanç bulunamadı.");
+            return;
+        }
+
+        _isRewardProcessing = true;
+        try
+        {
+            var adminId = await GetAdminIdAsync();
+            var result = await AssignmentService.ApproveRewardsAsync(ProjectId, ids, adminId);
+            Toast.Success($"Onaylandı: {result.ProcessedCount} kayıt, {result.ProcessedAmount:N2} {_rewardUnitLabel}");
+            if (result.SkippedCount > 0)
+                Toast.Warning($"Atlandı: {result.SkippedCount} kayıt.");
+
+            await LoadAssignmentsAsync();
+            await DeselectAssignmentsAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleOperation(ex, Toast);
+        }
+        finally
+        {
+            _isRewardProcessing = false;
+        }
+    }
+
+    private void ShowRewardRejectPopup()
+    {
+        if (!_canManageRewards)
+        {
+            Toast.Error("Ödül reddetme yetkiniz yok.");
+            return;
+        }
+
+        _rewardRejectTargetSubjectIds = _selectedAssignments.Cast<ProjectAssignmentDto>()
+            .Where(a => a.Status == AssignmentStatus.Completed && a.RewardStatus is RewardStatus.Pending or RewardStatus.None)
+            .Select(a => a.SubjectId)
+            .ToList();
+
+        if (_rewardRejectTargetSubjectIds.Count == 0)
+        {
+            Toast.Warning("Reddedilecek bekleyen kazanç bulunamadı.");
+            return;
+        }
+
+        _rewardRejectReason = string.Empty;
+        _rewardRejectPopupVisible = true;
+    }
+
+    private async Task RejectSelectedRewardsAsync()
+    {
+        if (!_canManageRewards)
+        {
+            Toast.Error("Ödül reddetme yetkiniz yok.");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_rewardRejectReason))
+        {
+            Toast.Error("Red nedeni zorunludur.");
+            return;
+        }
+
+        _rewardRejectPopupVisible = false;
+        _isRewardProcessing = true;
+        try
+        {
+            var adminId = await GetAdminIdAsync();
+            var result = await AssignmentService.RejectRewardsAsync(ProjectId, _rewardRejectTargetSubjectIds, _rewardRejectReason, adminId);
+            Toast.Success($"Reddedildi: {result.ProcessedCount} kayıt, {result.ProcessedAmount:N2} {_rewardUnitLabel}");
+            if (result.SkippedCount > 0)
+                Toast.Warning($"Atlandı: {result.SkippedCount} kayıt.");
+
+            await LoadAssignmentsAsync();
+            await DeselectAssignmentsAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleOperation(ex, Toast);
+        }
+        finally
+        {
+            _isRewardProcessing = false;
+            _rewardRejectTargetSubjectIds = [];
+            _rewardRejectReason = string.Empty;
+        }
+    }
+
+    private void ShowBulkRemoveConfirm()
+    {
+        if (!_canManageSubjects)
+        {
+            Toast.Error("Denek çıkarma yetkiniz yok.");
+            return;
+        }
+
+        _removeSubjectIds = _selectedAssignments.Cast<ProjectAssignmentDto>()
+            .Where(a => a.Status == AssignmentStatus.NotStarted)
+            .Select(a => a.SubjectId)
+            .Distinct()
+            .ToList();
+
+        if (_removeSubjectIds.Count == 0)
+        {
+            Toast.Warning("Projeden çıkarılabilecek (başlanmamış) seçili denek yok.");
+            return;
+        }
+
+        _assignmentToRemove = _removeSubjectIds.Count == 1
+            ? _assignments.FirstOrDefault(a => a.SubjectId == _removeSubjectIds[0])
+            : null;
+        _removeConfirmVisible = true;
+    }
+
+    private void ShowRemoveConfirm(ProjectAssignmentDto assignment)
+    {
+        if (!_canManageSubjects)
+        {
+            Toast.Error("Denek çıkarma yetkiniz yok.");
+            return;
+        }
+
+        _removeSubjectIds = [assignment.SubjectId];
+        _assignmentToRemove = assignment;
+        _removeConfirmVisible = true;
+    }
+
+    private async Task ConfirmRemoveAsync()
+    {
+        if (!_canManageSubjects)
+        {
+            Toast.Error("Denek çıkarma yetkiniz yok.");
+            return;
+        }
+
+        if (_removeSubjectIds.Count == 0) return;
+        _isRemoving = true;
+        try
+        {
+            var adminId = await GetAdminIdAsync();
+            var result = await AssignmentService.RemoveAssignmentsAsync(ProjectId, _removeSubjectIds, adminId);
+            Toast.Warning($"Projeden çıkarıldı: {result.RemovedCount} kayıt.");
+            if (result.SkippedCount > 0)
+                Toast.Warning($"Atlandı: {result.SkippedCount} kayıt (başlamış veya bulunamadı).");
+
+            _removeConfirmVisible = false;
+            await LoadAssignmentsAsync();
+            await DeselectAssignmentsAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleOperation(ex, Toast);
+        }
+        finally
+        {
+            _isRemoving = false;
+            _removeSubjectIds = [];
+            _assignmentToRemove = null;
+        }
+    }
+
+    private async Task<int> GetAdminIdAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var claim     = authState.User.FindFirst(ClaimTypes.NameIdentifier);
+        return claim is not null && int.TryParse(claim.Value, out var adminUserId)
+            ? adminUserId
+            : 0;
+    }
+
+    private static string ApprovalBadgeClass(ApprovalStatus status) => status switch
+    {
+        ApprovalStatus.Pending  => "bg-warning text-dark",
+        ApprovalStatus.Approved => "bg-success",
+        ApprovalStatus.Rejected => "bg-danger",
+        _                       => "bg-secondary"
+    };
+
+    private static string AssignmentStatusBadge(AssignmentStatus status) => status switch
+    {
+        AssignmentStatus.NotStarted => "bg-secondary",
+        AssignmentStatus.Completed  => "bg-success",
+        AssignmentStatus.Partial    => "bg-warning text-dark",
+        AssignmentStatus.Disqualify => "bg-danger",
+        AssignmentStatus.QuotaFull  => "bg-info text-dark",
+        AssignmentStatus.ScreenOut  => "bg-danger",
+        AssignmentStatus.Unknown    => "bg-light text-dark",
+        _                           => "bg-light text-dark"
+    };
+
+    private static string RewardStatusBadge(RewardStatus status) => status switch
+    {
+        RewardStatus.None => "bg-secondary",
+        RewardStatus.Pending => "bg-warning text-dark",
+        RewardStatus.Approved => "bg-success",
+        RewardStatus.Rejected => "bg-danger",
+        _ => "bg-secondary"
+    };
+
+    private static string ProjectStatusBadge(ProjectStatus status) => status switch
+    {
+        ProjectStatus.Draft => "bg-secondary",
+        ProjectStatus.Active => "bg-success",
+        ProjectStatus.Paused => "bg-warning text-dark",
+        ProjectStatus.Completed => "bg-dark",
+        ProjectStatus.Cancelled => "bg-danger",
+        _ => "bg-secondary"
+    };
+
+    private static string JobStatusBadge(AssignmentJobStatus status) => status switch
+    {
+        AssignmentJobStatus.Pending    => "bg-secondary",
+        AssignmentJobStatus.Processing => "bg-warning text-dark",
+        AssignmentJobStatus.Completed  => "bg-success",
+        AssignmentJobStatus.Failed     => "bg-danger",
+        _                              => "bg-light text-dark"
+    };
+
+    private async Task CancelJobAsync(int jobId)
+    {
+        if (!_canManageSubjects)
+        {
+            Toast.Error("Atama işi iptal etme yetkiniz yok.");
+            return;
+        }
+
+        try
+        {
+            await AssignmentService.CancelJobAsync(jobId);
+            Toast.Warning("Atama işlemi iptal edildi.");
+            _pollCts?.Cancel();
+            await RefreshJobsAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleOperation(ex, Toast);
+        }
+    }
+
+    private void StartPolling()
+    {
+        _pollCts?.Cancel();
+        _pollCts = new CancellationTokenSource();
+        _ = PollJobsAsync(_pollCts.Token);
+    }
+
+    private async Task PollJobsAsync(CancellationToken ct)
+    {
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(2));
+        try
+        {
+            while (await timer.WaitForNextTickAsync(ct))
+            {
+                try
+                {
+                    _jobs = await AssignmentService.GetJobsAsync(ProjectId);
+
+                    if (_jobs.Any(j => j.Status == AssignmentJobStatus.Completed))
+                        await LoadAssignmentsAsync();
+
+                    await InvokeAsync(StateHasChanged);
+
+                    if (!_jobs.Any(j => j.Status is AssignmentJobStatus.Pending or AssignmentJobStatus.Processing))
+                        break;
+                }
+                catch (Exception) when (!ct.IsCancellationRequested)
+                {
+                    // geçici hata — polling devam etsin
+                }
+            }
+        }
+        catch (OperationCanceledException) { }
+    }
+
+    public void Dispose()
+    {
+        _pollCts?.Cancel();
+        _pollCts?.Dispose();
+        _context?.Dispose();
+    }
+}

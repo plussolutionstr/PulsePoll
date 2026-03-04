@@ -1,0 +1,866 @@
+@page "/subjects"
+@attribute [HasPermission(PermissionCodes.Subjects.View)]
+@implements IDisposable
+@using System.Security.Claims
+@using PulsePoll.Application.Extensions
+@inject ISubjectService SubjectService
+@inject IDbContextFactory<AppDbContext> ContextFactory
+@inject INotificationService NotificationService
+@inject IAppToastService Toast
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager NavigationManager
+@inject IPermissionAuthorizationService PermissionService
+
+<PageTitle>Denekler — PulsePoll Admin</PageTitle>
+
+<div class="d-flex align-items-center justify-content-between mb-2">
+    <h3 class="mb-0">Denekler</h3>
+    <div class="d-flex align-items-center gap-2">
+        @if (_filterActive)
+        {
+            <span class="badge bg-primary">Filtre aktif</span>
+        }
+        @if (_selectedSubjects.Count > 0)
+        {
+            <span class="badge bg-secondary">@_selectedSubjects.Count seçili</span>
+        }
+        @if (_canSendSms)
+        {
+            <DxButton Text="SMS Gönder"
+                      IconCssClass="bi bi-chat-dots"
+                      RenderStyle="ButtonRenderStyle.Secondary"
+                      RenderStyleMode="ButtonRenderStyleMode.Outline"
+                      Enabled="_selectedSubjects.Count > 0"
+                      Click="() => _smsPopupVisible = true"/>
+        }
+        @if (_canSendPush)
+        {
+            <DxButton Text="Bildirim Gönder"
+                      IconCssClass="bi bi-bell"
+                      RenderStyle="ButtonRenderStyle.Secondary"
+                      RenderStyleMode="ButtonRenderStyleMode.Outline"
+                      Enabled="_selectedSubjects.Count > 0"
+                      Click="() => _pushPopupVisible = true"/>
+        }
+        <DxButton Text="Excel"
+                  IconCssClass="bi bi-file-earmark-excel"
+                  RenderStyle="ButtonRenderStyle.Secondary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="ExportToExcelAsync"/>
+        <DxButton Text="@(_filterPanelVisible ? "Filtreyi Kapat" : "Filtrele")"
+                  IconCssClass="@(_filterPanelVisible ? "bi bi-funnel-fill" : "bi bi-funnel")"
+                  RenderStyle="@(_filterActive ? ButtonRenderStyle.Primary : ButtonRenderStyle.Secondary)"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="ToggleFilterPanel"/>
+    </div>
+</div>
+
+@if (_filterPanelVisible)
+{
+    <div class="card mb-3 border-secondary-subtle shadow-sm">
+        <div class="card-body">
+            <DxFilterBuilder @bind-FilterCriteria="_builderCriteria"
+                             ViewMode="FilterBuilderViewMode.VisualAndText">
+                <Fields>
+                    <DxFilterBuilderField FieldName="Id" Caption="ID" Type="@typeof(int)"/>
+                    <DxFilterBuilderField FieldName="FirstName" Caption="Ad" Type="@typeof(string)"/>
+                    <DxFilterBuilderField FieldName="LastName" Caption="Soyad" Type="@typeof(string)"/>
+                    <DxFilterBuilderField FieldName="PhoneNumber" Caption="Telefon" Type="@typeof(string)"/>
+                    <DxFilterBuilderField FieldName="Email" Caption="E-posta" Type="@typeof(string)"/>
+                    <DxFilterBuilderField FieldName="Age" Caption="Yaş" Type="@typeof(int)"/>
+                    <DxFilterBuilderField FieldName="BirthDate" Caption="Doğum Tarihi" Type="@typeof(DateOnly)"/>
+                    <DxFilterBuilderField FieldName="ScoreSnapshot.Star" Caption="Değer (Yıldız)" Type="@typeof(int)"/>
+                    <DxFilterBuilderField FieldName="CreatedAt" Caption="Kayıt Tarihi" Type="@typeof(DateTime)"/>
+                    <DxFilterBuilderField FieldName="City.Name" Caption="Şehir" Type="@typeof(string)"/>
+                    <DxFilterBuilderField FieldName="District.Name" Caption="İlçe" Type="@typeof(string)"/>
+                    <DxFilterBuilderField FieldName="Profession.Name" Caption="Meslek" Type="@typeof(string)"/>
+                    <DxFilterBuilderField FieldName="EducationLevel.Name" Caption="Eğitim Seviyesi"
+                                          Type="@typeof(string)"/>
+                    <DxFilterBuilderField FieldName="IsRetired" Caption="Emekli mi" Type="@typeof(bool)"/>
+                    <DxFilterBuilderField FieldName="IsHeadOfFamily" Caption="Aile Reisi mi" Type="@typeof(bool)"/>
+                    <DxFilterBuilderField FieldName="IsHeadOfFamilyRetired" Caption="A.R. Emekli mi"
+                                          Type="@typeof(bool)"/>
+                    <DxFilterBuilderField FieldName="HeadOfFamilyProfession.Name" Caption="A.R. Meslek"
+                                          Type="@typeof(string)"/>
+                    <DxFilterBuilderField FieldName="HeadOfFamilyEducationLevel.Name" Caption="A.R. Eğitim"
+                                          Type="@typeof(string)"/>
+                    <DxFilterBuilderField FieldName="SocioeconomicStatus.Code" Caption="SES" Type="@typeof(string)"/>
+                    <DxFilterBuilderField FieldName="LSMSocioeconomicStatus.Code" Caption="LSM SES"
+                                          Type="@typeof(string)"/>
+                    <DxFilterBuilderField FieldName="Bank.Name" Caption="Banka" Type="@typeof(string)"/>
+                    <DxFilterBuilderField FieldName="IBAN" Caption="IBAN" Type="@typeof(string)"/>
+                    <DxFilterBuilderField FieldName="PublicId" Caption="Public ID" Type="@typeof(Guid)"/>
+                    <DxFilterBuilderField FieldName="ReferenceCode" Caption="Referans Kodu" Type="@typeof(string)"/>
+                    <DxFilterBuilderField FieldName="ReferralCode" Caption="Davet Kodu" Type="@typeof(string)"/>
+
+                    <DxFilterBuilderField FieldName="Status" Caption="Durum" Type="@typeof(ApprovalStatus)">
+                        <EditSettings>
+                            <DxComboBoxSettings Data="@_statusOpts" ValueFieldName="Value" TextFieldName="Label"/>
+                        </EditSettings>
+                    </DxFilterBuilderField>
+
+                    <DxFilterBuilderField FieldName="Gender" Caption="Cinsiyet" Type="@typeof(Gender)">
+                        <EditSettings>
+                            <DxComboBoxSettings Data="@_genderOpts" ValueFieldName="Value" TextFieldName="Label"/>
+                        </EditSettings>
+                    </DxFilterBuilderField>
+
+                    <DxFilterBuilderField FieldName="MaritalStatus" Caption="Medeni Hal" Type="@typeof(MaritalStatus)">
+                        <EditSettings>
+                            <DxComboBoxSettings Data="@_maritalOpts" ValueFieldName="Value" TextFieldName="Label"/>
+                        </EditSettings>
+                    </DxFilterBuilderField>
+
+                    <DxFilterBuilderField FieldName="GsmOperator" Caption="GSM Operatörü" Type="@typeof(GsmOperator)">
+                        <EditSettings>
+                            <DxComboBoxSettings Data="@_gsmOpts" ValueFieldName="Value" TextFieldName="Label"/>
+                        </EditSettings>
+                    </DxFilterBuilderField>
+                </Fields>
+            </DxFilterBuilder>
+
+            <div class="d-flex gap-2 mt-3">
+                <DxButton Text="Uygula" IconCssClass="bi bi-check-lg"
+                          RenderStyle="ButtonRenderStyle.Primary"
+                          RenderStyleMode="ButtonRenderStyleMode.Outline"
+                          Click="ApplyFilter"/>
+                <DxButton Text="Temizle" IconCssClass="bi bi-x-lg"
+                          RenderStyle="ButtonRenderStyle.Secondary"
+                          RenderStyleMode="ButtonRenderStyleMode.Outline"
+                          Click="ClearFilter"/>
+            </div>
+        </div>
+    </div>
+}
+
+<DxLoadingPanel @bind-Visible="_isLoading"
+                IsContentBlocked="true"
+                ApplyBackgroundShading="true"
+                IndicatorAreaVisible="false"
+                Text="Yükleniyor...">
+    <DxGrid @ref="_grid" Data="@_dataSource" KeyFieldName="Id"
+            ShowFilterRow="true" ShowHeaderFilter="true" PageSize="25"
+            SelectAllCheckboxMode="GridSelectAllCheckboxMode.Page"
+            ColumnResizeMode="GridColumnResizeMode.ColumnsContainer"
+            @bind-SelectedDataItems="_selectedSubjects">
+        <Columns>
+            <DxGridSelectionColumn Width="40px" FixedPosition="GridColumnFixedPosition.Left"/>
+            <DxGridDataColumn FieldName="Id" Caption="ID" Width="65px"
+                              FixedPosition="GridColumnFixedPosition.Left"
+                              TextAlignment="GridTextAlignment.Center"/>
+            <DxGridDataColumn FieldName="FullName" Caption="Ad Soyad" MinWidth="160"
+                              FixedPosition="GridColumnFixedPosition.Left"
+                              AllowSort="false"
+                              UnboundType="GridUnboundColumnType.String"
+                              UnboundExpression="[FirstName] + ' ' + [LastName]"/>
+            <DxGridDataColumn FieldName="ScoreSnapshot.Star" Caption="Değer" Width="130px" TextAlignment="GridTextAlignment.Center">
+                <CellDisplayTemplate>
+                    @{
+                        var r = (Subject)context.DataItem;
+                        var star = r.ScoreSnapshot?.Star ?? 0;
+                    }
+                    <span title="@(r.ScoreSnapshot?.Score is { } sc ? $"{sc:N1} / 100" : "Skor hesaplanmadı")">
+                        @for (var i = 1; i <= 5; i++)
+                        {
+                            <i class="bi @(i <= star ? "bi-star-fill text-warning" : "bi-star text-muted")"></i>
+                        }
+                    </span>
+                </CellDisplayTemplate>
+            </DxGridDataColumn>
+            <DxGridDataColumn FieldName="PhoneNumber" Caption="Telefon" Width="130px"/>
+            <DxGridDataColumn FieldName="Email" Caption="E-posta" MinWidth="180"/>
+            <DxGridDataColumn FieldName="City.Name" Caption="Şehir" Width="110px"/>
+            <DxGridDataColumn FieldName="District.Name" Caption="İlçe" Width="110px"/>
+            <DxGridDataColumn FieldName="Age" Caption="Yaş" Width="60px" TextAlignment="GridTextAlignment.Center"
+                              UnboundType="GridUnboundColumnType.Integer"
+                              AllowSort="false">
+                <CellDisplayTemplate>
+                    @{ var r = (Subject)context.DataItem; }
+                    @r.Age
+                </CellDisplayTemplate>
+            </DxGridDataColumn>
+            <DxGridDataColumn FieldName="BirthDate" Caption="Doğum Tarihi" Width="115px" DisplayFormat="dd.MM.yyyy"/>
+            <DxGridDataColumn FieldName="Gender" Caption="Cinsiyet" Width="85px">
+                <CellDisplayTemplate>
+                    @{ var r = (Subject)context.DataItem; }
+                    @r.Gender.GetDescription()
+                </CellDisplayTemplate>
+            </DxGridDataColumn>
+            <DxGridDataColumn FieldName="MaritalStatus" Caption="Medeni Hal" Width="105px">
+                <CellDisplayTemplate>
+                    @{ var r = (Subject)context.DataItem; }
+                    @r.MaritalStatus.GetDescription()
+                </CellDisplayTemplate>
+            </DxGridDataColumn>
+            <DxGridDataColumn FieldName="GsmOperator" Caption="GSM Op." Width="95px">
+                <CellDisplayTemplate>
+                    @{ var r = (Subject)context.DataItem; }
+                    @r.GsmOperator.GetDescription()
+                </CellDisplayTemplate>
+            </DxGridDataColumn>
+            <DxGridDataColumn FieldName="Profession.Name" Caption="Meslek" Width="140px"/>
+            <DxGridDataColumn FieldName="EducationLevel.Name" Caption="Eğitim" Width="140px"/>
+            <DxGridDataColumn FieldName="IsRetired" Caption="Emekli" Width="75px"
+                              TextAlignment="GridTextAlignment.Center">
+                <CellDisplayTemplate>
+                    @{ var r = (Subject)context.DataItem; }
+                    @(r.IsRetired ? "Evet" : "Hayır")
+                </CellDisplayTemplate>
+            </DxGridDataColumn>
+            <DxGridDataColumn FieldName="IsHeadOfFamily" Caption="Aile Reisi" Width="90px"
+                              TextAlignment="GridTextAlignment.Center">
+                <CellDisplayTemplate>
+                    @{ var r = (Subject)context.DataItem; }
+                    @(r.IsHeadOfFamily ? "Evet" : "Hayır")
+                </CellDisplayTemplate>
+            </DxGridDataColumn>
+            <DxGridDataColumn FieldName="IsHeadOfFamilyRetired" Caption="A.R. Emekli" Width="95px"
+                              TextAlignment="GridTextAlignment.Center">
+                <CellDisplayTemplate>
+                    @{ var r = (Subject)context.DataItem; }
+                    @(r.IsHeadOfFamily ? (r.IsHeadOfFamilyRetired ? "Evet" : "Hayır") : "\u2014")
+                </CellDisplayTemplate>
+            </DxGridDataColumn>
+            <DxGridDataColumn FieldName="HeadOfFamilyProfession.Name" Caption="A.R. Meslek" Width="140px"/>
+            <DxGridDataColumn FieldName="HeadOfFamilyEducationLevel.Name" Caption="A.R. Eğitim" Width="140px"/>
+            <DxGridDataColumn FieldName="SocioeconomicStatus.Code" Caption="SES" Width="65px"
+                              TextAlignment="GridTextAlignment.Center"/>
+            <DxGridDataColumn FieldName="LSMSocioeconomicStatus.Code" Caption="LSM SES" Width="80px"
+                              TextAlignment="GridTextAlignment.Center"/>
+            <DxGridDataColumn FieldName="Bank.Name" Caption="Banka" Width="120px"/>
+            <DxGridDataColumn FieldName="IBAN" Caption="IBAN" Width="200px"/>
+            <DxGridDataColumn FieldName="PublicId" Caption="Public ID" Width="280px"/>
+            <DxGridDataColumn FieldName="ReferenceCode" Caption="Referans Kodu" Width="115px"
+                              TextAlignment="GridTextAlignment.Center"/>
+            <DxGridDataColumn FieldName="ReferralCode" Caption="Davet Kodu" Width="110px"
+                              TextAlignment="GridTextAlignment.Center"/>
+            <DxGridDataColumn FieldName="Status" Caption="Durum" Width="110px" TextAlignment="GridTextAlignment.Center">
+                <CellDisplayTemplate>
+                    @{ var r = (Subject)context.DataItem; }
+                    <span class="badge @StatusBadgeClass(r.Status)">@r.Status.GetDescription()</span>
+                </CellDisplayTemplate>
+            </DxGridDataColumn>
+            <DxGridDataColumn FieldName="CreatedAt" Caption="Kayıt Tarihi" Width="110px" DisplayFormat="dd.MM.yyyy"/>
+            <DxGridCommandColumn NewButtonVisible="false" EditButtonVisible="false" DeleteButtonVisible="false"
+                                 Width="50px" Caption="" TextAlignment="GridTextAlignment.Center">
+                <CellDisplayTemplate>
+                    @{ var item = (Subject)context.DataItem; }
+                    <DxButton IconCssClass="bi bi-three-dots-vertical"
+                              RenderStyle="ButtonRenderStyle.Link"
+                              Click="@(async e => await ShowMenuAsync(e, item))"
+                              title="İşlemler"/>
+                </CellDisplayTemplate>
+            </DxGridCommandColumn>
+        </Columns>
+        <TotalSummary>
+            <DxGridSummaryItem SummaryType="GridSummaryItemType.Count"
+                               FieldName="Id"
+                               FooterColumnName="FullName"
+                               DisplayText="Kayıt Sayısı: {0}" />
+        </TotalSummary>
+    </DxGrid>
+</DxLoadingPanel>
+
+<DxContextMenu @ref="_contextMenu" ItemClick="OnContextMenuItemClick">
+    <Items>
+        <DxContextMenuItem Text="Detay" Name="detail" IconCssClass="bi bi-eye"/>
+        @if (_canViewProjects)
+        {
+            <DxContextMenuItem Text="Proje Geçmişi" Name="projects" IconCssClass="bi bi-briefcase"/>
+        }
+        @if (_canViewLedger)
+        {
+            <DxContextMenuItem Text="Hesap Ekstresi" Name="ledger" IconCssClass="bi bi-receipt"/>
+        }
+        @if (_canViewReferrals)
+        {
+            <DxContextMenuItem Text="Referral" Name="referrals" IconCssClass="bi bi-people" BeginGroup="true"/>
+        }
+        @if (_canApprove)
+        {
+            <DxContextMenuItem Text="Onayla" Name="approve" IconCssClass="bi bi-check-circle" CssClass="text-success"
+                               BeginGroup="true"
+                               Visible="@(_selectedItem?.Status != ApprovalStatus.Approved)"/>
+        }
+        @if (_canReject)
+        {
+            <DxContextMenuItem Text="Reddet" Name="reject" IconCssClass="bi bi-x-circle" CssClass="text-danger"
+                               Visible="@(_selectedItem?.Status != ApprovalStatus.Rejected)"/>
+        }
+    </Items>
+</DxContextMenu>
+
+<!-- Detay Popup -->
+<DxPopup @bind-Visible="_detailVisible"
+         HeaderText="Denek Detayı"
+         Width="800px"
+         CloseOnOutsideClick="true"
+         ShowFooter="true">
+    <BodyContentTemplate Context="_">
+        @if (_selectedItem is not null)
+        {
+            <DxFormLayout>
+                <DxFormLayoutGroup Caption="Kişisel Bilgiler" ColSpanMd="12">
+                    <DxFormLayoutItem ColSpanMd="6">
+                        <label class="form-label">Ad</label>
+                        <DxTextBox Text="@_selectedItem.FirstName" ReadOnly="true"/>
+                    </DxFormLayoutItem>
+                    <DxFormLayoutItem ColSpanMd="6">
+                        <label class="form-label">Soyad</label>
+                        <DxTextBox Text="@_selectedItem.LastName" ReadOnly="true"/>
+                    </DxFormLayoutItem>
+                    <DxFormLayoutItem ColSpanMd="6">
+                        <label class="form-label">Telefon</label>
+                        <DxTextBox Text="@_selectedItem.PhoneNumber" ReadOnly="true"/>
+                    </DxFormLayoutItem>
+                    <DxFormLayoutItem ColSpanMd="6">
+                        <label class="form-label">E-posta</label>
+                        <DxTextBox Text="@_selectedItem.Email" ReadOnly="true"/>
+                    </DxFormLayoutItem>
+                    <DxFormLayoutItem ColSpanMd="4">
+                        <label class="form-label">Cinsiyet</label>
+                        <DxTextBox Text="@_selectedItem.Gender.GetDescription()" ReadOnly="true"/>
+                    </DxFormLayoutItem>
+                    <DxFormLayoutItem ColSpanMd="4">
+                        <label class="form-label">Doğum Tarihi</label>
+                        <DxTextBox Text="@_selectedItem.BirthDate.ToString("dd.MM.yyyy")" ReadOnly="true"/>
+                    </DxFormLayoutItem>
+                    <DxFormLayoutItem ColSpanMd="4">
+                        <label class="form-label">Yaş</label>
+                        <DxTextBox Text="@_selectedItem.Age.ToString()" ReadOnly="true"/>
+                    </DxFormLayoutItem>
+                    <DxFormLayoutItem ColSpanMd="4">
+                        <label class="form-label">Medeni Hal</label>
+                        <DxTextBox Text="@_selectedItem.MaritalStatus.GetDescription()" ReadOnly="true"/>
+                    </DxFormLayoutItem>
+                    <DxFormLayoutItem ColSpanMd="4">
+                        <label class="form-label">GSM Operatörü</label>
+                        <DxTextBox Text="@_selectedItem.GsmOperator.GetDescription()" ReadOnly="true"/>
+                    </DxFormLayoutItem>
+                    <DxFormLayoutItem ColSpanMd="4">
+                        <label class="form-label">Referans Kodu</label>
+                        <DxTextBox Text="@(_selectedItem.ReferenceCode ?? "-")" ReadOnly="true"/>
+                    </DxFormLayoutItem>
+                </DxFormLayoutGroup>
+                <DxFormLayoutGroup Caption="Konum" ColSpanMd="12">
+                    <DxFormLayoutItem ColSpanMd="6">
+                        <label class="form-label">Şehir</label>
+                        <DxTextBox Text="@(_selectedItem.City?.Name)" ReadOnly="true"/>
+                    </DxFormLayoutItem>
+                    <DxFormLayoutItem ColSpanMd="6">
+                        <label class="form-label">İlçe</label>
+                        <DxTextBox Text="@(_selectedItem.District?.Name)" ReadOnly="true"/>
+                    </DxFormLayoutItem>
+                </DxFormLayoutGroup>
+                <DxFormLayoutGroup Caption="Meslek ve Eğitim" ColSpanMd="12">
+                    <DxFormLayoutItem ColSpanMd="4">
+                        <label class="form-label">Meslek</label>
+                        <DxTextBox Text="@(_selectedItem.Profession?.Name)" ReadOnly="true"/>
+                    </DxFormLayoutItem>
+                    <DxFormLayoutItem ColSpanMd="4">
+                        <label class="form-label">Eğitim Seviyesi</label>
+                        <DxTextBox Text="@(_selectedItem.EducationLevel?.Name)" ReadOnly="true"/>
+                    </DxFormLayoutItem>
+                    <DxFormLayoutItem ColSpanMd="4">
+                        <label class="form-label">Emekli mi?</label>
+                        <DxTextBox Text="@(_selectedItem.IsRetired ? "Evet" : "Hayır")" ReadOnly="true"/>
+                    </DxFormLayoutItem>
+                    <DxFormLayoutItem ColSpanMd="4">
+                        <label class="form-label">Aile Reisi mi?</label>
+                        <DxTextBox Text="@(_selectedItem.IsHeadOfFamily ? "Evet" : "Hayır")" ReadOnly="true"/>
+                    </DxFormLayoutItem>
+                    <DxFormLayoutItem ColSpanMd="4">
+                        <label class="form-label">SES</label>
+                        <DxTextBox Text="@(_selectedItem.SocioeconomicStatus?.Name)" ReadOnly="true"/>
+                    </DxFormLayoutItem>
+                    <DxFormLayoutItem ColSpanMd="4">
+                        <label class="form-label">LSM SES</label>
+                        <DxTextBox Text="@(_selectedItem.LSMSocioeconomicStatus?.Name)" ReadOnly="true"/>
+                    </DxFormLayoutItem>
+                </DxFormLayoutGroup>
+                <DxFormLayoutGroup Caption="Finansal Bilgiler" ColSpanMd="12">
+                    <DxFormLayoutItem ColSpanMd="4">
+                        <label class="form-label">Banka</label>
+                        <DxTextBox Text="@(_selectedItem.Bank?.Name)" ReadOnly="true"/>
+                    </DxFormLayoutItem>
+                    <DxFormLayoutItem ColSpanMd="8">
+                        <label class="form-label">IBAN</label>
+                        <DxTextBox Text="@_selectedItem.IBAN" ReadOnly="true"/>
+                    </DxFormLayoutItem>
+                    <DxFormLayoutItem ColSpanMd="12">
+                        <label class="form-label">IBAN Hesap Adı</label>
+                        <DxTextBox Text="@_selectedItem.IBANFullName" ReadOnly="true"/>
+                    </DxFormLayoutItem>
+                </DxFormLayoutGroup>
+            </DxFormLayout>
+        }
+    </BodyContentTemplate>
+    <FooterContentTemplate>
+        <DxButton Text="Kapat"
+                  RenderStyle="ButtonRenderStyle.Secondary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="() => _detailVisible = false"/>
+    </FooterContentTemplate>
+</DxPopup>
+
+<!-- Onay / Red Onay Popup -->
+<DxPopup @bind-Visible="_confirmVisible"
+         HeaderText="@_confirmTitle"
+         Width="420px"
+         CloseOnOutsideClick="false"
+         ShowFooter="true">
+    <BodyContentTemplate Context="_">
+        <div class="d-flex align-items-start gap-3 p-2">
+            <i class="@_confirmIconClass" style="font-size:2.5rem; flex-shrink:0;"></i>
+            <div>
+                <p class="mb-1 fw-semibold">@_confirmMessage</p>
+                <p class="mb-0 text-muted">@_selectedItem?.FullName</p>
+            </div>
+        </div>
+    </BodyContentTemplate>
+    <FooterContentTemplate>
+        <DxButton Text="@_confirmButtonText"
+                  RenderStyle="@_confirmButtonStyle"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="ConfirmAction"
+                  Enabled="!_isActioning"/>
+        <DxButton Text="İptal"
+                  RenderStyle="ButtonRenderStyle.Secondary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="() => _confirmVisible = false"/>
+    </FooterContentTemplate>
+</DxPopup>
+
+<!-- SMS Gönder Popup -->
+<DxPopup @bind-Visible="_smsPopupVisible"
+         HeaderText="@($"SMS Gönder ({_selectedSubjects.Count} denek)")"
+         Width="480px"
+         CloseOnOutsideClick="false"
+         ShowFooter="true">
+    <BodyContentTemplate Context="_">
+        <div class="mb-2 small text-muted">
+            Seçili <strong>@_selectedSubjects.Count</strong> deneğin telefon numarasına SMS gönderilecek.
+        </div>
+        <label class="form-label">Mesaj</label>
+        <DxMemo @bind-Text="_smsMessage" Rows="4" CssClass="w-100"
+                Placeholder="SMS içeriğini buraya yazın..."/>
+        <div class="d-flex justify-content-end mt-1">
+            <small class="text-muted">@(_smsMessage?.Length ?? 0) karakter</small>
+        </div>
+    </BodyContentTemplate>
+    <FooterContentTemplate>
+        <DxButton Text="Gönder" IconCssClass="bi bi-send"
+                  RenderStyle="ButtonRenderStyle.Primary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Enabled="@(!string.IsNullOrWhiteSpace(_smsMessage) && !_isSending)"
+                  Click="SendSmsAsync"/>
+        <DxButton Text="İptal"
+                  RenderStyle="ButtonRenderStyle.Secondary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="() => _smsPopupVisible = false"
+                  Enabled="!_isSending"/>
+    </FooterContentTemplate>
+</DxPopup>
+
+<!-- Bildirim Gönder Popup -->
+<DxPopup @bind-Visible="_pushPopupVisible"
+         HeaderText="@($"Bildirim Gönder ({_selectedSubjects.Count} denek)")"
+         Width="480px"
+         CloseOnOutsideClick="false"
+         ShowFooter="true">
+    <BodyContentTemplate Context="_">
+        <div class="mb-3 small text-muted">
+            Seçili <strong>@_selectedSubjects.Count</strong> deneğin cihazına push bildirim gönderilecek.
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Başlık</label>
+            <DxTextBox @bind-Text="_pushTitle" CssClass="w-100" Placeholder="Bildirim başlığı"/>
+        </div>
+        <div>
+            <label class="form-label">Mesaj</label>
+            <DxMemo @bind-Text="_pushMessage" Rows="4" CssClass="w-100"
+                    Placeholder="Bildirim içeriğini buraya yazın..."/>
+        </div>
+    </BodyContentTemplate>
+    <FooterContentTemplate>
+        <DxButton Text="Gönder" IconCssClass="bi bi-send"
+                  RenderStyle="ButtonRenderStyle.Primary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Enabled="@(!string.IsNullOrWhiteSpace(_pushTitle) && !string.IsNullOrWhiteSpace(_pushMessage) && !_isSending)"
+                  Click="SendPushAsync"/>
+        <DxButton Text="İptal"
+                  RenderStyle="ButtonRenderStyle.Secondary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="() => _pushPopupVisible = false"
+                  Enabled="!_isSending"/>
+    </FooterContentTemplate>
+</DxPopup>
+
+@code {
+    private DxGrid? _grid;
+    private DxContextMenu? _contextMenu;
+    private Subject? _selectedItem;
+
+    private AppDbContext? _context;
+    private GridDevExtremeDataSource<Subject>? _dataSource;
+    private IReadOnlyList<object> _selectedSubjects = [];
+    private bool _isLoading = true;
+    private bool _filterPanelVisible;
+    private bool _detailVisible;
+    private bool _confirmVisible;
+    private bool _isActioning;
+    private bool _isApproving;
+    private bool _smsPopupVisible;
+    private bool _pushPopupVisible;
+    private bool _isSending;
+    private string? _smsMessage;
+    private string? _pushTitle;
+    private string? _pushMessage;
+    private bool _canApprove;
+    private bool _canReject;
+    private bool _canSendSms;
+    private bool _canSendPush;
+    private bool _canViewLedger;
+    private bool _canViewProjects;
+    private bool _canViewReferrals;
+
+    private CriteriaOperator? _builderCriteria;
+    private bool _filterActive;
+
+    private string _confirmTitle = string.Empty;
+    private string _confirmMessage = string.Empty;
+    private string _confirmButtonText = string.Empty;
+    private string _confirmIconClass = string.Empty;
+    private ButtonRenderStyle _confirmButtonStyle = ButtonRenderStyle.Primary;
+
+    // Enum option lists — EditSettings/DxComboBoxSettings için typed records
+    private record EnumOpt<T>(T Value, string Label) where T : struct, Enum;
+
+    private static List<EnumOpt<T>> MakeOpts<T>() where T : struct, Enum
+        => Enum.GetValues<T>().Select(v => new EnumOpt<T>(v, v.GetDescription())).ToList();
+
+    private readonly List<EnumOpt<ApprovalStatus>> _statusOpts = MakeOpts<ApprovalStatus>();
+    private readonly List<EnumOpt<Gender>> _genderOpts = MakeOpts<Gender>();
+    private readonly List<EnumOpt<MaritalStatus>> _maritalOpts = MakeOpts<MaritalStatus>();
+    private readonly List<EnumOpt<GsmOperator>> _gsmOpts = MakeOpts<GsmOperator>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPermissionsAsync();
+
+        _context = await ContextFactory.CreateDbContextAsync();
+        var query = _context.Subjects
+            .Include(s => s.City)
+            .Include(s => s.District)
+            .Include(s => s.Profession)
+            .Include(s => s.EducationLevel)
+            .Include(s => s.HeadOfFamilyProfession)
+            .Include(s => s.HeadOfFamilyEducationLevel)
+            .Include(s => s.SocioeconomicStatus)
+            .Include(s => s.LSMSocioeconomicStatus)
+            .Include(s => s.Bank)
+            .Include(s => s.ScoreSnapshot)
+            .AsNoTracking();
+        _dataSource = new GridDevExtremeDataSource<Subject>(query);
+        _isLoading = false;
+    }
+
+    private async Task LoadPermissionsAsync()
+    {
+        var permissions = await PermissionService.GetCurrentPermissionsAsync();
+        _canApprove = permissions.Contains(PermissionCodes.Subjects.Approve);
+        _canReject = permissions.Contains(PermissionCodes.Subjects.Reject);
+        _canSendSms = permissions.Contains(PermissionCodes.Subjects.SendSms);
+        _canSendPush = permissions.Contains(PermissionCodes.Subjects.SendPush);
+        _canViewLedger = permissions.Contains(PermissionCodes.Subjects.LedgerView);
+        _canViewProjects = permissions.Contains(PermissionCodes.Subjects.ProjectsView);
+        _canViewReferrals = permissions.Contains(PermissionCodes.Subjects.ReferralsView);
+    }
+
+    private void ReloadGridAsync()
+    {
+        _grid?.Reload();
+    }
+
+    private void ToggleFilterPanel() => _filterPanelVisible = !_filterPanelVisible;
+
+    private void ApplyFilter()
+    {
+        var criteria = TransformAgeToBirthDate(_builderCriteria);
+        _grid?.SetFilterCriteria(criteria);
+        _filterActive = _builderCriteria is not null;
+    }
+
+    private void ClearFilter()
+    {
+        _builderCriteria = null;
+        _grid?.SetFilterCriteria(null);
+        _filterActive = false;
+    }
+
+    // Age (NotMapped) → BirthDate dönüşümü: yaş kriterini tarih kriterine çevir
+    private static CriteriaOperator? TransformAgeToBirthDate(CriteriaOperator? criteria)
+    {
+        if (criteria is null) return null;
+
+        return criteria switch
+        {
+            BinaryOperator binary when binary.LeftOperand is OperandProperty { PropertyName: "Age" }
+                && binary.RightOperand is OperandValue { Value: int age }
+                => TransformAgeBinary(binary.OperatorType, age),
+
+            BetweenOperator between when between.TestExpression is OperandProperty { PropertyName: "Age" }
+                && between.BeginExpression is OperandValue { Value: int minAge }
+                && between.EndExpression is OperandValue { Value: int maxAge }
+                => new GroupOperator(GroupOperatorType.And,
+                    new BinaryOperator("BirthDate", DateOnly.FromDateTime(DateTime.Today).AddYears(-maxAge - 1), BinaryOperatorType.Greater),
+                    new BinaryOperator("BirthDate", DateOnly.FromDateTime(DateTime.Today).AddYears(-minAge), BinaryOperatorType.LessOrEqual)),
+
+            GroupOperator group => new GroupOperator(group.OperatorType,
+                group.Operands.Select(o => TransformAgeToBirthDate(o)!).ToList()),
+
+            UnaryOperator unary => new UnaryOperator(unary.OperatorType, TransformAgeToBirthDate(unary.Operand)),
+
+            _ => criteria
+        };
+    }
+
+    private static CriteriaOperator TransformAgeBinary(BinaryOperatorType opType, int age)
+    {
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        return opType switch
+        {
+            BinaryOperatorType.Equal => new GroupOperator(GroupOperatorType.And,
+                new BinaryOperator("BirthDate", today.AddYears(-(age + 1)), BinaryOperatorType.Greater),
+                new BinaryOperator("BirthDate", today.AddYears(-age), BinaryOperatorType.LessOrEqual)),
+            BinaryOperatorType.GreaterOrEqual =>
+                new BinaryOperator("BirthDate", today.AddYears(-age), BinaryOperatorType.LessOrEqual),
+            BinaryOperatorType.Greater =>
+                new BinaryOperator("BirthDate", today.AddYears(-(age + 1)), BinaryOperatorType.LessOrEqual),
+            BinaryOperatorType.LessOrEqual =>
+                new BinaryOperator("BirthDate", today.AddYears(-(age + 1)), BinaryOperatorType.Greater),
+            BinaryOperatorType.Less =>
+                new BinaryOperator("BirthDate", today.AddYears(-age), BinaryOperatorType.Greater),
+            BinaryOperatorType.NotEqual => new UnaryOperator(UnaryOperatorType.Not,
+                new GroupOperator(GroupOperatorType.And,
+                    new BinaryOperator("BirthDate", today.AddYears(-(age + 1)), BinaryOperatorType.Greater),
+                    new BinaryOperator("BirthDate", today.AddYears(-age), BinaryOperatorType.LessOrEqual))),
+            _ => new BinaryOperator("BirthDate", today.AddYears(-age), BinaryOperatorType.LessOrEqual)
+        };
+    }
+
+    private static string StatusBadgeClass(ApprovalStatus status) => status switch
+    {
+        ApprovalStatus.Pending => "bg-warning text-dark",
+        ApprovalStatus.Approved => "bg-success",
+        ApprovalStatus.Rejected => "bg-danger",
+        _ => "bg-secondary"
+    };
+
+    private async Task ShowMenuAsync(MouseEventArgs e, Subject item)
+    {
+        _selectedItem = item;
+        if (_contextMenu is not null)
+            await _contextMenu.ShowAsync(e);
+    }
+
+    private async Task OnContextMenuItemClick(ContextMenuItemClickEventArgs e)
+    {
+        if (_selectedItem is null) return;
+        switch (e.ItemInfo.Name)
+        {
+            case "detail":
+                _detailVisible = true;
+                break;
+            case "projects":
+                if (!_canViewProjects)
+                {
+                    Toast.Error("Proje geçmişi görüntüleme yetkiniz yok.");
+                    break;
+                }
+                NavigationManager.NavigateTo($"/subjects/{_selectedItem.Id}/projects");
+                break;
+            case "ledger":
+                if (!_canViewLedger)
+                {
+                    Toast.Error("Hesap ekstresi görüntüleme yetkiniz yok.");
+                    break;
+                }
+                NavigationManager.NavigateTo($"/subjects/{_selectedItem.Id}/ledger");
+                break;
+            case "referrals":
+                if (!_canViewReferrals)
+                {
+                    Toast.Error("Referral görüntüleme yetkiniz yok.");
+                    break;
+                }
+                NavigationManager.NavigateTo($"/subjects/{_selectedItem.Id}/referrals");
+                break;
+            case "approve":
+                if (!_canApprove)
+                {
+                    Toast.Error("Denek onaylama yetkiniz yok.");
+                    break;
+                }
+                ShowConfirm(true);
+                break;
+            case "reject":
+                if (!_canReject)
+                {
+                    Toast.Error("Denek reddetme yetkiniz yok.");
+                    break;
+                }
+                ShowConfirm(false);
+                break;
+        }
+
+        await Task.CompletedTask;
+    }
+
+    private void ShowConfirm(bool isApproving)
+    {
+        _isApproving = isApproving;
+        if (isApproving)
+        {
+            _confirmTitle = "Onay";
+            _confirmMessage = "Bu deneği onaylamak istediğinize emin misiniz?";
+            _confirmButtonText = "Onayla";
+            _confirmButtonStyle = ButtonRenderStyle.Success;
+            _confirmIconClass = "bi bi-check-circle-fill text-success";
+        }
+        else
+        {
+            _confirmTitle = "Reddet";
+            _confirmMessage = "Bu deneği reddetmek istediğinize emin misiniz?";
+            _confirmButtonText = "Reddet";
+            _confirmButtonStyle = ButtonRenderStyle.Danger;
+            _confirmIconClass = "bi bi-x-circle-fill text-danger";
+        }
+
+        _confirmVisible = true;
+    }
+
+    private async Task ConfirmAction()
+    {
+        if (_selectedItem is null) return;
+
+        if (_isApproving && !_canApprove)
+        {
+            Toast.Error("Denek onaylama yetkiniz yok.");
+            return;
+        }
+
+        if (!_isApproving && !_canReject)
+        {
+            Toast.Error("Denek reddetme yetkiniz yok.");
+            return;
+        }
+
+        _isActioning = true;
+        try
+        {
+            var adminId = await GetAdminIdAsync();
+            if (_isApproving)
+            {
+                await SubjectService.ApproveAsync(_selectedItem.Id, adminId);
+                Toast.Success($"{_selectedItem.FullName} onaylandı.");
+            }
+            else
+            {
+                await SubjectService.RejectAsync(_selectedItem.Id, adminId);
+                Toast.Warning($"{_selectedItem.FullName} reddedildi.");
+            }
+
+            _confirmVisible = false;
+            ReloadGridAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleOperation(ex, Toast);
+        }
+        finally
+        {
+            _isActioning = false;
+        }
+    }
+
+    private async Task ExportToExcelAsync()
+    {
+        if (_grid is not null)
+            await _grid.ExportToXlsxAsync("denekler");
+    }
+
+    private async Task SendSmsAsync()
+    {
+        if (!_canSendSms)
+        {
+            Toast.Error("SMS gönderme yetkiniz yok.");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_smsMessage)) return;
+        _isSending = true;
+        try
+        {
+            var adminId = await GetAdminIdAsync();
+            var ids = _selectedSubjects.Cast<Subject>().Select(s => s.Id);
+            await SubjectService.SendBulkSmsAsync(ids, _smsMessage, adminId);
+            Toast.Success($"{_selectedSubjects.Count} deneğe SMS gönderildi.");
+            _smsPopupVisible = false;
+            _smsMessage = null;
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleOperation(ex, Toast);
+        }
+        finally
+        {
+            _isSending = false;
+        }
+    }
+
+    private async Task SendPushAsync()
+    {
+        if (!_canSendPush)
+        {
+            Toast.Error("Push gönderme yetkiniz yok.");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_pushTitle) || string.IsNullOrWhiteSpace(_pushMessage)) return;
+        _isSending = true;
+        try
+        {
+            var adminId = await GetAdminIdAsync();
+            var ids = _selectedSubjects.Cast<Subject>().Select(s => s.Id);
+            await NotificationService.SendPushToManyAsync(ids, _pushTitle, _pushMessage, sentByAdminId: adminId);
+            Toast.Success($"{_selectedSubjects.Count} deneğe bildirim gönderildi.");
+            _pushPopupVisible = false;
+            _pushTitle = null;
+            _pushMessage = null;
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleOperation(ex, Toast);
+        }
+        finally
+        {
+            _isSending = false;
+        }
+    }
+
+    private async Task<int> GetAdminIdAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var claim = authState.User.FindFirst(ClaimTypes.NameIdentifier);
+        return claim is not null && int.TryParse(claim.Value, out var adminId)
+            ? adminId
+            : 0;
+    }
+
+    public void Dispose()
+    {
+        _context?.Dispose();
+    }
+
+}

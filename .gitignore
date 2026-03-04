@@ -1,0 +1,23 @@
+# Build results
+bin/
+obj/
+.vs/
+.vscode/
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Rider
+.idea/
+*.iml
+
+# Environment
+.env
+.env.local

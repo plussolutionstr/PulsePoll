@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PulsePoll — Solution Tree</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0D0F14;
+  --surface: #13161E;
+  --surface2: #1A1E28;
+  --border: #252A38;
+  --border2: #2E3548;
+
+  --purple: #A78BFA;
+  --blue: #60A5FA;
+  --green: #34D399;
+  --amber: #FBBF24;
+  --red: #F87171;
+  --teal: #2DD4BF;
+  --pink: #F472B6;
+  --orange: #FB923C;
+  --cyan: #22D3EE;
+  --lime: #A3E635;
+
+  --text: #E2E8F0;
+  --text2: #94A3B8;
+  --text3: #475569;
+
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'Plus Jakarta Sans', sans-serif;
+}
+
+body {
+  background: var(--bg);
+  font-family: var(--mono);
+  color: var(--text);
+  min-height: 100vh;
+  padding: 48px 40px 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+}
+
+/* HEADER */
+.header { text-align: center; font-family: var(--sans); }
+.header-tag { font-family: var(--mono); font-size: 11px; color: var(--purple); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; opacity: 0.8; }
+.header-title { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
+.header-title span { color: var(--purple); }
+.header-sub { font-size: 13px; color: var(--text2); margin-top: 6px; }
+
+/* MAIN LAYOUT */
+.layout {
+  display: flex;
+  gap: 20px;
+  width: 100%;
+  max-width: 1200px;
+  align-items: flex-start;
+}
+
+/* TREE PANEL */
+.tree-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  flex: 1;
+  min-width: 0;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+}
+.panel-dots { display: flex; gap: 6px; }
+.pd { width: 10px; height: 10px; border-radius: 50%; }
+.panel-title { font-size: 12px; font-weight: 600; color: var(--text2); }
+
+.tree { padding: 16px 12px 20px; }
+
+/* Tree items */
+.ti {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 1.5px 0;
+  cursor: default;
+  border-radius: 4px;
+  transition: background 0.1s;
+  white-space: nowrap;
+}
+.ti:hover { background: rgba(255,255,255,0.03); }
+
+.ti-indent {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* Tree lines */
+.tl-vert { width: 16px; display: flex; justify-content: center; color: var(--border2); font-size: 13px; }
+.tl-branch { width: 16px; color: var(--border2); font-size: 13px; }
+
+.ti-icon {
+  font-size: 13px;
+  margin-right: 6px;
+  flex-shrink: 0;
+  width: 16px;
+  text-align: center;
+}
+
+.ti-name {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.ti-ext {
+  font-size: 11px;
+  opacity: 0.5;
+  font-weight: 400;
+}
+
+.ti-badge {
+  margin-left: 8px;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+/* Folder types */
+.folder-sln .ti-name { color: var(--purple); font-weight: 700; }
+.folder-core .ti-name { color: var(--blue); font-weight: 700; }
+.folder-infra .ti-name { color: var(--amber); font-weight: 700; }
+.folder-api .ti-name { color: var(--green); font-weight: 700; }
+.folder-admin .ti-name { color: var(--cyan); font-weight: 700; }
+.folder-worker .ti-name { color: var(--orange); font-weight: 700; }
+.folder-mobile .ti-name { color: var(--pink); font-weight: 700; }
+.folder-test .ti-name { color: var(--text3); font-weight: 700; }
+.folder-sub .ti-name { color: var(--text2); font-weight: 600; }
+.file-cs .ti-name { color: var(--text); font-weight: 400; }
+.file-cs .ti-name .ti-ext { color: var(--text3); }
+.file-json .ti-name { color: var(--amber); font-weight: 400; opacity: 0.85; }
+.file-yml .ti-name { color: var(--teal); font-weight: 400; opacity: 0.85; }
+.file-razor .ti-name { color: var(--purple); font-weight: 400; opacity: 0.85; }
+.file-xaml .ti-name { color: var(--pink); font-weight: 400; opacity: 0.85; }
+.file-misc .ti-name { color: var(--text3); font-weight: 400; }
+
+/* Section divider in tree */
+.tree-gap { height: 8px; }
+.tree-section {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text3);
+  padding: 8px 4px 4px;
+}
+
+/* RIGHT PANEL */
+.right-panel {
+  width: 280px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Legend card */
+.legend-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.lc-header {
+  padding: 10px 14px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text3);
+}
+.lc-body { padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.legend-dot {
+  width: 8px; height: 8px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+.legend-text { font-size: 11px; color: var(--text2); line-height: 1.4; }
+.legend-text strong { font-weight: 600; }
+
+/* Info card */
+.info-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.ic-header {
+  padding: 10px 14px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text3);
+}
+.ic-body { padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+.ic-row {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.ic-label { font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+.ic-val { font-size: 11px; color: var(--text2); font-family: var(--sans); line-height: 1.5; }
+
+/* Dependency arrows */
+.dep-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.dep-header {
+  padding: 10px 14px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text3);
+}
+.dep-body { padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; }
+.dep-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+}
+.dep-from { font-weight: 600; }
+.dep-arrow { color: var(--text3); font-size: 10px; }
+.dep-to { color: var(--text2); }
+
+/* NuGet card */
+.nuget-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.nuget-header {
+  padding: 10px 14px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text3);
+}
+.nuget-body { padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; }
+.nuget-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.np-name { font-size: 11px; color: var(--text2); }
+.np-proj { font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-tag">Solution Structure</div>
+  <div class="header-title">PulsePoll<span>.sln</span></div>
+  <div class="header-sub">.NET Core 10 · Modüler Mimari · Clean Architecture</div>
+</div>
+
+<div class="layout">
+
+  <!-- TREE -->
+  <div class="tree-panel">
+    <div class="panel-header">
+      <div class="panel-dots">
+        <div class="pd" style="background:#FF5F57;"></div>
+        <div class="pd" style="background:#FFBD2E;"></div>
+        <div class="pd" style="background:#28CA41;"></div>
+      </div>
+      <div class="panel-title">Solution Explorer — PulsePoll.sln</div>
+    </div>
+
+    <div class="tree">
+
+      <!-- SLN ROOT -->
+      <div class="ti folder-sln">
+        <div class="ti-icon">📦</div>
+        <div class="ti-name">PulsePoll.sln</div>
+      </div>
+
+      <!-- ═══════════════════════════════ -->
+      <!-- CORE                           -->
+      <!-- ═══════════════════════════════ -->
+      <div class="tree-gap"></div>
+      <div class="tree-section" style="padding-left:20px;">Core / Domain</div>
+
+      <!-- PulsePoll.Domain -->
+      <div class="ti folder-core">
+        <div class="ti-indent"><div class="tl-vert">│</div></div>
+        <div class="ti-icon">📁</div>
+        <div class="ti-name">PulsePoll.Domain</div>
+        <span class="ti-badge" style="background:rgba(96,165,250,0.15);color:var(--blue);">csproj</span>
+      </div>
+      <div class="ti folder-sub">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">📁</div>
+        <div class="ti-name">Entities</div>
+      </div>
+      <div class="ti file-cs">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">🟦</div>
+        <div class="ti-name">User<span class="ti-ext">.cs</span></div>
+      </div>
+      <div class="ti file-cs">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">🟦</div>
+        <div class="ti-name">Survey<span class="ti-ext">.cs</span></div>
+      </div>
+      <div class="ti file-cs">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">🟦</div>
+        <div class="ti-name">Wallet<span class="ti-ext">.cs</span></div>
+      </div>
+      <div class="ti file-cs">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">🟦</div>
+        <div class="ti-name">Notification<span class="ti-ext">.cs</span></div>
+      </div>
+      <div class="ti file-cs">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">🟦</div>
+        <div class="ti-name">Story<span class="ti-ext">.cs</span></div>
+      </div>
+      <div class="ti folder-sub">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">📁</div>
+        <div class="ti-name">Enums</div>
+      </div>
+      <div class="ti file-cs">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">🟦</div>
+        <div class="ti-name">UserRank, SurveyStatus, WalletTxType<span class="ti-ext">.cs</span></div>
+      </div>
+      <div class="ti folder-sub">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">📁</div>
+        <div class="ti-name">Events</div>
+      </div>
+      <div class="ti file-cs">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">🟦</div>
+        <div class="ti-name">UserRegistered, SurveyCompleted, WalletCredited<span class="ti-ext">.cs</span></div>
+      </div>
+      <div class="ti folder-sub">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">📁</div>
+        <div class="ti-name">Exceptions</div>
+      </div>
+
+      <!-- PulsePoll.Application -->
+      <div class="ti folder-core" style="margin-top:4px;">
+        <div class="ti-indent"><div class="tl-vert">│</div></div>
+        <div class="ti-icon">📁</div>
+        <div class="ti-name">PulsePoll.Application</div>
+        <span class="ti-badge" style="background:rgba(96,165,250,0.15);color:var(--blue);">csproj</span>
+      </div>
+      <div class="ti folder-sub">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">📁</div>
+        <div class="ti-name">Interfaces</div>
+      </div>
+      <div class="ti file-cs">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">🟦</div>
+        <div class="ti-name">IUserService, ISurveyService, IWalletService<span class="ti-ext">.cs</span></div>
+      </div>
+      <div class="ti file-cs">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">🟦</div>
+        <div class="ti-name">INotificationService, IStorageService<span class="ti-ext">.cs</span></div>
+      </div>
+      <div class="ti folder-sub">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">📁</div>
+        <div class="ti-name">DTOs</div>
+      </div>
+      <div class="ti file-cs">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">🟦</div>
+        <div class="ti-name">UserDto, SurveyDto, WalletDto<span class="ti-ext">.cs</span></div>
+      </div>
+      <div class="ti folder-sub">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">📁</div>
+        <div class="ti-name">Services</div>
+      </div>
+      <div class="ti file-cs">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">🟦</div>
+        <div class="ti-name">UserService, SurveyService, WalletService<span class="ti-ext">.cs</span></div>
+      </div>
+      <div class="ti folder-sub">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">📁</div>
+        <div class="ti-name">Validators</div>
+      </div>
+
+      <!-- ═══════════════════════════════ -->
+      <!-- INFRASTRUCTURE                 -->
+      <!-- ═══════════════════════════════ -->
+      <div class="tree-gap"></div>
+      <div class="tree-section" style="padding-left:20px;">Infrastructure</div>
+
+      <!-- PulsePoll.Infrastructure -->
+      <div class="ti folder-infra">
+        <div class="ti-indent"><div class="tl-vert">│</div></div>
+        <div class="ti-icon">📁</div>
+        <div class="ti-name">PulsePoll.Infrastructure</div>
+        <span class="ti-badge" style="background:rgba(251,191,36,0.15);color:var(--amber);">csproj</span>
+      </div>
+      <div class="ti folder-sub">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">📁</div>
+        <div class="ti-name">Persistence</div>
+      </div>
+      <div class="ti file-cs">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">🟦</div>
+        <div class="ti-name">AppDbContext<span class="ti-ext">.cs</span></div>
+      </div>
+      <div class="ti folder-sub">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">📁</div>
+        <div class="ti-name">Configurations</div>
+      </div>
+      <div class="ti file-cs">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">🟦</div>
+        <div class="ti-name">UserConfig, SurveyConfig, WalletConfig<span class="ti-ext">.cs</span></div>
+      </div>
+      <div class="ti folder-sub">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">📁</div>
+        <div class="ti-name">Migrations</div>
+      </div>
+      <div class="ti folder-sub">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">📁</div>
+        <div class="ti-name">Repositories</div>
+      </div>
+      <div class="ti file-cs">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">🟦</div>
+        <div class="ti-name">UserRepository, SurveyRepository<span class="ti-ext">.cs</span></div>
+      </div>
+      <div class="ti folder-sub">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">📁</div>
+        <div class="ti-name">Messaging</div>
+      </div>
+      <div class="ti file-cs">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">🟦</div>
+        <div class="ti-name">RabbitMqPublisher<span class="ti-ext">.cs</span></div>
+      </div>
+      <div class="ti file-cs">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">🟦</div>
+        <div class="ti-name">MessageContracts<span class="ti-ext">.cs</span></div>
+      </div>
+      <div class="ti folder-sub">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">📁</div>
+        <div class="ti-name">Caching</div>
+      </div>
+      <div class="ti file-cs">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">🟦</div>
+        <div class="ti-name">RedisCacheService<span class="ti-ext">.cs</span></div>
+      </div>
+      <div class="ti folder-sub">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">📁</div>
+        <div class="ti-name">Storage</div>
+      </div>
+      <div class="ti file-cs">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">🟦</div>
+        <div class="ti-name">MinioStorageService<span class="ti-ext">.cs</span></div>
+      </div>
+      <div class="ti folder-sub">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">📁</div>
+        <div class="ti-name">Notifications</div>
+      </div>
+      <div class="ti file-cs">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">🟦</div>
+        <div class="ti-name">FcmPushService, SmtpMailService<span class="ti-ext">.cs</span></div>
+      </div>
+
+      <!-- ═══════════════════════════════ -->
+      <!-- API                            -->
+      <!-- ═══════════════════════════════ -->
+      <div class="tree-gap"></div>
+      <div class="tree-section" style="padding-left:20px;">Web API</div>
+
+      <div class="ti folder-api">
+        <div class="ti-indent"><div class="tl-vert">│</div></div>
+        <div class="ti-icon">📁</div>
+        <div class="ti-name">PulsePoll.Api</div>
+        <span class="ti-badge" style="background:rgba(52,211,153,0.15);color:var(--green);">csproj</span>
+      </div>
+      <div class="ti folder-sub">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">📁</div>
+        <div class="ti-name">Controllers</div>
+      </div>
+      <div class="ti file-cs">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">🟦</div>
+        <div class="ti-name">AuthController<span class="ti-ext">.cs</span></div>
+      </div>
+      <div class="ti file-cs">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">🟦</div>
+        <div class="ti-name">SurveyController<span class="ti-ext">.cs</span></div>
+      </div>
+      <div class="ti file-cs">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">🟦</div>
+        <div class="ti-name">ProfileController<span class="ti-ext">.cs</span></div>
+      </div>
+      <div class="ti file-cs">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">🟦</div>
+        <div class="ti-name">WalletController<span class="ti-ext">.cs</span></div>
+      </div>
+      <div class="ti file-cs">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">🟦</div>
+        <div class="ti-name">WebhookController<span class="ti-ext">.cs</span></div>
+      </div>
+      <div class="ti file-cs">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">🟦</div>
+        <div class="ti-name">StoryController<span class="ti-ext">.cs</span></div>
+      </div>
+      <div class="ti folder-sub">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">📁</div>
+        <div class="ti-name">Middleware</div>
+      </div>
+      <div class="ti file-cs">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">🟦</div>
+        <div class="ti-name">ExceptionMiddleware, JwtMiddleware<span class="ti-ext">.cs</span></div>
+      </div>
+      <div class="ti folder-sub">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">📁</div>
+        <div class="ti-name">Extensions</div>
+      </div>
+      <div class="ti file-cs">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">🟦</div>
+        <div class="ti-name">ServiceExtensions<span class="ti-ext">.cs</span></div>
+      </div>
+      <div class="ti file-cs">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">🟦</div>
+        <div class="ti-name">Program<span class="ti-ext">.cs</span></div>
+      </div>
+      <div class="ti file-json">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">📄</div>
+        <div class="ti-name">appsettings.json</div>
+      </div>
+
+      <!-- ═══════════════════════════════ -->
+      <!-- WORKER                         -->
+      <!-- ═══════════════════════════════ -->
+      <div class="tree-gap"></div>
+      <div class="tree-section" style="padding-left:20px;">Worker Services</div>
+
+      <div class="ti folder-worker">
+        <div class="ti-indent"><div class="tl-vert">│</div></div>
+        <div class="ti-icon">📁</div>
+        <div class="ti-name">PulsePoll.Worker</div>
+        <span class="ti-badge" style="background:rgba(251,146,60,0.15);color:var(--orange);">csproj</span>
+      </div>
+      <div class="ti folder-sub">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">📁</div>
+        <div class="ti-name">Consumers</div>
+      </div>
+      <div class="ti file-cs">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">🟦</div>
+        <div class="ti-name">UserRegisteredConsumer<span class="ti-ext">.cs</span></div>
+      </div>
+      <div class="ti file-cs">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">🟦</div>
+        <div class="ti-name">SurveyCompletedConsumer<span class="ti-ext">.cs</span></div>
+      </div>
+      <div class="ti file-cs">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">🟦</div>
+        <div class="ti-name">NotificationSendConsumer<span class="ti-ext">.cs</span></div>
+      </div>
+      <div class="ti file-cs">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">🟦</div>
+        <div class="ti-name">WithdrawalRequestedConsumer<span class="ti-ext">.cs</span></div>
+      </div>
+      <div class="ti file-cs">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">🟦</div>
+        <div class="ti-name">WalletCreditConsumer<span class="ti-ext">.cs</span></div>
+      </div>
+      <div class="ti file-cs">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">🟦</div>
+        <div class="ti-name">Program<span class="ti-ext">.cs</span></div>
+      </div>
+      <div class="ti file-json">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">📄</div>
+        <div class="ti-name">appsettings.json</div>
+      </div>
+
+      <!-- ═══════════════════════════════ -->
+      <!-- ADMIN                          -->
+      <!-- ═══════════════════════════════ -->
+      <div class="tree-gap"></div>
+      <div class="tree-section" style="padding-left:20px;">Admin Panel</div>
+
+      <div class="ti folder-admin">
+        <div class="ti-indent"><div class="tl-vert">│</div></div>
+        <div class="ti-icon">📁</div>
+        <div class="ti-name">PulsePoll.Admin</div>
+        <span class="ti-badge" style="background:rgba(34,211,238,0.15);color:var(--cyan);">csproj · Blazor Server</span>
+      </div>
+      <div class="ti folder-sub">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">📁</div>
+        <div class="ti-name">Pages</div>
+      </div>
+      <div class="ti file-razor">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">🔷</div>
+        <div class="ti-name">Dashboard, Users, Surveys, Stories, Wallet<span class="ti-ext">.razor</span></div>
+      </div>
+      <div class="ti folder-sub">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">📁</div>
+        <div class="ti-name">Components</div>
+      </div>
+      <div class="ti file-razor">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">🔷</div>
+        <div class="ti-name">SurveyForm, UserGrid, StoryUpload<span class="ti-ext">.razor</span></div>
+      </div>
+      <div class="ti folder-sub">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">📁</div>
+        <div class="ti-name">Layout</div>
+      </div>
+      <div class="ti file-cs">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">🟦</div>
+        <div class="ti-name">Program<span class="ti-ext">.cs</span></div>
+      </div>
+
+      <!-- ═══════════════════════════════ -->
+      <!-- MOBILE                         -->
+      <!-- ═══════════════════════════════ -->
+      <div class="tree-gap"></div>
+      <div class="tree-section" style="padding-left:20px;">Mobile</div>
+
+      <div class="ti folder-mobile">
+        <div class="ti-indent"><div class="tl-vert">│</div></div>
+        <div class="ti-icon">📁</div>
+        <div class="ti-name">PulsePoll.Mobile</div>
+        <span class="ti-badge" style="background:rgba(244,114,182,0.15);color:var(--pink);">csproj · MAUI</span>
+      </div>
+      <div class="ti folder-sub">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">📁</div>
+        <div class="ti-name">Views</div>
+      </div>
+      <div class="ti file-xaml">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">🔸</div>
+        <div class="ti-name">HomePage, SurveyDetailPage, ProfilePage<span class="ti-ext">.xaml</span></div>
+      </div>
+      <div class="ti file-xaml">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">🔸</div>
+        <div class="ti-name">WalletPage, HistoryPage, NotificationsPage<span class="ti-ext">.xaml</span></div>
+      </div>
+      <div class="ti folder-sub">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">📁</div>
+        <div class="ti-name">ViewModels</div>
+      </div>
+      <div class="ti file-cs">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">🟦</div>
+        <div class="ti-name">HomeViewModel, SurveyViewModel, WalletViewModel<span class="ti-ext">.cs</span></div>
+      </div>
+      <div class="ti folder-sub">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">📁</div>
+        <div class="ti-name">Services</div>
+      </div>
+      <div class="ti file-cs">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">🟦</div>
+        <div class="ti-name">ApiService, AuthService, PushService<span class="ti-ext">.cs</span></div>
+      </div>
+      <div class="ti folder-sub">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">📁</div>
+        <div class="ti-name">Controls</div>
+      </div>
+      <div class="ti file-xaml">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">🔸</div>
+        <div class="ti-name">StoryRing, SurveyCard, EarnBadge<span class="ti-ext">.xaml</span></div>
+      </div>
+      <div class="ti folder-sub">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">📁</div>
+        <div class="ti-name">Themes</div>
+      </div>
+      <div class="ti file-xaml">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">🔸</div>
+        <div class="ti-name">Purple, SlateBlue, Teal, Rose<span class="ti-ext">.xaml</span></div>
+      </div>
+
+      <!-- ═══════════════════════════════ -->
+      <!-- TESTS                          -->
+      <!-- ═══════════════════════════════ -->
+      <div class="tree-gap"></div>
+      <div class="tree-section" style="padding-left:20px;">Tests</div>
+
+      <div class="ti folder-test">
+        <div class="ti-indent"><div class="tl-vert">│</div></div>
+        <div class="ti-icon">📁</div>
+        <div class="ti-name">PulsePoll.Tests</div>
+        <span class="ti-badge" style="background:rgba(71,80,104,0.4);color:var(--text3);">csproj · xUnit</span>
+      </div>
+      <div class="ti file-cs">
+        <div class="ti-indent"><div class="tl-vert">│</div><div class="tl-vert">│</div></div>
+        <div class="ti-icon">🟦</div>
+        <div class="ti-name">UserServiceTests, WalletServiceTests<span class="ti-ext">.cs</span></div>
+      </div>
+
+      <!-- ROOT FILES -->
+      <div class="tree-gap"></div>
+      <div class="tree-section" style="padding-left:0;">Root Files</div>
+
+      <div class="ti file-yml">
+        <div class="ti-indent"></div>
+        <div class="ti-icon">📄</div>
+        <div class="ti-name">docker-compose.yml</div>
+      </div>
+      <div class="ti file-yml">
+        <div class="ti-indent"></div>
+        <div class="ti-icon">📄</div>
+        <div class="ti-name">docker-compose.override.yml</div>
+      </div>
+      <div class="ti file-misc">
+        <div class="ti-indent"></div>
+        <div class="ti-icon">📄</div>
+        <div class="ti-name">.gitignore · .editorconfig · README.md</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel">
+
+    <!-- LEGEND -->
+    <div class="legend-card">
+      <div class="lc-header">Proje Renkleri</div>
+      <div class="lc-body">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--blue);"></div><div class="legend-text"><strong style="color:var(--blue);">Domain + Application</strong> — Entity, interface, DTO, servis</div></div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--amber);"></div><div class="legend-text"><strong style="color:var(--amber);">Infrastructure</strong> — DB, cache, storage, messaging</div></div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--green);"></div><div class="legend-text"><strong style="color:var(--green);">Web API</strong> — Mobile için HTTP katmanı</div></div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--orange);"></div><div class="legend-text"><strong style="color:var(--orange);">Worker</strong> — Kuyruk consumer'ları</div></div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--cyan);"></div><div class="legend-text"><strong style="color:var(--cyan);">Admin</strong> — Blazor Server panel</div></div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--pink);"></div><div class="legend-text"><strong style="color:var(--pink);">Mobile</strong> — MAUI uygulaması</div></div>
+      </div>
+    </div>
+
+    <!-- DEPENDENCIES -->
+    <div class="dep-card">
+      <div class="dep-header">Proje Bağımlılıkları</div>
+      <div class="dep-body">
+        <div class="dep-row"><span class="dep-from" style="color:var(--blue);">Application</span><span class="dep-arrow">→</span><span class="dep-to">Domain</span></div>
+        <div class="dep-row"><span class="dep-from" style="color:var(--amber);">Infrastructure</span><span class="dep-arrow">→</span><span class="dep-to">Application</span></div>
+        <div class="dep-row"><span class="dep-from" style="color:var(--green);">API</span><span class="dep-arrow">→</span><span class="dep-to">Application + Infra</span></div>
+        <div class="dep-row"><span class="dep-from" style="color:var(--orange);">Worker</span><span class="dep-arrow">→</span><span class="dep-to">Application + Infra</span></div>
+        <div class="dep-row"><span class="dep-from" style="color:var(--cyan);">Admin</span><span class="dep-arrow">→</span><span class="dep-to">Application + Infra</span></div>
+        <div class="dep-row"><span class="dep-from" style="color:var(--pink);">Mobile</span><span class="dep-arrow">→</span><span class="dep-to">Sadece API çağırır</span></div>
+      </div>
+    </div>
+
+    <!-- NUGET -->
+    <div class="nuget-card">
+      <div class="nuget-header">Temel NuGet Paketleri</div>
+      <div class="nuget-body">
+        <div class="nuget-row"><span class="np-name">EF Core + Npgsql</span><span class="np-proj" style="background:rgba(251,191,36,0.15);color:var(--amber);">Infra</span></div>
+        <div class="nuget-row"><span class="np-name">MassTransit RabbitMQ</span><span class="np-proj" style="background:rgba(251,146,60,0.15);color:var(--orange);">API · Worker</span></div>
+        <div class="nuget-row"><span class="np-name">StackExchange.Redis</span><span class="np-proj" style="background:rgba(251,191,36,0.15);color:var(--amber);">Infra</span></div>
+        <div class="nuget-row"><span class="np-name">Minio</span><span class="np-proj" style="background:rgba(251,191,36,0.15);color:var(--amber);">Infra</span></div>
+        <div class="nuget-row"><span class="np-name">Serilog + Seq</span><span class="np-proj" style="background:rgba(96,165,250,0.15);color:var(--blue);">Tümü</span></div>
+        <div class="nuget-row"><span class="np-name">FluentValidation</span><span class="np-proj" style="background:rgba(96,165,250,0.15);color:var(--blue);">App</span></div>
+        <div class="nuget-row"><span class="np-name">DevExpress MAUI</span><span class="np-proj" style="background:rgba(244,114,182,0.15);color:var(--pink);">Mobile</span></div>
+        <div class="nuget-row"><span class="np-name">DevExpress Blazor</span><span class="np-proj" style="background:rgba(34,211,238,0.15);color:var(--cyan);">Admin</span></div>
+        <div class="nuget-row"><span class="np-name">xUnit + Moq</span><span class="np-proj" style="background:rgba(71,80,104,0.3);color:var(--text3);">Tests</span></div>
+      </div>
+    </div>
+
+    <!-- INFO -->
+    <div class="info-card">
+      <div class="ic-header">Notlar</div>
+      <div class="ic-body">
+        <div class="ic-row">
+          <div class="ic-label" style="color:var(--green);">Shared Logic</div>
+          <div class="ic-val">API, Worker ve Admin aynı Application servislerini kullanır. Logic bir yerde yazar, üçü de alır.</div>
+        </div>
+        <div class="ic-row">
+          <div class="ic-label" style="color:var(--pink);">Mobile Bağımsız</div>
+          <div class="ic-val">MAUI sadece HTTP ile konuşur. Domain/Application referansı yok, tamamen ayrı.</div>
+        </div>
+        <div class="ic-row">
+          <div class="ic-label" style="color:var(--amber);">Tema Desteği</div>
+          <div class="ic-val">4 ResourceDictionary. Kullanıcı seçimi UserService'te saklanır, uygulama açılışında yüklenir.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,260 @@
+@page "/payments/batches"
+@attribute [HasPermission(PermissionCodes.Payments.BatchesView)]
+@using System.Security.Claims
+@inject IPaymentBatchService PaymentBatchService
+@inject IAppToastService Toast
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager NavigationManager
+@inject IPermissionAuthorizationService PermissionService
+
+<PageTitle>Ödeme Paketleri - PulsePoll Admin</PageTitle>
+
+<div class="d-flex align-items-center justify-content-between mb-2">
+    <h3 class="mb-0">Ödeme Paketleri</h3>
+    <div class="d-flex gap-2">
+        @if (_canExport)
+        {
+            <DxButton Text="Excel"
+                      IconCssClass="bi bi-file-earmark-excel"
+                      RenderStyle="ButtonRenderStyle.Secondary"
+                      RenderStyleMode="ButtonRenderStyleMode.Outline"
+                      Click="ExportToExcelAsync"/>
+        }
+        @if (_canCreate)
+        {
+            <DxButton Text="Yeni Paket Olustur"
+                      IconCssClass="bi bi-plus-lg"
+                      RenderStyle="ButtonRenderStyle.Primary"
+                      RenderStyleMode="ButtonRenderStyleMode.Outline"
+                      Click="OnNewBatchClick"/>
+        }
+    </div>
+</div>
+
+<DxLoadingPanel @bind-Visible="_isLoading"
+                IsContentBlocked="true"
+                ApplyBackgroundShading="true"
+                IndicatorAreaVisible="false"
+                Text="Yukleniyor...">
+    <DxGrid @ref="_grid"
+            Data="@_batches"
+            ShowFilterRow="true"
+            PageSize="25"
+            ColumnResizeMode="GridColumnResizeMode.ColumnsContainer">
+        <Columns>
+            <DxGridDataColumn FieldName="BatchNumber" Caption="Paket No" Width="160px"/>
+            <DxGridDataColumn FieldName="StatusLabel" Caption="Durum" Width="120px">
+                <CellDisplayTemplate>
+                    @{
+                        var b = (PaymentBatchDto)context.DataItem;
+                    }
+                    <span class="badge @BatchStatusBadge(b.Status)">@b.StatusLabel</span>
+                </CellDisplayTemplate>
+            </DxGridDataColumn>
+            <DxGridDataColumn FieldName="ItemCount" Caption="Talep Sayisi" Width="110px"/>
+            <DxGridDataColumn FieldName="TotalAmount" Caption="Toplam (TL)" DisplayFormat="N2" Width="130px"/>
+            <DxGridDataColumn FieldName="CreatedAt" Caption="Olusturulma" DisplayFormat="dd.MM.yyyy HH:mm" Width="150px"/>
+            <DxGridDataColumn FieldName="SentAt" Caption="Gonderilme" DisplayFormat="dd.MM.yyyy HH:mm" Width="150px"/>
+            <DxGridDataColumn FieldName="Note" Caption="Not" MinWidth="150"/>
+            <DxGridCommandColumn Width="90px" Caption="Islemler" NewButtonVisible="false">
+                <CellDisplayTemplate>
+                    @{
+                        var rowBatch = (PaymentBatchDto)context.DataItem;
+                    }
+                    <DxButton IconCssClass="bi bi-eye"
+                              RenderStyle="ButtonRenderStyle.Secondary"
+                              RenderStyleMode="ButtonRenderStyleMode.Text"
+                              SizeMode="SizeMode.Small"
+                              title="Detay"
+                              Click="@(() => NavigationManager.NavigateTo($"/payments/batches/{rowBatch.Id}"))"/>
+                </CellDisplayTemplate>
+            </DxGridCommandColumn>
+        </Columns>
+        <TotalSummary>
+            <DxGridSummaryItem SummaryType="GridSummaryItemType.Sum"
+                               FieldName="ItemCount"
+                               FooterColumnName="ItemCount"
+                               DisplayText="Toplam Talep: {0:N0}" />
+            <DxGridSummaryItem SummaryType="GridSummaryItemType.Sum"
+                               FieldName="TotalAmount"
+                               FooterColumnName="TotalAmount"
+                               DisplayText="Toplam Tutar: {0:N2} TL" />
+        </TotalSummary>
+    </DxGrid>
+</DxLoadingPanel>
+
+<DxPopup @bind-Visible="_newBatchPopupVisible"
+         HeaderText="Yeni Odeme Paketi"
+         Width="700px"
+         CloseOnOutsideClick="false"
+         ShowFooter="true">
+    <BodyContentTemplate Context="popupCtx">
+        @if (_approvedRequests.Count == 0)
+        {
+            <div class="text-center text-muted py-4">
+                <i class="bi bi-inbox" style="font-size:2rem;"></i>
+                <p class="mt-2">Pakete eklenecek onayli talep bulunmuyor.</p>
+            </div>
+        }
+        else
+        {
+            <p class="text-muted mb-2">Pakete eklemek istediginiz talepleri secin:</p>
+            <DxGrid @ref="_approvedGrid"
+                    Data="@_approvedRequests"
+                    SelectionMode="GridSelectionMode.Multiple"
+                    @bind-SelectedDataItems="_selectedRequests"
+                    PageSize="20"
+                    ShowFilterRow="true">
+                <Columns>
+                    <DxGridSelectionColumn Width="40px"/>
+                    <DxGridDataColumn FieldName="SubjectFullName" Caption="Denek" MinWidth="140"/>
+                    <DxGridDataColumn FieldName="BankName" Caption="Banka" Width="120px"/>
+                    <DxGridDataColumn FieldName="IbanLast4" Caption="IBAN Son 4" Width="100px"/>
+                    <DxGridDataColumn FieldName="Amount" Caption="Tutar (Birim)" Width="140px">
+                        <CellDisplayTemplate>
+                            @{
+                                var rowItem = (WithdrawalRequestAdminDto)context.DataItem;
+                            }
+                            @($"{rowItem.Amount:N2} {rowItem.UnitLabel}")
+                        </CellDisplayTemplate>
+                    </DxGridDataColumn>
+                    <DxGridDataColumn FieldName="AmountTry" Caption="TL Karşılığı" DisplayFormat="N2" Width="120px"/>
+                    <DxGridDataColumn FieldName="CreatedAt" Caption="Talep Tarihi" DisplayFormat="dd.MM.yyyy" Width="120px"/>
+                </Columns>
+            </DxGrid>
+
+            @if (_selectedRequests.Count > 0)
+            {
+                <div class="alert alert-info mt-2 mb-0 py-2">
+                    <strong>@_selectedRequests.Count talep</strong> secildi —
+                    Toplam: <strong>@SelectedTotalTry().ToString("N2") TL</strong>
+                </div>
+            }
+
+            <DxFormLayout CssClass="mt-2">
+                <DxFormLayoutItem Caption="Paket Notu (opsiyonel)" ColSpanMd="12">
+                    <DxTextBox @bind-Text="_newBatchNote"/>
+                </DxFormLayoutItem>
+            </DxFormLayout>
+        }
+    </BodyContentTemplate>
+    <FooterContentTemplate>
+        <DxButton Text="Paket Olustur"
+                  RenderStyle="ButtonRenderStyle.Primary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Enabled="_selectedRequests.Count > 0"
+                  Click="CreateBatchAsync"/>
+        <DxButton Text="Iptal"
+                  RenderStyle="ButtonRenderStyle.Secondary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="() => _newBatchPopupVisible = false"/>
+    </FooterContentTemplate>
+</DxPopup>
+
+@code {
+    DxGrid? _grid;
+    List<PaymentBatchDto> _batches = [];
+    List<WithdrawalRequestAdminDto> _approvedRequests = [];
+    IReadOnlyList<object> _selectedRequests = [];
+    DxGrid? _approvedGrid;
+    bool _isLoading;
+    bool _newBatchPopupVisible;
+    bool _canCreate;
+    bool _canExport;
+    string _newBatchNote = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPermissionsAsync();
+        await LoadAsync();
+    }
+
+    private async Task LoadPermissionsAsync()
+    {
+        var permissions = await PermissionService.GetCurrentPermissionsAsync();
+        _canCreate = permissions.Contains(PermissionCodes.Payments.BatchesCreate);
+        _canExport = permissions.Contains(PermissionCodes.Payments.BatchesExport);
+    }
+
+    private async Task ExportToExcelAsync()
+    {
+        if (!_canExport)
+        {
+            Toast.Error("Ödeme paketi dışa aktarma yetkiniz yok.");
+            return;
+        }
+
+        if (_grid is not null)
+            await _grid.ExportToXlsxAsync("odeme-paketleri");
+    }
+
+    private async Task LoadAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            var (items, _) = await PaymentBatchService.GetBatchesAsync(null, 0, 500);
+            _batches = items;
+        }
+        finally { _isLoading = false; }
+    }
+
+    private async Task OnNewBatchClick()
+    {
+        if (!_canCreate)
+        {
+            Toast.Error("Ödeme paketi oluşturma yetkiniz yok.");
+            return;
+        }
+
+        var (approved, _) = await PaymentBatchService.GetApprovedWithdrawalsAsync(0, 500);
+        _approvedRequests     = approved;
+        _selectedRequests     = [];
+        _newBatchNote         = string.Empty;
+        _newBatchPopupVisible = true;
+    }
+
+    private decimal SelectedTotalTry()
+        => _selectedRequests.Cast<WithdrawalRequestAdminDto>().Sum(r => r.AmountTry);
+
+    private async Task CreateBatchAsync()
+    {
+        if (!_canCreate)
+        {
+            Toast.Error("Ödeme paketi oluşturma yetkiniz yok.");
+            return;
+        }
+
+        var adminId = await GetAdminIdAsync();
+        var ids = _selectedRequests.Cast<WithdrawalRequestAdminDto>().Select(r => r.Id).ToList();
+        _newBatchPopupVisible = false;
+        _isLoading = true;
+        try
+        {
+            var batch = await PaymentBatchService.CreateBatchAsync(
+                new CreatePaymentBatchDto(ids, string.IsNullOrWhiteSpace(_newBatchNote) ? null : _newBatchNote),
+                adminId);
+            Toast.Success($"Paket olusturuldu: {batch.BatchNumber}");
+            await LoadAsync();
+            NavigationManager.NavigateTo($"/payments/batches/{batch.Id}");
+        }
+        catch (Exception ex) { ErrorHandler.HandleOperation(ex, Toast); }
+        finally { _isLoading = false; }
+    }
+
+    private static string BatchStatusBadge(PaymentBatchStatus status) => status switch
+    {
+        PaymentBatchStatus.Draft      => "bg-secondary",
+        PaymentBatchStatus.Sent       => "bg-primary",
+        PaymentBatchStatus.Completed  => "bg-success",
+        _                             => "bg-secondary"
+    };
+
+    private async Task<int> GetAdminIdAsync()
+    {
+        var state = await AuthStateProvider.GetAuthenticationStateAsync();
+        return int.TryParse(state.User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var adminId)
+            ? adminId
+            : 0;
+    }
+}
