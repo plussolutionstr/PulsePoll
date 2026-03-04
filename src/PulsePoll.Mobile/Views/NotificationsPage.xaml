@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:PulsePoll.Mobile.ViewModels"
+             xmlns:models="clr-namespace:PulsePoll.Mobile.Models"
+             xmlns:converters="clr-namespace:PulsePoll.Mobile.Converters"
+             x:Class="PulsePoll.Mobile.Views.NotificationsPage"
+             x:DataType="vm:NotificationsViewModel"
+             Shell.NavBarIsVisible="False">
+
+    <ContentPage.Resources>
+        <converters:NotificationTypeToBgConverter x:Key="TypeToBg"/>
+    </ContentPage.Resources>
+
+    <VerticalStackLayout Spacing="16" Padding="20,16">
+
+        <!-- Header -->
+        <Grid ColumnDefinitions="Auto,*,Auto">
+            <ImageButton Source="icon_arrow_left.png"
+                         HeightRequest="24" WidthRequest="24"
+                         Command="{Binding GoBackCommand}"
+                         VerticalOptions="Center"/>
+            <Label Grid.Column="1" Text="Bildirimler"
+                   Style="{StaticResource PageTitleStyle}"
+                   VerticalOptions="Center"
+                   Margin="12,0,0,0"/>
+            <Label Grid.Column="2" Text="Tümünü Okundu İşaretle"
+                   FontFamily="JakartaSemiBold" FontSize="12"
+                   TextColor="{StaticResource PrimaryPurple}"
+                   VerticalOptions="Center">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding MarkAllReadCommand}"/>
+                </Label.GestureRecognizers>
+            </Label>
+        </Grid>
+
+        <!-- Filter Tabs -->
+        <ScrollView Orientation="Horizontal" HorizontalScrollBarVisibility="Never">
+            <HorizontalStackLayout Spacing="8"
+                                   BindableLayout.ItemsSource="{Binding Filters}">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="x:String">
+                        <Border StrokeThickness="0"
+                                StrokeShape="RoundRectangle 16"
+                                BackgroundColor="{StaticResource SurfaceColor}"
+                                Padding="16,8">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:NotificationsViewModel}}, Path=SetFilterCommand}"
+                                    CommandParameter="{Binding .}"/>
+                            </Border.GestureRecognizers>
+                            <Label Text="{Binding .}"
+                                   FontFamily="JakartaSemiBold" FontSize="13"
+                                   TextColor="{StaticResource TextSecondary}"/>
+                        </Border>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </HorizontalStackLayout>
+        </ScrollView>
+
+        <!-- Notifications List -->
+        <ScrollView>
+            <VerticalStackLayout Spacing="8"
+                                 BindableLayout.ItemsSource="{Binding Notifications}">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="models:NotificationModel">
+                        <Border StrokeShape="RoundRectangle 16"
+                                Stroke="{StaticResource CardBorder}"
+                                Padding="14">
+                            <Border.BackgroundColor>
+                                <MultiBinding>
+                                    <Binding Path="IsRead"/>
+                                </MultiBinding>
+                            </Border.BackgroundColor>
+                            <Grid ColumnDefinitions="40,*,Auto" ColumnSpacing="12">
+                                <Border StrokeThickness="0"
+                                        StrokeShape="RoundRectangle 20"
+                                        HeightRequest="40" WidthRequest="40"
+                                        BackgroundColor="{Binding Type, Converter={StaticResource TypeToBg}}">
+                                    <Image Source="icon_bell.png"
+                                           HeightRequest="18" WidthRequest="18"
+                                           HorizontalOptions="Center" VerticalOptions="Center"/>
+                                </Border>
+                                <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                                    <Label Text="{Binding Title}"
+                                           FontFamily="JakartaSemiBold" FontSize="14"
+                                           TextColor="{StaticResource TextPrimary}"/>
+                                    <Label Text="{Binding Message}"
+                                           Style="{StaticResource CaptionStyle}"
+                                           MaxLines="2" LineBreakMode="TailTruncation"/>
+                                </VerticalStackLayout>
+                                <Label Grid.Column="2"
+                                       Text="{Binding Date, StringFormat='{0:HH:mm}'}"
+                                       Style="{StaticResource CaptionStyle}"
+                                       VerticalOptions="Start"/>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </VerticalStackLayout>
+        </ScrollView>
+
+    </VerticalStackLayout>
+</ContentPage>

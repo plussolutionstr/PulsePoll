@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:PulsePoll.Mobile.ViewModels"
+             xmlns:models="clr-namespace:PulsePoll.Mobile.Models"
+             xmlns:converters="clr-namespace:PulsePoll.Mobile.Converters"
+             x:Class="PulsePoll.Mobile.Views.HistoryPage"
+             x:DataType="vm:HistoryViewModel"
+             Shell.NavBarIsVisible="False">
+
+    <ContentPage.Resources>
+        <converters:StatusToColorConverter x:Key="StatusToColor"/>
+        <converters:StatusToBgColorConverter x:Key="StatusToBgColor"/>
+    </ContentPage.Resources>
+
+    <ScrollView>
+        <VerticalStackLayout Spacing="16" Padding="20,16">
+
+            <Label Text="Geçmiş" Style="{StaticResource PageTitleStyle}"/>
+
+            <!-- Summary Boxes -->
+            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10">
+                <Border StrokeShape="RoundRectangle 16" StrokeThickness="0"
+                        BackgroundColor="{StaticResource SuccessLight}" Padding="12,16">
+                    <VerticalStackLayout HorizontalOptions="Center" Spacing="4">
+                        <Label Text="{Binding CompletedCount}"
+                               FontFamily="JakartaBold" FontSize="22"
+                               TextColor="{StaticResource Success}"
+                               HorizontalTextAlignment="Center"/>
+                        <Label Text="Tamamlanan" FontFamily="JakartaMedium" FontSize="11"
+                               TextColor="{StaticResource Success}" HorizontalTextAlignment="Center"/>
+                    </VerticalStackLayout>
+                </Border>
+                <Border Grid.Column="1" StrokeShape="RoundRectangle 16" StrokeThickness="0"
+                        BackgroundColor="{StaticResource DangerLight}" Padding="12,16">
+                    <VerticalStackLayout HorizontalOptions="Center" Spacing="4">
+                        <Label Text="{Binding DisqualifiedCount}"
+                               FontFamily="JakartaBold" FontSize="22"
+                               TextColor="{StaticResource Danger}"
+                               HorizontalTextAlignment="Center"/>
+                        <Label Text="Elenen" FontFamily="JakartaMedium" FontSize="11"
+                               TextColor="{StaticResource Danger}" HorizontalTextAlignment="Center"/>
+                    </VerticalStackLayout>
+                </Border>
+                <Border Grid.Column="2" StrokeShape="RoundRectangle 16" StrokeThickness="0"
+                        BackgroundColor="{StaticResource AmberLight}" Padding="12,16">
+                    <VerticalStackLayout HorizontalOptions="Center" Spacing="4">
+                        <Label Text="{Binding TotalEarned, StringFormat='₺{0}'}"
+                               FontFamily="JakartaBold" FontSize="22"
+                               TextColor="{StaticResource Amber}"
+                               HorizontalTextAlignment="Center"/>
+                        <Label Text="Toplam" FontFamily="JakartaMedium" FontSize="11"
+                               TextColor="{StaticResource Amber}" HorizontalTextAlignment="Center"/>
+                    </VerticalStackLayout>
+                </Border>
+            </Grid>
+
+            <!-- Filter Tabs -->
+            <ScrollView Orientation="Horizontal" HorizontalScrollBarVisibility="Never">
+                <HorizontalStackLayout Spacing="8"
+                                       BindableLayout.ItemsSource="{Binding Filters}">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="x:String">
+                            <Border StrokeThickness="0"
+                                    StrokeShape="RoundRectangle 16"
+                                    BackgroundColor="{StaticResource SurfaceColor}"
+                                    Padding="16,8">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:HistoryViewModel}}, Path=SetFilterCommand}"
+                                        CommandParameter="{Binding .}"/>
+                                </Border.GestureRecognizers>
+                                <Label Text="{Binding .}"
+                                       FontFamily="JakartaSemiBold" FontSize="13"
+                                       TextColor="{StaticResource TextSecondary}"/>
+                            </Border>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </HorizontalStackLayout>
+            </ScrollView>
+
+            <!-- History Items -->
+            <VerticalStackLayout Spacing="8"
+                                 BindableLayout.ItemsSource="{Binding FlatItems}">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="models:HistoryItemModel">
+                        <Border Style="{StaticResource CardBorderStyle}" Padding="14">
+                            <Grid ColumnDefinitions="40,*,Auto" ColumnSpacing="12">
+                                <!-- Status Icon -->
+                                <Border StrokeThickness="0"
+                                        StrokeShape="RoundRectangle 20"
+                                        HeightRequest="40" WidthRequest="40"
+                                        BackgroundColor="{Binding Status, Converter={StaticResource StatusToBgColor}}">
+                                    <Label Text="{Binding Status, StringFormat='{0:0}'}"
+                                           FontFamily="JakartaBold" FontSize="11"
+                                           HorizontalOptions="Center" VerticalOptions="Center"
+                                           TextColor="{Binding Status, Converter={StaticResource StatusToColor}}"
+                                           MaxLines="1"/>
+                                </Border>
+
+                                <!-- Info -->
+                                <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                                    <Label Text="{Binding SurveyTitle}"
+                                           FontFamily="JakartaSemiBold" FontSize="14"
+                                           TextColor="{StaticResource TextPrimary}"
+                                           MaxLines="1" LineBreakMode="TailTruncation"/>
+                                    <Label FontFamily="JakartaRegular" FontSize="12" TextColor="{StaticResource TextTertiary}">
+                                        <Label.FormattedText>
+                                            <FormattedString>
+                                                <Span Text="{Binding BrandName}"/>
+                                                <Span Text=" · "/>
+                                                <Span Text="{Binding Date, StringFormat='{0:dd MMM}'}"/>
+                                            </FormattedString>
+                                        </Label.FormattedText>
+                                    </Label>
+                                </VerticalStackLayout>
+
+                                <!-- Amount/Status -->
+                                <Label Grid.Column="2"
+                                       VerticalOptions="Center"
+                                       FontFamily="JakartaSemiBold" FontSize="14"
+                                       TextColor="{Binding Status, Converter={StaticResource StatusToColor}}">
+                                    <Label.Text>
+                                        <MultiBinding StringFormat="{}{0}">
+                                            <Binding Path="Status"/>
+                                        </MultiBinding>
+                                    </Label.Text>
+                                </Label>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </VerticalStackLayout>
+
+            <BoxView HeightRequest="20" Color="Transparent"/>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

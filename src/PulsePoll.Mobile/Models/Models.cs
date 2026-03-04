@@ -1,0 +1,76 @@
+namespace PulsePoll.Mobile.Models;
+
+public record StoryModel(int Id, string BrandName, string AvatarUrl);
+
+public record NewsModel(int Id, string Tag, string Title, string Subtitle);
+
+public record SurveyModel(
+    int Id,
+    string BrandName,
+    string BrandLogoUrl,
+    string Title,
+    string Description,
+    string Category,
+    decimal Reward,
+    int DurationMinutes,
+    int QuestionCount,
+    List<SurveyCriteria> Criteria,
+    string BannerGradientStart = "#EDE8FF",
+    string BannerGradientEnd = "#DDD6FE",
+    string BrandColor = "#7C5CFC");
+
+public record SurveyCriteria(string Label, bool IsMet);
+
+public record QuestionModel(int Number, string Text, List<OptionModel> Options);
+
+public record OptionModel(int Id, string Text);
+
+public record ProfileModel(
+    string FullName,
+    string Email,
+    string AvatarUrl,
+    string Tier,
+    int Points,
+    int CompletedCount,
+    int DisqualifiedCount,
+    int SuccessRate,
+    List<DemographicField> Demographics,
+    List<string> Interests);
+
+public record DemographicField(string Label, string Value);
+
+public record HistoryItemModel(
+    int Id,
+    string SurveyTitle,
+    string BrandName,
+    string Status, // Tamamlandı, Elendi, Devam Ediyor
+    decimal? Reward,
+    DateTime Date,
+    int QuestionCount);
+
+public record HistoryGroup(string Month, List<HistoryItemModel> Items);
+
+public record WalletModel(
+    decimal WithdrawableBalance,
+    int Points,
+    decimal TotalEarned,
+    List<BankAccountModel> BankAccounts,
+    List<TransactionModel> RecentTransactions);
+
+public record BankAccountModel(int Id, string BankName, string MaskedIban);
+
+public record TransactionModel(
+    int Id,
+    string Title,
+    string Description,
+    decimal Amount,
+    DateTime Date,
+    bool IsIncome);
+
+public record NotificationModel(
+    int Id,
+    string Type, // survey, earning, rank, disqualified, system
+    string Title,
+    string Message,
+    DateTime Date,
+    bool IsRead);

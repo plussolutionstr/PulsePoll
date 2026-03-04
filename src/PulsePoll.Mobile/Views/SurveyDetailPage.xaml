@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:PulsePoll.Mobile.ViewModels"
+             xmlns:models="clr-namespace:PulsePoll.Mobile.Models"
+             xmlns:converters="clr-namespace:PulsePoll.Mobile.Converters"
+             x:Class="PulsePoll.Mobile.Views.SurveyDetailPage"
+             x:DataType="vm:SurveyDetailViewModel"
+             Shell.NavBarIsVisible="False">
+
+    <ContentPage.Resources>
+        <converters:BoolToColorConverter x:Key="BoolToColor"/>
+        <converters:BoolToIconConverter x:Key="BoolToIcon"/>
+    </ContentPage.Resources>
+
+    <ScrollView>
+        <VerticalStackLayout Spacing="16" Padding="20,16">
+
+            <!-- Back Button -->
+            <HorizontalStackLayout Spacing="8">
+                <ImageButton Source="icon_arrow_left.png"
+                             HeightRequest="24" WidthRequest="24"
+                             Command="{Binding GoBackCommand}"/>
+                <Label Text="Anket Detayı"
+                       Style="{StaticResource TitleStyle}"
+                       VerticalOptions="Center"/>
+            </HorizontalStackLayout>
+
+            <!-- Hero Card -->
+            <Border StrokeThickness="0"
+                    StrokeShape="RoundRectangle 20"
+                    Padding="24">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="{StaticResource PrimaryPurple}" Offset="0"/>
+                        <GradientStop Color="{StaticResource PrimaryDark}" Offset="1"/>
+                    </LinearGradientBrush>
+                </Border.Background>
+                <VerticalStackLayout Spacing="12">
+                    <Border StrokeThickness="0"
+                            StrokeShape="RoundRectangle 24"
+                            HeightRequest="48" WidthRequest="48"
+                            BackgroundColor="#50FFFFFF">
+                        <Label Text="{Binding Survey.BrandName, StringFormat='{0:0}'}"
+                               FontFamily="JakartaBold" FontSize="14"
+                               HorizontalOptions="Center" VerticalOptions="Center"
+                               TextColor="White" MaxLines="1"/>
+                    </Border>
+                    <Label Text="{Binding Survey.BrandName}"
+                           FontFamily="JakartaSemiBold" FontSize="14"
+                           TextColor="#CCFFFFFF"/>
+                    <Label Text="{Binding Survey.Title}"
+                           FontFamily="JakartaBold" FontSize="20"
+                           TextColor="White"/>
+                    <Label Text="{Binding Survey.Description}"
+                           FontFamily="JakartaRegular" FontSize="14"
+                           TextColor="#AAFFFFFF"/>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Meta Row -->
+            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10">
+                <Border StrokeShape="RoundRectangle 16"
+                        Stroke="{StaticResource CardBorder}"
+                        BackgroundColor="{StaticResource White}"
+                        Padding="12,16">
+                    <VerticalStackLayout Spacing="6" HorizontalOptions="Center">
+                        <Image Source="icon_clock.png" HeightRequest="20" WidthRequest="20" HorizontalOptions="Center"/>
+                        <Label Text="{Binding Survey.DurationMinutes, StringFormat='~{0} dk'}"
+                               FontFamily="JakartaSemiBold" FontSize="14"
+                               HorizontalTextAlignment="Center" TextColor="{StaticResource TextPrimary}"/>
+                        <Label Text="Süre" Style="{StaticResource CaptionStyle}" HorizontalTextAlignment="Center"/>
+                    </VerticalStackLayout>
+                </Border>
+                <Border Grid.Column="1"
+                        StrokeShape="RoundRectangle 16"
+                        Stroke="{StaticResource CardBorder}"
+                        BackgroundColor="{StaticResource White}"
+                        Padding="12,16">
+                    <VerticalStackLayout Spacing="6" HorizontalOptions="Center">
+                        <Image Source="icon_money.png" HeightRequest="20" WidthRequest="20" HorizontalOptions="Center"/>
+                        <Label Text="{Binding Survey.Reward, StringFormat='₺{0}'}"
+                               FontFamily="JakartaSemiBold" FontSize="14"
+                               HorizontalTextAlignment="Center" TextColor="{StaticResource TextPrimary}"/>
+                        <Label Text="Kazanç" Style="{StaticResource CaptionStyle}" HorizontalTextAlignment="Center"/>
+                    </VerticalStackLayout>
+                </Border>
+                <Border Grid.Column="2"
+                        StrokeShape="RoundRectangle 16"
+                        Stroke="{StaticResource CardBorder}"
+                        BackgroundColor="{StaticResource White}"
+                        Padding="12,16">
+                    <VerticalStackLayout Spacing="6" HorizontalOptions="Center">
+                        <Image Source="icon_check.png" HeightRequest="20" WidthRequest="20" HorizontalOptions="Center"/>
+                        <Label Text="{Binding Survey.QuestionCount, StringFormat='{0} soru'}"
+                               FontFamily="JakartaSemiBold" FontSize="14"
+                               HorizontalTextAlignment="Center" TextColor="{StaticResource TextPrimary}"/>
+                        <Label Text="Soru" Style="{StaticResource CaptionStyle}" HorizontalTextAlignment="Center"/>
+                    </VerticalStackLayout>
+                </Border>
+            </Grid>
+
+            <!-- Criteria Card -->
+            <Border Style="{StaticResource CardBorderStyle}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Uygunluk Durumu"
+                           FontFamily="JakartaSemiBold" FontSize="16"
+                           TextColor="{StaticResource TextPrimary}"/>
+                    <VerticalStackLayout Spacing="8"
+                                         BindableLayout.ItemsSource="{Binding Criteria}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="models:SurveyCriteria">
+                                <HorizontalStackLayout Spacing="10">
+                                    <Image Source="{Binding IsMet, Converter={StaticResource BoolToIcon}}"
+                                           HeightRequest="18" WidthRequest="18"
+                                           VerticalOptions="Center"/>
+                                    <Label Text="{Binding Label}"
+                                           Style="{StaticResource BodyStyle}"
+                                           VerticalOptions="Center"/>
+                                </HorizontalStackLayout>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Start Button -->
+            <Button Text="Ankete Başla"
+                    Style="{StaticResource PrimaryButtonStyle}"
+                    Command="{Binding StartSurveyCommand}"
+                    HorizontalOptions="Fill"/>
+
+            <!-- Disclaimer -->
+            <Label Text="Anketi tamamlamadan çıkarsanız kazanç elde edemezsiniz. Verileriniz gizlilik politikamız kapsamında korunmaktadır."
+                   Style="{StaticResource CaptionStyle}"
+                   HorizontalTextAlignment="Center"
+                   Margin="20,0"/>
+
+            <BoxView HeightRequest="20" Color="Transparent"/>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

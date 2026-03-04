@@ -1,0 +1,58 @@
+using CommunityToolkit.Maui;
+using Microsoft.Extensions.Logging;
+using PulsePoll.Mobile.Services;
+using PulsePoll.Mobile.ViewModels;
+using PulsePoll.Mobile.Views;
+
+namespace PulsePoll.Mobile;
+
+public static class MauiProgram
+{
+    public static MauiApp CreateMauiApp()
+    {
+        var builder = MauiApp.CreateBuilder();
+        builder
+            .UseMauiApp<App>()
+            .UseMauiCommunityToolkit()
+            .ConfigureFonts(fonts =>
+            {
+                fonts.AddFont("PlusJakartaSans-Regular.ttf", "JakartaRegular");
+                fonts.AddFont("PlusJakartaSans-Medium.ttf", "JakartaMedium");
+                fonts.AddFont("PlusJakartaSans-SemiBold.ttf", "JakartaSemiBold");
+                fonts.AddFont("PlusJakartaSans-Bold.ttf", "JakartaBold");
+                fonts.AddFont("PlusJakartaSans-ExtraBold.ttf", "JakartaExtraBold");
+            });
+
+        // Shell
+        builder.Services.AddSingleton<AppShell>();
+
+        // Services
+        builder.Services.AddSingleton<MockDataService>();
+
+        // ViewModels
+        builder.Services.AddTransient<HomeViewModel>();
+        builder.Services.AddTransient<SurveysViewModel>();
+        builder.Services.AddTransient<SurveyDetailViewModel>();
+        builder.Services.AddTransient<ActiveQuestionViewModel>();
+        builder.Services.AddTransient<ProfileViewModel>();
+        builder.Services.AddTransient<HistoryViewModel>();
+        builder.Services.AddTransient<WalletViewModel>();
+        builder.Services.AddTransient<NotificationsViewModel>();
+
+        // Pages
+        builder.Services.AddTransient<HomePage>();
+        builder.Services.AddTransient<SurveysPage>();
+        builder.Services.AddTransient<SurveyDetailPage>();
+        builder.Services.AddTransient<ActiveQuestionPage>();
+        builder.Services.AddTransient<ProfilePage>();
+        builder.Services.AddTransient<HistoryPage>();
+        builder.Services.AddTransient<WalletPage>();
+        builder.Services.AddTransient<NotificationsPage>();
+
+#if DEBUG
+        builder.Logging.AddDebug();
+#endif
+
+        return builder.Build();
+    }
+}

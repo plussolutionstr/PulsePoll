@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell
+    x:Class="PulsePoll.Mobile.AppShell"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    Title="PulsePoll">
+
+    <TabBar>
+        <ShellContent x:Name="homeTab" Title="Anasayfa" Icon="tab_home.png" Route="home"/>
+        <ShellContent x:Name="surveysTab" Title="Anketler" Icon="tab_surveys.png" Route="surveys"/>
+        <ShellContent x:Name="historyTab" Title="Geçmiş" Icon="tab_history.png" Route="history"/>
+        <ShellContent x:Name="walletTab" Title="Cüzdan" Icon="tab_wallet.png" Route="wallet"/>
+        <ShellContent x:Name="profileTab" Title="Profil" Icon="tab_profile.png" Route="profile"/>
+    </TabBar>
+
+</Shell>

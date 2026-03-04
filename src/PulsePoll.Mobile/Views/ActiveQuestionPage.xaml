@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:PulsePoll.Mobile.ViewModels"
+             xmlns:models="clr-namespace:PulsePoll.Mobile.Models"
+             x:Class="PulsePoll.Mobile.Views.ActiveQuestionPage"
+             x:DataType="vm:ActiveQuestionViewModel"
+             Shell.NavBarIsVisible="False"
+             Shell.TabBarIsVisible="False">
+
+    <Grid RowDefinitions="Auto,*,Auto" Padding="20,16">
+
+        <!-- Top Section -->
+        <VerticalStackLayout Spacing="12">
+            <!-- Brand + Close -->
+            <Grid ColumnDefinitions="*,Auto">
+                <Border StrokeThickness="0"
+                        StrokeShape="RoundRectangle 12"
+                        BackgroundColor="{StaticResource PrimaryLight}"
+                        Padding="12,6"
+                        HorizontalOptions="Start">
+                    <Label Text="{Binding BrandName}"
+                           FontFamily="JakartaSemiBold" FontSize="13"
+                           TextColor="{StaticResource PrimaryPurple}"/>
+                </Border>
+                <ImageButton Grid.Column="1"
+                             Source="icon_close.png"
+                             HeightRequest="24" WidthRequest="24"
+                             Command="{Binding CloseSurveyCommand}"/>
+            </Grid>
+
+            <!-- Progress Info -->
+            <Grid ColumnDefinitions="*,Auto">
+                <Label TextColor="{StaticResource TextSecondary}" FontFamily="JakartaMedium" FontSize="13">
+                    <Label.FormattedText>
+                        <FormattedString>
+                            <Span Text="{Binding CurrentIndex, StringFormat='{0}'}" FontFamily="JakartaBold" TextColor="{StaticResource TextPrimary}"/>
+                            <Span Text="{Binding TotalQuestions, StringFormat=' / {0} Soru'}"/>
+                        </FormattedString>
+                    </Label.FormattedText>
+                </Label>
+                <Label Grid.Column="1"
+                       Text="{Binding Reward, StringFormat='₺{0}'}"
+                       FontFamily="JakartaSemiBold" FontSize="13"
+                       TextColor="{StaticResource Amber}"/>
+            </Grid>
+
+            <!-- Progress Bar -->
+            <ProgressBar Progress="{Binding Progress}"
+                         ProgressColor="{StaticResource PrimaryPurple}"
+                         HeightRequest="8"/>
+        </VerticalStackLayout>
+
+        <!-- Question Content -->
+        <ScrollView Grid.Row="1" Margin="0,24,0,0">
+            <VerticalStackLayout Spacing="16">
+                <Label Text="{Binding CurrentQuestion.Number, StringFormat='Soru {0}'}"
+                       FontFamily="JakartaSemiBold" FontSize="13"
+                       TextColor="{StaticResource PrimaryPurple}"/>
+
+                <Label Text="{Binding CurrentQuestion.Text}"
+                       FontFamily="JakartaBold" FontSize="20"
+                       TextColor="{StaticResource TextPrimary}"
+                       LineHeight="1.3"/>
+
+                <!-- Options -->
+                <VerticalStackLayout Spacing="10"
+                                     BindableLayout.ItemsSource="{Binding Options}">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="models:OptionModel">
+                            <Border Padding="16,14"
+                                    StrokeShape="RoundRectangle 16"
+                                    Stroke="{StaticResource CardBorder}"
+                                    BackgroundColor="{StaticResource White}">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ActiveQuestionViewModel}}, Path=SelectOptionCommand}"
+                                        CommandParameter="{Binding .}"/>
+                                </Border.GestureRecognizers>
+                                <HorizontalStackLayout Spacing="12">
+                                    <Border StrokeThickness="2"
+                                            Stroke="{StaticResource CardBorder}"
+                                            StrokeShape="RoundRectangle 11"
+                                            HeightRequest="22" WidthRequest="22"
+                                            BackgroundColor="Transparent">
+                                        <Ellipse Fill="{StaticResource PrimaryPurple}"
+                                                 HeightRequest="12" WidthRequest="12"
+                                                 HorizontalOptions="Center" VerticalOptions="Center"
+                                                 IsVisible="False"/>
+                                    </Border>
+                                    <Label Text="{Binding Text}"
+                                           FontFamily="JakartaMedium" FontSize="15"
+                                           TextColor="{StaticResource TextPrimary}"
+                                           VerticalOptions="Center"/>
+                                </HorizontalStackLayout>
+                            </Border>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- Bottom Navigation -->
+        <Grid Grid.Row="2" ColumnDefinitions="Auto,*" ColumnSpacing="12" Margin="0,16,0,0">
+            <Button Text="Geri"
+                    Style="{StaticResource SecondaryButtonStyle}"
+                    Command="{Binding PreviousQuestionCommand}"
+                    IsVisible="{Binding CanGoBack}"
+                    WidthRequest="100"/>
+            <Button Grid.Column="1"
+                    Text="Devam Et"
+                    Style="{StaticResource PrimaryButtonStyle}"
+                    Command="{Binding NextQuestionCommand}"
+                    HorizontalOptions="Fill"/>
+        </Grid>
+    </Grid>
+</ContentPage>
