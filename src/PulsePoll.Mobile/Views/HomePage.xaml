@@ -58,12 +58,15 @@
                                     <Border StrokeThickness="0"
                                             StrokeShape="RoundRectangle 25"
                                             BackgroundColor="{StaticResource SurfaceColor}">
-                                        <!-- Placeholder: brand initial (will be Image when API ready) -->
-                                        <Image Source="icon_star.png"
-                                               HeightRequest="24" WidthRequest="24"
-                                               Opacity="0.3"
-                                               HorizontalOptions="Center"
-                                               VerticalOptions="Center"/>
+                                        <Grid>
+                                            <Image Source="icon_star.png"
+                                                   HeightRequest="24" WidthRequest="24"
+                                                   Opacity="0.3"
+                                                   HorizontalOptions="Center"
+                                                   VerticalOptions="Center"/>
+                                            <Image Source="{Binding ImageUrl}"
+                                                   Aspect="AspectFill"/>
+                                        </Grid>
                                     </Border>
                                 </Border>
                                 <Label Text="{Binding BrandName}"
@@ -98,7 +101,14 @@
                             <DataTemplate x:DataType="models:NewsModel">
                                 <Grid>
                                     <BoxView BackgroundColor="#1A1535"/>
-                                    <BoxView Opacity="0.85">
+                                    <Image Source="icon_star.png"
+                                           HeightRequest="48" WidthRequest="48"
+                                           Opacity="0.1"
+                                           HorizontalOptions="Center"
+                                           VerticalOptions="Center"/>
+                                    <Image Source="{Binding ImageUrl}"
+                                           Aspect="AspectFill"/>
+                                    <BoxView Opacity="0.6">
                                         <BoxView.Background>
                                             <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
                                                 <GradientStop Color="#2D1B6E" Offset="0"/>
@@ -121,13 +131,6 @@
                                             BackgroundColor="#0DFFFFFF"
                                             HorizontalOptions="Start" VerticalOptions="End"
                                             Margin="20,0,0,-30"/>
-
-                                    <!-- Image placeholder -->
-                                    <Image Source="icon_star.png"
-                                           HeightRequest="48" WidthRequest="48"
-                                           Opacity="0.1"
-                                           HorizontalOptions="Center"
-                                           VerticalOptions="Center"/>
 
                                     <!-- Bottom text gradient -->
                                     <BoxView VerticalOptions="End" HeightRequest="80">
@@ -228,12 +231,15 @@
                                             HorizontalOptions="Start" VerticalOptions="End"
                                             Margin="30,0,0,-20"/>
 
-                                    <!-- Image placeholder (survey visual will go here) -->
-                                    <Image Source="icon_star.png"
-                                           HeightRequest="40" WidthRequest="40"
-                                           Opacity="0.15"
-                                           HorizontalOptions="Center"
-                                           VerticalOptions="Center"/>
+                                    <Grid>
+                                        <Image Source="icon_star.png"
+                                               HeightRequest="40" WidthRequest="40"
+                                               Opacity="0.15"
+                                               HorizontalOptions="Center"
+                                               VerticalOptions="Center"/>
+                                        <Image Source="{Binding BrandLogoUrl}"
+                                               Aspect="AspectFill"/>
+                                    </Grid>
 
                                     <!-- Earn Badge (top-right) -->
                                     <Border StrokeThickness="1"

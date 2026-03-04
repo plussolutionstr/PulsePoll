@@ -8,7 +8,7 @@ public static class ApiDtoMapper
         => new(dto.Id, dto.BrandName ?? dto.Title, dto.ImageUrl);
 
     public static NewsModel ToModel(this NewsApiDto dto)
-        => new(dto.Id, "", dto.Title, dto.Summary);
+        => new(dto.Id, "", dto.Title, dto.Summary, ImageUrl: dto.ImageUrl);
 
     public static SurveyModel ToModel(this ProjectApiDto dto)
         => new(
