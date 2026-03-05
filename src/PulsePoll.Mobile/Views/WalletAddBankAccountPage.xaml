@@ -9,23 +9,6 @@
     <ScrollView>
         <VerticalStackLayout Padding="20,16" Spacing="16">
 
-            <!-- Header Icon -->
-            <Border StrokeThickness="0"
-                    StrokeShape="RoundRectangle 28"
-                    HeightRequest="56" WidthRequest="56"
-                    BackgroundColor="{StaticResource PrimaryLight}"
-                    HorizontalOptions="Center"
-                    Margin="0,8,0,0">
-                <Label Text="&#x1F3E6;"
-                       FontSize="26"
-                       HorizontalOptions="Center" VerticalOptions="Center"/>
-            </Border>
-            <Label Text="{Binding PageTitle}"
-                   FontFamily="JakartaBold"
-                   FontSize="20"
-                   HorizontalTextAlignment="Center"
-                   TextColor="{StaticResource TextPrimary}" />
-
             <!-- Bank Selection -->
             <Border Style="{StaticResource CardBorderStyle}" Padding="16">
                 <VerticalStackLayout Spacing="8">
@@ -93,8 +76,8 @@
                     Clicked="OnSaveClicked" />
 
             <Button Text="Sil"
-                    HeightRequest="44"
-                    CornerRadius="22"
+                    HeightRequest="52"
+                    CornerRadius="26"
                     FontFamily="JakartaSemiBold"
                     FontSize="14"
                     Clicked="OnDeleteClicked"
@@ -104,6 +87,8 @@
 
             <Button Text="İptal"
                     Style="{StaticResource SecondaryButtonStyle}"
+                    HeightRequest="52"
+                    CornerRadius="26"
                     HorizontalOptions="Fill"
                     Clicked="OnCancelClicked" />
 

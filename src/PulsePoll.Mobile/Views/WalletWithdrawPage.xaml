@@ -13,30 +13,25 @@
             <!-- Mini Balance Card -->
             <Border StrokeThickness="0"
                     StrokeShape="RoundRectangle 20"
+                    BackgroundColor="{StaticResource PrimaryLight}"
                     Padding="20,16">
-                <Border.Background>
-                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                        <GradientStop Color="{StaticResource PrimaryPurple}" Offset="0"/>
-                        <GradientStop Color="{StaticResource PrimaryDark}" Offset="1"/>
-                    </LinearGradientBrush>
-                </Border.Background>
                 <HorizontalStackLayout Spacing="12" VerticalOptions="Center">
                     <Border StrokeThickness="0"
                             StrokeShape="RoundRectangle 20"
                             HeightRequest="40" WidthRequest="40"
-                            BackgroundColor="#30FFFFFF">
+                            BackgroundColor="{StaticResource PrimaryMid}">
                         <Label Text="&#x20BA;"
                                FontFamily="JakartaExtraBold" FontSize="20"
-                               TextColor="White"
+                               TextColor="{StaticResource PrimaryDark}"
                                HorizontalOptions="Center" VerticalOptions="Center"/>
                     </Border>
                     <VerticalStackLayout Spacing="2" VerticalOptions="Center">
                         <Label Text="Çekilebilir Bakiye"
                                FontFamily="JakartaRegular" FontSize="12"
-                               TextColor="#BBFFFFFF"/>
+                               TextColor="{StaticResource TextSecondary}"/>
                         <Label Text="{Binding WithdrawableBalanceInfo}"
                                FontFamily="JakartaBold" FontSize="16"
-                               TextColor="White"/>
+                               TextColor="{StaticResource PrimaryDark}"/>
                     </VerticalStackLayout>
                 </HorizontalStackLayout>
             </Border>
@@ -121,6 +116,8 @@
 
             <Button Text="İptal"
                     Style="{StaticResource SecondaryButtonStyle}"
+                    HeightRequest="52"
+                    CornerRadius="26"
                     HorizontalOptions="Fill"
                     Clicked="OnCancelClicked" />
 
