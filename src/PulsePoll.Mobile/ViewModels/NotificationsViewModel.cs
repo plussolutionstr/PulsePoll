@@ -78,6 +78,50 @@ public partial class NotificationsViewModel : ObservableObject
         await Shell.Current.GoToAsync("..");
     }
 
+    // Popup state
+    [ObservableProperty] private NotificationModel? _selectedNotification;
+    [ObservableProperty] private bool _isPopupVisible;
+
+    [RelayCommand]
+    private void ShowNotification(NotificationModel notification)
+    {
+        SelectedNotification = notification;
+        IsPopupVisible = true;
+        if (!notification.IsRead)
+            _ = MarkOneReadAsync(notification);
+    }
+
+    [RelayCommand]
+    private void ClosePopup()
+    {
+        IsPopupVisible = false;
+        SelectedNotification = null;
+    }
+
+    [RelayCommand]
+    private async Task MarkOneReadAsync(NotificationModel notification)
+    {
+        try
+        {
+            await _notificationCenter.MarkOneReadAsync(notification.Id);
+        }
+        catch { }
+    }
+
+    [RelayCommand]
+    private async Task DeleteNotificationAsync(NotificationModel notification)
+    {
+        try
+        {
+            await _notificationCenter.DeleteAsync(notification.Id);
+        }
+        catch
+        {
+            if (Shell.Current is not null)
+                await Shell.Current.DisplayAlertAsync("Hata", "Bildirim silinemedi.", "Tamam");
+        }
+    }
+
     private void ApplyFilter()
     {
         var items = _notificationCenter.Items.AsEnumerable();

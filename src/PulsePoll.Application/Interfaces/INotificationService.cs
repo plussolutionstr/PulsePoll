@@ -6,6 +6,8 @@ public interface INotificationService
 {
     Task<IEnumerable<NotificationDto>> GetBySubjectIdAsync(int subjectId);
     Task MarkAllReadAsync(int subjectId);
+    Task MarkOneReadAsync(int notificationId, int subjectId);
+    Task DeleteAsync(int notificationId, int subjectId);
     Task SendPushAsync(int subjectId, string title, string body, string? type = null, int? sentByAdminId = null);
     Task SendPushToManyAsync(IEnumerable<int> subjectIds, string title, string body, string? type = null, int? sentByAdminId = null);
 }

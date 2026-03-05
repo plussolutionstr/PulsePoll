@@ -71,6 +71,44 @@ public partial class NotificationCenterService : ObservableObject
         }
     }
 
+    public async Task MarkOneReadAsync(int notificationId, CancellationToken ct = default)
+    {
+        var previous = Items.ToList();
+        var updated = previous.Select(n => n.Id == notificationId ? n with { IsRead = true } : n).ToList();
+        SetItems(updated);
+
+        if (_usingFallback) return;
+
+        try
+        {
+            await _notificationApiClient.MarkOneReadAsync(notificationId, ct);
+        }
+        catch
+        {
+            SetItems(previous);
+            throw;
+        }
+    }
+
+    public async Task DeleteAsync(int notificationId, CancellationToken ct = default)
+    {
+        var previous = Items.ToList();
+        var updated = previous.Where(n => n.Id != notificationId).ToList();
+        SetItems(updated);
+
+        if (_usingFallback) return;
+
+        try
+        {
+            await _notificationApiClient.DeleteAsync(notificationId, ct);
+        }
+        catch
+        {
+            SetItems(previous);
+            throw;
+        }
+    }
+
     private void SetItems(IReadOnlyList<NotificationModel> items)
     {
         Items = items;

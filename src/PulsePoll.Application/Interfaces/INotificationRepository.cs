@@ -9,6 +9,8 @@ public interface INotificationRepository
     Task AddManyAsync(IEnumerable<Notification> notifications);
     Task<List<Notification>> GetBySubjectIdAsync(int subjectId, int skip = 0, int take = 50);
     Task MarkAllReadAsync(int subjectId);
+    Task MarkOneReadAsync(int notificationId, int subjectId);
+    Task SoftDeleteAsync(int notificationId, int subjectId);
     Task UpdateDeliveryStatusAsync(int notificationId, DeliveryStatus status, string? errorMessage);
     Task UpdateDeliveryStatusBulkAsync(IEnumerable<int> notificationIds, DeliveryStatus status);
     Task<(List<Notification> Items, int Total)> GetPagedAsync(

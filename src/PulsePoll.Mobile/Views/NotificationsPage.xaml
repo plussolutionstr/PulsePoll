@@ -14,129 +14,209 @@
         <converters:InvertedBoolConverter x:Key="InvertedBool"/>
     </ContentPage.Resources>
 
-    <VerticalStackLayout Spacing="16" Padding="20,16">
+    <Grid>
+        <!-- Main Content -->
+        <VerticalStackLayout Spacing="16" Padding="20,16">
 
-        <!-- Header -->
-        <Grid ColumnDefinitions="Auto,*,Auto">
-            <ImageButton Source="icon_arrow_left.png"
-                         HeightRequest="24" WidthRequest="24"
-                         Command="{Binding GoBackCommand}"
-                         VerticalOptions="Center"/>
-            <Label Grid.Column="1" Text="Bildirimler"
-                   Style="{StaticResource PageTitleStyle}"
-                   VerticalOptions="Center"
-                   Margin="12,0,0,0"/>
-            <Label Grid.Column="2" Text="Tümünü Okundu İşaretle"
-                   FontFamily="JakartaSemiBold" FontSize="12"
-                   TextColor="{StaticResource PrimaryPurple}"
-                   VerticalOptions="Center"
-                   IsEnabled="{Binding CanMarkAllRead}"
-                   Opacity="1">
-                <Label.Triggers>
-                    <DataTrigger TargetType="Label"
-                                 Binding="{Binding CanMarkAllRead}"
-                                 Value="False">
-                        <Setter Property="Opacity" Value="0.5"/>
-                    </DataTrigger>
-                </Label.Triggers>
-                <Label.GestureRecognizers>
-                    <TapGestureRecognizer Command="{Binding MarkAllReadCommand}"/>
-                </Label.GestureRecognizers>
-            </Label>
-        </Grid>
+            <!-- Header -->
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <ImageButton Source="icon_arrow_left.png"
+                             HeightRequest="24" WidthRequest="24"
+                             Command="{Binding GoBackCommand}"
+                             VerticalOptions="Center"/>
+                <Label Grid.Column="1" Text="Bildirimler"
+                       Style="{StaticResource PageTitleStyle}"
+                       VerticalOptions="Center"
+                       Margin="12,0,0,0"/>
+                <Label Grid.Column="2" Text="Tümünü Okundu İşaretle"
+                       FontFamily="JakartaSemiBold" FontSize="12"
+                       TextColor="{StaticResource PrimaryPurple}"
+                       VerticalOptions="Center"
+                       IsEnabled="{Binding CanMarkAllRead}"
+                       Opacity="1">
+                    <Label.Triggers>
+                        <DataTrigger TargetType="Label"
+                                     Binding="{Binding CanMarkAllRead}"
+                                     Value="False">
+                            <Setter Property="Opacity" Value="0.5"/>
+                        </DataTrigger>
+                    </Label.Triggers>
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding MarkAllReadCommand}"/>
+                    </Label.GestureRecognizers>
+                </Label>
+            </Grid>
 
-        <!-- Filter Tabs -->
-        <ScrollView Orientation="Horizontal" HorizontalScrollBarVisibility="Never">
-            <HorizontalStackLayout Spacing="8"
-                                   BindableLayout.ItemsSource="{Binding Filters}">
-                <BindableLayout.ItemTemplate>
-                    <DataTemplate x:DataType="x:String">
-                        <Border StrokeThickness="0"
-                                StrokeShape="RoundRectangle 16"
-                                BackgroundColor="{StaticResource SurfaceColor}"
-                                Padding="16,8">
-                            <Border.GestureRecognizers>
-                                <TapGestureRecognizer
-                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:NotificationsViewModel}}, Path=SetFilterCommand}"
-                                    CommandParameter="{Binding .}"/>
-                            </Border.GestureRecognizers>
-                            <Label Text="{Binding .}"
-                                   FontFamily="JakartaSemiBold" FontSize="13"
-                                   TextColor="{StaticResource TextSecondary}"/>
-                        </Border>
-                    </DataTemplate>
-                </BindableLayout.ItemTemplate>
-            </HorizontalStackLayout>
-        </ScrollView>
-
-        <Grid>
-            <ActivityIndicator IsVisible="{Binding IsLoading}"
-                               IsRunning="{Binding IsLoading}"
-                               Color="{StaticResource PrimaryPurple}"
-                               HorizontalOptions="Center"
-                               VerticalOptions="Center"/>
-
-            <VerticalStackLayout IsVisible="{Binding ShowEmptyState}"
-                                 Spacing="8"
-                                 VerticalOptions="Center"
-                                 HorizontalOptions="Center">
-                <Label Text="Bildirim bulunamadı"
-                       FontFamily="JakartaSemiBold"
-                       FontSize="16"
-                       TextColor="{StaticResource TextPrimary}"
-                       HorizontalTextAlignment="Center"/>
-                <Label Text="Yeni bildirimler geldiğinde burada listelenecek."
-                       Style="{StaticResource CaptionStyle}"
-                       HorizontalTextAlignment="Center"/>
-            </VerticalStackLayout>
-
-            <!-- Notifications List -->
-            <ScrollView IsVisible="{Binding HasNotifications}">
-                <VerticalStackLayout Spacing="8"
-                                     BindableLayout.ItemsSource="{Binding Notifications}">
+            <!-- Filter Tabs -->
+            <ScrollView Orientation="Horizontal" HorizontalScrollBarVisibility="Never">
+                <HorizontalStackLayout Spacing="8"
+                                       BindableLayout.ItemsSource="{Binding Filters}">
                     <BindableLayout.ItemTemplate>
-                        <DataTemplate x:DataType="models:NotificationModel">
-                            <Border StrokeShape="RoundRectangle 16"
-                                    Stroke="{StaticResource CardBorder}"
-                                    BackgroundColor="{Binding IsRead, Converter={StaticResource BoolToReadBg}}"
-                                    Padding="14">
-                                <Grid ColumnDefinitions="40,*,Auto" ColumnSpacing="12">
-                                    <Border StrokeThickness="0"
-                                            StrokeShape="RoundRectangle 20"
-                                            HeightRequest="40" WidthRequest="40"
-                                            BackgroundColor="{Binding Type, Converter={StaticResource TypeToBg}}">
-                                        <Image Source="icon_bell.png"
-                                               HeightRequest="18" WidthRequest="18"
-                                               HorizontalOptions="Center" VerticalOptions="Center"/>
-                                    </Border>
-                                    <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
-                                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="6">
-                                            <Border StrokeThickness="0"
-                                                    StrokeShape="RoundRectangle 4"
-                                                    HeightRequest="8" WidthRequest="8"
-                                                    BackgroundColor="{StaticResource PrimaryPurple}"
-                                                    IsVisible="{Binding IsRead, Converter={StaticResource InvertedBool}}"
-                                                    VerticalOptions="Center"/>
-                                            <Label Grid.Column="1"
-                                                   Text="{Binding Title}"
-                                                   FontFamily="JakartaSemiBold" FontSize="14"
-                                                   TextColor="{StaticResource TextPrimary}"/>
-                                        </Grid>
-                                        <Label Text="{Binding Message}"
-                                               Style="{StaticResource CaptionStyle}"
-                                               MaxLines="2" LineBreakMode="TailTruncation"/>
-                                    </VerticalStackLayout>
-                                    <Label Grid.Column="2"
-                                           Text="{Binding Date, StringFormat='{0:HH:mm}'}"
-                                           Style="{StaticResource CaptionStyle}"
-                                           VerticalOptions="Start"/>
-                                </Grid>
+                        <DataTemplate x:DataType="x:String">
+                            <Border StrokeThickness="0"
+                                    StrokeShape="RoundRectangle 16"
+                                    BackgroundColor="{StaticResource SurfaceColor}"
+                                    Padding="16,8">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:NotificationsViewModel}}, Path=SetFilterCommand}"
+                                        CommandParameter="{Binding .}"/>
+                                </Border.GestureRecognizers>
+                                <Label Text="{Binding .}"
+                                       FontFamily="JakartaSemiBold" FontSize="13"
+                                       TextColor="{StaticResource TextSecondary}"/>
                             </Border>
                         </DataTemplate>
                     </BindableLayout.ItemTemplate>
-                </VerticalStackLayout>
+                </HorizontalStackLayout>
             </ScrollView>
-        </Grid>
 
-    </VerticalStackLayout>
+            <Grid>
+                <ActivityIndicator IsVisible="{Binding IsLoading}"
+                                   IsRunning="{Binding IsLoading}"
+                                   Color="{StaticResource PrimaryPurple}"
+                                   HorizontalOptions="Center"
+                                   VerticalOptions="Center"/>
+
+                <VerticalStackLayout IsVisible="{Binding ShowEmptyState}"
+                                     Spacing="8"
+                                     VerticalOptions="Center"
+                                     HorizontalOptions="Center">
+                    <Label Text="Bildirim bulunamadı"
+                           FontFamily="JakartaSemiBold"
+                           FontSize="16"
+                           TextColor="{StaticResource TextPrimary}"
+                           HorizontalTextAlignment="Center"/>
+                    <Label Text="Yeni bildirimler geldiğinde burada listelenecek."
+                           Style="{StaticResource CaptionStyle}"
+                           HorizontalTextAlignment="Center"/>
+                </VerticalStackLayout>
+
+                <!-- Notifications List with SwipeView -->
+                <ScrollView IsVisible="{Binding HasNotifications}">
+                    <VerticalStackLayout Spacing="8"
+                                         BindableLayout.ItemsSource="{Binding Notifications}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="models:NotificationModel">
+                                <SwipeView>
+                                    <!-- Swipe Right: Mark as Read -->
+                                    <SwipeView.LeftItems>
+                                        <SwipeItems Mode="Execute">
+                                            <SwipeItem Text="Okundu"
+                                                       BackgroundColor="{StaticResource Success}"
+                                                       Command="{Binding Source={RelativeSource AncestorType={x:Type vm:NotificationsViewModel}}, Path=MarkOneReadCommand}"
+                                                       CommandParameter="{Binding .}"/>
+                                        </SwipeItems>
+                                    </SwipeView.LeftItems>
+
+                                    <!-- Swipe Left: Delete -->
+                                    <SwipeView.RightItems>
+                                        <SwipeItems Mode="Execute">
+                                            <SwipeItem Text="Sil"
+                                                       BackgroundColor="{StaticResource Danger}"
+                                                       Command="{Binding Source={RelativeSource AncestorType={x:Type vm:NotificationsViewModel}}, Path=DeleteNotificationCommand}"
+                                                       CommandParameter="{Binding .}"/>
+                                        </SwipeItems>
+                                    </SwipeView.RightItems>
+
+                                    <!-- Notification Card -->
+                                    <Border StrokeShape="RoundRectangle 16"
+                                            Stroke="{StaticResource CardBorder}"
+                                            BackgroundColor="{Binding IsRead, Converter={StaticResource BoolToReadBg}}"
+                                            Padding="14">
+                                        <Border.GestureRecognizers>
+                                            <TapGestureRecognizer
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:NotificationsViewModel}}, Path=ShowNotificationCommand}"
+                                                CommandParameter="{Binding .}"/>
+                                        </Border.GestureRecognizers>
+                                        <Grid ColumnDefinitions="40,*,Auto" ColumnSpacing="12">
+                                            <Border StrokeThickness="0"
+                                                    StrokeShape="RoundRectangle 20"
+                                                    HeightRequest="40" WidthRequest="40"
+                                                    BackgroundColor="{Binding Type, Converter={StaticResource TypeToBg}}">
+                                                <Image Source="icon_bell.png"
+                                                       HeightRequest="18" WidthRequest="18"
+                                                       HorizontalOptions="Center" VerticalOptions="Center"/>
+                                            </Border>
+                                            <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="6">
+                                                    <Border StrokeThickness="0"
+                                                            StrokeShape="RoundRectangle 4"
+                                                            HeightRequest="8" WidthRequest="8"
+                                                            BackgroundColor="{StaticResource PrimaryPurple}"
+                                                            IsVisible="{Binding IsRead, Converter={StaticResource InvertedBool}}"
+                                                            VerticalOptions="Center"/>
+                                                    <Label Grid.Column="1"
+                                                           Text="{Binding Title}"
+                                                           FontFamily="JakartaSemiBold" FontSize="14"
+                                                           TextColor="{StaticResource TextPrimary}"/>
+                                                </Grid>
+                                                <Label Text="{Binding Message}"
+                                                       Style="{StaticResource CaptionStyle}"
+                                                       MaxLines="2" LineBreakMode="TailTruncation"/>
+                                            </VerticalStackLayout>
+                                            <Label Grid.Column="2"
+                                                   Text="{Binding Date, StringFormat='{0:HH:mm}'}"
+                                                   Style="{StaticResource CaptionStyle}"
+                                                   VerticalOptions="Start"/>
+                                        </Grid>
+                                    </Border>
+                                </SwipeView>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+                </ScrollView>
+            </Grid>
+
+        </VerticalStackLayout>
+
+        <!-- Popup Overlay -->
+        <Grid IsVisible="{Binding IsPopupVisible}"
+              BackgroundColor="#80000000"
+              x:DataType="vm:NotificationsViewModel">
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Command="{Binding ClosePopupCommand}"/>
+            </Grid.GestureRecognizers>
+
+            <Border StrokeShape="RoundRectangle 24"
+                    StrokeThickness="0"
+                    BackgroundColor="White"
+                    Padding="24"
+                    Margin="24"
+                    VerticalOptions="Center"
+                    HorizontalOptions="Fill"
+                    x:DataType="vm:NotificationsViewModel">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer />
+                </Border.GestureRecognizers>
+                <VerticalStackLayout Spacing="16"
+                                     BindingContext="{Binding SelectedNotification}">
+                    <Grid ColumnDefinitions="*,Auto"
+                          x:DataType="models:NotificationModel">
+                        <Label Text="{Binding Title}"
+                               FontFamily="JakartaBold" FontSize="18"
+                               TextColor="{StaticResource TextPrimary}"
+                               VerticalOptions="Center"/>
+                        <Label Grid.Column="1"
+                               Text="{Binding Date, StringFormat='{0:dd.MM.yyyy HH:mm}'}"
+                               Style="{StaticResource CaptionStyle}"
+                               VerticalOptions="Center"/>
+                    </Grid>
+                    <BoxView HeightRequest="1" Color="{StaticResource CardBorder}"/>
+                    <Label x:DataType="models:NotificationModel"
+                           Text="{Binding Message}"
+                           FontFamily="JakartaRegular" FontSize="14"
+                           TextColor="{StaticResource TextSecondary}"
+                           LineBreakMode="WordWrap"/>
+                    <Button Text="Kapat"
+                            Style="{StaticResource SecondaryButtonStyle}"
+                            HeightRequest="44"
+                            HorizontalOptions="Fill"
+                            x:DataType="vm:NotificationsViewModel"
+                            BindingContext="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext}"
+                            Command="{Binding ClosePopupCommand}"/>
+                </VerticalStackLayout>
+            </Border>
+        </Grid>
+    </Grid>
 </ContentPage>

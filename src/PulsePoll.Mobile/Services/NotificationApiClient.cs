@@ -49,6 +49,20 @@ public sealed class NotificationApiClient : INotificationApiClient
         response.EnsureSuccessStatusCode();
     }
 
+    public async Task MarkOneReadAsync(int notificationId, CancellationToken ct = default)
+    {
+        await SetAuthHeaderAsync();
+        var response = await _http.PutAsync($"api/notifications/{notificationId}/read", null, ct);
+        response.EnsureSuccessStatusCode();
+    }
+
+    public async Task DeleteAsync(int notificationId, CancellationToken ct = default)
+    {
+        await SetAuthHeaderAsync();
+        var response = await _http.DeleteAsync($"api/notifications/{notificationId}", ct);
+        response.EnsureSuccessStatusCode();
+    }
+
     private async Task SetAuthHeaderAsync()
     {
         var token = await _tokenProvider.GetAccessTokenAsync();

@@ -22,6 +22,12 @@ public class NotificationService(
     public Task MarkAllReadAsync(int subjectId)
         => notificationRepository.MarkAllReadAsync(subjectId);
 
+    public Task MarkOneReadAsync(int notificationId, int subjectId)
+        => notificationRepository.MarkOneReadAsync(notificationId, subjectId);
+
+    public Task DeleteAsync(int notificationId, int subjectId)
+        => notificationRepository.SoftDeleteAsync(notificationId, subjectId);
+
     public async Task SendPushAsync(int subjectId, string title, string body, string? type = null, int? sentByAdminId = null)
     {
         var notification = new Notification

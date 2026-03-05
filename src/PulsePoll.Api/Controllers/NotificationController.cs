@@ -25,4 +25,18 @@ public class NotificationController(INotificationService notificationService) : 
         await notificationService.MarkAllReadAsync(SubjectId);
         return this.NoContentResponse();
     }
+
+    [HttpPut("{id:int}/read")]
+    public async Task<IActionResult> MarkOneRead(int id)
+    {
+        await notificationService.MarkOneReadAsync(id, SubjectId);
+        return this.NoContentResponse();
+    }
+
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        await notificationService.DeleteAsync(id, SubjectId);
+        return this.NoContentResponse();
+    }
 }

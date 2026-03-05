@@ -34,6 +34,20 @@ public class NotificationRepository(AppDbContext db) : INotificationRepository
             .ExecuteUpdateAsync(s => s.SetProperty(n => n.IsRead, true));
     }
 
+    public async Task MarkOneReadAsync(int notificationId, int subjectId)
+    {
+        await db.Notifications
+            .Where(n => n.Id == notificationId && n.SubjectId == subjectId)
+            .ExecuteUpdateAsync(s => s.SetProperty(n => n.IsRead, true));
+    }
+
+    public async Task SoftDeleteAsync(int notificationId, int subjectId)
+    {
+        await db.Notifications
+            .Where(n => n.Id == notificationId && n.SubjectId == subjectId && n.DeletedAt == null)
+            .ExecuteUpdateAsync(s => s.SetProperty(n => n.DeletedAt, DateTime.UtcNow));
+    }
+
     public async Task UpdateDeliveryStatusAsync(int notificationId, DeliveryStatus status, string? errorMessage)
     {
         await db.Notifications
