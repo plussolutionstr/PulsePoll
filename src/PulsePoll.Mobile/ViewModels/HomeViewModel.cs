@@ -95,16 +95,19 @@ public partial class HomeViewModel : ObservableObject
         var surveysTask = _apiClient.GetProjectsAsync();
 
         await Task.WhenAll(storiesTask, newsTask, surveysTask);
+        var stories = await storiesTask;
+        var news = await newsTask;
+        var surveys = await surveysTask;
 
         MainThread.BeginInvokeOnMainThread(() =>
         {
-            var orderedStories = storiesTask.Result
+            var orderedStories = stories
                 .OrderBy(s => s.IsSeen)
                 .ToList();
 
             Stories = new ObservableCollection<StoryModel>(orderedStories);
-            News = new ObservableCollection<NewsModel>(newsTask.Result);
-            Surveys = new ObservableCollection<SurveyModel>(surveysTask.Result.Take(3));
+            News = new ObservableCollection<NewsModel>(news);
+            Surveys = new ObservableCollection<SurveyModel>(surveys.Take(3));
         });
     }
 

@@ -10,11 +10,16 @@ public partial class RegisterViewModel : ObservableObject
 {
     private readonly IPulsePollApiClient _api;
     private readonly IServiceProvider _serviceProvider;
+    private readonly IHttpClientFactory _httpClientFactory;
 
-    public RegisterViewModel(IPulsePollApiClient api, IServiceProvider serviceProvider)
+    public RegisterViewModel(
+        IPulsePollApiClient api,
+        IServiceProvider serviceProvider,
+        IHttpClientFactory httpClientFactory)
     {
         _api = api;
         _serviceProvider = serviceProvider;
+        _httpClientFactory = httpClientFactory;
     }
 
     // Step tracking: 0=Phone, 1=OTP, 2=PersonalInfo, 3=KVKK
@@ -274,7 +279,8 @@ public partial class RegisterViewModel : ObservableObject
             var ip = "unknown";
             try
             {
-                using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
+                using var http = _httpClientFactory.CreateClient();
+                http.Timeout = TimeSpan.FromSeconds(5);
                 ip = (await http.GetStringAsync("https://api.ipify.org")).Trim();
             }
             catch { /* IP alınamazsa devam et */ }

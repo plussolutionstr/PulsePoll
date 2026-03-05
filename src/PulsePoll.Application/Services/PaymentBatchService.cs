@@ -14,7 +14,7 @@ public class PaymentBatchService(
     IWithdrawalRequestRepository withdrawalRepo,
     IPaymentBatchRepository batchRepo,
     IPaymentSettingRepository settingRepo,
-    IWalletRepository walletRepo,
+    IWalletService walletService,
     ILogger<PaymentBatchService> logger) : IPaymentBatchService
 {
     // ── Withdrawal management ──────────────────────────────────────
@@ -33,58 +33,12 @@ public class PaymentBatchService(
 
     public async Task ApproveWithdrawalAsync(int requestId, int adminId)
     {
-        var request = await withdrawalRepo.GetByIdAsync(requestId)
-            ?? throw new NotFoundException("Para çekimi talebi");
-
-        if (request.Status != ApprovalStatus.Pending)
-            throw new BusinessException("ALREADY_PROCESSED", "Bu talep zaten işlenmiş.");
-
-        request.Status      = ApprovalStatus.Approved;
-        request.ProcessedAt = TurkeyTime.Now;
-        request.ProcessedBy = adminId;
-        request.SetUpdated(adminId);
-        await withdrawalRepo.UpdateAsync(request);
-
-        logger.LogInformation("Para çekimi onaylandı: RequestId={RequestId} AdminId={AdminId}", requestId, adminId);
+        await walletService.ApproveWithdrawalAsync(requestId, adminId);
     }
 
     public async Task RejectWithdrawalAsync(int requestId, string reason, int adminId)
     {
-        var request = await withdrawalRepo.GetByIdAsync(requestId)
-            ?? throw new NotFoundException("Para çekimi talebi");
-
-        if (request.Status != ApprovalStatus.Pending)
-            throw new BusinessException("ALREADY_PROCESSED", "Bu talep zaten işlenmiş.");
-
-        request.Status          = ApprovalStatus.Rejected;
-        request.RejectionReason = reason;
-        request.ProcessedAt     = TurkeyTime.Now;
-        request.ProcessedBy     = adminId;
-        request.SetUpdated(adminId);
-
-        // İadeyi cüzdana ekle
-        var wallet = await walletRepo.GetBySubjectIdAsync(request.SubjectId)
-            ?? throw new NotFoundException("Cüzdan");
-
-        wallet.Balance += request.Amount;
-        wallet.SetUpdated(0);
-        await walletRepo.UpdateAsync(wallet);
-
-        var refundTx = new WalletTransaction
-        {
-            WalletId    = wallet.Id,
-            Amount      = request.Amount,
-            Type        = WalletTransactionType.Credit,
-            ReferenceId = $"refund:{request.WalletTransactionId}",
-            Description = "Para çekimi iadesi"
-        };
-        refundTx.SetCreated(0);
-        await walletRepo.AddTransactionAsync(refundTx);
-
-        await withdrawalRepo.UpdateAsync(request);
-
-        logger.LogInformation("Para çekimi reddedildi: RequestId={RequestId} AdminId={AdminId} Reason={Reason}",
-            requestId, adminId, reason);
+        await walletService.RejectWithdrawalAsync(requestId, reason, adminId);
     }
 
     // ── Batch management ──────────────────────────────────────────

@@ -9,14 +9,14 @@
 @inject IJSRuntime JS
 @inject IPermissionAuthorizationService PermissionService
 
-<PageTitle>Odeme Paketi - PulsePoll Admin</PageTitle>
+<PageTitle>Ödeme Paketi - PulsePoll Admin</PageTitle>
 
 <div class="d-flex align-items-center gap-2 mb-2">
     <DxButton IconCssClass="bi bi-arrow-left"
               RenderStyle="ButtonRenderStyle.Secondary"
               RenderStyleMode="ButtonRenderStyleMode.Text"
               Click="@(() => NavigationManager.NavigateTo("/payments/batches"))"/>
-    <h3 class="mb-0">@(_batch?.BatchNumber ?? "Yukleniyor...")</h3>
+    <h3 class="mb-0">@(_batch?.BatchNumber ?? "Yükleniyor...")</h3>
     @if (_batch is not null)
     {
         <span class="badge @BatchStatusBadge(_batch.Status) ms-1">@_batch.StatusLabel</span>
@@ -41,13 +41,13 @@
         <div class="col-md-3">
             <div class="card text-center p-3 shadow-sm">
                 <div class="fs-4 fw-bold text-success">@PaidCount()</div>
-                <div class="text-muted small">Odendi</div>
+                <div class="text-muted small">Ödendi</div>
             </div>
         </div>
         <div class="col-md-3">
             <div class="card text-center p-3 shadow-sm">
                 <div class="fs-4 fw-bold text-danger">@FailedCount()</div>
-                <div class="text-muted small">Basarisiz</div>
+                <div class="text-muted small">Başarısız</div>
             </div>
         </div>
     </div>
@@ -63,7 +63,7 @@
         }
         @if (_batch.Status == PaymentBatchStatus.Draft && _canManage)
         {
-            <DxButton Text="Gonderildi Olarak Isaretlendi"
+            <DxButton Text="Gönderildi Olarak İşaretlendi"
                       IconCssClass="bi bi-send"
                       RenderStyle="ButtonRenderStyle.Primary"
                       RenderStyleMode="ButtonRenderStyleMode.Outline"
@@ -71,13 +71,13 @@
         }
         @if (_batch.Status == PaymentBatchStatus.Sent && _canManage)
         {
-            <DxButton Text="Tumunu Sec"
+            <DxButton Text="Tümünü Seç"
                       IconCssClass="bi bi-check2-square"
                       RenderStyle="ButtonRenderStyle.Secondary"
                       RenderStyleMode="ButtonRenderStyleMode.Outline"
                       Enabled="@(!_isLoading && PendingSelectableCount > 0)"
                       Click="SelectAllPending"/>
-            <DxButton Text="Secimi Temizle"
+            <DxButton Text="Seçimi Temizle"
                       IconCssClass="bi bi-x-square"
                       RenderStyle="ButtonRenderStyle.Secondary"
                       RenderStyleMode="ButtonRenderStyleMode.Outline"
@@ -88,13 +88,13 @@
                       RenderStyle="ButtonRenderStyle.Success"
                       RenderStyleMode="ButtonRenderStyleMode.Outline"
                       Click="FinalizeAsync"/>
-            <DxButton Text="Secilenleri Odendi Yap"
+            <DxButton Text="Seçilenleri Ödendi Yap"
                       IconCssClass="bi bi-check2-all"
                       RenderStyle="ButtonRenderStyle.Success"
                       RenderStyleMode="ButtonRenderStyleMode.Outline"
                       Enabled="@(SelectedPendingCount > 0 && !_isLoading)"
                       Click="OnBulkPaidAsync"/>
-            <DxButton Text="Secilenleri Hata Yap"
+            <DxButton Text="Seçilenleri Hata Yap"
                       IconCssClass="bi bi-x-octagon"
                       RenderStyle="ButtonRenderStyle.Danger"
                       RenderStyleMode="ButtonRenderStyleMode.Outline"
@@ -107,7 +107,7 @@
                     IsContentBlocked="true"
                     ApplyBackgroundShading="true"
                     IndicatorAreaVisible="false"
-                    Text="Yukleniyor...">
+                    Text="Yükleniyor...">
         <DxGrid Data="@_batch.Items"
                 SelectionMode="GridSelectionMode.Multiple"
                 @bind-SelectedDataItems="_selectedItems"
@@ -141,10 +141,10 @@
                     </CellDisplayTemplate>
                 </DxGridDataColumn>
                 <DxGridDataColumn FieldName="FailureReason" Caption="Hata" MinWidth="130"/>
-                <DxGridDataColumn FieldName="ProcessedAt" Caption="Islem Tarihi" DisplayFormat="dd.MM.yyyy HH:mm" Width="150px"/>
+                <DxGridDataColumn FieldName="ProcessedAt" Caption="İşlem Tarihi" DisplayFormat="dd.MM.yyyy HH:mm" Width="150px"/>
                 @if (_batch.Status == PaymentBatchStatus.Sent && _canManage)
                 {
-                    <DxGridCommandColumn Width="130px" Caption="Guncelle" NewButtonVisible="false">
+                    <DxGridCommandColumn Width="130px" Caption="Güncelle" NewButtonVisible="false">
                         <CellDisplayTemplate>
                             @{
                                 var actionItem = (PaymentBatchItemDto)context.DataItem;
@@ -152,7 +152,7 @@
                             @if (actionItem.Status == PaymentStatus.Pending)
                             {
                                 <div class="d-flex gap-1">
-                                    <DxButton Text="Odendi"
+                                    <DxButton Text="Ödendi"
                                               RenderStyle="ButtonRenderStyle.Success"
                                               RenderStyleMode="ButtonRenderStyleMode.Outline"
                                               SizeMode="SizeMode.Small"
@@ -177,11 +177,11 @@
         <DxFormLayout>
             @if (!string.IsNullOrWhiteSpace(_failureTargetLabel))
             {
-                <DxFormLayoutItem Caption="Secim" ColSpanMd="12">
+                <DxFormLayoutItem Caption="Seçim" ColSpanMd="12">
                     <div class="small text-muted">@_failureTargetLabel</div>
                 </DxFormLayoutItem>
             }
-            <DxFormLayoutItem Caption="Hata Aciklamasi" ColSpanMd="12">
+            <DxFormLayoutItem Caption="Hata Açıklaması" ColSpanMd="12">
                 <DxMemo @bind-Text="_failureReason" Rows="3" style="width:100%"/>
             </DxFormLayoutItem>
         </DxFormLayout>
@@ -191,7 +191,7 @@
                   RenderStyle="ButtonRenderStyle.Danger"
                   RenderStyleMode="ButtonRenderStyleMode.Outline"
                   Click="ConfirmFailureAsync"/>
-        <DxButton Text="Iptal"
+        <DxButton Text="İptal"
                   RenderStyle="ButtonRenderStyle.Secondary"
                   RenderStyleMode="ButtonRenderStyleMode.Outline"
                   Click="() => _failurePopupVisible = false"/>
@@ -254,7 +254,7 @@
         try
         {
             await PaymentBatchService.MarkBatchSentAsync(Id, adminId);
-            Toast.Success("Paket 'Gonderildi' olarak isaretlendi.");
+            Toast.Success("Paket 'Gönderildi' olarak işaretlendi.");
             await LoadAsync();
         }
         catch (Exception ex) { ErrorHandler.HandleOperation(ex, Toast); }
@@ -274,7 +274,7 @@
         try
         {
             await PaymentBatchService.FinalizeBatchAsync(Id, adminId);
-            Toast.Success("Paket tamamlandi.");
+            Toast.Success("Paket tamamlandı.");
             await LoadAsync();
         }
         catch (Exception ex) { ErrorHandler.HandleOperation(ex, Toast); }
@@ -295,7 +295,7 @@
         var ids = itemIds.Distinct().ToList();
         if (ids.Count == 0)
         {
-            Toast.Error("Guncellenecek odeme bulunamadi.");
+            Toast.Error("Güncellenecek ödeme bulunamadı.");
             return;
         }
 
@@ -323,12 +323,12 @@
 
             if (successCount == 0)
             {
-                Toast.Error("Secili odemeler guncellenemedi.");
+                Toast.Error("Seçili ödemeler güncellenemedi.");
             }
             else
             {
-                var statusText = status == PaymentStatus.Paid ? "odendi" : "hatali";
-                Toast.Success($"{successCount} odeme {statusText} olarak guncellendi.");
+                var statusText = status == PaymentStatus.Paid ? "ödendi" : "hatalı";
+                Toast.Success($"{successCount} ödeme {statusText} olarak güncellendi.");
             }
 
             await LoadAsync();
@@ -346,7 +346,7 @@
         }
 
         _failureItemIds      = [item.Id];
-        _failureTargetLabel  = $"1 odeme secildi: #{item.Id}";
+        _failureTargetLabel  = $"1 ödeme seçildi: #{item.Id}";
         _failureReason       = string.Empty;
         _failurePopupVisible = true;
     }
@@ -361,7 +361,7 @@
 
         if (_failureItemIds.Count == 0)
         {
-            Toast.Error("Hata olarak isaretlenecek odeme yok.");
+            Toast.Error("Hata olarak işaretlenecek ödeme yok.");
             return;
         }
 
@@ -376,7 +376,7 @@
         var ids = GetSelectedPendingIds();
         if (ids.Count == 0)
         {
-            Toast.Error("Lutfen bekleyen odemeleri secin.");
+            Toast.Error("Lütfen bekleyen ödemeleri seçin.");
             return;
         }
 
@@ -388,12 +388,12 @@
         var ids = GetSelectedPendingIds();
         if (ids.Count == 0)
         {
-            Toast.Error("Lutfen bekleyen odemeleri secin.");
+            Toast.Error("Lütfen bekleyen ödemeleri seçin.");
             return;
         }
 
         _failureItemIds = ids;
-        _failureTargetLabel = $"{ids.Count} odeme secildi.";
+        _failureTargetLabel = $"{ids.Count} ödeme seçildi.";
         _failureReason = string.Empty;
         _failurePopupVisible = true;
     }

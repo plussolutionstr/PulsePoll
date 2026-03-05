@@ -27,7 +27,11 @@ public class ProjectController(
     [HttpGet("{id:int}")]
     public async Task<IActionResult> GetById(int id)
     {
-        var project = await projectService.GetByIdAsync(id);
+        var project = (await projectService.GetAssignedProjectsAsync(SubjectId))
+            .FirstOrDefault(p => p.Id == id);
+        if (project is null)
+            throw new ForbiddenException("Bu projeye erişim yetkiniz yok.");
+
         return this.OkResponse(project);
     }
 

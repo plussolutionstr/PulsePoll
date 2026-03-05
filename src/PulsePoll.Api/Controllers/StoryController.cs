@@ -29,7 +29,7 @@ public class StoryController(IStoryService storyService) : ControllerBase
         return this.NoContentResponse();
     }
 
-    // TODO: Admin auth eklenince [Authorize(Roles = "Admin")] eklenmeli
+    [Authorize(Policy = "AdminOnly")]
     [HttpPost]
     public async Task<IActionResult> Create([FromForm] CreateStoryFormDto dto)
     {
@@ -50,6 +50,7 @@ public class StoryController(IStoryService storyService) : ControllerBase
         return this.OkResponse(created);
     }
 
+    [Authorize(Policy = "AdminOnly")]
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, [FromForm] CreateStoryFormDto dto)
     {
@@ -70,6 +71,7 @@ public class StoryController(IStoryService storyService) : ControllerBase
         return this.NoContentResponse();
     }
 
+    [Authorize(Policy = "AdminOnly")]
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {

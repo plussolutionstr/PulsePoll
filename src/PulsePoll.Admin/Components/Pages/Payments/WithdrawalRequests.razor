@@ -23,7 +23,7 @@
     </li>
     <li class="nav-item">
         <button class="nav-link @(_activeTab == "approved" ? "active" : "")" @onclick='() => SetTab("approved")'>
-            Onaylanan (Pakete Eklenmemis)
+            Onaylanan (Pakete Eklenmemiş)
             @if (_approvedTotal > 0) { <span class="badge bg-success ms-1">@_approvedTotal</span> }
         </button>
     </li>
@@ -32,14 +32,14 @@
 <div class="d-flex justify-content-end mb-2">
     @if (_activeTab == "pending")
     {
-        <DxButton Text="Tumunu Sec"
+        <DxButton Text="Tümünü Seç"
                   IconCssClass="bi bi-check2-square"
                   CssClass="me-2"
                   RenderStyle="ButtonRenderStyle.Secondary"
                   RenderStyleMode="ButtonRenderStyleMode.Outline"
                   Enabled="@(!_isActionRunning && _pendingTotal > 0)"
                   Click="SelectAllPendingAsync"/>
-        <DxButton Text="Secimi Temizle"
+        <DxButton Text="Seçimi Temizle"
                   IconCssClass="bi bi-x-square"
                   CssClass="me-2"
                   RenderStyle="ButtonRenderStyle.Secondary"
@@ -48,7 +48,7 @@
                   Click="ClearSelection"/>
         @if (_canApprove)
         {
-            <DxButton Text="Secilenleri Onayla"
+            <DxButton Text="Seçilenleri Onayla"
                       IconCssClass="bi bi-check2-circle"
                       CssClass="me-2"
                       RenderStyle="ButtonRenderStyle.Success"
@@ -58,7 +58,7 @@
         }
         @if (_canReject)
         {
-            <DxButton Text="Secilenleri Reddet"
+            <DxButton Text="Seçilenleri Reddet"
                       IconCssClass="bi bi-x-circle"
                       CssClass="me-2"
                       RenderStyle="ButtonRenderStyle.Danger"
@@ -123,7 +123,7 @@
         <DxGridDataColumn FieldName="RejectionReason" Caption="Red Nedeni" MinWidth="150"/>
         @if (_activeTab == "pending")
         {
-            <DxGridCommandColumn Width="130px" Caption="Islemler" NewButtonVisible="false">
+            <DxGridCommandColumn Width="130px" Caption="İşlemler" NewButtonVisible="false">
                 <CellDisplayTemplate>
                     @{
                         var rowItem2 = (WithdrawalRequest)context.DataItem;
@@ -165,7 +165,7 @@
 <DxPopup @bind-Visible="_rejectPopupVisible" HeaderText="Talebi Reddet" Width="420px" CloseOnOutsideClick="false" ShowFooter="true">
     <BodyContentTemplate Context="popupCtx">
         <DxFormLayout>
-            <DxFormLayoutItem Caption="Secili Talep" ColSpanMd="12">
+            <DxFormLayoutItem Caption="Seçili Talep" ColSpanMd="12">
                 <div class="small text-muted">@_rejectTargetLabel</div>
             </DxFormLayoutItem>
             <DxFormLayoutItem Caption="Red Nedeni" ColSpanMd="12">
@@ -178,7 +178,7 @@
                   RenderStyle="ButtonRenderStyle.Danger"
                   RenderStyleMode="ButtonRenderStyleMode.Outline"
                   Click="ConfirmRejectAsync"/>
-        <DxButton Text="Iptal"
+        <DxButton Text="İptal"
                   RenderStyle="ButtonRenderStyle.Secondary"
                   RenderStyleMode="ButtonRenderStyleMode.Outline"
                   Click="() => _rejectPopupVisible = false"/>
@@ -269,7 +269,7 @@
         try
         {
             await PaymentBatchService.ApproveWithdrawalAsync(item.Id, adminId);
-            Toast.Success("Talep onaylandi.");
+            Toast.Success("Talep onaylandı.");
             _selectedRows = _selectedRows
                 .Where(x => x is not WithdrawalRequest wr || wr.Id != item.Id)
                 .ToList();
@@ -305,7 +305,7 @@
         var selectedIds = await GetSelectedPendingIdsAsync();
         if (selectedIds.Count == 0)
         {
-            Toast.Error("Lutfen en az bir bekleyen talep secin.");
+            Toast.Error("Lütfen en az bir bekleyen talep seçin.");
             return;
         }
 
@@ -328,9 +328,9 @@
             }
 
             if (approvedCount > 0)
-                Toast.Success($"{approvedCount} talep onaylandi.");
+                Toast.Success($"{approvedCount} talep onaylandı.");
             else
-                Toast.Error("Secili talepler onaylanamadi.");
+                Toast.Error("Seçili talepler onaylanamadı.");
         }
         finally
         {
@@ -352,13 +352,13 @@
         var selectedIds = GetSelectedPendingIds();
         if (selectedIds.Count == 0)
         {
-            Toast.Error("Lutfen en az bir bekleyen talep secin.");
+            Toast.Error("Lütfen en az bir bekleyen talep seçin.");
             return;
         }
 
         _selectedItem = null;
         _rejectIds = selectedIds;
-        _rejectTargetLabel = $"{_rejectIds.Count} talep secildi.";
+        _rejectTargetLabel = $"{_rejectIds.Count} talep seçildi.";
         _rejectReason = string.Empty;
         _rejectPopupVisible = true;
     }
@@ -381,7 +381,7 @@
 
         if (_rejectIds.Count == 0)
         {
-            Toast.Error("Reddedilecek talep bulunamadi.");
+            Toast.Error("Reddedilecek talep bulunamadı.");
             return;
         }
 
@@ -407,7 +407,7 @@
             if (rejectedCount > 0)
                 Toast.Success($"{rejectedCount} talep reddedildi, tutar iade edildi.");
             else
-                Toast.Error("Secili talepler reddedilemedi.");
+                Toast.Error("Seçili talepler reddedilemedi.");
         }
         catch (Exception ex) { ErrorHandler.HandleOperation(ex, Toast); }
         finally
@@ -432,7 +432,7 @@
     private static string StatusLabel(ApprovalStatus status) => status switch
     {
         ApprovalStatus.Pending  => "Bekliyor",
-        ApprovalStatus.Approved => "Onayli",
+        ApprovalStatus.Approved => "Onaylı",
         ApprovalStatus.Rejected => "Reddedildi",
         _                       => status.ToString()
     };
@@ -456,7 +456,7 @@
         if (_grid is null)
             return;
 
-        var fileName = _activeTab == "pending" ? "cekim-talepleri-bekleyen" : "cekim-talepleri-onaylanan";
+        var fileName = _activeTab == "pending" ? "çekim-talepleri-bekleyen" : "çekim-talepleri-onaylanan";
         try
         {
             await _grid.ExportToXlsxAsync(fileName);

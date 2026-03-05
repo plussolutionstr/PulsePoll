@@ -19,7 +19,7 @@ public class NewsController(INewsService newsService) : ControllerBase
         return this.OkResponse(news);
     }
 
-    // TODO: Admin auth eklenince [Authorize(Roles = "Admin")] eklenmeli
+    [Authorize(Policy = "AdminOnly")]
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateNewsRequest dto)
     {
@@ -39,6 +39,7 @@ public class NewsController(INewsService newsService) : ControllerBase
         return this.OkResponse(created);
     }
 
+    [Authorize(Policy = "AdminOnly")]
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, [FromBody] CreateNewsRequest dto)
     {
@@ -58,6 +59,7 @@ public class NewsController(INewsService newsService) : ControllerBase
         return this.NoContentResponse();
     }
 
+    [Authorize(Policy = "AdminOnly")]
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {

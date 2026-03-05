@@ -387,7 +387,7 @@
             </Border>
 
             <!-- Logout -->
-            <Button Text="Cikis Yap"
+            <Button Text="Çıkış Yap"
                     Command="{Binding LogoutCommand}"
                     BackgroundColor="{StaticResource DangerLight}"
                     TextColor="{StaticResource Danger}"

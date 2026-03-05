@@ -22,7 +22,7 @@
         }
         @if (_canCreate)
         {
-            <DxButton Text="Yeni Paket Olustur"
+            <DxButton Text="Yeni Paket Oluştur"
                       IconCssClass="bi bi-plus-lg"
                       RenderStyle="ButtonRenderStyle.Primary"
                       RenderStyleMode="ButtonRenderStyleMode.Outline"
@@ -35,7 +35,7 @@
                 IsContentBlocked="true"
                 ApplyBackgroundShading="true"
                 IndicatorAreaVisible="false"
-                Text="Yukleniyor...">
+                Text="Yükleniyor...">
     <DxGrid @ref="_grid"
             Data="@_batches"
             ShowFilterRow="true"
@@ -51,12 +51,12 @@
                     <span class="badge @BatchStatusBadge(b.Status)">@b.StatusLabel</span>
                 </CellDisplayTemplate>
             </DxGridDataColumn>
-            <DxGridDataColumn FieldName="ItemCount" Caption="Talep Sayisi" Width="110px"/>
+            <DxGridDataColumn FieldName="ItemCount" Caption="Talep Sayısı" Width="110px"/>
             <DxGridDataColumn FieldName="TotalAmount" Caption="Toplam (TL)" DisplayFormat="N2" Width="130px"/>
-            <DxGridDataColumn FieldName="CreatedAt" Caption="Olusturulma" DisplayFormat="dd.MM.yyyy HH:mm" Width="150px"/>
-            <DxGridDataColumn FieldName="SentAt" Caption="Gonderilme" DisplayFormat="dd.MM.yyyy HH:mm" Width="150px"/>
+            <DxGridDataColumn FieldName="CreatedAt" Caption="Oluşturulma" DisplayFormat="dd.MM.yyyy HH:mm" Width="150px"/>
+            <DxGridDataColumn FieldName="SentAt" Caption="Gönderilme" DisplayFormat="dd.MM.yyyy HH:mm" Width="150px"/>
             <DxGridDataColumn FieldName="Note" Caption="Not" MinWidth="150"/>
-            <DxGridCommandColumn Width="90px" Caption="Islemler" NewButtonVisible="false">
+            <DxGridCommandColumn Width="90px" Caption="İşlemler" NewButtonVisible="false">
                 <CellDisplayTemplate>
                     @{
                         var rowBatch = (PaymentBatchDto)context.DataItem;
@@ -84,7 +84,7 @@
 </DxLoadingPanel>
 
 <DxPopup @bind-Visible="_newBatchPopupVisible"
-         HeaderText="Yeni Odeme Paketi"
+         HeaderText="Yeni Ödeme Paketi"
          Width="700px"
          CloseOnOutsideClick="false"
          ShowFooter="true">
@@ -93,12 +93,12 @@
         {
             <div class="text-center text-muted py-4">
                 <i class="bi bi-inbox" style="font-size:2rem;"></i>
-                <p class="mt-2">Pakete eklenecek onayli talep bulunmuyor.</p>
+                <p class="mt-2">Pakete eklenecek onaylı talep bulunmuyor.</p>
             </div>
         }
         else
         {
-            <p class="text-muted mb-2">Pakete eklemek istediginiz talepleri secin:</p>
+            <p class="text-muted mb-2">Pakete eklemek istediğiniz talepleri seçin:</p>
             <DxGrid @ref="_approvedGrid"
                     Data="@_approvedRequests"
                     SelectionMode="GridSelectionMode.Multiple"
@@ -126,7 +126,7 @@
             @if (_selectedRequests.Count > 0)
             {
                 <div class="alert alert-info mt-2 mb-0 py-2">
-                    <strong>@_selectedRequests.Count talep</strong> secildi —
+                    <strong>@_selectedRequests.Count talep</strong> seçildi —
                     Toplam: <strong>@SelectedTotalTry().ToString("N2") TL</strong>
                 </div>
             }
@@ -139,12 +139,12 @@
         }
     </BodyContentTemplate>
     <FooterContentTemplate>
-        <DxButton Text="Paket Olustur"
+        <DxButton Text="Paket Oluştur"
                   RenderStyle="ButtonRenderStyle.Primary"
                   RenderStyleMode="ButtonRenderStyleMode.Outline"
                   Enabled="_selectedRequests.Count > 0"
                   Click="CreateBatchAsync"/>
-        <DxButton Text="Iptal"
+        <DxButton Text="İptal"
                   RenderStyle="ButtonRenderStyle.Secondary"
                   RenderStyleMode="ButtonRenderStyleMode.Outline"
                   Click="() => _newBatchPopupVisible = false"/>
@@ -185,7 +185,7 @@
         }
 
         if (_grid is not null)
-            await _grid.ExportToXlsxAsync("odeme-paketleri");
+            await _grid.ExportToXlsxAsync("ödeme-paketleri");
     }
 
     private async Task LoadAsync()
@@ -234,7 +234,7 @@
             var batch = await PaymentBatchService.CreateBatchAsync(
                 new CreatePaymentBatchDto(ids, string.IsNullOrWhiteSpace(_newBatchNote) ? null : _newBatchNote),
                 adminId);
-            Toast.Success($"Paket olusturuldu: {batch.BatchNumber}");
+            Toast.Success($"Paket oluşturuldu: {batch.BatchNumber}");
             await LoadAsync();
             NavigationManager.NavigateTo($"/payments/batches/{batch.Id}");
         }

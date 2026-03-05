@@ -46,14 +46,20 @@ public class CommunicationAutomationJobScheduler(
         return DefaultRunTime;
     }
 
-    private static TimeZoneInfo ResolveTimeZone(string timeZoneId)
+    private TimeZoneInfo ResolveTimeZone(string timeZoneId)
     {
         try
         {
             return TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
         }
-        catch (Exception)
+        catch (TimeZoneNotFoundException ex)
         {
+            logger.LogWarning(ex, "Configured timezone not found: {TimeZoneId}. Falling back to local timezone.", timeZoneId);
+            return TimeZoneInfo.Local;
+        }
+        catch (InvalidTimeZoneException ex)
+        {
+            logger.LogWarning(ex, "Configured timezone is invalid: {TimeZoneId}. Falling back to local timezone.", timeZoneId);
             return TimeZoneInfo.Local;
         }
     }

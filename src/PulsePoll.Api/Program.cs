@@ -49,7 +49,7 @@ app.UseSerilogRequestLogging(opts =>
             ?? string.Empty);
     };
 });
-app.UseCors("Dev");
+app.UseCors("Default");
 app.UseMiddleware<ExceptionMiddleware>();
 app.UseAuthentication();
 app.UseRateLimiter();

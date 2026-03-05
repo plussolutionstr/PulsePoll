@@ -328,7 +328,7 @@ public partial class ProfileViewModel : ObservableObject
     private async Task LogoutAsync()
     {
         var confirm = await Shell.Current.DisplayAlertAsync(
-            "Cikis Yap", "Hesabinizdan cikis yapmak istediginize emin misiniz?", "Cikis Yap", "Iptal");
+            "Çıkış Yap", "Hesabınızdan çıkış yapmak istediğinize emin misiniz?", "Çıkış Yap", "İptal");
 
         if (!confirm) return;
 

@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PulsePoll.Api.Extensions;
 using PulsePoll.Api.Models;
@@ -8,13 +10,15 @@ using PulsePoll.Domain.Enums;
 
 namespace PulsePoll.Api.Controllers.Admin;
 
-// TODO: [Authorize(Roles = "Admin")] — admin auth gelince eklenecek
+[Authorize(Policy = "AdminOnly")]
 [ApiController]
 [Route("api/admin/withdrawals")]
 public class WithdrawalController(
     IWalletService walletService,
     IWithdrawalRequestRepository withdrawalRequestRepository) : ControllerBase
 {
+    private int AdminId => int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
     [HttpGet]
     public async Task<IActionResult> GetPending([FromQuery] PaginationQuery query, [FromQuery] string status = "Pending")
     {
@@ -50,14 +54,14 @@ public class WithdrawalController(
     [HttpPost("{id:int}/approve")]
     public async Task<IActionResult> Approve(int id)
     {
-        await walletService.ApproveWithdrawalAsync(id, 0);
+        await walletService.ApproveWithdrawalAsync(id, AdminId);
         return this.NoContentResponse();
     }
 
     [HttpPost("{id:int}/reject")]
     public async Task<IActionResult> Reject(int id, [FromBody] RejectWithdrawalDto dto)
     {
-        await walletService.RejectWithdrawalAsync(id, dto.Reason, 0);
+        await walletService.RejectWithdrawalAsync(id, dto.Reason, AdminId);
         return this.NoContentResponse();
     }
 }

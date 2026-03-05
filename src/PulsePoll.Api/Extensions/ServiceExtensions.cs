@@ -20,9 +20,32 @@ public static class ServiceExtensions
         services.AddInfrastructure(config);
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen();
+        services.AddAuthorization(options =>
+        {
+            options.AddPolicy("AdminOnly", policy =>
+            {
+                policy.RequireAuthenticatedUser();
+                policy.RequireAssertion(ctx =>
+                    ctx.User.IsInRole("Admin")
+                    || ctx.User.HasClaim(c => c.Type == "perm"));
+            });
+        });
 
-        services.AddCors(opt => opt.AddPolicy("Dev", p =>
-            p.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()));
+        var allowedOrigins = config.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+        services.AddCors(opt => opt.AddPolicy("Default", p =>
+        {
+            if (allowedOrigins.Length > 0)
+            {
+                p.WithOrigins(allowedOrigins)
+                    .AllowAnyMethod()
+                    .AllowAnyHeader();
+                return;
+            }
+
+            p.WithOrigins("https://localhost:5001", "http://localhost:5001", "http://localhost:5173")
+                .AllowAnyMethod()
+                .AllowAnyHeader();
+        }));
 
         services.AddApiRateLimiter();
 
