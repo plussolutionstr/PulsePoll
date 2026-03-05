@@ -22,6 +22,7 @@ public partial class HomeViewModel : ObservableObject
     [ObservableProperty] private ObservableCollection<SurveyModel> _surveys = [];
     [ObservableProperty] private bool _isLoading;
     [ObservableProperty] private bool _isRefreshing;
+    [ObservableProperty] private bool _needsRefreshOnReturn;
 
     private bool _isLoaded;
 
@@ -49,6 +50,7 @@ public partial class HomeViewModel : ObservableObject
         {
             await FetchDataAsync();
             _isLoaded = true;
+            NeedsRefreshOnReturn = false;
         }
         finally
         {
@@ -96,8 +98,16 @@ public partial class HomeViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private async Task OpenNews(NewsModel news)
+    {
+        await Shell.Current.GoToAsync($"newsdetail?id={news.Id}");
+    }
+
+    [RelayCommand]
     private async Task OpenStory(StoryModel story)
     {
+        NeedsRefreshOnReturn = true;
+
         if (!story.IsSeen)
             _ = MarkStorySeenAndReorderAsync(story);
 

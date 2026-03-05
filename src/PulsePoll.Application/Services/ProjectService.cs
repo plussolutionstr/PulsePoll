@@ -57,6 +57,7 @@ public class ProjectService(
             Code                 = dto.Code.ToUpperInvariant(),
             Name                 = dto.Name,
             Description          = dto.Description,
+            Category             = dto.Category,
             ParticipantCount     = dto.ParticipantCount,
             TotalTargetCount     = dto.TotalTargetCount,
             DurationDays         = dto.DurationDays,
@@ -93,6 +94,7 @@ public class ProjectService(
 
         project.Name                 = dto.Name;
         project.Description          = dto.Description;
+        project.Category             = dto.Category;
         project.ParticipantCount     = dto.ParticipantCount;
         project.TotalTargetCount     = dto.TotalTargetCount;
         project.DurationDays         = dto.DurationDays;
@@ -153,6 +155,7 @@ public class ProjectService(
             p.Code,
             p.Name,
             p.Description,
+            p.Category,
             p.ParticipantCount,
             p.TotalTargetCount,
             p.DurationDays,

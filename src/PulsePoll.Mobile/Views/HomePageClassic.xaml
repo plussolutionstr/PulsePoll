@@ -71,6 +71,11 @@
                                 StrokeShape="RoundRectangle 20"
                                 Padding="20"
                                 HeightRequest="140">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:HomeViewModel}}, Path=OpenNewsCommand}"
+                                    CommandParameter="{Binding .}"/>
+                            </Border.GestureRecognizers>
                             <Border.Background>
                                 <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
                                     <GradientStop Color="{StaticResource PrimaryPurple}" Offset="0"/>
@@ -140,14 +145,14 @@
                                             BackgroundColor="{StaticResource AmberLight}"
                                             Padding="10,4">
                                         <Label Text="{Binding Reward, StringFormat='₺{0}'}"
-                                               FontFamily="JakartaSemiBold" FontSize="13"
-                                               TextColor="{StaticResource Amber}"/>
+                                               FontFamily="JakartaBold" FontSize="13"
+                                               TextColor="#111111"/>
                                     </Border>
                                 </Grid>
 
                                 <!-- Title -->
                                 <Label Text="{Binding Title}"
-                                       FontFamily="JakartaSemiBold" FontSize="15"
+                                       FontFamily="JakartaBold" FontSize="15"
                                        TextColor="{StaticResource TextPrimary}"/>
 
                                 <!-- Meta -->
@@ -171,6 +176,7 @@
                                         StrokeShape="RoundRectangle 8"
                                         BackgroundColor="{StaticResource PrimaryLight}"
                                         Padding="10,4"
+                                        IsVisible="{Binding HasCategory}"
                                         HorizontalOptions="Start">
                                     <Label Text="{Binding Category}"
                                            FontFamily="JakartaMedium" FontSize="11"

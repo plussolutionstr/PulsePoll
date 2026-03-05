@@ -9,6 +9,7 @@ public record ProjectDto(
     string Code,
     string Name,
     string? Description,
+    string? Category,
     int ParticipantCount,
     int TotalTargetCount,
     int DurationDays,
@@ -39,6 +40,7 @@ public record CreateProjectDto(
     string Code,
     string Name,
     string? Description,
+    string? Category,
     int ParticipantCount,
     int TotalTargetCount,
     int DurationDays,
@@ -60,6 +62,7 @@ public record CreateProjectDto(
 public record UpdateProjectDto(
     string Name,
     string? Description,
+    string? Category,
     int ParticipantCount,
     int TotalTargetCount,
     int DurationDays,

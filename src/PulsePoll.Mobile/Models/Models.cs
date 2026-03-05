@@ -25,7 +25,11 @@ public record NewsModel(
     string Subtitle,
     string GradientStart = "#2D1B6E",
     string GradientEnd = "#A78BFA",
-    string ImageUrl = "");
+    string ImageUrl = "",
+    string? LinkUrl = null)
+{
+    public bool HasLink => !string.IsNullOrWhiteSpace(LinkUrl);
+}
 
 public record SurveyModel(
     int Id,
@@ -40,7 +44,10 @@ public record SurveyModel(
     List<SurveyCriteria> Criteria,
     string BannerGradientStart = "#EDE8FF",
     string BannerGradientEnd = "#DDD6FE",
-    string BrandColor = "#7C5CFC");
+    string BrandColor = "#7C5CFC")
+{
+    public bool HasCategory => !string.IsNullOrWhiteSpace(Category);
+}
 
 public record SurveyCriteria(string Label, bool IsMet);
 

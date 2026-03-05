@@ -23,6 +23,10 @@ public class CreateProjectValidator : AbstractValidator<CreateProjectDto>
             .MaximumLength(1000)
             .When(x => x.Description != null);
 
+        RuleFor(x => x.Category)
+            .MaximumLength(100)
+            .When(x => x.Category != null);
+
         RuleFor(x => x.ParticipantCount)
             .GreaterThan(0).WithMessage("Katılımcı sayısı 0'dan büyük olmalıdır.");
 

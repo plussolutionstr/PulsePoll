@@ -15,7 +15,7 @@ public static class ApiDtoMapper
             IsSeen: dto.IsSeen);
 
     public static NewsModel ToModel(this NewsApiDto dto)
-        => new(dto.Id, "", dto.Title, dto.Summary, ImageUrl: dto.ImageUrl);
+        => new(dto.Id, "", dto.Title, dto.Summary, ImageUrl: dto.ImageUrl, LinkUrl: dto.LinkUrl);
 
     public static SurveyModel ToModel(this ProjectApiDto dto)
         => new(
@@ -24,7 +24,7 @@ public static class ApiDtoMapper
             dto.CoverImageUrl ?? "",
             dto.Name,
             dto.Description ?? "",
-            "",
+            dto.Category ?? "",
             dto.Reward,
             dto.EstimatedMinutes,
             0,

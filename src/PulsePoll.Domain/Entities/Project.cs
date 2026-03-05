@@ -17,6 +17,9 @@ public class Project : EntityBase
     [MaxLength(1000)]
     public string? Description { get; set; }
 
+    [MaxLength(100)]
+    public string? Category { get; set; }
+
     public int ParticipantCount { get; set; }
 
     public int TotalTargetCount { get; set; }

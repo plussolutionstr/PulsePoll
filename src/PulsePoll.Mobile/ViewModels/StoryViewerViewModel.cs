@@ -189,6 +189,7 @@ public partial class StoryViewerViewModel : ObservableObject
         var normalized = Math.Clamp(index, 0, Stories.Count - 1);
         CurrentIndex = normalized;
         CurrentStory = Stories[normalized];
+        OnPropertyChanged(nameof(ProgressText));
         CurrentProgress = 0;
         UpdateProgressSegments();
 

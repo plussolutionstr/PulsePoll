@@ -36,6 +36,7 @@ public record ProjectApiDto(
     string Code,
     string Name,
     string? Description,
+    string? Category,
     int ParticipantCount,
     int TotalTargetCount,
     int DurationDays,
