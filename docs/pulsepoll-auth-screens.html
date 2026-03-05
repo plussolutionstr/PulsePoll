@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PulsePoll — Auth Screens</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #F7F5FF;
+  --white: #FFFFFF;
+  --surface2: #F0EDF9;
+  --border: #E8E3F5;
+
+  --purple: #7C5CFC;
+  --purple-light: #EDE8FF;
+  --purple-mid: #C4B5FD;
+  --purple-dark: #5B3FD9;
+
+  --text: #1A1535;
+  --text2: #6B6589;
+  --text3: #B0AABE;
+
+  --green: #22C988;
+  --green-light: #E6FBF4;
+  --red: #FF5C7A;
+  --red-light: #FFF0F3;
+  --amber: #F59E0B;
+  --amber-light: #FFFBEB;
+  --blue: #3B82F6;
+  --blue-light: #EFF6FF;
+
+  --font: 'Plus Jakarta Sans', sans-serif;
+  --r: 20px;
+  --rs: 12px;
+}
+
+body {
+  background: #EEEAF8;
+  font-family: var(--font);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48px 24px 80px;
+  gap: 64px;
+}
+
+svg { display: block; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+.lbl {
+  font-size: 11px; font-weight: 700; letter-spacing: 2.5px;
+  text-transform: uppercase; color: var(--purple);
+  margin-bottom: 14px; text-align: center; opacity: 0.7;
+}
+
+/* PHONE */
+.phone {
+  width: 375px;
+  background: var(--bg);
+  border-radius: 50px;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px rgba(124,92,252,0.08),
+    0 0 0 10px #E5E0F5,
+    0 0 0 11px rgba(124,92,252,0.06),
+    0 32px 64px rgba(90,60,200,0.18);
+}
+
+.status-bar {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 16px 28px 0; font-size: 12px; font-weight: 700;
+  color: var(--text); background: var(--bg); position: relative;
+}
+.notch {
+  width: 110px; height: 32px; background: var(--text);
+  border-radius: 0 0 18px 18px;
+  position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+}
+.sr { display: flex; gap: 5px; align-items: center; }
+.sr svg { width: 15px; height: 15px; }
+
+.screen { height: 780px; display: flex; flex-direction: column; overflow: hidden; }
+.sa { flex: 1; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; }
+.sa::-webkit-scrollbar { display: none; }
+
+.sw { display: flex; flex-direction: column; align-items: center; }
+.sg { display: flex; flex-direction: column; gap: 64px; align-items: center; width: 100%; }
+
+/* ===== AUTH SHARED STYLES ===== */
+.auth-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 0 28px;
+}
+
+/* Logo Mark */
+.logo-mark {
+  width: 72px; height: 72px;
+  border-radius: 22px;
+  background: linear-gradient(135deg, var(--purple) 0%, #A78BFA 100%);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 8px 32px rgba(124,92,252,0.25);
+  position: relative;
+  overflow: hidden;
+}
+.logo-mark::after {
+  content: '';
+  position: absolute;
+  top: -12px; right: -12px;
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.12);
+}
+.logo-mark svg {
+  width: 32px; height: 32px;
+  color: white;
+  position: relative;
+  z-index: 1;
+}
+
+.auth-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.3;
+  letter-spacing: -0.3px;
+}
+
+.auth-subtitle {
+  font-size: 14px;
+  color: var(--text2);
+  line-height: 1.6;
+}
+
+/* Input fields */
+.field { margin-bottom: 14px; }
+.field-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text2);
+  margin-bottom: 7px;
+  letter-spacing: 0.2px;
+}
+.field-input {
+  width: 100%;
+  height: 50px;
+  border-radius: 14px;
+  border: 1.5px solid var(--border);
+  background: var(--white);
+  padding: 0 16px;
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.field-input::placeholder {
+  color: var(--text3);
+  font-weight: 400;
+}
+.field-input:focus {
+  border-color: var(--purple-mid);
+  box-shadow: 0 0 0 3px rgba(124,92,252,0.08);
+}
+.field-input-wrap {
+  position: relative;
+}
+.field-input-wrap .field-input {
+  padding-left: 44px;
+}
+.field-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.field-icon svg {
+  width: 17px; height: 17px;
+  color: var(--text3);
+}
+.field-eye {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 4px;
+}
+.field-eye svg {
+  width: 17px; height: 17px;
+  color: var(--text3);
+}
+
+/* Primary button */
+.btn-primary {
+  width: 100%;
+  height: 52px;
+  border-radius: 16px;
+  background: var(--purple);
+  border: none;
+  font-family: var(--font);
+  font-size: 15px;
+  font-weight: 700;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 6px 20px rgba(124,92,252,0.3);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.btn-primary:active {
+  transform: scale(0.98);
+  box-shadow: 0 3px 12px rgba(124,92,252,0.25);
+}
+.btn-primary svg { width: 17px; height: 17px; }
+
+/* Secondary / outline button */
+.btn-outline {
+  width: 100%;
+  height: 50px;
+  border-radius: 14px;
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: background 0.15s;
+}
+.btn-outline:active { background: var(--surface2); }
+.btn-outline img { width: 20px; height: 20px; }
+
+/* Divider */
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 18px 0;
+}
+.divider-line {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+.divider-text {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text3);
+  letter-spacing: 0.5px;
+}
+
+/* Link */
+.link {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--purple);
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-family: var(--font);
+  padding: 0;
+}
+
+/* Bottom link bar */
+.bottom-link {
+  padding: 16px 28px 32px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text2);
+  font-weight: 500;
+  background: var(--bg);
+}
+
+/* Checkbox */
+.check-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.check-box {
+  width: 20px; height: 20px; flex-shrink: 0;
+  border-radius: 6px;
+  border: 1.5px solid var(--border);
+  background: var(--white);
+  display: flex; align-items: center; justify-content: center;
+  margin-top: 1px;
+  cursor: pointer;
+}
+.check-box.checked {
+  background: var(--purple);
+  border-color: var(--purple);
+}
+.check-box.checked::after {
+  content: '';
+  width: 10px; height: 6px;
+  border-left: 2px solid white;
+  border-bottom: 2px solid white;
+  transform: rotate(-45deg);
+  margin-top: -2px;
+}
+.check-text {
+  font-size: 12px;
+  color: var(--text2);
+  line-height: 1.6;
+  font-weight: 500;
+}
+
+/* Features row */
+.features-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+}
+.feature-pill {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 8px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--rs);
+}
+.feature-icon {
+  width: 36px; height: 36px;
+  border-radius: 11px;
+  display: flex; align-items: center; justify-content: center;
+}
+.feature-icon svg { width: 17px; height: 17px; }
+.fip { background: var(--purple-light); color: var(--purple); }
+.fia { background: var(--amber-light); color: var(--amber); }
+.fig { background: var(--green-light); color: var(--green); }
+.feature-lbl {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text2);
+  text-align: center;
+  line-height: 1.3;
+}
+
+/* Welcome dots */
+.dots {
+  display: flex; gap: 5px;
+  justify-content: center;
+}
+.dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--purple-mid);
+}
+.dot.a {
+  width: 20px;
+  border-radius: 3px;
+  background: var(--purple);
+}
+
+/* OTP style */
+.otp-row {
+  display: flex; gap: 10px;
+  justify-content: center;
+}
+.otp-box {
+  width: 50px; height: 56px;
+  border-radius: 14px;
+  border: 1.5px solid var(--border);
+  background: var(--white);
+  font-family: var(--font);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  text-align: center;
+  outline: none;
+}
+.otp-box:focus {
+  border-color: var(--purple-mid);
+  box-shadow: 0 0 0 3px rgba(124,92,252,0.08);
+}
+.otp-box.filled {
+  border-color: var(--purple);
+  background: var(--purple-light);
+  color: var(--purple-dark);
+}
+
+/* Password strength */
+.strength-bar {
+  display: flex; gap: 4px;
+  margin-top: 8px; margin-bottom: 4px;
+}
+.str-seg {
+  flex: 1; height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+}
+.str-seg.on1 { background: var(--red); }
+.str-seg.on2 { background: var(--amber); }
+.str-seg.on3 { background: var(--green); }
+.str-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--green);
+  text-align: right;
+}
+
+/* Back row */
+.back-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 20px 0;
+  cursor: pointer;
+  color: var(--text2);
+  font-size: 14px;
+  font-weight: 600;
+}
+.back-row svg { width: 18px; height: 18px; }
+
+/* Success icon */
+.success-circle {
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  background: var(--green-light);
+  border: 2px solid #A7F3D0;
+  display: flex; align-items: center; justify-content: center;
+}
+.success-circle svg {
+  width: 36px; height: 36px;
+  color: var(--green);
+  stroke-width: 2.2;
+}
+</style>
+</head>
+<body>
+<div class="sg">
+
+<!-- ══════════════════ 00 WELCOME / ONBOARDING ══════════════════ -->
+<div class="sw">
+  <div class="lbl">00 — Welcome / Onboarding</div>
+  <div class="phone">
+    <div class="status-bar"><span>09:41</span><div class="notch"></div><div class="sr"><svg viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1" fill="currentColor" stroke="none"/></svg><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="11" rx="2"/></svg></div></div>
+    <div class="screen">
+      <div class="auth-content" style="justify-content:center; align-items:center; text-align:center; padding-top:40px;">
+
+        <!-- Illustration area -->
+        <div style="position:relative; margin-bottom:36px;">
+          <!-- Background decoration -->
+          <div style="width:200px; height:200px; border-radius:50%; background:linear-gradient(135deg, var(--purple-light), #E9D5FF); display:flex; align-items:center; justify-content:center; position:relative;">
+            <div style="position:absolute; top:10px; right:10px; width:40px; height:40px; border-radius:50%; background:var(--amber-light); border:1px solid #FDE68A; display:flex; align-items:center; justify-content:center;">
+              <svg width="18" height="18" viewBox="0 0 24 24" style="stroke:var(--amber);"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            </div>
+            <div style="position:absolute; bottom:8px; left:4px; width:36px; height:36px; border-radius:50%; background:var(--green-light); border:1px solid #A7F3D0; display:flex; align-items:center; justify-content:center;">
+              <svg width="16" height="16" viewBox="0 0 24 24" style="stroke:var(--green);"><path d="M9 11l3 3L22 4"/></svg>
+            </div>
+            <!-- Central logo -->
+            <div style="width:88px; height:88px; border-radius:26px; background:linear-gradient(135deg, var(--purple) 0%, #A78BFA 100%); display:flex; align-items:center; justify-content:center; box-shadow:0 12px 40px rgba(124,92,252,0.3); position:relative; overflow:hidden;">
+              <div style="position:absolute; top:-14px; right:-14px; width:52px; height:52px; border-radius:50%; background:rgba(255,255,255,0.12);"></div>
+              <svg width="38" height="38" viewBox="0 0 24 24" style="stroke:white; position:relative; z-index:1;">
+                <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Text -->
+        <div style="font-size:26px; font-weight:800; color:var(--purple); letter-spacing:-0.5px; margin-bottom:4px;">PulsePoll</div>
+        <div style="font-size:22px; font-weight:800; line-height:1.3; margin-bottom:10px;">Ankete Katıl,<br>Kazanmaya Başla</div>
+        <div style="font-size:14px; color:var(--text2); line-height:1.6; margin-bottom:8px; padding:0 10px;">Türkiye'nin en güvenilir anket platformunda fikirlerini paylaş, anında kazan.</div>
+
+        <!-- Features -->
+        <div class="features-row" style="width:100%; margin-bottom:28px;">
+          <div class="feature-pill">
+            <div class="feature-icon fip"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+            <div class="feature-lbl">Kısa<br>Anketler</div>
+          </div>
+          <div class="feature-pill">
+            <div class="feature-icon fia"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+            <div class="feature-lbl">Anında<br>Kazanç</div>
+          </div>
+          <div class="feature-pill">
+            <div class="feature-icon fig"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></div>
+            <div class="feature-lbl">Kolay<br>Çekim</div>
+          </div>
+        </div>
+
+        <!-- Dots -->
+        <div class="dots" style="margin-bottom:28px;">
+          <div class="dot a"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+        </div>
+
+        <!-- Buttons -->
+        <div style="width:100%;">
+          <button class="btn-primary" style="margin-bottom:10px;">
+            Hemen Başla
+            <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+          <button class="btn-outline">
+            Zaten hesabım var
+          </button>
+        </div>
+      </div>
+
+      <!-- Bottom safe area -->
+      <div style="height:32px; background:var(--bg);"></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════ 01 GİRİŞ YAP (LOGIN) ══════════════════ -->
+<div class="sw">
+  <div class="lbl">01 — Giriş Yap</div>
+  <div class="phone">
+    <div class="status-bar"><span>09:41</span><div class="notch"></div><div class="sr"><svg viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1" fill="currentColor" stroke="none"/></svg><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="11" rx="2"/></svg></div></div>
+    <div class="screen">
+      <div class="auth-content" style="padding-top:28px;">
+
+        <!-- Logo + Title -->
+        <div style="margin-bottom:28px;">
+          <div class="logo-mark" style="margin-bottom:20px;">
+            <svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          </div>
+          <div class="auth-title">Tekrar Hoş Geldin 👋</div>
+          <div class="auth-subtitle" style="margin-top:6px;">Hesabına giriş yap ve anketlere katılmaya devam et.</div>
+        </div>
+
+        <!-- Form -->
+        <div class="field">
+          <div class="field-label">E-POSTA</div>
+          <div class="field-input-wrap">
+            <div class="field-icon"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg></div>
+            <input class="field-input" type="email" placeholder="ornek@email.com" value="ilhan@pulsepoll.com">
+          </div>
+        </div>
+
+        <div class="field">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:7px;">
+            <div class="field-label" style="margin-bottom:0;">ŞİFRE</div>
+            <button class="link" style="font-size:12px;">Şifremi Unuttum</button>
+          </div>
+          <div class="field-input-wrap">
+            <div class="field-icon"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+            <input class="field-input" type="password" placeholder="••••••••" value="••••••••">
+            <button class="field-eye"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+          </div>
+        </div>
+
+        <!-- Remember me -->
+        <div class="check-row" style="margin-top:2px;">
+          <div class="check-box checked"></div>
+          <div class="check-text">Beni hatırla</div>
+        </div>
+
+        <!-- Login button -->
+        <button class="btn-primary" style="margin-bottom:4px;">
+          Giriş Yap
+          <svg viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+        </button>
+
+        <!-- Divider -->
+        <div class="divider">
+          <div class="divider-line"></div>
+          <div class="divider-text">VEYA</div>
+          <div class="divider-line"></div>
+        </div>
+
+        <!-- Social -->
+        <button class="btn-outline" style="margin-bottom:10px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="none">
+            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+          </svg>
+          Google ile Giriş Yap
+        </button>
+        <button class="btn-outline">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="none">
+            <path d="M16.365 1.43c0 1.14-.493 2.27-1.177 3.08-.744.9-1.99 1.57-2.987 1.57-.18 0-.36-.02-.53-.06-.01-.18-.04-.39-.04-.59 0-1.15.572-2.27 1.206-2.98.804-.94 2.142-1.64 3.248-1.68.03.21.06.43.06.66zm3.42 15.83c-.36.77-.54 1.12-.99 1.81-.63.96-1.52 2.16-2.62 2.17-1 .01-1.25-.65-2.6-.64-1.35.01-1.62.65-2.63.64-1.1-.01-1.94-1.1-2.58-2.06-1.78-2.68-1.96-5.82-.87-7.49.78-1.19 2.01-1.89 3.16-1.89 1.18 0 1.92.65 2.89.65.95 0 1.53-.65 2.9-.65 1.02 0 2.1.55 2.87 1.51-2.52 1.38-2.11 4.98.47 5.95z" fill="#1A1535"/>
+          </svg>
+          Apple ile Giriş Yap
+        </button>
+      </div>
+
+      <!-- Bottom link -->
+      <div class="bottom-link">
+        Hesabın yok mu? <button class="link">Kayıt Ol</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════ 02 KAYIT OL (REGISTER) ══════════════════ -->
+<div class="sw">
+  <div class="lbl">02 — Kayıt Ol</div>
+  <div class="phone">
+    <div class="status-bar"><span>09:41</span><div class="notch"></div><div class="sr"><svg viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1" fill="currentColor" stroke="none"/></svg><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="11" rx="2"/></svg></div></div>
+    <div class="screen">
+      <!-- Back -->
+      <div class="back-row">
+        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        Geri
+      </div>
+
+      <div class="sa">
+        <div class="auth-content" style="padding-top:18px;">
+
+          <!-- Title -->
+          <div style="margin-bottom:22px;">
+            <div class="auth-title">Hesap Oluştur ✨</div>
+            <div class="auth-subtitle" style="margin-top:6px;">Hemen ücretsiz kayıt ol, anketlere katılmaya başla.</div>
+          </div>
+
+          <!-- Form -->
+          <div style="display:flex; gap:10px;">
+            <div class="field" style="flex:1;">
+              <div class="field-label">AD</div>
+              <input class="field-input" type="text" placeholder="İlhan">
+            </div>
+            <div class="field" style="flex:1;">
+              <div class="field-label">SOYAD</div>
+              <input class="field-input" type="text" placeholder="Yılmaz">
+            </div>
+          </div>
+
+          <div class="field">
+            <div class="field-label">E-POSTA</div>
+            <div class="field-input-wrap">
+              <div class="field-icon"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg></div>
+              <input class="field-input" type="email" placeholder="ornek@email.com">
+            </div>
+          </div>
+
+          <div class="field">
+            <div class="field-label">TELEFON</div>
+            <div class="field-input-wrap">
+              <div class="field-icon"><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></div>
+              <input class="field-input" type="tel" placeholder="+90 5XX XXX XX XX">
+            </div>
+          </div>
+
+          <div class="field">
+            <div class="field-label">ŞİFRE</div>
+            <div class="field-input-wrap">
+              <div class="field-icon"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+              <input class="field-input" type="password" placeholder="En az 8 karakter" value="••••••••••">
+              <button class="field-eye"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+            </div>
+            <!-- Password strength -->
+            <div class="strength-bar">
+              <div class="str-seg on3"></div>
+              <div class="str-seg on3"></div>
+              <div class="str-seg on3"></div>
+              <div class="str-seg on3"></div>
+            </div>
+            <div class="str-label">Güçlü şifre</div>
+          </div>
+
+          <!-- Terms checkbox -->
+          <div class="check-row">
+            <div class="check-box checked"></div>
+            <div class="check-text"><button class="link" style="font-size:12px;">Kullanım Koşulları</button> ve <button class="link" style="font-size:12px;">Gizlilik Politikası</button>'nı okudum ve kabul ediyorum.</div>
+          </div>
+
+          <div class="check-row" style="margin-bottom:20px;">
+            <div class="check-box"></div>
+            <div class="check-text">Yeni anket ve kampanya bildirimlerini almak istiyorum.</div>
+          </div>
+
+          <!-- Register button -->
+          <button class="btn-primary" style="margin-bottom:4px;">
+            Kayıt Ol
+            <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+          </button>
+
+          <!-- Divider -->
+          <div class="divider">
+            <div class="divider-line"></div>
+            <div class="divider-text">VEYA</div>
+            <div class="divider-line"></div>
+          </div>
+
+          <!-- Social -->
+          <div style="display:flex; gap:10px; margin-bottom:16px;">
+            <button class="btn-outline" style="flex:1;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="none">
+                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+              </svg>
+              Google
+            </button>
+            <button class="btn-outline" style="flex:1;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="none">
+                <path d="M16.365 1.43c0 1.14-.493 2.27-1.177 3.08-.744.9-1.99 1.57-2.987 1.57-.18 0-.36-.02-.53-.06-.01-.18-.04-.39-.04-.59 0-1.15.572-2.27 1.206-2.98.804-.94 2.142-1.64 3.248-1.68.03.21.06.43.06.66zm3.42 15.83c-.36.77-.54 1.12-.99 1.81-.63.96-1.52 2.16-2.62 2.17-1 .01-1.25-.65-2.6-.64-1.35.01-1.62.65-2.63.64-1.1-.01-1.94-1.1-2.58-2.06-1.78-2.68-1.96-5.82-.87-7.49.78-1.19 2.01-1.89 3.16-1.89 1.18 0 1.92.65 2.89.65.95 0 1.53-.65 2.9-.65 1.02 0 2.1.55 2.87 1.51-2.52 1.38-2.11 4.98.47 5.95z" fill="#1A1535"/>
+              </svg>
+              Apple
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom link -->
+      <div class="bottom-link">
+        Zaten hesabın var mı? <button class="link">Giriş Yap</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════ 03 ŞİFREMİ UNUTTUM ══════════════════ -->
+<div class="sw">
+  <div class="lbl">03 — Şifremi Unuttum</div>
+  <div class="phone">
+    <div class="status-bar"><span>09:41</span><div class="notch"></div><div class="sr"><svg viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1" fill="currentColor" stroke="none"/></svg><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="11" rx="2"/></svg></div></div>
+    <div class="screen">
+      <!-- Back -->
+      <div class="back-row">
+        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        Geri
+      </div>
+
+      <div class="auth-content" style="padding-top:32px;">
+
+        <!-- Icon -->
+        <div style="width:72px; height:72px; border-radius:22px; background:var(--purple-light); border:1.5px solid var(--purple-mid); display:flex; align-items:center; justify-content:center; margin-bottom:20px;">
+          <svg width="30" height="30" viewBox="0 0 24 24" style="color:var(--purple);">
+            <rect x="3" y="11" width="18" height="11" rx="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            <circle cx="12" cy="16" r="1" fill="var(--purple)" stroke="none"/>
+          </svg>
+        </div>
+
+        <div class="auth-title">Şifreni Sıfırla</div>
+        <div class="auth-subtitle" style="margin-top:6px; margin-bottom:28px;">Kayıtlı e-posta adresini gir, sana şifre sıfırlama bağlantısı gönderelim.</div>
+
+        <!-- Email field -->
+        <div class="field">
+          <div class="field-label">E-POSTA ADRESİ</div>
+          <div class="field-input-wrap">
+            <div class="field-icon"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg></div>
+            <input class="field-input" type="email" placeholder="ornek@email.com" value="ilhan@pulsepoll.com">
+          </div>
+        </div>
+
+        <!-- Send button -->
+        <button class="btn-primary" style="margin-top:8px; margin-bottom:24px;">
+          Sıfırlama Bağlantısı Gönder
+          <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22 6 12 13 2 6"/></svg>
+        </button>
+
+        <!-- Info card -->
+        <div style="background:var(--purple-light); border:1px solid var(--purple-mid); border-radius:var(--rs); padding:14px 16px; display:flex; align-items:flex-start; gap:12px;">
+          <div style="width:32px; height:32px; border-radius:10px; background:var(--white); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+            <svg width="16" height="16" viewBox="0 0 24 24" style="color:var(--purple);"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </div>
+          <div style="font-size:12px; color:var(--text2); line-height:1.6;">E-posta birkaç dakika içinde gelecektir. Spam klasörünü de kontrol etmeyi unutma.</div>
+        </div>
+
+        <!-- Spacer push bottom -->
+        <div style="flex:1;"></div>
+
+        <!-- Alternative -->
+        <div style="text-align:center; padding-bottom:16px;">
+          <div style="font-size:13px; color:var(--text3); margin-bottom:12px;">Hâlâ e-posta gelmiyor mu?</div>
+          <button class="link" style="font-size:14px;">Tekrar Gönder</button>
+        </div>
+      </div>
+
+      <!-- Bottom link -->
+      <div class="bottom-link">
+        Şifreni hatırladın mı? <button class="link">Giriş Yap</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════ 04 DOĞRULAMA KODU (BONUS) ══════════════════ -->
+<div class="sw">
+  <div class="lbl">04 — E-posta Doğrulama</div>
+  <div class="phone">
+    <div class="status-bar"><span>09:41</span><div class="notch"></div><div class="sr"><svg viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1" fill="currentColor" stroke="none"/></svg><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="11" rx="2"/></svg></div></div>
+    <div class="screen">
+      <!-- Back -->
+      <div class="back-row">
+        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        Geri
+      </div>
+
+      <div class="auth-content" style="padding-top:32px; align-items:center; text-align:center;">
+
+        <!-- Success circle -->
+        <div class="success-circle" style="margin-bottom:24px;">
+          <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+        </div>
+
+        <div class="auth-title" style="text-align:center;">Doğrulama Kodu</div>
+        <div class="auth-subtitle" style="margin-top:6px; margin-bottom:28px; text-align:center; padding:0 10px;">
+          <strong style="color:var(--text);">ilhan@pulsepoll.com</strong> adresine gönderilen 4 haneli kodu gir.
+        </div>
+
+        <!-- OTP -->
+        <div class="otp-row" style="margin-bottom:8px;">
+          <input class="otp-box filled" maxlength="1" value="7">
+          <input class="otp-box filled" maxlength="1" value="3">
+          <input class="otp-box filled" maxlength="1" value="9">
+          <input class="otp-box" maxlength="1" placeholder="·">
+        </div>
+
+        <!-- Timer -->
+        <div style="font-size:13px; color:var(--text3); margin-bottom:24px;">
+          Tekrar gönder: <span style="color:var(--purple); font-weight:700;">01:47</span>
+        </div>
+
+        <!-- Verify button -->
+        <button class="btn-primary" style="margin-bottom:20px;">
+          Doğrula
+          <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/></svg>
+        </button>
+
+        <div style="font-size:12px; color:var(--text3); line-height:1.6; padding:0 10px;">
+          Kodu almadın mı? <button class="link" style="font-size:12px;">Farklı e-posta ile dene</button>
+        </div>
+
+      </div>
+
+      <div style="height:32px; background:var(--bg);"></div>
+    </div>
+  </div>
+</div>
+
+</div>
+</body>
+</html>
