@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Npgsql;
+using NpgsqlTypes;
 using PulsePoll.Application.Interfaces;
 using PulsePoll.Application.Messaging;
 using PulsePoll.Domain.Entities;
@@ -47,18 +49,22 @@ public class OutboxDispatcherBackgroundService(
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var publisher = scope.ServiceProvider.GetRequiredService<IMessagePublisher>();
         var now = TurkeyTime.Now;
+        var nowParam = new NpgsqlParameter("now", NpgsqlDbType.Timestamp) { Value = now };
+        var batchSizeParam = new NpgsqlParameter("batchSize", NpgsqlDbType.Integer) { Value = BatchSize };
 
         List<OutboxMessage> messages;
         await using (var lockTx = await db.Database.BeginTransactionAsync(ct))
         {
             messages = await db.OutboxMessages
-                .FromSqlInterpolated($@"
+                .FromSqlRaw(@"
                     SELECT * FROM outbox_messages
                     WHERE processed_at IS NULL
-                      AND (locked_until IS NULL OR locked_until < {now})
+                      AND (locked_until IS NULL OR locked_until < @now)
                     ORDER BY occurred_at
-                    LIMIT {BatchSize}
-                    FOR UPDATE SKIP LOCKED")
+                    LIMIT @batchSize
+                    FOR UPDATE SKIP LOCKED",
+                    nowParam,
+                    batchSizeParam)
                 .ToListAsync(ct);
 
             if (messages.Count == 0)
