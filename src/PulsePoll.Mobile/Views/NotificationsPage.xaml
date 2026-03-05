@@ -14,8 +14,8 @@
         <converters:InvertedBoolConverter x:Key="InvertedBool"/>
     </ContentPage.Resources>
 
-    <Grid>
-        <!-- Main Content -->
+    <Grid RowDefinitions="Auto,*">
+        <!-- Header + Filters -->
         <VerticalStackLayout Spacing="16" Padding="20,16">
 
             <!-- Header -->
@@ -71,107 +71,112 @@
                 </HorizontalStackLayout>
             </ScrollView>
 
-            <Grid>
-                <ActivityIndicator IsVisible="{Binding IsLoading}"
-                                   IsRunning="{Binding IsLoading}"
-                                   Color="{StaticResource PrimaryPurple}"
-                                   HorizontalOptions="Center"
-                                   VerticalOptions="Center"/>
-
-                <VerticalStackLayout IsVisible="{Binding ShowEmptyState}"
-                                     Spacing="8"
-                                     VerticalOptions="Center"
-                                     HorizontalOptions="Center">
-                    <Label Text="Bildirim bulunamadı"
-                           FontFamily="JakartaSemiBold"
-                           FontSize="16"
-                           TextColor="{StaticResource TextPrimary}"
-                           HorizontalTextAlignment="Center"/>
-                    <Label Text="Yeni bildirimler geldiğinde burada listelenecek."
-                           Style="{StaticResource CaptionStyle}"
-                           HorizontalTextAlignment="Center"/>
-                </VerticalStackLayout>
-
-                <!-- Notifications List with SwipeView -->
-                <ScrollView IsVisible="{Binding HasNotifications}">
-                    <VerticalStackLayout Spacing="8"
-                                         BindableLayout.ItemsSource="{Binding Notifications}">
-                        <BindableLayout.ItemTemplate>
-                            <DataTemplate x:DataType="models:NotificationModel">
-                                <SwipeView>
-                                    <!-- Swipe Right: Mark as Read -->
-                                    <SwipeView.LeftItems>
-                                        <SwipeItems Mode="Execute">
-                                            <SwipeItem Text="Okundu"
-                                                       BackgroundColor="{StaticResource Success}"
-                                                       Command="{Binding Source={RelativeSource AncestorType={x:Type vm:NotificationsViewModel}}, Path=MarkOneReadCommand}"
-                                                       CommandParameter="{Binding .}"/>
-                                        </SwipeItems>
-                                    </SwipeView.LeftItems>
-
-                                    <!-- Swipe Left: Delete -->
-                                    <SwipeView.RightItems>
-                                        <SwipeItems Mode="Execute">
-                                            <SwipeItem Text="Sil"
-                                                       BackgroundColor="{StaticResource Danger}"
-                                                       Command="{Binding Source={RelativeSource AncestorType={x:Type vm:NotificationsViewModel}}, Path=DeleteNotificationCommand}"
-                                                       CommandParameter="{Binding .}"/>
-                                        </SwipeItems>
-                                    </SwipeView.RightItems>
-
-                                    <!-- Notification Card -->
-                                    <Border StrokeShape="RoundRectangle 16"
-                                            Stroke="{StaticResource CardBorder}"
-                                            BackgroundColor="{Binding IsRead, Converter={StaticResource BoolToReadBg}}"
-                                            Padding="14">
-                                        <Border.GestureRecognizers>
-                                            <TapGestureRecognizer
-                                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:NotificationsViewModel}}, Path=ShowNotificationCommand}"
-                                                CommandParameter="{Binding .}"/>
-                                        </Border.GestureRecognizers>
-                                        <Grid ColumnDefinitions="40,*,Auto" ColumnSpacing="12">
-                                            <Border StrokeThickness="0"
-                                                    StrokeShape="RoundRectangle 20"
-                                                    HeightRequest="40" WidthRequest="40"
-                                                    BackgroundColor="{Binding Type, Converter={StaticResource TypeToBg}}">
-                                                <Image Source="icon_bell.png"
-                                                       HeightRequest="18" WidthRequest="18"
-                                                       HorizontalOptions="Center" VerticalOptions="Center"/>
-                                            </Border>
-                                            <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
-                                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="6">
-                                                    <Border StrokeThickness="0"
-                                                            StrokeShape="RoundRectangle 4"
-                                                            HeightRequest="8" WidthRequest="8"
-                                                            BackgroundColor="{StaticResource PrimaryPurple}"
-                                                            IsVisible="{Binding IsRead, Converter={StaticResource InvertedBool}}"
-                                                            VerticalOptions="Center"/>
-                                                    <Label Grid.Column="1"
-                                                           Text="{Binding Title}"
-                                                           FontFamily="JakartaSemiBold" FontSize="14"
-                                                           TextColor="{StaticResource TextPrimary}"/>
-                                                </Grid>
-                                                <Label Text="{Binding Message}"
-                                                       Style="{StaticResource CaptionStyle}"
-                                                       MaxLines="2" LineBreakMode="TailTruncation"/>
-                                            </VerticalStackLayout>
-                                            <Label Grid.Column="2"
-                                                   Text="{Binding Date, StringFormat='{0:HH:mm}'}"
-                                                   Style="{StaticResource CaptionStyle}"
-                                                   VerticalOptions="Start"/>
-                                        </Grid>
-                                    </Border>
-                                </SwipeView>
-                            </DataTemplate>
-                        </BindableLayout.ItemTemplate>
-                    </VerticalStackLayout>
-                </ScrollView>
-            </Grid>
-
         </VerticalStackLayout>
 
+        <!-- Empty State -->
+        <VerticalStackLayout Grid.Row="1"
+                             IsVisible="{Binding ShowEmptyState}"
+                             Spacing="8"
+                             VerticalOptions="Center"
+                             HorizontalOptions="Center"
+                             Padding="20">
+            <Label Text="Bildirim bulunamadı"
+                   FontFamily="JakartaSemiBold"
+                   FontSize="16"
+                   TextColor="{StaticResource TextPrimary}"
+                   HorizontalTextAlignment="Center"/>
+            <Label Text="Yeni bildirimler geldiğinde burada listelenecek."
+                   Style="{StaticResource CaptionStyle}"
+                   HorizontalTextAlignment="Center"/>
+        </VerticalStackLayout>
+
+        <!-- Notifications CollectionView -->
+        <CollectionView Grid.Row="1"
+                        ItemsSource="{Binding Notifications}"
+                        IsVisible="{Binding HasNotifications}"
+                        Margin="20,0">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:NotificationModel">
+                    <SwipeView Margin="0,4">
+                        <!-- Swipe Right: Mark as Read -->
+                        <SwipeView.LeftItems>
+                            <SwipeItems Mode="Reveal">
+                                <SwipeItem Text="Okundu"
+                                           IconImageSource="icon_check.png"
+                                           BackgroundColor="{StaticResource Success}"
+                                           Command="{Binding Source={RelativeSource AncestorType={x:Type vm:NotificationsViewModel}}, Path=MarkOneReadCommand}"
+                                           CommandParameter="{Binding .}"/>
+                            </SwipeItems>
+                        </SwipeView.LeftItems>
+
+                        <!-- Swipe Left: Delete -->
+                        <SwipeView.RightItems>
+                            <SwipeItems Mode="Reveal">
+                                <SwipeItem Text="Sil"
+                                           IconImageSource="icon_x_circle.png"
+                                           BackgroundColor="{StaticResource Danger}"
+                                           Command="{Binding Source={RelativeSource AncestorType={x:Type vm:NotificationsViewModel}}, Path=DeleteNotificationCommand}"
+                                           CommandParameter="{Binding .}"/>
+                            </SwipeItems>
+                        </SwipeView.RightItems>
+
+                        <!-- Notification Card -->
+                        <Border StrokeShape="RoundRectangle 16"
+                                Stroke="{StaticResource CardBorder}"
+                                BackgroundColor="{Binding IsRead, Converter={StaticResource BoolToReadBg}}"
+                                Padding="14">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:NotificationsViewModel}}, Path=ShowNotificationCommand}"
+                                    CommandParameter="{Binding .}"/>
+                            </Border.GestureRecognizers>
+                            <Grid ColumnDefinitions="40,*,Auto" ColumnSpacing="12">
+                                <Border StrokeThickness="0"
+                                        StrokeShape="RoundRectangle 20"
+                                        HeightRequest="40" WidthRequest="40"
+                                        BackgroundColor="{Binding Type, Converter={StaticResource TypeToBg}}">
+                                    <Image Source="icon_bell.png"
+                                           HeightRequest="18" WidthRequest="18"
+                                           HorizontalOptions="Center" VerticalOptions="Center"/>
+                                </Border>
+                                <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="6">
+                                        <Border StrokeThickness="0"
+                                                StrokeShape="RoundRectangle 4"
+                                                HeightRequest="8" WidthRequest="8"
+                                                BackgroundColor="{StaticResource PrimaryPurple}"
+                                                IsVisible="{Binding IsRead, Converter={StaticResource InvertedBool}}"
+                                                VerticalOptions="Center"/>
+                                        <Label Grid.Column="1"
+                                               Text="{Binding Title}"
+                                               FontFamily="JakartaSemiBold" FontSize="14"
+                                               TextColor="{StaticResource TextPrimary}"/>
+                                    </Grid>
+                                    <Label Text="{Binding Message}"
+                                           Style="{StaticResource CaptionStyle}"
+                                           MaxLines="2" LineBreakMode="TailTruncation"/>
+                                </VerticalStackLayout>
+                                <Label Grid.Column="2"
+                                       Text="{Binding Date, StringFormat='{0:HH:mm}'}"
+                                       Style="{StaticResource CaptionStyle}"
+                                       VerticalOptions="Start"/>
+                            </Grid>
+                        </Border>
+                    </SwipeView>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <ActivityIndicator Grid.RowSpan="2"
+                           IsVisible="{Binding IsLoading}"
+                           IsRunning="{Binding IsLoading}"
+                           Color="{StaticResource PrimaryPurple}"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center"/>
+
         <!-- Popup Overlay -->
-        <Grid IsVisible="{Binding IsPopupVisible}"
+        <Grid Grid.RowSpan="2"
+              IsVisible="{Binding IsPopupVisible}"
               BackgroundColor="#80000000"
               x:DataType="vm:NotificationsViewModel">
             <Grid.GestureRecognizers>
