@@ -70,9 +70,11 @@ public class Project : EntityBase
     public DateOnly? EndDate => StartDate.HasValue ? StartDate.Value.AddDays(DurationDays) : null;
 
     public int? CoverMediaId { get; set; }
+    public int? SurveyResultScriptId { get; set; }
 
     // Navigation properties
     public Customer Customer { get; set; } = null!;
     public MediaAsset? CoverMedia { get; set; }
+    public SurveyResultScript? SurveyResultScript { get; set; }
     public ICollection<ProjectAssignment> Assignments { get; set; } = [];
 }

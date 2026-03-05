@@ -74,6 +74,7 @@ public class ProjectService(
             DisqualifyMessage    = dto.DisqualifyMessage,
             QuotaFullMessage     = dto.QuotaFullMessage,
             ScreenOutMessage     = dto.ScreenOutMessage,
+            SurveyResultScriptId = dto.SurveyResultScriptId,
             CoverMediaId         = dto.CoverMediaId
         };
         project.SetCreated(adminId);
@@ -111,6 +112,7 @@ public class ProjectService(
         project.DisqualifyMessage    = dto.DisqualifyMessage;
         project.QuotaFullMessage     = dto.QuotaFullMessage;
         project.ScreenOutMessage     = dto.ScreenOutMessage;
+        project.SurveyResultScriptId = dto.SurveyResultScriptId;
         project.Status               = dto.Status;
         project.CoverMediaId         = dto.CoverMediaId;
         project.SetUpdated(adminId);
@@ -175,6 +177,17 @@ public class ProjectService(
             p.ScreenOutMessage,
             p.Status,
             assignmentStatus,
+            p.SurveyResultScriptId,
+            p.SurveyResultScript?.Name,
+            p.SurveyResultScript?.Patterns
+                .Where(x => x.DeletedAt == null)
+                .OrderBy(x => x.Order)
+                .Select(x => new SurveyResultPatternDto(
+                    x.Id,
+                    x.Status,
+                    x.MatchPattern,
+                    x.Order))
+                .ToList(),
             p.CoverMediaId,
             coverImageUrl,
             rewardUnit.UnitCode,

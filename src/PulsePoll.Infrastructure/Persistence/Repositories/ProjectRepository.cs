@@ -10,12 +10,16 @@ public class ProjectRepository(AppDbContext db) : IProjectRepository
         => db.Projects
              .Include(p => p.Customer)
              .Include(p => p.CoverMedia)
+             .Include(p => p.SurveyResultScript)
+                .ThenInclude(s => s!.Patterns.Where(x => x.DeletedAt == null))
              .FirstOrDefaultAsync(p => p.Id == id && p.DeletedAt == null);
 
     public Task<List<Project>> GetAllAsync()
         => db.Projects
              .Include(p => p.Customer)
              .Include(p => p.CoverMedia)
+             .Include(p => p.SurveyResultScript)
+                .ThenInclude(s => s!.Patterns.Where(x => x.DeletedAt == null))
              .Where(p => p.DeletedAt == null)
              .OrderByDescending(p => p.CreatedAt)
              .ToListAsync();
@@ -25,6 +29,7 @@ public class ProjectRepository(AppDbContext db) : IProjectRepository
              .Where(a => a.SubjectId == subjectId)
              .Include(a => a.Project).ThenInclude(p => p.Customer)
              .Include(a => a.Project).ThenInclude(p => p.CoverMedia)
+             .Include(a => a.Project).ThenInclude(p => p.SurveyResultScript).ThenInclude(s => s!.Patterns.Where(x => x.DeletedAt == null))
              .Include(a => a.Project).ThenInclude(p => p.Assignments)
              .Select(a => a.Project)
              .Where(p => p.DeletedAt == null)

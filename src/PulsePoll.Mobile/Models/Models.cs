@@ -49,16 +49,23 @@ public record SurveyModel(
     string RewardUnitLabel = "TL",
     string SurveyUrl = "",
     string SubjectParameterName = "uid",
-    string StartMessage = "")
+    string StartMessage = "",
+    List<SurveyResultPatternModel>? ResultPatterns = null)
 {
     public bool HasCategory => !string.IsNullOrWhiteSpace(Category);
     public bool HasDescription => !string.IsNullOrWhiteSpace(Description);
+    public bool HasResultPatterns => ResultPatterns is { Count: > 0 };
     public string RewardDisplay => $"{Reward:0.##} {RewardUnitLabel}";
     public string ConsolationRewardDisplay => $"{ConsolationReward:0.##} {RewardUnitLabel}";
     public string StartMessageDisplay => string.IsNullOrWhiteSpace(StartMessage)
         ? "Ankete başlamadan önce soruları dikkatle okuyunuz."
         : StartMessage;
 }
+
+public record SurveyResultPatternModel(
+    string Status,
+    string MatchPattern,
+    int Order);
 
 public record SurveyCriteria(string Label, bool IsMet);
 

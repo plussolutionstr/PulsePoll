@@ -24,6 +24,7 @@ public static class DependencyInjection
         services.AddScoped<ICommunicationAutomationConfigService, CommunicationAutomationConfigService>();
         services.AddScoped<IReferralRewardService, ReferralRewardService>();
         services.AddScoped<IProjectService, ProjectService>();
+        services.AddScoped<ISurveyResultScriptService, SurveyResultScriptService>();
         services.AddScoped<IAssignmentService, AssignmentService>();
         services.AddScoped<IWalletService, WalletService>();
         services.AddScoped<INotificationService, NotificationService>();

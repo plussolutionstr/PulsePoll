@@ -53,7 +53,7 @@ public partial class SurveyDetailViewModel : ObservableObject
 
             var title = Uri.EscapeDataString(Survey.Title);
             var encodedUrl = Uri.EscapeDataString(targetUrl);
-            await Shell.Current.GoToAsync($"surveywebview?title={title}&url={encodedUrl}");
+            await Shell.Current.GoToAsync($"surveywebview?projectId={Survey.Id}&title={title}&url={encodedUrl}");
         }
         finally
         {

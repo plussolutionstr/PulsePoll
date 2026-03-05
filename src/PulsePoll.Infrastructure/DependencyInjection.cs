@@ -70,6 +70,7 @@ public static class DependencyInjection
         services.AddScoped<IMessageAutomationRepository, MessageAutomationRepository>();
         services.AddScoped<ISpecialDayRepository, SpecialDayRepository>();
         services.AddScoped<IProjectRepository, ProjectRepository>();
+        services.AddScoped<ISurveyResultScriptRepository, SurveyResultScriptRepository>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
         services.AddScoped<IWalletRepository, WalletRepository>();
         services.AddScoped<IStoryRepository, StoryRepository>();

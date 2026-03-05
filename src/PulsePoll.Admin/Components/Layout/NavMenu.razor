@@ -16,7 +16,11 @@
             }
             @if (Has(PermissionCodes.Projects.View))
             {
-                <DxMenuItem NavigateUrl="/projects" Text="Projeler" CssClass="@MenuItemCssClass("/projects")" IconCssClass="bi bi-kanban"/>
+                <DxMenuItem NavigateUrl="/projects" Text="Projeler" CssClass="@MenuItemCssClass("/projects", "/projects/result-scripts")" IconCssClass="bi bi-kanban"/>
+                @if (Has(PermissionCodes.Projects.Edit))
+                {
+                    <DxMenuItem NavigateUrl="/projects/result-scripts" Text="Anket Scriptleri" CssClass="@MenuItemCssClass("/projects/result-scripts")" IconCssClass="bi bi-code-slash"/>
+                }
             }
             @if (Has(PermissionCodes.Subjects.View))
             {
@@ -145,7 +149,7 @@
     private bool Has(string permissionCode)
         => _permissions.Contains(permissionCode);
 
-    private string? MenuItemCssClass(string itemPath)
+    private string? MenuItemCssClass(string itemPath, params string[] excludedChildPaths)
     {
         var effectivePath = EffectivePathForMenu();
         if (string.IsNullOrWhiteSpace(effectivePath))
@@ -156,10 +160,27 @@
                 ? "menu-item-active"
                 : null;
 
-        return effectivePath.Equals(itemPath, StringComparison.OrdinalIgnoreCase) ||
-               effectivePath.StartsWith($"{itemPath}/", StringComparison.OrdinalIgnoreCase)
-            ? "menu-item-active"
-            : null;
+        var isActive = effectivePath.Equals(itemPath, StringComparison.OrdinalIgnoreCase) ||
+                       effectivePath.StartsWith($"{itemPath}/", StringComparison.OrdinalIgnoreCase);
+        if (!isActive)
+            return null;
+
+        if (excludedChildPaths.Length == 0)
+            return "menu-item-active";
+
+        foreach (var excludedChildPath in excludedChildPaths)
+        {
+            if (string.IsNullOrWhiteSpace(excludedChildPath))
+                continue;
+
+            if (effectivePath.Equals(excludedChildPath, StringComparison.OrdinalIgnoreCase) ||
+                effectivePath.StartsWith($"{excludedChildPath}/", StringComparison.OrdinalIgnoreCase))
+            {
+                return null;
+            }
+        }
+
+        return "menu-item-active";
     }
 
     private string? EffectivePathForMenu()

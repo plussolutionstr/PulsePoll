@@ -4,6 +4,7 @@
 @using PulsePoll.Domain.Enums
 @using PulsePoll.Application.Extensions
 @inject IProjectService ProjectService
+@inject ISurveyResultScriptService SurveyResultScriptService
 @inject ICustomerService CustomerService
 @inject IAppToastService Toast
 @inject AuthenticationStateProvider AuthStateProvider
@@ -236,6 +237,15 @@
                         </EditBoxDisplayTemplate>
                     </DxComboBox>
                 </DxFormLayoutItem>
+                <DxFormLayoutItem ColSpanMd="12">
+                    <label class="form-label">Anket Scripti</label>
+                    <DxComboBox Data="@_resultScripts"
+                                ValueFieldName="Id"
+                                TextFieldName="Name"
+                                @bind-Value="_form.SurveyResultScriptId"
+                                ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto"
+                                NullText="Script seçiniz (opsiyonel)" />
+                </DxFormLayoutItem>
             </DxFormLayoutGroup>
 
             <DxFormLayoutGroup Caption="Katılımcı Mesajları" ColSpanMd="12">
@@ -319,6 +329,7 @@
 
     private IReadOnlyList<ProjectDto> _projects = [];
     private List<CustomerDto> _customers = [];
+    private List<SurveyResultScriptDto> _resultScripts = [];
     private readonly List<ProjectStatus> _statuses = Enum.GetValues<ProjectStatus>().ToList();
 
     private bool _isLoading = true;
@@ -343,6 +354,7 @@
     {
         await LoadPermissionsAsync();
         _customers = await CustomerService.GetAllAsync();
+        _resultScripts = await SurveyResultScriptService.GetAllAsync(includeInactive: true);
         await LoadDataAsync();
     }
 
@@ -400,6 +412,7 @@
             Name = dto.Name,
             Description = dto.Description,
             Category = dto.Category,
+            SurveyResultScriptId = dto.SurveyResultScriptId,
             ParticipantCount = dto.ParticipantCount,
             TotalTargetCount = dto.TotalTargetCount,
             DurationDays = dto.DurationDays,
@@ -441,6 +454,7 @@
             Name = $"{dto.Name} - Kopyası",
             Description = dto.Description,
             Category = dto.Category,
+            SurveyResultScriptId = dto.SurveyResultScriptId,
             ParticipantCount = dto.ParticipantCount,
             TotalTargetCount = dto.TotalTargetCount,
             DurationDays = dto.DurationDays,
@@ -518,6 +532,7 @@
                     _form.DisqualifyMessage.Trim(),
                     _form.QuotaFullMessage.Trim(),
                     _form.ScreenOutMessage.Trim(),
+                    _form.SurveyResultScriptId,
                     _form.CoverMediaId);
 
                 await ProjectService.CreateAsync(dto, adminId);
@@ -546,6 +561,7 @@
                     _form.QuotaFullMessage.Trim(),
                     _form.ScreenOutMessage.Trim(),
                     _form.Status,
+                    _form.SurveyResultScriptId,
                     _form.CoverMediaId);
 
                 await ProjectService.UpdateAsync(_form.Id, dto, adminId);
@@ -679,6 +695,7 @@
         public string Name { get; set; } = string.Empty;
         public string? Description { get; set; }
         public string? Category { get; set; }
+        public int? SurveyResultScriptId { get; set; }
         public int ParticipantCount { get; set; }
         public int TotalTargetCount { get; set; }
         public int DurationDays { get; set; }

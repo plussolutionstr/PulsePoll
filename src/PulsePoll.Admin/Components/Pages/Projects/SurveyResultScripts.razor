@@ -1,0 +1,380 @@
+@page "/projects/result-scripts"
+@attribute [HasPermission(PermissionCodes.Projects.Edit)]
+@using System.Security.Claims
+@using PulsePoll.Application.DTOs
+@using PulsePoll.Application.Extensions
+@using PulsePoll.Domain.Enums
+@inject ISurveyResultScriptService SurveyResultScriptService
+@inject IAppToastService Toast
+@inject AuthenticationStateProvider AuthStateProvider
+
+<PageTitle>Anket Scriptleri — PulsePoll Admin</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">Anket Scriptleri</h3>
+    <DxButton Text="Yeni Script"
+              IconCssClass="bi bi-plus-lg"
+              RenderStyle="ButtonRenderStyle.Primary"
+              RenderStyleMode="ButtonRenderStyleMode.Outline"
+              Click="OpenNew" />
+</div>
+
+<DxGrid Data="@_items" ShowFilterRow="true" PageSize="20">
+    <Columns>
+        <DxGridDataColumn FieldName="Name" Caption="Script Adı" />
+        <DxGridDataColumn FieldName="IsActive" Caption="Aktif" Width="90px" />
+        <DxGridDataColumn Caption="Pattern" Width="90px">
+            <CellDisplayTemplate>
+                @{
+                    var row = (SurveyResultScriptDto)context.DataItem;
+                }
+                @row.Patterns.Count
+            </CellDisplayTemplate>
+        </DxGridDataColumn>
+        <DxGridCommandColumn Caption="" Width="50px" TextAlignment="GridTextAlignment.Center"
+                             NewButtonVisible="false" EditButtonVisible="false" DeleteButtonVisible="false">
+            <CellDisplayTemplate>
+                @{
+                    var row = (SurveyResultScriptDto)context.DataItem;
+                }
+                <DxButton IconCssClass="bi bi-three-dots-vertical"
+                          RenderStyle="ButtonRenderStyle.Link"
+                          Click="@(async e => await ShowMenuAsync(e, row))"
+                          title="İşlemler" />
+            </CellDisplayTemplate>
+        </DxGridCommandColumn>
+    </Columns>
+</DxGrid>
+
+<DxContextMenu @ref="_contextMenu" ItemClick="OnContextMenuItemClick">
+    <Items>
+        <DxContextMenuItem Text="Düzenle" Name="edit" IconCssClass="bi bi-pencil" />
+        <DxContextMenuItem Text="Sil" Name="delete" IconCssClass="bi bi-trash" CssClass="text-danger" BeginGroup="true" />
+    </Items>
+</DxContextMenu>
+
+<DxPopup @bind-Visible="_popupVisible"
+         HeaderText="@(_form.Id > 0 ? "Script Düzenle" : "Yeni Script")"
+         Width="920px"
+         CloseOnOutsideClick="false"
+         ShowFooter="true">
+    <BodyContentTemplate Context="_">
+        @if (!string.IsNullOrWhiteSpace(_formError))
+        {
+            <div class="alert alert-danger py-2 mb-3">@_formError</div>
+        }
+
+        <DxFormLayout>
+            <DxFormLayoutItem ColSpanMd="8">
+                <label class="form-label">Script Adı *</label>
+                <DxTextBox @bind-Text="_form.Name" />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanMd="4">
+                <div class="pt-4">
+                    <DxCheckBox @bind-Checked="_form.IsActive" Text="Aktif" />
+                </div>
+            </DxFormLayoutItem>
+        </DxFormLayout>
+
+        <div class="d-flex justify-content-between align-items-center mt-3 mb-2">
+            <h6 class="mb-0">Pattern Listesi</h6>
+            <DxButton Text="Pattern Ekle"
+                      IconCssClass="bi bi-plus"
+                      RenderStyle="ButtonRenderStyle.Secondary"
+                      RenderStyleMode="ButtonRenderStyleMode.Outline"
+                      Click="AddPattern" />
+        </div>
+
+        <table class="table table-sm table-bordered align-middle mb-0">
+            <thead>
+            <tr>
+                <th style="width: 170px;">Durum</th>
+                <th>HTML Pattern</th>
+                <th style="width: 110px;">Sıra</th>
+                <th style="width: 50px;"></th>
+            </tr>
+            </thead>
+            <tbody>
+            @if (_form.Patterns.Count == 0)
+            {
+                <tr>
+                    <td colspan="4" class="text-muted text-center py-3">Henüz pattern eklenmedi.</td>
+                </tr>
+            }
+            @for (var i = 0; i < _form.Patterns.Count; i++)
+            {
+                var row = _form.Patterns[i];
+                <tr>
+                    <td>
+                        <DxComboBox Data="@_statusOptions"
+                                    ValueFieldName="Value"
+                                    TextFieldName="Label"
+                                    @bind-Value="row.Status" />
+                    </td>
+                    <td>
+                        <DxTextBox @bind-Text="row.MatchPattern" />
+                    </td>
+                    <td>
+                        <DxSpinEdit @bind-Value="row.Order" MinValue="0" />
+                    </td>
+                    <td class="text-center">
+                        <DxButton IconCssClass="bi bi-x-lg text-danger"
+                                  RenderStyle="ButtonRenderStyle.Link"
+                                  Click="@(() => RemovePattern(row))" />
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </BodyContentTemplate>
+    <FooterContentTemplate>
+        <DxButton Text="@(_isSaving ? "Kaydediliyor..." : "Kaydet")"
+                  IconCssClass="@(_isSaving ? "spinner-border spinner-border-sm" : "bi bi-check-lg")"
+                  RenderStyle="ButtonRenderStyle.Primary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Enabled="@(!_isSaving)"
+                  Click="SaveAsync" />
+        <DxButton Text="İptal"
+                  RenderStyle="ButtonRenderStyle.Secondary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Enabled="@(!_isSaving)"
+                  Click="@(() => _popupVisible = false)" />
+    </FooterContentTemplate>
+</DxPopup>
+
+<DxPopup @bind-Visible="_deleteConfirmVisible"
+         HeaderText="Silme Onayı"
+         Width="420px"
+         CloseOnOutsideClick="false"
+         ShowFooter="true">
+    <BodyContentTemplate Context="_">
+        <div class="d-flex align-items-start gap-3 p-2">
+            <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size:2.5rem; flex-shrink:0;"></i>
+            <div>
+                <p class="mb-1 fw-semibold">Bu scripti silmek istediğinize emin misiniz?</p>
+                <p class="mb-0 text-muted">@_itemToDelete?.Name</p>
+            </div>
+        </div>
+    </BodyContentTemplate>
+    <FooterContentTemplate>
+        <DxButton Text="Sil"
+                  IconCssClass="bi bi-trash"
+                  RenderStyle="ButtonRenderStyle.Danger"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="ConfirmDeleteAsync"
+                  Enabled="@(!_isDeleting)" />
+        <DxButton Text="İptal"
+                  RenderStyle="ButtonRenderStyle.Secondary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="@(() => _deleteConfirmVisible = false)"
+                  Enabled="@(!_isDeleting)" />
+    </FooterContentTemplate>
+</DxPopup>
+
+@code {
+    private List<SurveyResultScriptDto> _items = [];
+    private bool _popupVisible;
+    private bool _deleteConfirmVisible;
+    private bool _isSaving;
+    private bool _isDeleting;
+    private string? _formError;
+    private SurveyResultScriptDto? _itemToDelete;
+    private SurveyResultScriptDto? _selectedItem;
+    private DxContextMenu? _contextMenu;
+    private ScriptForm _form = new();
+
+    private readonly List<EnumOption<AssignmentStatus>> _statusOptions = Enum.GetValues<AssignmentStatus>()
+        .Select(x => new EnumOption<AssignmentStatus>(x, x.GetDescription()))
+        .ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _items = await SurveyResultScriptService.GetAllAsync(includeInactive: true);
+    }
+
+    private void OpenNew()
+    {
+        _formError = null;
+        _form = new ScriptForm
+        {
+            IsActive = true
+        };
+        AddPattern();
+        _popupVisible = true;
+    }
+
+    private async Task OpenEdit(int id)
+    {
+        var item = await SurveyResultScriptService.GetByIdAsync(id);
+        if (item is null)
+        {
+            Toast.Error("Script bulunamadı.");
+            return;
+        }
+
+        _formError = null;
+        _form = new ScriptForm
+        {
+            Id = item.Id,
+            Name = item.Name,
+            IsActive = item.IsActive,
+            Patterns = item.Patterns
+                .Select(p => new PatternForm
+                {
+                    Status = p.Status,
+                    MatchPattern = p.MatchPattern,
+                    Order = p.Order
+                })
+                .ToList()
+        };
+        _popupVisible = true;
+    }
+
+    private void AddPattern()
+    {
+        _form.Patterns.Add(new PatternForm
+        {
+            Status = AssignmentStatus.Completed,
+            Order = _form.Patterns.Count + 1
+        });
+    }
+
+    private void RemovePattern(PatternForm row)
+    {
+        _form.Patterns.Remove(row);
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_isSaving)
+            return;
+
+        if (string.IsNullOrWhiteSpace(_form.Name))
+        {
+            _formError = "Script adı zorunludur.";
+            return;
+        }
+
+        if (_form.Patterns.Count == 0)
+        {
+            _formError = "En az bir pattern ekleyiniz.";
+            return;
+        }
+
+        _isSaving = true;
+        _formError = null;
+        try
+        {
+            var adminId = await GetAdminIdAsync();
+            var dto = new SaveSurveyResultScriptDto(
+                _form.Id > 0 ? _form.Id : null,
+                _form.Name.Trim(),
+                _form.IsActive,
+                _form.Patterns
+                    .Select(p => new SaveSurveyResultPatternDto(
+                        p.Status,
+                        p.MatchPattern.Trim(),
+                        p.Order))
+                    .ToList());
+
+            await SurveyResultScriptService.SaveAsync(dto, adminId);
+            _popupVisible = false;
+            await LoadAsync();
+            Toast.Success("Script kaydedildi.");
+        }
+        catch (Exception ex)
+        {
+            _formError = ErrorHandler.HandleFormSave(ex, Toast);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private Task AskDelete(SurveyResultScriptDto dto)
+    {
+        _itemToDelete = dto;
+        _deleteConfirmVisible = true;
+        return Task.CompletedTask;
+    }
+
+    private async Task ShowMenuAsync(MouseEventArgs e, SurveyResultScriptDto item)
+    {
+        _selectedItem = item;
+        if (_contextMenu is not null)
+            await _contextMenu.ShowAsync(e);
+    }
+
+    private async Task OnContextMenuItemClick(ContextMenuItemClickEventArgs e)
+    {
+        if (_selectedItem is null)
+            return;
+
+        switch (e.ItemInfo.Name)
+        {
+            case "edit":
+                await OpenEdit(_selectedItem.Id);
+                break;
+            case "delete":
+                await AskDelete(_selectedItem);
+                break;
+        }
+    }
+
+    private async Task ConfirmDeleteAsync()
+    {
+        if (_itemToDelete is null)
+            return;
+
+        _isDeleting = true;
+        try
+        {
+            var adminId = await GetAdminIdAsync();
+            await SurveyResultScriptService.DeleteAsync(_itemToDelete.Id, adminId);
+            _deleteConfirmVisible = false;
+            _itemToDelete = null;
+            await LoadAsync();
+            Toast.Success("Script silindi.");
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleOperation(ex, Toast, "Script silinemedi.");
+        }
+        finally
+        {
+            _isDeleting = false;
+        }
+    }
+
+    private async Task<int> GetAdminIdAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var claim = authState.User.FindFirst(ClaimTypes.NameIdentifier);
+        return claim is not null && int.TryParse(claim.Value, out var adminUserId)
+            ? adminUserId
+            : 0;
+    }
+
+    private sealed class ScriptForm
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public bool IsActive { get; set; } = true;
+        public List<PatternForm> Patterns { get; set; } = [];
+    }
+
+    private sealed class PatternForm
+    {
+        public AssignmentStatus Status { get; set; } = AssignmentStatus.Completed;
+        public string MatchPattern { get; set; } = string.Empty;
+        public int Order { get; set; }
+    }
+
+    private sealed record EnumOption<T>(T Value, string Label);
+}

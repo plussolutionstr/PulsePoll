@@ -33,5 +33,12 @@ public static class ApiDtoMapper
             RewardUnitLabel: dto.RewardUnitLabel,
             SurveyUrl: dto.SurveyUrl,
             SubjectParameterName: dto.SubjectParameterName,
-            StartMessage: dto.StartMessage);
+            StartMessage: dto.StartMessage,
+            ResultPatterns: dto.SurveyResultPatterns?
+                .OrderBy(p => p.Order)
+                .Select(p => new SurveyResultPatternModel(
+                    p.Status.ToString(),
+                    p.MatchPattern,
+                    p.Order))
+                .ToList());
 }

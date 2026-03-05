@@ -36,6 +36,12 @@ public class ProjectConfiguration : IEntityTypeConfiguration<Project>
                .HasConstraintName("fk_projects_cover_media")
                .OnDelete(DeleteBehavior.SetNull);
 
+        builder.HasOne(p => p.SurveyResultScript)
+               .WithMany(s => s.Projects)
+               .HasForeignKey(p => p.SurveyResultScriptId)
+               .HasConstraintName("fk_projects_survey_result_script")
+               .OnDelete(DeleteBehavior.SetNull);
+
         builder.HasIndex(p => p.Code).IsUnique().HasDatabaseName("uq_projects_code");
         builder.HasIndex(p => p.CustomerId).HasDatabaseName("idx_projects_customer_id");
         builder.HasIndex(p => p.Status).HasDatabaseName("idx_projects_status");
