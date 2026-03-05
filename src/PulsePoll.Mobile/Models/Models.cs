@@ -95,11 +95,18 @@ public record DemographicField(string Label, string Value);
 public record HistoryItemModel(
     int Id,
     string SurveyTitle,
-    string BrandName,
     string Status, // Tamamlandı, Elendi, Devam Ediyor
     decimal? Reward,
     DateTime Date,
-    int QuestionCount);
+    int QuestionCount,
+    string RewardUnitLabel = "Poll",
+    int DurationMinutes = 0,
+    decimal RewardAmount = 0m,
+    decimal ConsolationRewardAmount = 0m)
+{
+    public string RewardAmountDisplay => $"{RewardAmount:0.##} {RewardUnitLabel}";
+    public string ConsolationAmountDisplay => $"{ConsolationRewardAmount:0.##} {RewardUnitLabel}";
+}
 
 public record HistoryGroup(string Month, List<HistoryItemModel> Items);
 

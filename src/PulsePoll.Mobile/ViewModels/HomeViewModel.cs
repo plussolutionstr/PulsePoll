@@ -80,7 +80,7 @@ public partial class HomeViewModel : ObservableObject
 
             Stories = new ObservableCollection<StoryModel>(orderedStories);
             News = new ObservableCollection<NewsModel>(newsTask.Result);
-            Surveys = new ObservableCollection<SurveyModel>(surveysTask.Result);
+            Surveys = new ObservableCollection<SurveyModel>(surveysTask.Result.Take(3));
         });
     }
 
@@ -95,6 +95,12 @@ public partial class HomeViewModel : ObservableObject
     private async Task NavigateToSurveyDetail(SurveyModel survey)
     {
         await Shell.Current.GoToAsync($"surveydetail?id={survey.Id}");
+    }
+
+    [RelayCommand]
+    private async Task NavigateToSurveys()
+    {
+        await Shell.Current.GoToAsync("//surveys");
     }
 
     [RelayCommand]

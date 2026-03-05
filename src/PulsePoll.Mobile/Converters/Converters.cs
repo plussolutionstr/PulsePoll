@@ -40,14 +40,17 @@ public class StatusToColorConverter : IValueConverter
 {
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        var status = value?.ToString();
+        var status = value?.ToString()?.Trim();
         var resources = Application.Current!.Resources;
 
         return status switch
         {
-            "Tamamlandı" => resources.TryGetValue("Success", out var s) ? (Color)s : Colors.Green,
-            "Elendi" => resources.TryGetValue("Danger", out var d) ? (Color)d : Colors.Red,
-            "Devam Ediyor" => resources.TryGetValue("Amber", out var a) ? (Color)a : Colors.Orange,
+            "Tamamlandı" or "Completed" => resources.TryGetValue("Success", out var s) ? (Color)s : Colors.Green,
+            "Devam Ediyor" or "Partial" or "Kısmi" => resources.TryGetValue("Amber", out var a) ? (Color)a : Colors.Orange,
+            "Elendi" or "Diskalifiye" or "Disqualify" or "Elenmiş" or "ScreenOut" =>
+                resources.TryGetValue("Danger", out var d) ? (Color)d : Colors.Red,
+            "Kota Dolu" or "QuotaFull" =>
+                resources.TryGetValue("PrimaryPurple", out var p) ? (Color)p : Colors.Purple,
             _ => resources.TryGetValue("TextTertiary", out var t) ? (Color)t : Colors.Gray
         };
     }
@@ -60,15 +63,37 @@ public class StatusToBgColorConverter : IValueConverter
 {
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        var status = value?.ToString();
+        var status = value?.ToString()?.Trim();
         var resources = Application.Current!.Resources;
 
         return status switch
         {
-            "Tamamlandı" => resources.TryGetValue("SuccessLight", out var s) ? (Color)s : Colors.LightGreen,
-            "Elendi" => resources.TryGetValue("DangerLight", out var d) ? (Color)d : Colors.MistyRose,
-            "Devam Ediyor" => resources.TryGetValue("AmberLight", out var a) ? (Color)a : Colors.LemonChiffon,
+            "Tamamlandı" or "Completed" => resources.TryGetValue("SuccessLight", out var s) ? (Color)s : Colors.LightGreen,
+            "Devam Ediyor" or "Partial" or "Kısmi" => resources.TryGetValue("AmberLight", out var a) ? (Color)a : Colors.LemonChiffon,
+            "Elendi" or "Diskalifiye" or "Disqualify" or "Elenmiş" or "ScreenOut" =>
+                resources.TryGetValue("DangerLight", out var d) ? (Color)d : Colors.MistyRose,
+            "Kota Dolu" or "QuotaFull" =>
+                resources.TryGetValue("PrimaryLight", out var p) ? (Color)p : Colors.Lavender,
             _ => resources.TryGetValue("SurfaceColor", out var t) ? (Color)t : Colors.LightGray
+        };
+    }
+
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}
+
+public class StatusToIconConverter : IValueConverter
+{
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        var status = value?.ToString()?.Trim();
+        return status switch
+        {
+            "Tamamlandı" or "Completed" => "✓",
+            "Devam Ediyor" or "Partial" or "Kısmi" => "•",
+            "Kota Dolu" or "QuotaFull" => "◔",
+            "Elendi" or "Diskalifiye" or "Disqualify" or "Elenmiş" or "ScreenOut" => "!",
+            _ => "•"
         };
     }
 

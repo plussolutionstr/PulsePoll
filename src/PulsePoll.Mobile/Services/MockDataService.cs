@@ -113,19 +113,19 @@ public class MockDataService
     [
         new("Mart 2026",
         [
-            new(1, "Ev Aletleri Kullanım Anketi", "Arçelik", "Tamamlandı", 15m,
-                new DateTime(2026, 3, 2), 12),
-            new(2, "Mobil Uygulama Deneyimi", "Turkcell", "Devam Ediyor", null,
-                new DateTime(2026, 3, 1), 15)
+            new(1, "Ev Aletleri Kullanım Anketi", "Tamamlandı", 15m,
+                new DateTime(2026, 3, 2), 12, "Poll", 12, 15m, 5m),
+            new(2, "Mobil Uygulama Deneyimi", "Devam Ediyor", null,
+                new DateTime(2026, 3, 1), 15, "Poll", 15, 22m, 7m)
         ]),
         new("Şubat 2026",
         [
-            new(3, "Alışveriş Alışkanlıkları", "Migros", "Tamamlandı", 18m,
-                new DateTime(2026, 2, 25), 10),
-            new(4, "Sürüş Deneyimi Anketi", "BMW", "Elendi", null,
-                new DateTime(2026, 2, 20), 8),
-            new(5, "Bankacılık Hizmetleri", "Akbank", "Tamamlandı", 20m,
-                new DateTime(2026, 2, 15), 14)
+            new(3, "Alışveriş Alışkanlıkları", "Tamamlandı", 18m,
+                new DateTime(2026, 2, 25), 10, "Poll", 10, 18m, 6m),
+            new(4, "Sürüş Deneyimi Anketi", "Elendi", null,
+                new DateTime(2026, 2, 20), 8, "Poll", 8, 20m, 5m),
+            new(5, "Bankacılık Hizmetleri", "Tamamlandı", 20m,
+                new DateTime(2026, 2, 15), 14, "Poll", 14, 20m, 6m)
         ])
     ];
 

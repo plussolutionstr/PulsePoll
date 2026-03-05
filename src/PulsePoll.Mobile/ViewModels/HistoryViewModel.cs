@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PulsePoll.Mobile.Models;
@@ -8,15 +9,15 @@ namespace PulsePoll.Mobile.ViewModels;
 
 public partial class HistoryViewModel : ObservableObject
 {
+    private readonly IPulsePollApiClient _apiClient;
     private readonly MockDataService _dataService;
     private List<HistoryGroup> _allGroups = [];
+    private bool _isLoaded;
 
-    public HistoryViewModel(MockDataService dataService)
+    public HistoryViewModel(IPulsePollApiClient apiClient, MockDataService dataService)
     {
+        _apiClient = apiClient;
         _dataService = dataService;
-        _allGroups = _dataService.GetHistory();
-        LoadData();
-        CalculateSummary();
     }
 
     [ObservableProperty] private ObservableCollection<HistoryGroup> _groups = [];
@@ -24,9 +25,37 @@ public partial class HistoryViewModel : ObservableObject
     [ObservableProperty] private int _completedCount;
     [ObservableProperty] private int _disqualifiedCount;
     [ObservableProperty] private decimal _totalEarned;
+    [ObservableProperty] private string _rewardUnitLabel = "Poll";
     [ObservableProperty] private ObservableCollection<HistoryItemModel> _flatItems = [];
+    [ObservableProperty] private bool _isLoading;
+    public string TotalEarnedDisplay => $"{TotalEarned:0.##} {RewardUnitLabel}";
 
     public List<string> Filters => ["Tümü", "Tamamlandı", "Elendi", "Devam Ediyor"];
+
+    [RelayCommand]
+    private async Task LoadAsync()
+    {
+        if (_isLoaded)
+            return;
+
+        IsLoading = true;
+        try
+        {
+            var items = await FetchOrFallbackAsync(
+                () => _apiClient.GetHistoryAsync(),
+                () => _dataService.GetHistory().SelectMany(g => g.Items).ToList());
+
+            _allGroups = GroupByMonth(items);
+            RewardUnitLabel = items.FirstOrDefault(i => !string.IsNullOrWhiteSpace(i.RewardUnitLabel))?.RewardUnitLabel ?? "Poll";
+            LoadData();
+            CalculateSummary();
+            _isLoaded = true;
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
 
     [RelayCommand]
     private void SetFilter(string filter)
@@ -40,7 +69,7 @@ public partial class HistoryViewModel : ObservableObject
         var items = _allGroups.SelectMany(g => g.Items);
 
         if (SelectedFilter != "Tümü")
-            items = items.Where(i => i.Status == SelectedFilter);
+            items = items.Where(i => ToFilterKey(i.Status) == SelectedFilter);
 
         FlatItems = new ObservableCollection<HistoryItemModel>(items.OrderByDescending(i => i.Date));
     }
@@ -49,7 +78,36 @@ public partial class HistoryViewModel : ObservableObject
     {
         var allItems = _allGroups.SelectMany(g => g.Items).ToList();
         CompletedCount = allItems.Count(i => i.Status == "Tamamlandı");
-        DisqualifiedCount = allItems.Count(i => i.Status == "Elendi");
+        DisqualifiedCount = allItems.Count(i => ToFilterKey(i.Status) == "Elendi");
         TotalEarned = allItems.Where(i => i.Reward.HasValue).Sum(i => i.Reward!.Value);
+    }
+
+    partial void OnTotalEarnedChanged(decimal value) => OnPropertyChanged(nameof(TotalEarnedDisplay));
+    partial void OnRewardUnitLabelChanged(string value) => OnPropertyChanged(nameof(TotalEarnedDisplay));
+
+    private static async Task<List<T>> FetchOrFallbackAsync<T>(
+        Func<Task<List<T>>> fetch, Func<List<T>> fallback)
+    {
+        try { return await fetch(); }
+        catch { return fallback(); }
+    }
+
+    private static List<HistoryGroup> GroupByMonth(IEnumerable<HistoryItemModel> items)
+    {
+        return items
+            .GroupBy(i => i.Date.ToString("MMMM yyyy", new CultureInfo("tr-TR")))
+            .Select(g => new HistoryGroup(g.Key, g.OrderByDescending(x => x.Date).ToList()))
+            .ToList();
+    }
+
+    private static string ToFilterKey(string status)
+    {
+        return status switch
+        {
+            "Tamamlandı" => "Tamamlandı",
+            "Devam Ediyor" => "Devam Ediyor",
+            "Diskalifiye" or "Kota Dolu" or "Elenmiş" or "Elendi" => "Elendi",
+            _ => "Tümü"
+        };
     }
 }

@@ -78,6 +78,12 @@ public sealed class PulsePollApiClient : IPulsePollApiClient
         return response?.ToModel();
     }
 
+    public async Task<List<HistoryItemModel>> GetHistoryAsync(CancellationToken ct = default)
+    {
+        var response = await GetAsync<List<ProjectHistoryApiDto>>("api/profile/projects/history", ct);
+        return response?.Select(h => h.ToModel()).ToList() ?? [];
+    }
+
     public async Task<string> StartProjectAsync(int projectId, CancellationToken ct = default)
     {
         await SetAuthHeaderAsync();

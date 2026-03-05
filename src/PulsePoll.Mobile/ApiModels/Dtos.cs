@@ -29,6 +29,19 @@ public record NewsApiDto(
     int Order,
     bool IsActive);
 
+public record ProjectHistoryApiDto(
+    int ProjectId,
+    string ProjectName,
+    string CustomerShortName,
+    AssignmentStatus Status,
+    DateTime AssignedAt,
+    DateTime? CompletedAt,
+    int DurationMinutes,
+    decimal EarnedAmount,
+    decimal RewardAmount,
+    decimal ConsolationRewardAmount,
+    string RewardUnitLabel);
+
 public record ProjectApiDto(
     int Id,
     int CustomerId,

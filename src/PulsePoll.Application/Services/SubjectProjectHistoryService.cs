@@ -3,11 +3,15 @@ using PulsePoll.Application.Interfaces;
 
 namespace PulsePoll.Application.Services;
 
-public class SubjectProjectHistoryService(IProjectRepository projectRepository)
+public class SubjectProjectHistoryService(
+    IProjectRepository projectRepository,
+    IRewardUnitConfigService rewardUnitConfigService)
 {
     public async Task<List<ProjectHistoryDto>> GetSubjectProjectHistoryAsync(int subjectId)
     {
         var assignments = await projectRepository.GetSubjectAssignmentsAsync(subjectId);
+        var rewardUnit = await rewardUnitConfigService.GetAsync();
+
         return assignments.Select(a => new ProjectHistoryDto(
             a.Project.Id,
             a.Project.Name,
@@ -15,15 +19,11 @@ public class SubjectProjectHistoryService(IProjectRepository projectRepository)
             a.Status,
             a.AssignedAt,
             a.CompletedAt,
-            CalculateDurationMinutes(a),
-            a.EarnedAmount ?? 0
+            a.Project.EstimatedMinutes,
+            a.EarnedAmount ?? 0,
+            a.Project.Reward,
+            a.Project.ConsolationReward,
+            rewardUnit.UnitLabel
         )).ToList();
-    }
-
-    private static int CalculateDurationMinutes(Domain.Entities.ProjectAssignment assignment)
-    {
-        if (!assignment.CompletedAt.HasValue)
-            return 0;
-        return (int)(assignment.CompletedAt.Value - assignment.AssignedAt).TotalMinutes;
     }
 }

@@ -17,6 +17,19 @@ public static class ApiDtoMapper
     public static NewsModel ToModel(this NewsApiDto dto)
         => new(dto.Id, "", dto.Title, dto.Summary, ImageUrl: dto.ImageUrl, LinkUrl: dto.LinkUrl);
 
+    public static HistoryItemModel ToModel(this ProjectHistoryApiDto dto)
+        => new(
+            dto.ProjectId,
+            dto.ProjectName,
+            ToHistoryStatus(dto.Status),
+            dto.EarnedAmount > 0m ? dto.EarnedAmount : null,
+            dto.CompletedAt ?? dto.AssignedAt,
+            0,
+            dto.RewardUnitLabel,
+            dto.DurationMinutes,
+            dto.RewardAmount,
+            dto.ConsolationRewardAmount);
+
     public static SurveyModel ToModel(this ProjectApiDto dto)
         => new(
             dto.Id,
@@ -46,4 +59,15 @@ public static class ApiDtoMapper
                     p.MatchPattern,
                     p.Order))
                 .ToList());
+
+    private static string ToHistoryStatus(AssignmentStatus status) => status switch
+    {
+        AssignmentStatus.Completed => "Tamamlandı",
+        AssignmentStatus.Partial => "Devam Ediyor",
+        AssignmentStatus.NotStarted => "Devam Ediyor",
+        AssignmentStatus.Disqualify => "Diskalifiye",
+        AssignmentStatus.QuotaFull => "Kota Dolu",
+        AssignmentStatus.ScreenOut => "Elenmiş",
+        _ => "Bilinmiyor"
+    };
 }

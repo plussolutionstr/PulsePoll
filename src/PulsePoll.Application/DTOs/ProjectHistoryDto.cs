@@ -11,7 +11,10 @@ public record ProjectHistoryDto(
     DateTime AssignedAt,
     DateTime? CompletedAt,
     int DurationMinutes,
-    decimal EarnedAmount);
+    decimal EarnedAmount,
+    decimal RewardAmount,
+    decimal ConsolationRewardAmount,
+    string RewardUnitLabel);
 
 public record ReferredSubjectDto(
     int SubjectId,

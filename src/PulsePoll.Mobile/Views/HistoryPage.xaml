@@ -11,8 +11,10 @@
     <ContentPage.Resources>
         <converters:StatusToColorConverter x:Key="StatusToColor"/>
         <converters:StatusToBgColorConverter x:Key="StatusToBgColor"/>
+        <converters:StatusToIconConverter x:Key="StatusToIcon"/>
     </ContentPage.Resources>
 
+    <Grid>
     <ScrollView>
         <VerticalStackLayout Spacing="16" Padding="20,16">
 
@@ -45,7 +47,7 @@
                 <Border Grid.Column="2" StrokeShape="RoundRectangle 16" StrokeThickness="0"
                         BackgroundColor="{StaticResource AmberLight}" Padding="12,16">
                     <VerticalStackLayout HorizontalOptions="Center" Spacing="4">
-                        <Label Text="{Binding TotalEarned, StringFormat='₺{0}'}"
+                        <Label Text="{Binding TotalEarnedDisplay}"
                                FontFamily="JakartaBold" FontSize="22"
                                TextColor="{StaticResource Amber}"
                                HorizontalTextAlignment="Center"/>
@@ -85,47 +87,62 @@
                 <BindableLayout.ItemTemplate>
                     <DataTemplate x:DataType="models:HistoryItemModel">
                         <Border Style="{StaticResource CardBorderStyle}" Padding="14">
-                            <Grid ColumnDefinitions="40,*,Auto" ColumnSpacing="12">
-                                <!-- Status Icon -->
-                                <Border StrokeThickness="0"
-                                        StrokeShape="RoundRectangle 20"
-                                        HeightRequest="40" WidthRequest="40"
-                                        BackgroundColor="{Binding Status, Converter={StaticResource StatusToBgColor}}">
-                                    <Label Text="{Binding Status, StringFormat='{0:0}'}"
-                                           FontFamily="JakartaBold" FontSize="11"
-                                           HorizontalOptions="Center" VerticalOptions="Center"
-                                           TextColor="{Binding Status, Converter={StaticResource StatusToColor}}"
-                                           MaxLines="1"/>
-                                </Border>
-
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
                                 <!-- Info -->
-                                <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                                <VerticalStackLayout Spacing="3" VerticalOptions="Center">
                                     <Label Text="{Binding SurveyTitle}"
                                            FontFamily="JakartaSemiBold" FontSize="14"
                                            TextColor="{StaticResource TextPrimary}"
                                            MaxLines="1" LineBreakMode="TailTruncation"/>
-                                    <Label FontFamily="JakartaRegular" FontSize="12" TextColor="{StaticResource TextTertiary}">
-                                        <Label.FormattedText>
-                                            <FormattedString>
-                                                <Span Text="{Binding BrandName}"/>
-                                                <Span Text=" · "/>
-                                                <Span Text="{Binding Date, StringFormat='{0:dd MMM}'}"/>
-                                            </FormattedString>
-                                        </Label.FormattedText>
-                                    </Label>
+                                    <HorizontalStackLayout Spacing="6">
+                                        <Border StrokeThickness="0"
+                                                StrokeShape="RoundRectangle 6"
+                                                BackgroundColor="{StaticResource SurfaceColor}"
+                                                Padding="6,2">
+                                            <Label Text="{Binding DurationMinutes, StringFormat='~{0} dk'}"
+                                                   FontFamily="JakartaMedium" FontSize="11"
+                                                   TextColor="{StaticResource TextSecondary}"/>
+                                        </Border>
+                                        <Border StrokeThickness="0"
+                                                StrokeShape="RoundRectangle 6"
+                                                BackgroundColor="{StaticResource SuccessLight}"
+                                                Padding="6,2">
+                                            <Label Text="{Binding RewardAmountDisplay}"
+                                                   FontFamily="JakartaMedium" FontSize="11"
+                                                   TextColor="{StaticResource Success}"/>
+                                        </Border>
+                                        <Border StrokeThickness="0"
+                                                StrokeShape="RoundRectangle 6"
+                                                BackgroundColor="{StaticResource AmberLight}"
+                                                Padding="6,2">
+                                            <Label Text="{Binding ConsolationAmountDisplay}"
+                                                   FontFamily="JakartaMedium" FontSize="11"
+                                                   TextColor="{StaticResource Amber}"/>
+                                        </Border>
+                                    </HorizontalStackLayout>
+                                    <Label Text="{Binding Date, StringFormat='{0:dd MMM yyyy}'}"
+                                           FontFamily="JakartaRegular" FontSize="11"
+                                           TextColor="{StaticResource TextTertiary}"/>
                                 </VerticalStackLayout>
 
-                                <!-- Amount/Status -->
-                                <Label Grid.Column="2"
-                                       VerticalOptions="Center"
-                                       FontFamily="JakartaSemiBold" FontSize="14"
-                                       TextColor="{Binding Status, Converter={StaticResource StatusToColor}}">
-                                    <Label.Text>
-                                        <MultiBinding StringFormat="{}{0}">
-                                            <Binding Path="Status"/>
-                                        </MultiBinding>
-                                    </Label.Text>
-                                </Label>
+                                <!-- Status Badge -->
+                                <Border Grid.Column="1"
+                                        StrokeThickness="0"
+                                        StrokeShape="RoundRectangle 10"
+                                        BackgroundColor="{Binding Status, Converter={StaticResource StatusToBgColor}}"
+                                        Padding="10,4"
+                                        VerticalOptions="Center">
+                                    <HorizontalStackLayout Spacing="4">
+                                        <Label Text="{Binding Status, Converter={StaticResource StatusToIcon}}"
+                                               FontFamily="JakartaBold" FontSize="11"
+                                               TextColor="{Binding Status, Converter={StaticResource StatusToColor}}"
+                                               VerticalOptions="Center"/>
+                                        <Label Text="{Binding Status}"
+                                               FontFamily="JakartaSemiBold" FontSize="12"
+                                               TextColor="{Binding Status, Converter={StaticResource StatusToColor}}"
+                                               VerticalOptions="Center"/>
+                                    </HorizontalStackLayout>
+                                </Border>
                             </Grid>
                         </Border>
                     </DataTemplate>
@@ -135,4 +152,10 @@
             <BoxView HeightRequest="20" Color="Transparent"/>
         </VerticalStackLayout>
     </ScrollView>
+        <ActivityIndicator IsVisible="{Binding IsLoading}"
+                           IsRunning="{Binding IsLoading}"
+                           Color="{StaticResource PrimaryPurple}"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center"/>
+    </Grid>
 </ContentPage>

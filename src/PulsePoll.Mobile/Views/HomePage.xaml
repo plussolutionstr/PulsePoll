@@ -178,7 +178,11 @@
                        Text="Tümü"
                        FontFamily="JakartaSemiBold" FontSize="14"
                        TextColor="{StaticResource PrimaryPurple}"
-                       VerticalOptions="Center"/>
+                       VerticalOptions="Center">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding NavigateToSurveysCommand}"/>
+                    </Label.GestureRecognizers>
+                </Label>
             </Grid>
 
             <!-- ══════ SURVEY CARDS (VISUAL) ══════ -->
@@ -243,7 +247,7 @@
                                             Margin="0,12,12,0"
                                             VerticalOptions="Start"
                                             HorizontalOptions="End">
-                                        <Label Text="{Binding Reward, StringFormat='₺{0}'}"
+                                        <Label Text="{Binding RewardDisplay}"
                                                FontFamily="JakartaBold" FontSize="13"
                                                TextColor="#111111"/>
                                     </Border>

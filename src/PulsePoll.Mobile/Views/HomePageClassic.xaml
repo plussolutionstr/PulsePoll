@@ -144,7 +144,7 @@
                                             StrokeShape="RoundRectangle 10"
                                             BackgroundColor="{StaticResource AmberLight}"
                                             Padding="10,4">
-                                        <Label Text="{Binding Reward, StringFormat='₺{0}'}"
+                                        <Label Text="{Binding RewardDisplay}"
                                                FontFamily="JakartaBold" FontSize="13"
                                                TextColor="#111111"/>
                                     </Border>

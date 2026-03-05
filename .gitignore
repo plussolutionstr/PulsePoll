@@ -17,7 +17,11 @@ Thumbs.db
 # Rider
 .idea/
 *.iml
+*.DotSettings.user
 
 # Environment
 .env
 .env.local
+
+# Accidental directories created with backslash in name
+**/bin?Debug/

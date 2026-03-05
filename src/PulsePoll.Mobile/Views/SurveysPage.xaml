@@ -7,80 +7,81 @@
              x:DataType="vm:SurveysViewModel"
              Shell.NavBarIsVisible="False">
 
-    <ScrollView>
-        <VerticalStackLayout Spacing="12" Padding="20,16">
+    <Grid>
+        <ScrollView>
+            <VerticalStackLayout Spacing="12" Padding="20,16">
+                <Label Text="Anketler" Style="{StaticResource PageTitleStyle}" Margin="0,0,0,4"/>
 
-            <Label Text="Anketler" Style="{StaticResource PageTitleStyle}" Margin="0,0,0,4"/>
+                <VerticalStackLayout Spacing="12"
+                                     BindableLayout.ItemsSource="{Binding Surveys}">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="models:SurveyModel">
+                            <Border Style="{StaticResource CardBorderStyle}">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:SurveysViewModel}}, Path=OpenSurveyCommand}"
+                                                          CommandParameter="{Binding .}"/>
+                                </Border.GestureRecognizers>
+                                <VerticalStackLayout Spacing="10">
+                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                                        <Label Text="{Binding Title}"
+                                               FontFamily="JakartaSemiBold" FontSize="16"
+                                               TextColor="{StaticResource TextPrimary}"
+                                               VerticalOptions="Center"/>
+                                        <Border Grid.Column="1"
+                                                StrokeThickness="0"
+                                                StrokeShape="RoundRectangle 10"
+                                                BackgroundColor="{StaticResource AmberLight}"
+                                                Padding="10,4"
+                                                VerticalOptions="Center">
+                                            <Label Text="{Binding RewardDisplay}"
+                                                   FontFamily="JakartaSemiBold" FontSize="13"
+                                                   TextColor="#111111"/>
+                                        </Border>
+                                    </Grid>
 
-            <VerticalStackLayout Spacing="12"
-                                 BindableLayout.ItemsSource="{Binding Surveys}">
-                <BindableLayout.ItemTemplate>
-                    <DataTemplate x:DataType="models:SurveyModel">
-                        <Border Style="{StaticResource CardBorderStyle}">
-                            <Border.GestureRecognizers>
-                                <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:SurveysViewModel}}, Path=NavigateToSurveyDetailCommand}"
-                                                      CommandParameter="{Binding .}"/>
-                            </Border.GestureRecognizers>
-                            <VerticalStackLayout Spacing="10">
-                                <Grid ColumnDefinitions="36,*,Auto">
-                                    <Border StrokeThickness="0"
-                                            StrokeShape="RoundRectangle 18"
-                                            HeightRequest="36" WidthRequest="36"
-                                            BackgroundColor="{StaticResource PrimaryLight}">
-                                        <Label Text="{Binding BrandName, StringFormat='{0:0}'}"
-                                               FontFamily="JakartaBold" FontSize="12"
-                                               HorizontalOptions="Center" VerticalOptions="Center"
-                                               TextColor="{StaticResource PrimaryPurple}"
-                                               MaxLines="1"/>
-                                    </Border>
-                                    <VerticalStackLayout Grid.Column="1" Margin="10,0,0,0" VerticalOptions="Center">
-                                        <Label Text="{Binding BrandName}" Style="{StaticResource SubtitleStyle}"/>
-                                    </VerticalStackLayout>
-                                    <Border Grid.Column="2"
-                                            StrokeThickness="0"
-                                            StrokeShape="RoundRectangle 10"
-                                            BackgroundColor="{StaticResource AmberLight}"
-                                            Padding="10,4">
-                                        <Label Text="{Binding Reward, StringFormat='₺{0}'}"
-                                               FontFamily="JakartaSemiBold" FontSize="13"
-                                               TextColor="{StaticResource Amber}"/>
-                                    </Border>
-                                </Grid>
+                                    <Label Text="{Binding Description}"
+                                           Style="{StaticResource BodyStyle}"
+                                           MaxLines="3"
+                                           LineBreakMode="TailTruncation"
+                                           IsVisible="{Binding HasDescription}"/>
 
-                                <Label Text="{Binding Title}"
-                                       FontFamily="JakartaSemiBold" FontSize="15"
-                                       TextColor="{StaticResource TextPrimary}"/>
+                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                                        <Border StrokeThickness="0"
+                                                StrokeShape="RoundRectangle 8"
+                                                BackgroundColor="{StaticResource SurfaceColor}"
+                                                Padding="10,4">
+                                            <HorizontalStackLayout Spacing="4">
+                                                <Image Source="icon_clock.png" HeightRequest="14" WidthRequest="14" VerticalOptions="Center"/>
+                                                <Label Text="{Binding DurationMinutes, StringFormat='~{0} dk'}"
+                                                       Style="{StaticResource CaptionStyle}" VerticalOptions="Center"/>
+                                            </HorizontalStackLayout>
+                                        </Border>
 
-                                <Label Text="{Binding Description}"
-                                       Style="{StaticResource BodyStyle}"
-                                       MaxLines="2" LineBreakMode="TailTruncation"/>
+                                        <Border Grid.Column="1"
+                                                StrokeThickness="0"
+                                                StrokeShape="RoundRectangle 8"
+                                                BackgroundColor="{StaticResource PrimaryLight}"
+                                                Padding="10,4"
+                                                IsVisible="{Binding HasCategory}"
+                                                HorizontalOptions="End">
+                                            <Label Text="{Binding Category}" FontFamily="JakartaMedium" FontSize="11"
+                                                   TextColor="{StaticResource PrimaryPurple}"/>
+                                        </Border>
+                                    </Grid>
+                                </VerticalStackLayout>
+                            </Border>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
 
-                                <HorizontalStackLayout Spacing="12">
-                                    <HorizontalStackLayout Spacing="4">
-                                        <Image Source="icon_clock.png" HeightRequest="14" WidthRequest="14" VerticalOptions="Center"/>
-                                        <Label Text="{Binding DurationMinutes, StringFormat='~{0} dk'}"
-                                               Style="{StaticResource CaptionStyle}" VerticalOptions="Center"/>
-                                    </HorizontalStackLayout>
-                                    <HorizontalStackLayout Spacing="4">
-                                        <Image Source="icon_check.png" HeightRequest="14" WidthRequest="14" VerticalOptions="Center"/>
-                                        <Label Text="{Binding QuestionCount, StringFormat='{0} soru'}"
-                                               Style="{StaticResource CaptionStyle}" VerticalOptions="Center"/>
-                                    </HorizontalStackLayout>
-                                </HorizontalStackLayout>
-
-                                <Border StrokeThickness="0" StrokeShape="RoundRectangle 8"
-                                        BackgroundColor="{StaticResource PrimaryLight}" Padding="10,4" HorizontalOptions="Start"
-                                        IsVisible="{Binding HasCategory}">
-                                    <Label Text="{Binding Category}" FontFamily="JakartaMedium" FontSize="11"
-                                           TextColor="{StaticResource PrimaryPurple}"/>
-                                </Border>
-                            </VerticalStackLayout>
-                        </Border>
-                    </DataTemplate>
-                </BindableLayout.ItemTemplate>
+                <BoxView HeightRequest="20" Color="Transparent"/>
             </VerticalStackLayout>
+        </ScrollView>
 
-            <BoxView HeightRequest="20" Color="Transparent"/>
-        </VerticalStackLayout>
-    </ScrollView>
+        <ActivityIndicator IsVisible="{Binding IsLoading}"
+                           IsRunning="{Binding IsLoading}"
+                           Color="{StaticResource PrimaryPurple}"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center"/>
+    </Grid>
 </ContentPage>
