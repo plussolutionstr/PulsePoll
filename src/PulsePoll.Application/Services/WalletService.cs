@@ -32,10 +32,10 @@ public class WalletService(
 
         var assignments = await projectRepository.GetSubjectAssignmentsAsync(subjectId);
         var pendingBalance = assignments
-            .Where(a => a.Status == AssignmentStatus.Completed && a.RewardStatus is RewardStatus.Pending or RewardStatus.None)
+            .Where(a => IsRewardEligibleStatus(a.Status) && a.RewardStatus is RewardStatus.Pending or RewardStatus.None)
             .Sum(a => a.EarnedAmount ?? 0m);
         var rejectedBalance = assignments
-            .Where(a => a.Status == AssignmentStatus.Completed && a.RewardStatus == RewardStatus.Rejected)
+            .Where(a => IsRewardEligibleStatus(a.Status) && a.RewardStatus == RewardStatus.Rejected)
             .Sum(a => a.EarnedAmount ?? 0m);
         var rewardUnit = await rewardUnitConfigService.GetAsync();
 
@@ -420,6 +420,12 @@ public class WalletService(
     private static bool IsManualReference(string? referenceId)
         => !string.IsNullOrWhiteSpace(referenceId) &&
            referenceId.StartsWith("manual:", StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsRewardEligibleStatus(AssignmentStatus status)
+        => status is AssignmentStatus.Completed
+            or AssignmentStatus.Disqualify
+            or AssignmentStatus.QuotaFull
+            or AssignmentStatus.ScreenOut;
 
     private static string? NormalizeDescription(string? description)
     {

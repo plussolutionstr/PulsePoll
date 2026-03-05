@@ -560,7 +560,7 @@
         .Count(s => s.Status == ApprovalStatus.Approved && !_assignedSubjectIds.Contains(s.Id));
     private bool IsProjectClosed => _projectStatus is ProjectStatus.Completed or ProjectStatus.Cancelled;
     private int PendingRewardSelectionCount => _selectedAssignments.Cast<ProjectAssignmentDto>()
-        .Count(a => a.Status == AssignmentStatus.Completed && a.RewardStatus is RewardStatus.Pending or RewardStatus.None);
+        .Count(IsRewardPendingApproval);
     private int RemovableSelectionCount => _selectedAssignments.Cast<ProjectAssignmentDto>()
         .Count(a => a.Status == AssignmentStatus.NotStarted);
     private string RemoveConfirmTitle => _removeSubjectIds.Count > 1
@@ -798,7 +798,7 @@
         }
 
         var ids = _selectedAssignments.Cast<ProjectAssignmentDto>()
-            .Where(a => a.Status == AssignmentStatus.Completed && a.RewardStatus is RewardStatus.Pending or RewardStatus.None)
+            .Where(IsRewardPendingApproval)
             .Select(a => a.SubjectId)
             .ToList();
 
@@ -839,7 +839,7 @@
         }
 
         _rewardRejectTargetSubjectIds = _selectedAssignments.Cast<ProjectAssignmentDto>()
-            .Where(a => a.Status == AssignmentStatus.Completed && a.RewardStatus is RewardStatus.Pending or RewardStatus.None)
+            .Where(IsRewardPendingApproval)
             .Select(a => a.SubjectId)
             .ToList();
 
@@ -973,6 +973,13 @@
             ? adminUserId
             : 0;
     }
+
+    private static bool IsRewardPendingApproval(ProjectAssignmentDto assignment)
+        => (assignment.Status is AssignmentStatus.Completed
+            or AssignmentStatus.Disqualify
+            or AssignmentStatus.QuotaFull
+            or AssignmentStatus.ScreenOut)
+           && assignment.RewardStatus is RewardStatus.Pending or RewardStatus.None;
 
     private static string ApprovalBadgeClass(ApprovalStatus status) => status switch
     {

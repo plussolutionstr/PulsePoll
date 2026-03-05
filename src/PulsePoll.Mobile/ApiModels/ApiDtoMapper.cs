@@ -34,6 +34,11 @@ public static class ApiDtoMapper
             SurveyUrl: dto.SurveyUrl,
             SubjectParameterName: dto.SubjectParameterName,
             StartMessage: dto.StartMessage,
+            CompletedMessage: dto.CompletedMessage,
+            DisqualifyMessage: dto.DisqualifyMessage,
+            QuotaFullMessage: dto.QuotaFullMessage,
+            ScreenOutMessage: dto.ScreenOutMessage,
+            AssignmentStatus: dto.AssignmentStatus?.ToString(),
             ResultPatterns: dto.SurveyResultPatterns?
                 .OrderBy(p => p.Order)
                 .Select(p => new SurveyResultPatternModel(

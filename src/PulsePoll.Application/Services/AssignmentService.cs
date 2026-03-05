@@ -22,8 +22,15 @@ public class AssignmentService(
         var assignment = await repository.GetAssignmentAsync(projectId, subjectId)
             ?? throw new ForbiddenException("Bu projeye atanmış değilsiniz.");
 
-        if (assignment.Status != AssignmentStatus.NotStarted)
-            throw new BusinessException("ASSIGNMENT_ALREADY_STARTED", "Bu proje zaten başlatılmış.");
+        if (IsTerminalStatus(assignment.Status))
+            throw new BusinessException("ASSIGNMENT_ALREADY_FINISHED", "Bu proje için anket süreci tamamlanmış.");
+
+        if (assignment.Status == AssignmentStatus.NotStarted)
+        {
+            assignment.Status = AssignmentStatus.Partial;
+            assignment.SetUpdated(subjectId);
+            await repository.UpdateAssignmentAsync(assignment);
+        }
 
         var subject = await subjectRepository.GetByIdAsync(subjectId)
             ?? throw new NotFoundException("Denek");
@@ -32,7 +39,7 @@ public class AssignmentService(
         return $"{project.SurveyUrl}{separator}{project.SubjectParameterName}={subject.PublicId:D}";
     }
 
-    public async Task MarkCompletedAsync(int projectId, int subjectId, string webhookPayload)
+    public async Task MarkResultAsync(int projectId, int subjectId, AssignmentStatus status, string? webhookPayload = null)
     {
         var assignment = await repository.GetAssignmentAsync(projectId, subjectId)
             ?? throw new NotFoundException("Proje ataması");
@@ -40,18 +47,24 @@ public class AssignmentService(
         var project = await repository.GetByIdAsync(projectId)
             ?? throw new NotFoundException("Proje");
 
-        // Webhook duplicate çağrılarında idempotent davran.
-        if (assignment.Status == AssignmentStatus.Completed)
+        if (IsTerminalStatus(assignment.Status))
             return;
 
-        assignment.Status               = AssignmentStatus.Completed;
-        assignment.CompletedAt          = DateTime.UtcNow;
-        assignment.EarnedAmount         = project.Reward;
-        assignment.RewardStatus         = RewardStatus.Pending;
-        assignment.RewardProcessedAt    = null;
-        assignment.RewardProcessedBy    = null;
+        var now = DateTime.UtcNow;
+        assignment.Status = status;
+        assignment.CompletedAt = IsTerminalStatus(status) ? now : null;
+
+        var earnedAmount = ResolveEarnedAmount(project, status);
+        assignment.EarnedAmount = earnedAmount > 0m ? earnedAmount : null;
+        assignment.RewardStatus = earnedAmount > 0m ? RewardStatus.Pending : RewardStatus.None;
+        assignment.RewardProcessedAt = null;
+        assignment.RewardProcessedBy = null;
         assignment.RewardRejectionReason = null;
+        assignment.SetUpdated(subjectId);
         await repository.UpdateAssignmentAsync(assignment);
+
+        if (status != AssignmentStatus.Completed)
+            return;
 
         await referralRewardService.TryGrantAsync(
             subjectId,
@@ -59,7 +72,26 @@ public class AssignmentService(
             actorId: 0);
 
         await publisher.PublishAsync(
-            new SurveyCompletedMessage(projectId, subjectId, project.Reward, webhookPayload, DateTime.UtcNow),
+            new SurveyCompletedMessage(projectId, subjectId, project.Reward, webhookPayload ?? string.Empty, now),
             Queues.SurveyCompleted);
     }
+
+    public async Task MarkCompletedAsync(int projectId, int subjectId, string webhookPayload)
+    {
+        await MarkResultAsync(projectId, subjectId, AssignmentStatus.Completed, webhookPayload);
+    }
+
+    private static bool IsTerminalStatus(AssignmentStatus status)
+        => status is AssignmentStatus.Completed
+            or AssignmentStatus.Disqualify
+            or AssignmentStatus.QuotaFull
+            or AssignmentStatus.ScreenOut;
+
+    private static decimal ResolveEarnedAmount(Domain.Entities.Project project, AssignmentStatus status)
+        => status switch
+        {
+            AssignmentStatus.Completed => project.Reward,
+            AssignmentStatus.Disqualify or AssignmentStatus.QuotaFull or AssignmentStatus.ScreenOut => project.ConsolationReward,
+            _ => 0m
+        };
 }

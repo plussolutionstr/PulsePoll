@@ -12,6 +12,7 @@ public partial class SurveyDetailViewModel : ObservableObject
     private readonly IPulsePollApiClient _apiClient;
     private readonly MockDataService _mockDataService;
     private const string LocalSubjectPublicIdKey = "subject_public_id";
+    private const string HomeRefreshRequiredKey = "home_refresh_required";
 
     public SurveyDetailViewModel(IPulsePollApiClient apiClient, MockDataService mockDataService)
     {
@@ -51,6 +52,7 @@ public partial class SurveyDetailViewModel : ObservableObject
             if (string.IsNullOrWhiteSpace(targetUrl))
                 return;
 
+            Preferences.Default.Set(HomeRefreshRequiredKey, true);
             var title = Uri.EscapeDataString(Survey.Title);
             var encodedUrl = Uri.EscapeDataString(targetUrl);
             await Shell.Current.GoToAsync($"surveywebview?projectId={Survey.Id}&title={title}&url={encodedUrl}");

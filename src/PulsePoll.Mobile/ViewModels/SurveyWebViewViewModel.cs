@@ -64,14 +64,26 @@ public partial class SurveyWebViewViewModel : ObservableObject
         if (matched is null)
             return false;
 
-        var statusText = StatusLabel(matched.Status);
+        var status = NormalizeStatus(matched.Status);
+        if (!IsTerminalResult(status))
+            return false;
+
         _isHandlingResult = true;
         try
         {
+            try
+            {
+                await _apiClient.SubmitProjectResultAsync(ProjectId, status);
+            }
+            catch
+            {
+                // Sonuç kaydı başarısız olsa da kullanıcı deneyimi kesilmesin.
+            }
+
             await MainThread.InvokeOnMainThreadAsync(async () =>
             {
-                await Shell.Current.DisplayAlertAsync("Anket Sonucu", $"Durum: {statusText}", "Tamam");
-                await Shell.Current.GoToAsync("..");
+                var encodedStatus = Uri.EscapeDataString(status);
+                await Shell.Current.GoToAsync($"surveyresult?projectId={ProjectId}&status={encodedStatus}");
             });
 
             _resultHandled = true;
@@ -310,15 +322,19 @@ public partial class SurveyWebViewViewModel : ObservableObject
             .Replace("\\t", "\t", StringComparison.Ordinal);
     }
 
-    private static string StatusLabel(string status) => status.ToLowerInvariant() switch
+    private static string NormalizeStatus(string status) => status.Trim().ToLowerInvariant() switch
     {
-        "completed" => "Tamamlandı",
-        "disqualify" => "Diskalifiye",
-        "quotafull" => "Kota Dolu",
-        "screenout" => "Elenmiş",
-        "partial" => "Kısmi",
-        _ => status
+        "completed" => "Completed",
+        "disqualify" or "disqualified" => "Disqualify",
+        "quotafull" => "QuotaFull",
+        "screenout" => "ScreenOut",
+        "partial" => "Partial",
+        "notstarted" => "NotStarted",
+        _ => "Unknown"
     };
+
+    private static bool IsTerminalResult(string status)
+        => status is "Completed" or "Disqualify" or "QuotaFull" or "ScreenOut";
 
     private static async Task<SurveyModel?> FetchOrFallbackAsync(
         Func<Task<SurveyModel?>> fetch,

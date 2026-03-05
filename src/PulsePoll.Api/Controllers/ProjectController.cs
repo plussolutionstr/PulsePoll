@@ -2,7 +2,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using PulsePoll.Api.Extensions;
+using PulsePoll.Application.Exceptions;
 using PulsePoll.Application.Interfaces;
+using PulsePoll.Domain.Enums;
 
 namespace PulsePoll.Api.Controllers;
 
@@ -36,4 +38,17 @@ public class ProjectController(
         var url = await assignmentService.StartAsync(id, SubjectId);
         return this.OkResponse(new { url });
     }
+
+    [HttpPost("{id:int}/result")]
+    [EnableRateLimiting("project-start")]
+    public async Task<IActionResult> SetResult(int id, [FromBody] SetProjectResultRequest request)
+    {
+        if (!Enum.TryParse<AssignmentStatus>(request.Status, true, out var status))
+            throw new BusinessException("INVALID_ASSIGNMENT_STATUS", "Geçersiz anket sonucu.");
+
+        await assignmentService.MarkResultAsync(id, SubjectId, status, request.RawPayload);
+        return this.NoContentResponse();
+    }
 }
+
+public record SetProjectResultRequest(string Status, string? RawPayload = null);

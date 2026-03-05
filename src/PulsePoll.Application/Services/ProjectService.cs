@@ -39,7 +39,10 @@ public class ProjectService(
         foreach (var p in projects)
         {
             var assignment = p.Assignments.FirstOrDefault(a => a.SubjectId == subjectId);
-            dtos.Add(await ToDtoAsync(p, assignment?.Status));
+            if (assignment is null || IsHiddenForSubjectList(assignment.Status))
+                continue;
+
+            dtos.Add(await ToDtoAsync(p, assignment.Status));
         }
         return dtos;
     }
@@ -194,4 +197,10 @@ public class ProjectService(
             rewardUnit.UnitLabel,
             rewardUnit.TryMultiplier);
     }
+
+    private static bool IsHiddenForSubjectList(AssignmentStatus status)
+        => status is AssignmentStatus.Completed
+            or AssignmentStatus.Disqualify
+            or AssignmentStatus.QuotaFull
+            or AssignmentStatus.ScreenOut;
 }

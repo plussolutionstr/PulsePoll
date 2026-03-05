@@ -50,6 +50,11 @@ public record SurveyModel(
     string SurveyUrl = "",
     string SubjectParameterName = "uid",
     string StartMessage = "",
+    string CompletedMessage = "",
+    string DisqualifyMessage = "",
+    string QuotaFullMessage = "",
+    string ScreenOutMessage = "",
+    string? AssignmentStatus = null,
     List<SurveyResultPatternModel>? ResultPatterns = null)
 {
     public bool HasCategory => !string.IsNullOrWhiteSpace(Category);

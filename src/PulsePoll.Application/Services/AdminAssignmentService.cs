@@ -133,7 +133,7 @@ public class AdminAssignmentService(
                 continue;
             }
 
-            if (assignment.Status != AssignmentStatus.Completed)
+            if (!IsRewardProcessableStatus(assignment.Status))
             {
                 skipped++;
                 continue;
@@ -226,7 +226,7 @@ public class AdminAssignmentService(
                 continue;
             }
 
-            if (assignment.Status != AssignmentStatus.Completed)
+            if (!IsRewardProcessableStatus(assignment.Status))
             {
                 skipped++;
                 continue;
@@ -278,4 +278,9 @@ public class AdminAssignmentService(
         logger.LogInformation("Atama işi iptal edildi: JobId={JobId}", jobId);
     }
 
+    private static bool IsRewardProcessableStatus(AssignmentStatus status)
+        => status is AssignmentStatus.Completed
+            or AssignmentStatus.Disqualify
+            or AssignmentStatus.QuotaFull
+            or AssignmentStatus.ScreenOut;
 }

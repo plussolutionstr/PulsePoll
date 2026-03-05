@@ -59,6 +59,7 @@ public static class MauiProgram
         builder.Services.AddTransient<StoryViewerViewModel>();
         builder.Services.AddTransient<NewsDetailViewModel>();
         builder.Services.AddTransient<SurveyWebViewViewModel>();
+        builder.Services.AddTransient<SurveyResultViewModel>();
 
         // Pages
         builder.Services.AddTransient<LoginPage>();
@@ -73,6 +74,7 @@ public static class MauiProgram
         builder.Services.AddTransient<StoryViewerPage>();
         builder.Services.AddTransient<NewsDetailPage>();
         builder.Services.AddTransient<SurveyWebViewPage>();
+        builder.Services.AddTransient<SurveyResultPage>();
 
 #if DEBUG
         builder.Logging.AddDebug();

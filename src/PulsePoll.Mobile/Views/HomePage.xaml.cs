@@ -1,10 +1,12 @@
 using PulsePoll.Mobile.ViewModels;
 using System.ComponentModel;
+using Microsoft.Maui.Storage;
 
 namespace PulsePoll.Mobile.Views;
 
 public partial class HomePage : ContentPage
 {
+    private const string HomeRefreshRequiredKey = "home_refresh_required";
     private readonly HomeViewModel _viewModel;
     private CancellationTokenSource? _shimmerCts;
 
@@ -22,8 +24,11 @@ public partial class HomePage : ContentPage
 
         if (_viewModel.Stories.Count == 0)
             await _viewModel.LoadDataCommand.ExecuteAsync(null);
-        else if (_viewModel.NeedsRefreshOnReturn)
+        else if (_viewModel.NeedsRefreshOnReturn || Preferences.Default.Get(HomeRefreshRequiredKey, false))
+        {
+            Preferences.Default.Set(HomeRefreshRequiredKey, false);
             await _viewModel.RefreshCommand.ExecuteAsync(null);
+        }
     }
 
     protected override void OnDisappearing()

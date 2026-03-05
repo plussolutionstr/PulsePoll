@@ -11,4 +11,5 @@ public interface IPulsePollApiClient
     Task<List<SurveyModel>> GetProjectsAsync(CancellationToken ct = default);
     Task<SurveyModel?> GetProjectByIdAsync(int projectId, CancellationToken ct = default);
     Task<string> StartProjectAsync(int projectId, CancellationToken ct = default);
+    Task SubmitProjectResultAsync(int projectId, string status, string? rawPayload = null, CancellationToken ct = default);
 }
