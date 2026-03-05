@@ -10,6 +10,9 @@ public partial class SurveyWebViewPage : ContentPage
     {
         InitializeComponent();
         BindingContext = _viewModel = viewModel;
+#if DEBUG
+        DebugUrlLabel.IsVisible = true;
+#endif
     }
 
     private async void OnWebViewNavigating(object? sender, WebNavigatingEventArgs e)
