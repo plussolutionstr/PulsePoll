@@ -17,7 +17,7 @@ public class MockDataService
     public List<NewsModel> GetNews() =>
     [
         new(1, "Duyuru", "Yeni Platin Üyelik Sistemi Geliyor", "Daha fazla kazanç, daha fazla fırsat!",
-            "#2D1B6E", "#A78BFA"),
+            "#2D1B6E", "#A78BFA", LinkUrl: "https://pulsepoll.com"),
         new(2, "Kampanya", "Hafta Sonu Anketi 2x Puan", "Cumartesi-Pazar tamamlanan anketler çift puan!",
             "#1F4E79", "#3B82F6"),
         new(3, "Yenilik", "Yeni Kategori: Otomotiv", "Otomotiv anketleri ile daha fazla kazanın.",

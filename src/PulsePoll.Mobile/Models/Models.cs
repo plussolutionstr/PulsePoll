@@ -25,7 +25,11 @@ public record NewsModel(
     string Subtitle,
     string GradientStart = "#2D1B6E",
     string GradientEnd = "#A78BFA",
-    string ImageUrl = "");
+    string ImageUrl = "",
+    string? LinkUrl = null)
+{
+    public bool HasLink => !string.IsNullOrWhiteSpace(LinkUrl);
+}
 
 public record SurveyModel(
     int Id,

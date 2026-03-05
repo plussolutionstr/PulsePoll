@@ -21,5 +21,6 @@ public partial class AppShell : Shell
         Routing.RegisterRoute("activequestion", typeof(ActiveQuestionPage));
         Routing.RegisterRoute("notifications", typeof(NotificationsPage));
         Routing.RegisterRoute("storyviewer", typeof(StoryViewerPage));
+        Routing.RegisterRoute("newsdetail", typeof(NewsDetailPage));
     }
 }

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:PulsePoll.Mobile.ViewModels"
+             x:Class="PulsePoll.Mobile.Views.NewsDetailPage"
+             x:DataType="vm:NewsDetailViewModel"
+             Shell.NavBarIsVisible="False">
+
+    <Grid>
+        <ScrollView>
+            <VerticalStackLayout Spacing="14" Padding="20,16,20,22">
+                <HorizontalStackLayout Spacing="8">
+                    <ImageButton Source="icon_arrow_left.png"
+                                 HeightRequest="24"
+                                 WidthRequest="24"
+                                 Command="{Binding GoBackCommand}"/>
+                    <Label Text="Haber"
+                           Style="{StaticResource TitleStyle}"
+                           VerticalOptions="Center"/>
+                </HorizontalStackLayout>
+
+                <Label Text="{Binding NewsItem.Title}"
+                       FontFamily="JakartaExtraBold"
+                       FontSize="24"
+                       TextColor="{StaticResource TextPrimary}"
+                       LineHeight="1.2"/>
+
+                <Border StrokeThickness="0"
+                        StrokeShape="RoundRectangle 18"
+                        HeightRequest="220"
+                        BackgroundColor="{StaticResource SurfaceColor}">
+                    <Grid>
+                        <Image Source="icon_star.png"
+                               HeightRequest="56"
+                               WidthRequest="56"
+                               Opacity="0.2"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center"/>
+                        <Image Source="{Binding NewsItem.ImageUrl}"
+                               Aspect="AspectFill"/>
+                    </Grid>
+                </Border>
+
+                <Label Text="{Binding NewsItem.Subtitle}"
+                       FontFamily="JakartaRegular"
+                       FontSize="15"
+                       TextColor="{StaticResource TextPrimary}"
+                       LineHeight="1.45"/>
+
+                <Border IsVisible="{Binding HasLink}"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 14"
+                        BackgroundColor="{StaticResource PrimaryPurple}"
+                        Padding="14,12">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding OpenLinkCommand}"/>
+                    </Border.GestureRecognizers>
+                    <HorizontalStackLayout Spacing="8" HorizontalOptions="Center">
+                        <Label Text="Habere Git"
+                               FontFamily="JakartaBold"
+                               FontSize="14"
+                               TextColor="White"/>
+                        <Label Text=">"
+                               FontFamily="JakartaBold"
+                               FontSize="14"
+                               TextColor="White"/>
+                    </HorizontalStackLayout>
+                </Border>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <ActivityIndicator IsVisible="{Binding IsLoading}"
+                           IsRunning="{Binding IsLoading}"
+                           Color="{StaticResource PrimaryPurple}"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center"/>
+    </Grid>
+</ContentPage>

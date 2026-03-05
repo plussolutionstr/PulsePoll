@@ -96,6 +96,12 @@ public partial class HomeViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private async Task OpenNews(NewsModel news)
+    {
+        await Shell.Current.GoToAsync($"newsdetail?id={news.Id}");
+    }
+
+    [RelayCommand]
     private async Task OpenStory(StoryModel story)
     {
         if (!story.IsSeen)

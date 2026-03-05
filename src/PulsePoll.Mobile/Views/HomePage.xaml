@@ -106,6 +106,11 @@
                         <CarouselView.ItemTemplate>
                             <DataTemplate x:DataType="models:NewsModel">
                                 <Grid>
+                                    <Grid.GestureRecognizers>
+                                        <TapGestureRecognizer
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:HomeViewModel}}, Path=OpenNewsCommand}"
+                                            CommandParameter="{Binding .}"/>
+                                    </Grid.GestureRecognizers>
                                     <BoxView BackgroundColor="#1A1535"/>
                                     <Image Source="icon_star.png"
                                            HeightRequest="48" WidthRequest="48"
@@ -114,15 +119,6 @@
                                            VerticalOptions="Center"/>
                                     <Image Source="{Binding ImageUrl}"
                                            Aspect="AspectFill"/>
-                                    <BoxView Opacity="0.6">
-                                        <BoxView.Background>
-                                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                                <GradientStop Color="#2D1B6E" Offset="0"/>
-                                                <GradientStop Color="#6D3FC0" Offset="0.5"/>
-                                                <GradientStop Color="#A78BFA" Offset="1"/>
-                                            </LinearGradientBrush>
-                                        </BoxView.Background>
-                                    </BoxView>
 
                                     <!-- Decorative circles -->
                                     <Border StrokeThickness="0"
@@ -138,32 +134,19 @@
                                             HorizontalOptions="Start" VerticalOptions="End"
                                             Margin="20,0,0,-30"/>
 
-                                    <!-- Bottom text gradient -->
-                                    <BoxView VerticalOptions="End" HeightRequest="80">
-                                        <BoxView.Background>
-                                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                                <GradientStop Color="#000F0A28" Offset="0"/>
-                                                <GradientStop Color="#D90F0A28" Offset="1"/>
-                                            </LinearGradientBrush>
-                                        </BoxView.Background>
-                                    </BoxView>
+                                    <!-- Dark band (about 1/5 of card height) -->
+                                    <Border StrokeThickness="0"
+                                            StrokeShape="RoundRectangle 0"
+                                            VerticalOptions="End"
+                                            HeightRequest="34"
+                                            BackgroundColor="#D311062C"/>
 
                                     <!-- Text content -->
-                                    <VerticalStackLayout Spacing="6"
+                                    <VerticalStackLayout Spacing="4"
                                                          VerticalOptions="End"
-                                                         Padding="16,0,16,14">
-                                        <Border StrokeThickness="0"
-                                                StrokeShape="RoundRectangle 6"
-                                                BackgroundColor="#33FFFFFF"
-                                                Padding="8,3"
-                                                HorizontalOptions="Start">
-                                            <Label Text="{Binding Tag}"
-                                                   FontFamily="JakartaBold" FontSize="10"
-                                                   TextColor="White"
-                                                   CharacterSpacing="1"/>
-                                        </Border>
+                                                         Padding="16,0,16,8">
                                         <Label Text="{Binding Title}"
-                                               FontFamily="JakartaBold" FontSize="15"
+                                               FontFamily="JakartaExtraBold" FontSize="18"
                                                TextColor="White"
                                                LineHeight="1.35"/>
                                     </VerticalStackLayout>
@@ -258,14 +241,14 @@
                                             HorizontalOptions="End">
                                         <Label Text="{Binding Reward, StringFormat='₺{0}'}"
                                                FontFamily="JakartaBold" FontSize="13"
-                                               TextColor="{StaticResource Amber}"/>
+                                               TextColor="#111111"/>
                                     </Border>
                                 </Grid>
 
                                 <!-- Card Body -->
                                 <VerticalStackLayout Spacing="10" Padding="16,12,16,14">
                                     <Label Text="{Binding Title}"
-                                           FontFamily="JakartaBold" FontSize="14"
+                                           FontFamily="JakartaExtraBold" FontSize="15"
                                            TextColor="{StaticResource TextPrimary}"/>
 
                                     <!-- Duration + Category -->
