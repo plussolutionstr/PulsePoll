@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:PulsePoll.Mobile.ViewModels"
+             x:Class="PulsePoll.Mobile.Views.ConnectionErrorPage"
+             x:DataType="vm:ConnectionErrorViewModel"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="{StaticResource PageBackground}">
+
+    <VerticalStackLayout Spacing="16"
+                         VerticalOptions="Center"
+                         HorizontalOptions="Center"
+                         Padding="32">
+
+        <Border StrokeThickness="0"
+                StrokeShape="RoundRectangle 32"
+                HeightRequest="64" WidthRequest="64"
+                BackgroundColor="{StaticResource DangerLight}"
+                HorizontalOptions="Center">
+            <Image Source="icon_info.png"
+                   HeightRequest="28" WidthRequest="28"
+                   HorizontalOptions="Center" VerticalOptions="Center"/>
+        </Border>
+
+        <Label Text="Bağlantı Hatası"
+               FontFamily="JakartaBold" FontSize="20"
+               TextColor="{StaticResource TextPrimary}"
+               HorizontalTextAlignment="Center"/>
+
+        <Label Text="Sunucuya ulaşılamıyor. Lütfen internet bağlantınızı kontrol edip tekrar deneyin."
+               FontFamily="JakartaRegular" FontSize="14"
+               TextColor="{StaticResource TextSecondary}"
+               HorizontalTextAlignment="Center"
+               Margin="0,0,0,8"/>
+
+        <Button Text="Yeniden Dene"
+                Style="{StaticResource PrimaryButtonStyle}"
+                Command="{Binding RetryCommand}"
+                HorizontalOptions="Fill"/>
+
+        <ActivityIndicator IsVisible="{Binding IsRetrying}"
+                           IsRunning="{Binding IsRetrying}"
+                           Color="{StaticResource PrimaryPurple}"
+                           HorizontalOptions="Center"
+                           Margin="0,8,0,0"/>
+    </VerticalStackLayout>
+</ContentPage>

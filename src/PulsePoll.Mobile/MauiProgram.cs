@@ -27,7 +27,6 @@ public static class MauiProgram
         builder.Services.AddTransient<AppShell>();
 
         // Services
-        builder.Services.AddSingleton<MockDataService>();
         builder.Services.AddSingleton<NotificationCenterService>();
         builder.Services.AddSingleton<ITokenProvider, DevTokenProvider>();
 
@@ -80,6 +79,7 @@ public static class MauiProgram
         builder.Services.AddTransient<NewsDetailViewModel>();
         builder.Services.AddTransient<SurveyWebViewViewModel>();
         builder.Services.AddTransient<SurveyResultViewModel>();
+        builder.Services.AddTransient<ConnectionErrorViewModel>();
 
         // Pages
         builder.Services.AddTransient<LoginPage>();
@@ -98,6 +98,7 @@ public static class MauiProgram
         builder.Services.AddTransient<NewsDetailPage>();
         builder.Services.AddTransient<SurveyWebViewPage>();
         builder.Services.AddTransient<SurveyResultPage>();
+        builder.Services.AddTransient<ConnectionErrorPage>();
 
 #if DEBUG
         builder.Logging.AddDebug();

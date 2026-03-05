@@ -10,14 +10,12 @@ namespace PulsePoll.Mobile.ViewModels;
 public partial class HistoryViewModel : ObservableObject
 {
     private readonly IPulsePollApiClient _apiClient;
-    private readonly MockDataService _dataService;
     private List<HistoryGroup> _allGroups = [];
     private bool _isLoaded;
 
-    public HistoryViewModel(IPulsePollApiClient apiClient, MockDataService dataService)
+    public HistoryViewModel(IPulsePollApiClient apiClient)
     {
         _apiClient = apiClient;
-        _dataService = dataService;
     }
 
     [ObservableProperty] private ObservableCollection<HistoryGroup> _groups = [];
@@ -41,15 +39,17 @@ public partial class HistoryViewModel : ObservableObject
         IsLoading = true;
         try
         {
-            var items = await FetchOrFallbackAsync(
-                () => _apiClient.GetHistoryAsync(),
-                () => _dataService.GetHistory().SelectMany(g => g.Items).ToList());
+            var items = await _apiClient.GetHistoryAsync();
 
             _allGroups = GroupByMonth(items);
             RewardUnitLabel = items.FirstOrDefault(i => !string.IsNullOrWhiteSpace(i.RewardUnitLabel))?.RewardUnitLabel ?? "Poll";
             LoadData();
             CalculateSummary();
             _isLoaded = true;
+        }
+        catch
+        {
+            await Shell.Current.GoToAsync("connectionerror");
         }
         finally
         {
@@ -84,13 +84,6 @@ public partial class HistoryViewModel : ObservableObject
 
     partial void OnTotalEarnedChanged(decimal value) => OnPropertyChanged(nameof(TotalEarnedDisplay));
     partial void OnRewardUnitLabelChanged(string value) => OnPropertyChanged(nameof(TotalEarnedDisplay));
-
-    private static async Task<List<T>> FetchOrFallbackAsync<T>(
-        Func<Task<List<T>>> fetch, Func<List<T>> fallback)
-    {
-        try { return await fetch(); }
-        catch { return fallback(); }
-    }
 
     private static List<HistoryGroup> GroupByMonth(IEnumerable<HistoryItemModel> items)
     {

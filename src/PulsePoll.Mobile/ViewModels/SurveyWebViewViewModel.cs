@@ -13,7 +13,6 @@ namespace PulsePoll.Mobile.ViewModels;
 public partial class SurveyWebViewViewModel : ObservableObject
 {
     private readonly IPulsePollApiClient _apiClient;
-    private readonly MockDataService _mockDataService;
     private bool _resultHandled;
     private bool _isHandlingResult;
     private bool _patternsLoaded;
@@ -22,10 +21,9 @@ public partial class SurveyWebViewViewModel : ObservableObject
     private static readonly Regex InputTagRegex = new("<input\\b[^>]*>", RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.Compiled);
     private static readonly Regex AttributeRegex = new("(?<name>[a-zA-Z_:][\\w:.-]*)\\s*=\\s*(\"(?<dq>[^\"]*)\"|'(?<sq>[^']*)'|(?<bare>[^\\s>]+))", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
-    public SurveyWebViewViewModel(IPulsePollApiClient apiClient, MockDataService mockDataService)
+    public SurveyWebViewViewModel(IPulsePollApiClient apiClient)
     {
         _apiClient = apiClient;
-        _mockDataService = mockDataService;
     }
 
     [ObservableProperty] private int _projectId;
@@ -110,9 +108,7 @@ public partial class SurveyWebViewViewModel : ObservableObject
 
         try
         {
-            var survey = await FetchOrFallbackAsync(
-                () => _apiClient.GetProjectByIdAsync(projectId),
-                () => _mockDataService.GetSurveyDetail(projectId));
+            var survey = await _apiClient.GetProjectByIdAsync(projectId);
 
             _patterns = survey?.ResultPatterns?
                 .Where(p => !string.IsNullOrWhiteSpace(p.MatchPattern))
@@ -335,18 +331,4 @@ public partial class SurveyWebViewViewModel : ObservableObject
 
     private static bool IsTerminalResult(string status)
         => status is "Completed" or "Disqualify" or "QuotaFull" or "ScreenOut";
-
-    private static async Task<SurveyModel?> FetchOrFallbackAsync(
-        Func<Task<SurveyModel?>> fetch,
-        Func<SurveyModel> fallback)
-    {
-        try
-        {
-            return await fetch() ?? fallback();
-        }
-        catch
-        {
-            return fallback();
-        }
-    }
 }

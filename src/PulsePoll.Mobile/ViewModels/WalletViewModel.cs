@@ -11,12 +11,10 @@ namespace PulsePoll.Mobile.ViewModels;
 public partial class WalletViewModel : ObservableObject
 {
     private readonly IPulsePollApiClient _apiClient;
-    private readonly MockDataService _mockDataService;
 
-    public WalletViewModel(IPulsePollApiClient apiClient, MockDataService mockDataService)
+    public WalletViewModel(IPulsePollApiClient apiClient)
     {
         _apiClient = apiClient;
-        _mockDataService = mockDataService;
     }
 
     [ObservableProperty] private bool _isLoading;
@@ -46,7 +44,7 @@ public partial class WalletViewModel : ObservableObject
         }
         catch
         {
-            LoadFromMock();
+            await Shell.Current.GoToAsync("connectionerror");
         }
         finally
         {
@@ -148,21 +146,6 @@ public partial class WalletViewModel : ObservableObject
             RewardUnitLabel = unitLabel;
             BankAccounts = new ObservableCollection<BankAccountModel>(banks.Select(b => b.ToModel()));
             RecentTransactions = new ObservableCollection<TransactionModel>(recentTransactions);
-        });
-    }
-
-    private void LoadFromMock()
-    {
-        var wallet = _mockDataService.GetWallet();
-        MainThread.BeginInvokeOnMainThread(() =>
-        {
-            WithdrawableBalance = wallet.WithdrawableBalance;
-            PendingBalance = Math.Max(wallet.TotalEarned - wallet.WithdrawableBalance, 0m);
-            TotalEarned = wallet.TotalEarned;
-            UnitTryMultiplier = 1m;
-            RewardUnitLabel = wallet.RewardUnitLabel;
-            BankAccounts = new ObservableCollection<BankAccountModel>(wallet.BankAccounts);
-            RecentTransactions = new ObservableCollection<TransactionModel>(wallet.RecentTransactions);
         });
     }
 

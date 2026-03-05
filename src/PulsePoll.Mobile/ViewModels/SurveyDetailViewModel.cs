@@ -10,14 +10,12 @@ namespace PulsePoll.Mobile.ViewModels;
 public partial class SurveyDetailViewModel : ObservableObject
 {
     private readonly IPulsePollApiClient _apiClient;
-    private readonly MockDataService _mockDataService;
     private const string LocalSubjectPublicIdKey = "subject_public_id";
     private const string HomeRefreshRequiredKey = "home_refresh_required";
 
-    public SurveyDetailViewModel(IPulsePollApiClient apiClient, MockDataService mockDataService)
+    public SurveyDetailViewModel(IPulsePollApiClient apiClient)
     {
         _apiClient = apiClient;
-        _mockDataService = mockDataService;
     }
 
     [ObservableProperty] private int _surveyId;
@@ -74,27 +72,17 @@ public partial class SurveyDetailViewModel : ObservableObject
         IsLoading = true;
         try
         {
-            Survey = await FetchOrFallbackAsync(
-                () => _apiClient.GetProjectByIdAsync(surveyId),
-                () => _mockDataService.GetSurveyDetail(surveyId));
+            Survey = await _apiClient.GetProjectByIdAsync(surveyId);
+            if (Survey is null)
+                await Shell.Current.GoToAsync("connectionerror");
+        }
+        catch
+        {
+            await Shell.Current.GoToAsync("connectionerror");
         }
         finally
         {
             IsLoading = false;
-        }
-    }
-
-    private static async Task<SurveyModel?> FetchOrFallbackAsync(
-        Func<Task<SurveyModel?>> fetch,
-        Func<SurveyModel> fallback)
-    {
-        try
-        {
-            return await fetch() ?? fallback();
-        }
-        catch
-        {
-            return fallback();
         }
     }
 

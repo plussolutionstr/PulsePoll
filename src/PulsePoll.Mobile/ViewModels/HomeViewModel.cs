@@ -10,16 +10,13 @@ namespace PulsePoll.Mobile.ViewModels;
 public partial class HomeViewModel : ObservableObject
 {
     private readonly IPulsePollApiClient _apiClient;
-    private readonly MockDataService _mockDataService;
     private readonly NotificationCenterService _notificationCenter;
 
     public HomeViewModel(
         IPulsePollApiClient apiClient,
-        MockDataService mockDataService,
         NotificationCenterService notificationCenter)
     {
         _apiClient = apiClient;
-        _mockDataService = mockDataService;
         _notificationCenter = notificationCenter;
         _notificationCenter.PropertyChanged += OnNotificationCenterPropertyChanged;
         SyncNotificationBadge();
@@ -47,6 +44,10 @@ public partial class HomeViewModel : ObservableObject
             await FetchDataAsync();
             _isLoaded = true;
         }
+        catch
+        {
+            await Shell.Current.GoToAsync("connectionerror");
+        }
         finally
         {
             IsLoading = false;
@@ -61,6 +62,10 @@ public partial class HomeViewModel : ObservableObject
             await FetchDataAsync();
             _isLoaded = true;
             NeedsRefreshOnReturn = false;
+        }
+        catch
+        {
+            await Shell.Current.GoToAsync("connectionerror");
         }
         finally
         {
@@ -85,15 +90,9 @@ public partial class HomeViewModel : ObservableObject
 
     private async Task FetchDataAsync()
     {
-        var storiesTask = FetchOrFallbackAsync(
-            () => _apiClient.GetStoriesAsync(),
-            () => _mockDataService.GetStories());
-        var newsTask = FetchOrFallbackAsync(
-            () => _apiClient.GetNewsAsync(),
-            () => _mockDataService.GetNews());
-        var surveysTask = FetchOrFallbackAsync(
-            () => _apiClient.GetProjectsAsync(),
-            () => _mockDataService.GetSurveys());
+        var storiesTask = _apiClient.GetStoriesAsync();
+        var newsTask = _apiClient.GetNewsAsync();
+        var surveysTask = _apiClient.GetProjectsAsync();
 
         await Task.WhenAll(storiesTask, newsTask, surveysTask);
 
@@ -107,13 +106,6 @@ public partial class HomeViewModel : ObservableObject
             News = new ObservableCollection<NewsModel>(newsTask.Result);
             Surveys = new ObservableCollection<SurveyModel>(surveysTask.Result.Take(3));
         });
-    }
-
-    private static async Task<List<T>> FetchOrFallbackAsync<T>(
-        Func<Task<List<T>>> fetch, Func<List<T>> fallback)
-    {
-        try { return await fetch(); }
-        catch { return fallback(); }
     }
 
     [RelayCommand]

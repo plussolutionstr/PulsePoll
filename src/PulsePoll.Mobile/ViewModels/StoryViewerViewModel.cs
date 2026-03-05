@@ -11,7 +11,6 @@ namespace PulsePoll.Mobile.ViewModels;
 public partial class StoryViewerViewModel : ObservableObject
 {
     private readonly IPulsePollApiClient _apiClient;
-    private readonly MockDataService _mockDataService;
     private readonly HashSet<int> _seenSyncStoryIds = [];
 
     private CancellationTokenSource? _progressCts;
@@ -19,10 +18,9 @@ public partial class StoryViewerViewModel : ObservableObject
     private const int StoryDurationMs = 5000;
     private const int ProgressTickMs = 50;
 
-    public StoryViewerViewModel(IPulsePollApiClient apiClient, MockDataService mockDataService)
+    public StoryViewerViewModel(IPulsePollApiClient apiClient)
     {
         _apiClient = apiClient;
-        _mockDataService = mockDataService;
     }
 
     [ObservableProperty] private int _storyId;
@@ -89,9 +87,7 @@ public partial class StoryViewerViewModel : ObservableObject
 
         try
         {
-            var stories = await FetchOrFallbackAsync(
-                () => _apiClient.GetStoriesAsync(),
-                () => _mockDataService.GetStories());
+            var stories = await _apiClient.GetStoriesAsync();
 
             Stories = new ObservableCollection<StoryModel>(stories);
             ProgressSegments = new ObservableCollection<StoryProgressSegment>(
@@ -108,6 +104,10 @@ public partial class StoryViewerViewModel : ObservableObject
                 initialIndex = 0;
 
             SetCurrentStory(initialIndex, restartProgress: true);
+        }
+        catch
+        {
+            await Shell.Current.GoToAsync("connectionerror");
         }
         finally
         {
@@ -261,20 +261,6 @@ public partial class StoryViewerViewModel : ObservableObject
         catch
         {
             await Shell.Current.GoToAsync("//home");
-        }
-    }
-
-    private static async Task<List<T>> FetchOrFallbackAsync<T>(
-        Func<Task<List<T>>> fetch,
-        Func<List<T>> fallback)
-    {
-        try
-        {
-            return await fetch();
-        }
-        catch
-        {
-            return fallback();
         }
     }
 

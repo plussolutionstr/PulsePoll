@@ -6,14 +6,11 @@ namespace PulsePoll.Mobile.Services;
 public partial class NotificationCenterService : ObservableObject
 {
     private readonly INotificationApiClient _notificationApiClient;
-    private readonly MockDataService _mockDataService;
     private bool _isLoaded;
-    private bool _usingFallback;
 
-    public NotificationCenterService(INotificationApiClient notificationApiClient, MockDataService mockDataService)
+    public NotificationCenterService(INotificationApiClient notificationApiClient)
     {
         _notificationApiClient = notificationApiClient;
-        _mockDataService = mockDataService;
     }
 
     [ObservableProperty] private IReadOnlyList<NotificationModel> _items = [];
@@ -33,13 +30,7 @@ public partial class NotificationCenterService : ObservableObject
         try
         {
             var notifications = await _notificationApiClient.GetNotificationsAsync(ct);
-            _usingFallback = false;
             SetItems(notifications);
-        }
-        catch
-        {
-            _usingFallback = true;
-            SetItems(_mockDataService.GetNotifications().OrderByDescending(n => n.Date).ToList());
         }
         finally
         {
@@ -56,9 +47,6 @@ public partial class NotificationCenterService : ObservableObject
         var previous = Items.ToList();
         var read = previous.Select(n => n with { IsRead = true }).ToList();
         SetItems(read);
-
-        if (_usingFallback)
-            return;
 
         try
         {
@@ -77,8 +65,6 @@ public partial class NotificationCenterService : ObservableObject
         var updated = previous.Select(n => n.Id == notificationId ? n with { IsRead = true } : n).ToList();
         SetItems(updated);
 
-        if (_usingFallback) return;
-
         try
         {
             await _notificationApiClient.MarkOneReadAsync(notificationId, ct);
@@ -95,8 +81,6 @@ public partial class NotificationCenterService : ObservableObject
         var previous = Items.ToList();
         var updated = previous.Where(n => n.Id != notificationId).ToList();
         SetItems(updated);
-
-        if (_usingFallback) return;
 
         try
         {

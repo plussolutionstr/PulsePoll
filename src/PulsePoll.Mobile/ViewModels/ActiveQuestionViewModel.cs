@@ -2,20 +2,13 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PulsePoll.Mobile.Models;
-using PulsePoll.Mobile.Services;
 
 namespace PulsePoll.Mobile.ViewModels;
 
 [QueryProperty(nameof(SurveyId), "surveyId")]
 public partial class ActiveQuestionViewModel : ObservableObject
 {
-    private readonly MockDataService _dataService;
     private List<QuestionModel> _questions = [];
-
-    public ActiveQuestionViewModel(MockDataService dataService)
-    {
-        _dataService = dataService;
-    }
 
     [ObservableProperty] private int _surveyId;
     [ObservableProperty] private QuestionModel? _currentQuestion;
@@ -27,17 +20,6 @@ public partial class ActiveQuestionViewModel : ObservableObject
     [ObservableProperty] private string _brandName = "";
     [ObservableProperty] private decimal _reward;
     [ObservableProperty] private bool _canGoBack;
-
-    partial void OnSurveyIdChanged(int value)
-    {
-        var survey = _dataService.GetSurveyDetail(value);
-        BrandName = survey.BrandName;
-        Reward = survey.Reward;
-        _questions = _dataService.GetQuestions();
-        TotalQuestions = survey.QuestionCount;
-        CurrentIndex = 0;
-        LoadQuestion();
-    }
 
     [RelayCommand]
     private void SelectOption(OptionModel option)
@@ -85,7 +67,7 @@ public partial class ActiveQuestionViewModel : ObservableObject
             Options = new ObservableCollection<OptionModel>(CurrentQuestion.Options);
         }
         SelectedOptionId = null;
-        Progress = (double)(CurrentIndex + 1) / TotalQuestions;
+        Progress = TotalQuestions > 0 ? (double)(CurrentIndex + 1) / TotalQuestions : 0;
         CanGoBack = CurrentIndex > 0;
     }
 }

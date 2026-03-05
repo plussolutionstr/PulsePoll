@@ -29,4 +29,5 @@ public interface IPulsePollApiClient
     Task<List<LookupItemDto>> GetDistrictsAsync(int cityId, CancellationToken ct = default);
     Task<List<LookupItemDto>> GetProfessionsAsync(CancellationToken ct = default);
     Task<List<LookupItemDto>> GetEducationLevelsAsync(CancellationToken ct = default);
+    Task PingAsync(CancellationToken ct = default);
 }

@@ -9,12 +9,10 @@ namespace PulsePoll.Mobile.ViewModels;
 public partial class NewsDetailViewModel : ObservableObject
 {
     private readonly IPulsePollApiClient _apiClient;
-    private readonly MockDataService _mockDataService;
 
-    public NewsDetailViewModel(IPulsePollApiClient apiClient, MockDataService mockDataService)
+    public NewsDetailViewModel(IPulsePollApiClient apiClient)
     {
         _apiClient = apiClient;
-        _mockDataService = mockDataService;
     }
 
     [ObservableProperty] private int _newsId;
@@ -56,9 +54,7 @@ public partial class NewsDetailViewModel : ObservableObject
         IsLoading = true;
         try
         {
-            var news = await FetchOrFallbackAsync(
-                () => _apiClient.GetNewsAsync(),
-                () => _mockDataService.GetNews());
+            var news = await _apiClient.GetNewsAsync();
 
             if (news.Count == 0)
             {
@@ -68,23 +64,13 @@ public partial class NewsDetailViewModel : ObservableObject
 
             NewsItem = news.FirstOrDefault(n => n.Id == newsId) ?? news[0];
         }
+        catch
+        {
+            await Shell.Current.GoToAsync("connectionerror");
+        }
         finally
         {
             IsLoading = false;
-        }
-    }
-
-    private static async Task<List<T>> FetchOrFallbackAsync<T>(
-        Func<Task<List<T>>> fetch,
-        Func<List<T>> fallback)
-    {
-        try
-        {
-            return await fetch();
-        }
-        catch
-        {
-            return fallback();
         }
     }
 }

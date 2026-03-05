@@ -22,37 +22,67 @@
 
             <!-- Summary Boxes -->
             <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10">
-                <Border StrokeShape="RoundRectangle 16" StrokeThickness="0"
-                        BackgroundColor="{StaticResource SuccessLight}" Padding="12,16">
-                    <VerticalStackLayout HorizontalOptions="Center" Spacing="4">
-                        <Label Text="{Binding CompletedCount}"
-                               FontFamily="JakartaBold" FontSize="22"
+                <!-- Tamamlanan -->
+                <Border StrokeShape="RoundRectangle 18" StrokeThickness="0" Padding="0">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                            <GradientStop Color="#E6FBF4" Offset="0"/>
+                            <GradientStop Color="#C6F7E2" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <VerticalStackLayout HorizontalOptions="Center" Spacing="2" Padding="12,14">
+                        <Label Text="&#x2713;"
+                               FontSize="16"
                                TextColor="{StaticResource Success}"
                                HorizontalTextAlignment="Center"/>
+                        <Label Text="{Binding CompletedCount}"
+                               FontFamily="JakartaBold" FontSize="24"
+                               TextColor="#0D9668"
+                               HorizontalTextAlignment="Center"/>
                         <Label Text="Tamamlanan" FontFamily="JakartaMedium" FontSize="11"
-                               TextColor="{StaticResource Success}" HorizontalTextAlignment="Center"/>
+                               TextColor="#0D9668" HorizontalTextAlignment="Center"/>
                     </VerticalStackLayout>
                 </Border>
-                <Border Grid.Column="1" StrokeShape="RoundRectangle 16" StrokeThickness="0"
-                        BackgroundColor="{StaticResource DangerLight}" Padding="12,16">
-                    <VerticalStackLayout HorizontalOptions="Center" Spacing="4">
-                        <Label Text="{Binding DisqualifiedCount}"
-                               FontFamily="JakartaBold" FontSize="22"
+                <!-- Elenen -->
+                <Border Grid.Column="1" StrokeShape="RoundRectangle 18" StrokeThickness="0" Padding="0">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                            <GradientStop Color="#FFF0F3" Offset="0"/>
+                            <GradientStop Color="#FDDDE4" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <VerticalStackLayout HorizontalOptions="Center" Spacing="2" Padding="12,14">
+                        <Label Text="&#x2717;"
+                               FontSize="16"
                                TextColor="{StaticResource Danger}"
                                HorizontalTextAlignment="Center"/>
+                        <Label Text="{Binding DisqualifiedCount}"
+                               FontFamily="JakartaBold" FontSize="24"
+                               TextColor="#D6336C"
+                               HorizontalTextAlignment="Center"/>
                         <Label Text="Elenen" FontFamily="JakartaMedium" FontSize="11"
-                               TextColor="{StaticResource Danger}" HorizontalTextAlignment="Center"/>
+                               TextColor="#D6336C" HorizontalTextAlignment="Center"/>
                     </VerticalStackLayout>
                 </Border>
-                <Border Grid.Column="2" StrokeShape="RoundRectangle 16" StrokeThickness="0"
-                        BackgroundColor="{StaticResource AmberLight}" Padding="12,16">
-                    <VerticalStackLayout HorizontalOptions="Center" Spacing="4">
+                <!-- Toplam Kazanç -->
+                <Border Grid.Column="2" StrokeShape="RoundRectangle 18" StrokeThickness="0" Padding="0">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                            <GradientStop Color="#EDE8FF" Offset="0"/>
+                            <GradientStop Color="#D4CBFF" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <VerticalStackLayout HorizontalOptions="Center" Spacing="2" Padding="12,14">
+                        <Label Text="&#x2605;"
+                               FontSize="16"
+                               TextColor="{StaticResource PrimaryPurple}"
+                               HorizontalTextAlignment="Center"/>
                         <Label Text="{Binding TotalEarnedDisplay}"
-                               FontFamily="JakartaBold" FontSize="22"
-                               TextColor="{StaticResource Amber}"
+                               FontFamily="JakartaBold" FontSize="24"
+                               TextColor="{StaticResource PrimaryDark}"
                                HorizontalTextAlignment="Center"/>
                         <Label Text="Toplam" FontFamily="JakartaMedium" FontSize="11"
-                               TextColor="{StaticResource Amber}" HorizontalTextAlignment="Center"/>
+                               TextColor="{StaticResource PrimaryDark}" HorizontalTextAlignment="Center"/>
                     </VerticalStackLayout>
                 </Border>
             </Grid>

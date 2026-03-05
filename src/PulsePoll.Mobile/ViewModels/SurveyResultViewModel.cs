@@ -12,12 +12,10 @@ public partial class SurveyResultViewModel : ObservableObject
 {
     private const string HomeRefreshRequiredKey = "home_refresh_required";
     private readonly IPulsePollApiClient _apiClient;
-    private readonly MockDataService _mockDataService;
 
-    public SurveyResultViewModel(IPulsePollApiClient apiClient, MockDataService mockDataService)
+    public SurveyResultViewModel(IPulsePollApiClient apiClient)
     {
         _apiClient = apiClient;
-        _mockDataService = mockDataService;
     }
 
     [ObservableProperty] private int _projectId;
@@ -59,10 +57,12 @@ public partial class SurveyResultViewModel : ObservableObject
         IsLoading = true;
         try
         {
-            Survey = await FetchOrFallbackAsync(
-                () => _apiClient.GetProjectByIdAsync(projectId),
-                () => _mockDataService.GetSurveyDetail(projectId));
+            Survey = await _apiClient.GetProjectByIdAsync(projectId);
             ResultMessage = ResolveResultMessage(Survey, Status);
+        }
+        catch
+        {
+            // Sonuç sayfasında bağlantı hatası olsa bile kullanıcı ana sayfaya dönebilmeli.
         }
         finally
         {
@@ -87,19 +87,5 @@ public partial class SurveyResultViewModel : ObservableObject
         return string.IsNullOrWhiteSpace(message)
             ? "Katılımınız için teşekkür ederiz."
             : message;
-    }
-
-    private static async Task<SurveyModel?> FetchOrFallbackAsync(
-        Func<Task<SurveyModel?>> fetch,
-        Func<SurveyModel> fallback)
-    {
-        try
-        {
-            return await fetch() ?? fallback();
-        }
-        catch
-        {
-            return fallback();
-        }
     }
 }

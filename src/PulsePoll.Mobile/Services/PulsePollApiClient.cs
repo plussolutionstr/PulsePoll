@@ -242,4 +242,11 @@ public sealed class PulsePollApiClient : IPulsePollApiClient
 
         throw new HttpRequestException(message, null, response.StatusCode);
     }
+
+    public async Task PingAsync(CancellationToken ct = default)
+    {
+        await SetAuthHeaderAsync();
+        var response = await _http.GetAsync("api/projects", ct);
+        response.EnsureSuccessStatusCode();
+    }
 }

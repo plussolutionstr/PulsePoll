@@ -16,7 +16,7 @@
         <converters:InvertedBoolConverter x:Key="InvertedBool"/>
     </ContentPage.Resources>
 
-    <Grid RowDefinitions="Auto,*">
+    <Grid RowDefinitions="Auto,*,Auto">
         <!-- Header + Filters -->
         <VerticalStackLayout Spacing="16" Padding="20,16">
 
@@ -30,21 +30,14 @@
                        Style="{StaticResource PageTitleStyle}"
                        VerticalOptions="Center"
                        Margin="12,0,0,0"/>
-                <Label Grid.Column="2" Text="Tümünü Okundu İşaretle"
+                <Label Grid.Column="2"
+                       Text="{Binding EditButtonText}"
                        FontFamily="JakartaSemiBold" FontSize="12"
                        TextColor="{StaticResource PrimaryPurple}"
                        VerticalOptions="Center"
-                       IsEnabled="{Binding CanMarkAllRead}"
-                       Opacity="1">
-                    <Label.Triggers>
-                        <DataTrigger TargetType="Label"
-                                     Binding="{Binding CanMarkAllRead}"
-                                     Value="False">
-                            <Setter Property="Opacity" Value="0.5"/>
-                        </DataTrigger>
-                    </Label.Triggers>
+                       IsVisible="{Binding HasNotifications}">
                     <Label.GestureRecognizers>
-                        <TapGestureRecognizer Command="{Binding MarkAllReadCommand}"/>
+                        <TapGestureRecognizer Command="{Binding ToggleEditModeCommand}"/>
                     </Label.GestureRecognizers>
                 </Label>
             </Grid>
@@ -99,75 +92,89 @@
                         SelectionMode="None"
                         Margin="20,0">
             <CollectionView.ItemTemplate>
-                <DataTemplate x:DataType="models:NotificationModel">
-                    <SwipeView Margin="0,4"
-                               Threshold="64">
-                        <!-- Swipe Right: Mark as Read -->
-                        <SwipeView.LeftItems>
-                            <SwipeItems Mode="Reveal" SwipeBehaviorOnInvoked="Close">
-                                <SwipeItem Text="Okundu"
-                                           IconImageSource="icon_check.png"
-                                           BackgroundColor="{StaticResource Success}"
-                                           Command="{Binding Source={x:Reference NotificationsPageRoot}, Path=BindingContext.MarkOneReadCommand}"
-                                           CommandParameter="{Binding .}"/>
-                            </SwipeItems>
-                        </SwipeView.LeftItems>
+                <DataTemplate x:DataType="vm:SelectableNotification">
+                    <!-- Notification Card -->
+                    <Border StrokeShape="RoundRectangle 16"
+                            Stroke="{StaticResource CardBorder}"
+                            BackgroundColor="{Binding Model.IsRead, Converter={StaticResource BoolToReadBg}}"
+                            Padding="13"
+                            Margin="0,4">
+                        <Border.Triggers>
+                            <DataTrigger TargetType="Border"
+                                         Binding="{Binding IsSelected}"
+                                         Value="True">
+                                <Setter Property="Stroke" Value="{StaticResource PrimaryPurple}"/>
+                                <Setter Property="StrokeThickness" Value="1.5"/>
+                            </DataTrigger>
+                        </Border.Triggers>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer
+                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:NotificationsViewModel}}, Path=ShowNotificationCommand}"
+                                CommandParameter="{Binding .}"/>
+                        </Border.GestureRecognizers>
+                        <Grid ColumnDefinitions="Auto,36,*,Auto" ColumnSpacing="11">
+                            <!-- Checkbox (edit mode only) -->
+                            <Border StrokeShape="RoundRectangle 4"
+                                    StrokeThickness="1.5"
+                                    Stroke="{StaticResource TextSecondary}"
+                                    HeightRequest="22" WidthRequest="22"
+                                    BackgroundColor="Transparent"
+                                    VerticalOptions="Center"
+                                    IsVisible="{Binding Source={RelativeSource AncestorType={x:Type vm:NotificationsViewModel}}, Path=IsEditMode}">
+                                <Border.Triggers>
+                                    <DataTrigger TargetType="Border"
+                                                 Binding="{Binding IsSelected}"
+                                                 Value="True">
+                                        <Setter Property="BackgroundColor" Value="{StaticResource PrimaryPurple}"/>
+                                        <Setter Property="Stroke" Value="{StaticResource PrimaryPurple}"/>
+                                    </DataTrigger>
+                                </Border.Triggers>
+                                <Label Text="&#x2713;"
+                                       FontSize="13"
+                                       TextColor="White"
+                                       HorizontalOptions="Center"
+                                       VerticalOptions="Center"
+                                       IsVisible="{Binding IsSelected}"/>
+                            </Border>
 
-                        <!-- Swipe Left: Delete -->
-                        <SwipeView.RightItems>
-                            <SwipeItems Mode="Reveal" SwipeBehaviorOnInvoked="Close">
-                                <SwipeItem Text="Sil"
-                                           IconImageSource="icon_x_circle.png"
-                                           BackgroundColor="{StaticResource Danger}"
-                                           Command="{Binding Source={x:Reference NotificationsPageRoot}, Path=BindingContext.DeleteNotificationCommand}"
-                                           CommandParameter="{Binding .}"/>
-                            </SwipeItems>
-                        </SwipeView.RightItems>
+                            <!-- Type Icon -->
+                            <Border Grid.Column="1"
+                                    StrokeThickness="0"
+                                    StrokeShape="RoundRectangle 14"
+                                    HeightRequest="36" WidthRequest="36"
+                                    BackgroundColor="{Binding Model.Type, Converter={StaticResource TypeToBg}}">
+                                <Image Source="{Binding Model.Type, Converter={StaticResource TypeToIcon}}"
+                                       HeightRequest="14" WidthRequest="14"
+                                       HorizontalOptions="Center" VerticalOptions="Center"/>
+                            </Border>
 
-                        <!-- Notification Card -->
-                        <Border StrokeShape="RoundRectangle 16"
-                                Stroke="{StaticResource CardBorder}"
-                                BackgroundColor="{Binding IsRead, Converter={StaticResource BoolToReadBg}}"
-                                Padding="13">
-                            <Border.GestureRecognizers>
-                                <TapGestureRecognizer
-                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:NotificationsViewModel}}, Path=ShowNotificationCommand}"
-                                    CommandParameter="{Binding .}"/>
-                            </Border.GestureRecognizers>
-                            <Grid ColumnDefinitions="36,*,Auto" ColumnSpacing="11">
-                                <Border StrokeThickness="0"
-                                        StrokeShape="RoundRectangle 14"
-                                        HeightRequest="36" WidthRequest="36"
-                                        BackgroundColor="{Binding Type, Converter={StaticResource TypeToBg}}">
-                                    <Image Source="{Binding Type, Converter={StaticResource TypeToIcon}}"
-                                           HeightRequest="14" WidthRequest="14"
-                                           HorizontalOptions="Center" VerticalOptions="Center"/>
-                                </Border>
-                                <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
-                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="6">
-                                        <Border StrokeThickness="0"
-                                                StrokeShape="RoundRectangle 3"
-                                                HeightRequest="6" WidthRequest="6"
-                                                BackgroundColor="{StaticResource PrimaryPurple}"
-                                                IsVisible="{Binding IsRead, Converter={StaticResource InvertedBool}}"
-                                                VerticalOptions="Center"/>
-                                        <Label Grid.Column="1"
-                                               Text="{Binding Title}"
-                                               FontFamily="JakartaSemiBold" FontSize="13"
-                                               TextColor="{StaticResource TextPrimary}"/>
-                                    </Grid>
-                                    <Label Text="{Binding Message}"
-                                           Style="{StaticResource CaptionStyle}"
-                                           TextColor="{StaticResource TextSecondary}"
-                                           MaxLines="2" LineBreakMode="TailTruncation"/>
-                                </VerticalStackLayout>
-                                <Label Grid.Column="2"
-                                       Text="{Binding Date, StringFormat='{0:HH:mm}'}"
+                            <!-- Content -->
+                            <VerticalStackLayout Grid.Column="2" Spacing="2" VerticalOptions="Center">
+                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="6">
+                                    <Border StrokeThickness="0"
+                                            StrokeShape="RoundRectangle 3"
+                                            HeightRequest="6" WidthRequest="6"
+                                            BackgroundColor="{StaticResource PrimaryPurple}"
+                                            IsVisible="{Binding Model.IsRead, Converter={StaticResource InvertedBool}}"
+                                            VerticalOptions="Center"/>
+                                    <Label Grid.Column="1"
+                                           Text="{Binding Model.Title}"
+                                           FontFamily="JakartaSemiBold" FontSize="13"
+                                           TextColor="{StaticResource TextPrimary}"/>
+                                </Grid>
+                                <Label Text="{Binding Model.Message}"
                                        Style="{StaticResource CaptionStyle}"
-                                       VerticalOptions="Start"/>
-                            </Grid>
-                        </Border>
-                    </SwipeView>
+                                       TextColor="{StaticResource TextSecondary}"
+                                       MaxLines="2" LineBreakMode="TailTruncation"/>
+                            </VerticalStackLayout>
+
+                            <!-- Time -->
+                            <Label Grid.Column="3"
+                                   Text="{Binding Model.Date, StringFormat='{0:HH:mm}'}"
+                                   Style="{StaticResource CaptionStyle}"
+                                   VerticalOptions="Start"/>
+                        </Grid>
+                    </Border>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
@@ -179,8 +186,65 @@
                            HorizontalOptions="Center"
                            VerticalOptions="Center"/>
 
+        <!-- Bottom Action Bar (edit mode) -->
+        <Border Grid.Row="2"
+                IsVisible="{Binding IsEditMode}"
+                StrokeThickness="0"
+                StrokeShape="RoundRectangle 0"
+                BackgroundColor="{StaticResource PageBackground}"
+                Padding="20,12">
+            <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="10">
+                <Label Text="{Binding SelectAllButtonText}"
+                       FontFamily="JakartaSemiBold" FontSize="13"
+                       TextColor="{StaticResource PrimaryPurple}"
+                       VerticalOptions="Center">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding ToggleSelectAllCommand}"/>
+                    </Label.GestureRecognizers>
+                </Label>
+                <Button Grid.Column="2"
+                        Text="Okundu"
+                        FontFamily="JakartaSemiBold" FontSize="13"
+                        TextColor="White"
+                        BackgroundColor="{StaticResource Success}"
+                        CornerRadius="20"
+                        HeightRequest="40"
+                        Padding="16,0"
+                        Command="{Binding MarkSelectedReadCommand}"
+                        IsEnabled="{Binding HasSelection}"
+                        Opacity="1">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button"
+                                     Binding="{Binding HasSelection}"
+                                     Value="False">
+                            <Setter Property="Opacity" Value="0.4"/>
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+                <Button Grid.Column="3"
+                        Text="Sil"
+                        FontFamily="JakartaSemiBold" FontSize="13"
+                        TextColor="White"
+                        BackgroundColor="{StaticResource Danger}"
+                        CornerRadius="20"
+                        HeightRequest="40"
+                        Padding="16,0"
+                        Command="{Binding DeleteSelectedCommand}"
+                        IsEnabled="{Binding HasSelection}"
+                        Opacity="1">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button"
+                                     Binding="{Binding HasSelection}"
+                                     Value="False">
+                            <Setter Property="Opacity" Value="0.4"/>
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+            </Grid>
+        </Border>
+
         <!-- Popup Overlay -->
-        <Grid Grid.RowSpan="2"
+        <Grid Grid.RowSpan="3"
               IsVisible="{Binding IsPopupVisible}"
               BackgroundColor="#80000000"
               x:DataType="vm:NotificationsViewModel">

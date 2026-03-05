@@ -9,12 +9,10 @@ namespace PulsePoll.Mobile.ViewModels;
 public partial class SurveysViewModel : ObservableObject
 {
     private readonly IPulsePollApiClient _apiClient;
-    private readonly MockDataService _dataService;
 
-    public SurveysViewModel(IPulsePollApiClient apiClient, MockDataService dataService)
+    public SurveysViewModel(IPulsePollApiClient apiClient)
     {
         _apiClient = apiClient;
-        _dataService = dataService;
     }
 
     [ObservableProperty] private ObservableCollection<SurveyModel> _surveys = [];
@@ -31,15 +29,17 @@ public partial class SurveysViewModel : ObservableObject
         IsLoading = true;
         try
         {
-            var surveys = await FetchOrFallbackAsync(
-                () => _apiClient.GetProjectsAsync(),
-                () => _dataService.GetSurveys());
+            var surveys = await _apiClient.GetProjectsAsync();
 
             MainThread.BeginInvokeOnMainThread(() =>
             {
                 Surveys = new ObservableCollection<SurveyModel>(surveys);
                 _isLoaded = true;
             });
+        }
+        catch
+        {
+            await Shell.Current.GoToAsync("connectionerror");
         }
         finally
         {
@@ -55,12 +55,4 @@ public partial class SurveysViewModel : ObservableObject
 
         await Shell.Current.GoToAsync($"surveydetail?id={survey.Id}");
     }
-
-    private static async Task<List<T>> FetchOrFallbackAsync<T>(
-        Func<Task<List<T>>> fetch, Func<List<T>> fallback)
-    {
-        try { return await fetch(); }
-        catch { return fallback(); }
-    }
-
 }
