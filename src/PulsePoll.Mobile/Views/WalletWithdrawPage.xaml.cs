@@ -20,6 +20,15 @@ public partial class WalletWithdrawPage : ContentPage
 
     private async void OnSubmitClicked(object? sender, EventArgs e)
     {
+        var confirmed = await DisplayAlertAsync(
+            "Para Çekme Talebi",
+            "Para çekme talebinizi göndermek istediğinize emin misiniz?",
+            "Gönder",
+            "Vazgeç");
+
+        if (!confirmed)
+            return;
+
         var (success, error) = await _viewModel.SubmitAsync();
         if (!success)
         {
