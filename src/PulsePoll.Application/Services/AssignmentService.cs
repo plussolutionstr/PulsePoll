@@ -7,6 +7,7 @@ namespace PulsePoll.Application.Services;
 
 public class AssignmentService(
     IProjectRepository repository,
+    ISubjectRepository subjectRepository,
     IReferralRewardService referralRewardService,
     IMessagePublisher publisher) : IAssignmentService
 {
@@ -24,8 +25,11 @@ public class AssignmentService(
         if (assignment.Status != AssignmentStatus.NotStarted)
             throw new BusinessException("ASSIGNMENT_ALREADY_STARTED", "Bu proje zaten başlatılmış.");
 
+        var subject = await subjectRepository.GetByIdAsync(subjectId)
+            ?? throw new NotFoundException("Denek");
+
         var separator = project.SurveyUrl.Contains('?') ? "&" : "?";
-        return $"{project.SurveyUrl}{separator}{project.SubjectParameterName}={subjectId}";
+        return $"{project.SurveyUrl}{separator}{project.SubjectParameterName}={subject.PublicId:D}";
     }
 
     public async Task MarkCompletedAsync(int projectId, int subjectId, string webhookPayload)

@@ -44,9 +44,20 @@ public record SurveyModel(
     List<SurveyCriteria> Criteria,
     string BannerGradientStart = "#EDE8FF",
     string BannerGradientEnd = "#DDD6FE",
-    string BrandColor = "#7C5CFC")
+    string BrandColor = "#7C5CFC",
+    decimal ConsolationReward = 0m,
+    string RewardUnitLabel = "TL",
+    string SurveyUrl = "",
+    string SubjectParameterName = "uid",
+    string StartMessage = "")
 {
     public bool HasCategory => !string.IsNullOrWhiteSpace(Category);
+    public bool HasDescription => !string.IsNullOrWhiteSpace(Description);
+    public string RewardDisplay => $"{Reward:0.##} {RewardUnitLabel}";
+    public string ConsolationRewardDisplay => $"{ConsolationReward:0.##} {RewardUnitLabel}";
+    public string StartMessageDisplay => string.IsNullOrWhiteSpace(StartMessage)
+        ? "Ankete başlamadan önce soruları dikkatle okuyunuz."
+        : StartMessage;
 }
 
 public record SurveyCriteria(string Label, bool IsMet);

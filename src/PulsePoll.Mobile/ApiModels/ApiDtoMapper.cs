@@ -28,5 +28,10 @@ public static class ApiDtoMapper
             dto.Reward,
             dto.EstimatedMinutes,
             0,
-            []);
+            [],
+            ConsolationReward: dto.ConsolationReward,
+            RewardUnitLabel: dto.RewardUnitLabel,
+            SurveyUrl: dto.SurveyUrl,
+            SubjectParameterName: dto.SubjectParameterName,
+            StartMessage: dto.StartMessage);
 }

@@ -71,6 +71,25 @@ public sealed class PulsePollApiClient : IPulsePollApiClient
             .ToList() ?? [];
     }
 
+    public async Task<SurveyModel?> GetProjectByIdAsync(int projectId, CancellationToken ct = default)
+    {
+        var response = await GetAsync<ProjectApiDto>($"api/projects/{projectId}", ct);
+        return response?.ToModel();
+    }
+
+    public async Task<string> StartProjectAsync(int projectId, CancellationToken ct = default)
+    {
+        await SetAuthHeaderAsync();
+        var response = await _http.PostAsync($"api/projects/{projectId}/start", content: null, ct);
+        response.EnsureSuccessStatusCode();
+
+        var result = await response.Content.ReadFromJsonAsync<ApiResponse<StartProjectApiDto>>(JsonOptions, ct);
+        if (result is not { Success: true } || string.IsNullOrWhiteSpace(result.Data?.Url))
+            throw new HttpRequestException("Anket başlatma URL'si alınamadı.");
+
+        return result.Data.Url;
+    }
+
     private async Task<T?> GetAsync<T>(string path, CancellationToken ct)
     {
         await SetAuthHeaderAsync();

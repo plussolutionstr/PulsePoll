@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:PulsePoll.Mobile.ViewModels"
+             x:Class="PulsePoll.Mobile.Views.SurveyWebViewPage"
+             x:DataType="vm:SurveyWebViewViewModel"
+             Shell.NavBarIsVisible="False">
+
+    <Grid RowDefinitions="Auto,*">
+        <Grid RowDefinitions="Auto"
+              ColumnDefinitions="Auto,*,Auto"
+              Padding="16,14,16,10"
+              BackgroundColor="{StaticResource White}">
+            <ImageButton Source="icon_arrow_left.png"
+                         HeightRequest="24"
+                         WidthRequest="24"
+                         Command="{Binding CloseCommand}"/>
+            <Label Grid.Column="1"
+                   Text="{Binding Title}"
+                   FontFamily="JakartaSemiBold"
+                   FontSize="16"
+                   VerticalOptions="Center"
+                   HorizontalOptions="Center"
+                   TextColor="{StaticResource TextPrimary}"
+                   MaxLines="1"
+                   LineBreakMode="TailTruncation"/>
+            <ActivityIndicator Grid.Column="2"
+                               IsVisible="{Binding IsLoading}"
+                               IsRunning="{Binding IsLoading}"
+                               Color="{StaticResource PrimaryPurple}"
+                               HeightRequest="20"
+                               WidthRequest="20"
+                               VerticalOptions="Center"/>
+        </Grid>
+
+        <WebView Grid.Row="1"
+                 x:Name="SurveyWebView"
+                 Source="{Binding ResolvedUrl}"
+                 Navigating="OnWebViewNavigating"
+                 Navigated="OnWebViewNavigated"/>
+    </Grid>
+</ContentPage>

@@ -34,7 +34,8 @@ public class MockDataService
                 new("İstanbul, Ankara veya İzmir", true),
                 new("Son 1 yılda ev aleti satın almış", false)
             ],
-            BannerGradientStart: "#FFF1EE", BannerGradientEnd: "#FFE4DC", BrandColor: "#E04A2F"),
+            BannerGradientStart: "#FFF1EE", BannerGradientEnd: "#FFE4DC", BrandColor: "#E04A2F",
+            ConsolationReward: 5m, RewardUnitLabel: "Poll", SurveyUrl: "https://anket.pulsepoll.com/arcelik", SubjectParameterName: "uid", StartMessage: "Kısa bir anket; deneyimlerinizi açık ve dürüst şekilde paylaşın."),
         new(2, "Turkcell", "turkcell", "Mobil Uygulama Deneyimi",
             "Turkcell mobil uygulama kullanım alışkanlıklarınızı değerlendirin.",
             "Telekomünikasyon", 22m, 10, 15,
@@ -43,7 +44,8 @@ public class MockDataService
                 new("Akıllı telefon kullanıcısı", true),
                 new("18 yaş üstü", true)
             ],
-            BannerGradientStart: "#EEF4FF", BannerGradientEnd: "#DBEAFE", BrandColor: "#0060AF"),
+            BannerGradientStart: "#EEF4FF", BannerGradientEnd: "#DBEAFE", BrandColor: "#0060AF",
+            ConsolationReward: 7m, RewardUnitLabel: "Poll", SurveyUrl: "https://anket.pulsepoll.com/turkcell", SubjectParameterName: "uid", StartMessage: "Her soruyu dikkatle okuyarak yanıtlayın."),
         new(3, "Migros", "migros", "Alışveriş Alışkanlıkları",
             "Haftalık market alışverişi tercihlerinizi paylaşın.",
             "Perakende", 18m, 7, 10,
@@ -52,7 +54,8 @@ public class MockDataService
                 new("25-55 yaş arası", true),
                 new("Migros kartı sahibi", false)
             ],
-            BannerGradientStart: "#EDFDF5", BannerGradientEnd: "#D1FAE5", BrandColor: "#007A33")
+            BannerGradientStart: "#EDFDF5", BannerGradientEnd: "#D1FAE5", BrandColor: "#007A33",
+            ConsolationReward: 6m, RewardUnitLabel: "Poll", SurveyUrl: "https://anket.pulsepoll.com/migros", SubjectParameterName: "uid", StartMessage: "Alışveriş alışkanlıklarınızı örneklerle paylaşmanız beklenir.")
     ];
 
     public SurveyModel GetSurveyDetail(int id) =>

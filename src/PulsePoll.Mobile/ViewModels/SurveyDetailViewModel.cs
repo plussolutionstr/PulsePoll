@@ -1,6 +1,6 @@
-using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Maui.Storage;
 using PulsePoll.Mobile.Models;
 using PulsePoll.Mobile.Services;
 
@@ -9,32 +9,114 @@ namespace PulsePoll.Mobile.ViewModels;
 [QueryProperty(nameof(SurveyId), "id")]
 public partial class SurveyDetailViewModel : ObservableObject
 {
-    private readonly MockDataService _dataService;
+    private readonly IPulsePollApiClient _apiClient;
+    private readonly MockDataService _mockDataService;
+    private const string LocalSubjectPublicIdKey = "subject_public_id";
 
-    public SurveyDetailViewModel(MockDataService dataService)
+    public SurveyDetailViewModel(IPulsePollApiClient apiClient, MockDataService mockDataService)
     {
-        _dataService = dataService;
+        _apiClient = apiClient;
+        _mockDataService = mockDataService;
     }
 
     [ObservableProperty] private int _surveyId;
     [ObservableProperty] private SurveyModel? _survey;
-    [ObservableProperty] private ObservableCollection<SurveyCriteria> _criteria = [];
+    [ObservableProperty] private bool _isLoading;
+    [ObservableProperty] private bool _isStarting;
 
     partial void OnSurveyIdChanged(int value)
     {
-        Survey = _dataService.GetSurveyDetail(value);
-        Criteria = new ObservableCollection<SurveyCriteria>(Survey.Criteria);
+        _ = LoadSurveyAsync(value);
     }
 
     [RelayCommand]
     private async Task StartSurvey()
     {
-        await Shell.Current.GoToAsync($"activequestion?surveyId={SurveyId}");
+        if (Survey is null || IsStarting)
+            return;
+
+        IsStarting = true;
+        try
+        {
+            string targetUrl;
+            try
+            {
+                targetUrl = await _apiClient.StartProjectAsync(Survey.Id);
+            }
+            catch
+            {
+                targetUrl = BuildFallbackStartUrl(Survey);
+            }
+
+            if (string.IsNullOrWhiteSpace(targetUrl))
+                return;
+
+            var title = Uri.EscapeDataString(Survey.Title);
+            var encodedUrl = Uri.EscapeDataString(targetUrl);
+            await Shell.Current.GoToAsync($"surveywebview?title={title}&url={encodedUrl}");
+        }
+        finally
+        {
+            IsStarting = false;
+        }
     }
 
     [RelayCommand]
     private async Task GoBack()
     {
         await Shell.Current.GoToAsync("..");
+    }
+
+    private async Task LoadSurveyAsync(int surveyId)
+    {
+        IsLoading = true;
+        try
+        {
+            Survey = await FetchOrFallbackAsync(
+                () => _apiClient.GetProjectByIdAsync(surveyId),
+                () => _mockDataService.GetSurveyDetail(surveyId));
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private static async Task<SurveyModel?> FetchOrFallbackAsync(
+        Func<Task<SurveyModel?>> fetch,
+        Func<SurveyModel> fallback)
+    {
+        try
+        {
+            return await fetch() ?? fallback();
+        }
+        catch
+        {
+            return fallback();
+        }
+    }
+
+    private static string BuildFallbackStartUrl(SurveyModel survey)
+    {
+        if (string.IsNullOrWhiteSpace(survey.SurveyUrl))
+            return string.Empty;
+
+        var subjectPublicId = GetOrCreateLocalSubjectPublicId();
+        var subjectParam = string.IsNullOrWhiteSpace(survey.SubjectParameterName)
+            ? "uid"
+            : survey.SubjectParameterName.Trim();
+        var separator = survey.SurveyUrl.Contains('?') ? "&" : "?";
+        return $"{survey.SurveyUrl}{separator}{subjectParam}={Uri.EscapeDataString(subjectPublicId)}";
+    }
+
+    private static string GetOrCreateLocalSubjectPublicId()
+    {
+        var existing = Preferences.Default.Get<string?>(LocalSubjectPublicIdKey, null);
+        if (!string.IsNullOrWhiteSpace(existing))
+            return existing;
+
+        var generated = Guid.NewGuid().ToString("D");
+        Preferences.Default.Set(LocalSubjectPublicIdKey, generated);
+        return generated;
     }
 }

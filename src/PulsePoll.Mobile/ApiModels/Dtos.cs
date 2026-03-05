@@ -62,6 +62,8 @@ public record ProjectApiDto(
     string RewardUnitLabel = "TL",
     decimal RewardUnitTryMultiplier = 1m);
 
+public record StartProjectApiDto(string Url);
+
 public record AuthResultDto(string AccessToken, string RefreshToken, DateTime ExpiresAt);
 
 [JsonConverter(typeof(JsonStringEnumConverter))]
