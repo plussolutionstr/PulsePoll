@@ -211,6 +211,40 @@ public class AuthService(
         logger.LogInformation("Denek çıkış yaptı: {SubjectId}", subjectId);
     }
 
+    public async Task ResetPasswordAsync(string phoneNumber, string otp, string newPassword)
+    {
+        if (string.IsNullOrWhiteSpace(newPassword) || newPassword.Length < 6)
+            throw new BusinessException("INVALID_PASSWORD", "Şifre en az 6 karakter olmalıdır.");
+
+        var verifyResult = await VerifyOtpAsync(phoneNumber, otp);
+
+        var subject = await subjectRepository.GetByPhoneAsync(phoneNumber)
+            ?? throw new NotFoundException("Bu telefon numarasına ait hesap bulunamadı.");
+
+        subject.PasswordHash = passwordHasher.Hash(newPassword);
+        await subjectRepository.UpdateAsync(subject);
+
+        await cache.RemoveAsync(RegTokenKey(verifyResult.RegistrationToken));
+
+        logger.LogInformation("Şifre sıfırlandı: {SubjectId}", subject.Id);
+    }
+
+    public async Task SendPasswordResetOtpAsync(string phoneNumber)
+    {
+        if (!await subjectRepository.ExistsByPhoneAsync(phoneNumber))
+            throw new BusinessException("NOT_FOUND", "Bu telefon numarasına ait hesap bulunamadı.");
+
+        var attempts = await cache.IncrementAsync(OtpAttemptsKey(phoneNumber), TimeSpan.FromHours(1));
+
+        if (attempts > MaxOtpRequestsPerHour)
+            throw new BusinessException("TOO_MANY_REQUESTS", "Çok fazla istek gönderildi. Lütfen daha sonra tekrar deneyin.");
+
+        var otpCode = await smsService.SendOtpAsync(phoneNumber);
+        await cache.SetAsync(otpCode, OtpKey(phoneNumber), TimeSpan.FromMinutes(5));
+
+        logger.LogInformation("Şifre sıfırlama OTP gönderildi: {PhoneNumber}", phoneNumber);
+    }
+
     private static RefreshToken CreateRefreshToken(int subjectId)
     {
         var bytes = new byte[64];
@@ -220,7 +254,7 @@ public class AuthService(
             Token = Convert.ToBase64String(bytes),
             SubjectId = subjectId,
             CreatedAt = DateTime.UtcNow,
-            ExpiresAt = DateTime.UtcNow.AddDays(7)
+            ExpiresAt = DateTime.UtcNow.AddDays(30)
         };
     }
 }

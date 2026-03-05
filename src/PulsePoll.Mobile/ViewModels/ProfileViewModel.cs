@@ -9,10 +9,12 @@ namespace PulsePoll.Mobile.ViewModels;
 public partial class ProfileViewModel : ObservableObject
 {
     private readonly IPulsePollApiClient _api;
+    private readonly IServiceProvider _serviceProvider;
 
-    public ProfileViewModel(IPulsePollApiClient api)
+    public ProfileViewModel(IPulsePollApiClient api, IServiceProvider serviceProvider)
     {
         _api = api;
+        _serviceProvider = serviceProvider;
         LoadProfileCommand.ExecuteAsync(null);
     }
 
@@ -320,6 +322,31 @@ public partial class ProfileViewModel : ObservableObject
         {
             IsLoading = false;
         }
+    }
+
+    [RelayCommand]
+    private async Task LogoutAsync()
+    {
+        var confirm = await Shell.Current.DisplayAlertAsync(
+            "Cikis Yap", "Hesabinizdan cikis yapmak istediginize emin misiniz?", "Cikis Yap", "Iptal");
+
+        if (!confirm) return;
+
+        try
+        {
+            await _api.LogoutAsync();
+        }
+        catch
+        {
+            // ignore — tokens are already cleared
+        }
+
+        var welcomePage = _serviceProvider.GetRequiredService<Views.WelcomePage>();
+        Application.Current!.Windows[0].Page = new NavigationPage(welcomePage)
+        {
+            BarBackgroundColor = Color.FromArgb("#F7F5FF"),
+            BarTextColor = Color.FromArgb("#1A1535")
+        };
     }
 
     private static string GetInitials(string firstName, string lastName)

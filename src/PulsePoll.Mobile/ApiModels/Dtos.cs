@@ -129,6 +129,8 @@ public record WithdrawalRequestApiRequest(decimal Amount, int BankAccountId);
 
 public record AuthResultDto(string AccessToken, string RefreshToken, DateTime ExpiresAt);
 
+public record OtpVerifiedApiDto(string RegistrationToken);
+
 public record ProfileApiDto(
     int Id,
     Guid PublicId,

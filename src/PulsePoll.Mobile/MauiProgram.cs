@@ -29,6 +29,7 @@ public static class MauiProgram
         // Services
         builder.Services.AddSingleton<NotificationCenterService>();
         builder.Services.AddSingleton<ITokenProvider, DevTokenProvider>();
+        builder.Services.AddTransient<AuthDelegatingHandler>();
 
         builder.Services.AddHttpClient<IPulsePollApiClient, PulsePollApiClient>(client =>
         {
@@ -38,6 +39,7 @@ public static class MauiProgram
             client.BaseAddress = new Uri("https://localhost:5001");
 #endif
         })
+        .AddHttpMessageHandler<AuthDelegatingHandler>()
 #if DEBUG
         .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
         {
@@ -54,6 +56,7 @@ public static class MauiProgram
             client.BaseAddress = new Uri("https://localhost:5001");
 #endif
         })
+        .AddHttpMessageHandler<AuthDelegatingHandler>()
 #if DEBUG
         .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
         {
@@ -63,7 +66,10 @@ public static class MauiProgram
         ;
 
         // ViewModels
+        builder.Services.AddTransient<WelcomeViewModel>();
         builder.Services.AddTransient<LoginViewModel>();
+        builder.Services.AddTransient<RegisterViewModel>();
+        builder.Services.AddTransient<ForgotPasswordViewModel>();
         builder.Services.AddTransient<HomeViewModel>();
         builder.Services.AddTransient<SurveysViewModel>();
         builder.Services.AddTransient<SurveyDetailViewModel>();
@@ -82,7 +88,10 @@ public static class MauiProgram
         builder.Services.AddTransient<ConnectionErrorViewModel>();
 
         // Pages
+        builder.Services.AddTransient<WelcomePage>();
         builder.Services.AddTransient<LoginPage>();
+        builder.Services.AddTransient<RegisterPage>();
+        builder.Services.AddTransient<ForgotPasswordPage>();
         builder.Services.AddTransient<HomePage>();
         builder.Services.AddTransient<SurveysPage>();
         builder.Services.AddTransient<SurveyDetailPage>();

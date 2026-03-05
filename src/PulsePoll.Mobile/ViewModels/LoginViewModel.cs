@@ -20,7 +20,6 @@ public partial class LoginViewModel : ObservableObject
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasError))]
     private string _errorMessage = string.Empty;
-
     [ObservableProperty] private bool _isBusy;
 
     public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
@@ -32,7 +31,7 @@ public partial class LoginViewModel : ObservableObject
 
         if (string.IsNullOrWhiteSpace(Email) || string.IsNullOrWhiteSpace(Password))
         {
-            ErrorMessage = "E-posta ve şifre gerekli.";
+            ErrorMessage = "E-posta ve parola gerekli.";
             return;
         }
 
@@ -46,7 +45,7 @@ public partial class LoginViewModel : ObservableObject
             }
             else
             {
-                ErrorMessage = "E-posta veya şifre hatalı.";
+                ErrorMessage = "E-posta veya parola hatalı.";
             }
         }
         catch
@@ -57,5 +56,12 @@ public partial class LoginViewModel : ObservableObject
         {
             IsBusy = false;
         }
+    }
+
+    [RelayCommand]
+    private async Task GoToForgotPasswordAsync()
+    {
+        var page = _serviceProvider.GetRequiredService<Views.ForgotPasswordPage>();
+        await Application.Current!.Windows[0].Page!.Navigation.PushAsync(page);
     }
 }

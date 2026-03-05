@@ -386,6 +386,15 @@
                 </VerticalStackLayout>
             </Border>
 
+            <!-- Logout -->
+            <Button Text="Cikis Yap"
+                    Command="{Binding LogoutCommand}"
+                    BackgroundColor="{StaticResource DangerLight}"
+                    TextColor="{StaticResource Danger}"
+                    FontFamily="JakartaSemiBold" FontSize="14"
+                    HeightRequest="48" CornerRadius="14"
+                    Margin="0,8,0,0"/>
+
             <BoxView HeightRequest="20" Color="Transparent"/>
         </VerticalStackLayout>
     </ScrollView>

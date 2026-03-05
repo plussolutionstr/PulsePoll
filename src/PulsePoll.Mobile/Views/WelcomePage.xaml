@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:PulsePoll.Mobile.ViewModels"
+             x:Class="PulsePoll.Mobile.Views.WelcomePage"
+             x:DataType="vm:WelcomeViewModel"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="{StaticResource PageBackground}">
+
+    <Grid RowDefinitions="*,Auto" Padding="32">
+
+        <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="16">
+            <Label Text="PulsePoll"
+                   FontFamily="JakartaBold" FontSize="42"
+                   TextColor="{StaticResource PrimaryPurple}"
+                   HorizontalTextAlignment="Center"/>
+
+            <Label Text="Anketlere katıl, para kazan."
+                   FontFamily="JakartaMedium" FontSize="16"
+                   TextColor="{StaticResource TextSecondary}"
+                   HorizontalTextAlignment="Center"/>
+        </VerticalStackLayout>
+
+        <VerticalStackLayout Grid.Row="1" Spacing="12" Margin="0,0,0,40">
+            <Button Text="Giriş Yap"
+                    Command="{Binding GoToLoginCommand}"
+                    BackgroundColor="{StaticResource PrimaryPurple}"
+                    TextColor="White"
+                    FontFamily="JakartaBold" FontSize="16"
+                    HeightRequest="52"
+                    CornerRadius="14"/>
+
+            <Button Text="Kaydol"
+                    Command="{Binding GoToRegisterCommand}"
+                    BackgroundColor="{StaticResource PrimaryLight}"
+                    TextColor="{StaticResource PrimaryPurple}"
+                    FontFamily="JakartaBold" FontSize="16"
+                    HeightRequest="52"
+                    CornerRadius="14"/>
+        </VerticalStackLayout>
+
+    </Grid>
+</ContentPage>

@@ -1,3 +1,4 @@
+using PulsePoll.Mobile.Services;
 using PulsePoll.Mobile.Views;
 
 namespace PulsePoll.Mobile;
@@ -14,6 +15,47 @@ public partial class App : Application
 
     protected override Window CreateWindow(IActivationState? activationState)
     {
-        return new Window(_serviceProvider.GetRequiredService<LoginPage>());
+        var tokenProvider = _serviceProvider.GetRequiredService<ITokenProvider>();
+
+        if (tokenProvider.HasTokens())
+        {
+            var window = new Window(new ContentPage());
+            _ = TryAutoLoginAsync(window);
+            return window;
+        }
+
+        return new Window(CreateAuthNavigation());
+    }
+
+    private async Task TryAutoLoginAsync(Window window)
+    {
+        try
+        {
+            var apiClient = _serviceProvider.GetRequiredService<IPulsePollApiClient>();
+            var refreshed = await apiClient.TryRefreshSessionAsync();
+
+            if (refreshed)
+            {
+                window.Page = _serviceProvider.GetRequiredService<AppShell>();
+            }
+            else
+            {
+                window.Page = CreateAuthNavigation();
+            }
+        }
+        catch
+        {
+            window.Page = CreateAuthNavigation();
+        }
+    }
+
+    private NavigationPage CreateAuthNavigation()
+    {
+        var welcomePage = _serviceProvider.GetRequiredService<WelcomePage>();
+        return new NavigationPage(welcomePage)
+        {
+            BarBackgroundColor = Color.FromArgb("#F7F5FF"),
+            BarTextColor = Color.FromArgb("#1A1535")
+        };
     }
 }

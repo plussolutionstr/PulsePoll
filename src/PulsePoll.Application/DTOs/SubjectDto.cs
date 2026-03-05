@@ -95,3 +95,7 @@ public record OtpVerifiedDto(string RegistrationToken);
 public record LoginDto(string Email, string Password);
 
 public record AuthResultDto(string AccessToken, string RefreshToken, DateTime ExpiresAt);
+
+public record SendPasswordResetOtpDto(string PhoneNumber);
+
+public record ResetPasswordDto(string PhoneNumber, string Otp, string NewPassword);

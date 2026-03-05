@@ -35,8 +35,77 @@ public sealed class PulsePollApiClient : IPulsePollApiClient
         if (result is not { Success: true } || result.Data is null)
             return false;
 
-        await _tokenProvider.SetTokenAsync(result.Data.AccessToken);
+        await _tokenProvider.SetTokensAsync(result.Data.AccessToken, result.Data.RefreshToken);
         return true;
+    }
+
+    public async Task SendOtpAsync(string phoneNumber, CancellationToken ct = default)
+    {
+        var response = await _http.PostAsJsonAsync("api/auth/send-otp", new { phoneNumber }, JsonOptions, ct);
+        await EnsureSuccessOrThrowAsync(response, ct);
+    }
+
+    public async Task<string> VerifyOtpAsync(string phoneNumber, string otp, CancellationToken ct = default)
+    {
+        var response = await _http.PostAsJsonAsync("api/auth/verify-otp", new { phoneNumber, otp }, JsonOptions, ct);
+        await EnsureSuccessOrThrowAsync(response, ct);
+        var result = await response.Content.ReadFromJsonAsync<ApiResponse<OtpVerifiedApiDto>>(JsonOptions, ct);
+        return result?.Data?.RegistrationToken ?? throw new InvalidOperationException("OTP doğrulanamadı.");
+    }
+
+    public async Task RegisterAsync(object dto, CancellationToken ct = default)
+    {
+        var response = await _http.PostAsJsonAsync("api/auth/register", dto, JsonOptions, ct);
+        await EnsureSuccessOrThrowAsync(response, ct);
+    }
+
+    public async Task LogoutAsync(CancellationToken ct = default)
+    {
+        var response = await _http.PostAsync("api/auth/logout", null, ct);
+        await _tokenProvider.ClearTokensAsync();
+    }
+
+    public async Task<bool> TryRefreshSessionAsync(CancellationToken ct = default)
+    {
+        var refreshToken = await _tokenProvider.GetRefreshTokenAsync();
+        if (string.IsNullOrEmpty(refreshToken))
+            return false;
+
+        try
+        {
+            var response = await _http.PostAsJsonAsync("api/auth/refresh", refreshToken, JsonOptions, ct);
+            if (!response.IsSuccessStatusCode)
+            {
+                await _tokenProvider.ClearTokensAsync();
+                return false;
+            }
+
+            var result = await response.Content.ReadFromJsonAsync<ApiResponse<AuthResultDto>>(JsonOptions, ct);
+            if (result is not { Success: true } || result.Data is null)
+            {
+                await _tokenProvider.ClearTokensAsync();
+                return false;
+            }
+
+            await _tokenProvider.SetTokensAsync(result.Data.AccessToken, result.Data.RefreshToken);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    public async Task SendPasswordResetOtpAsync(string phoneNumber, CancellationToken ct = default)
+    {
+        var response = await _http.PostAsJsonAsync("api/auth/send-password-reset-otp", new { phoneNumber }, JsonOptions, ct);
+        await EnsureSuccessOrThrowAsync(response, ct);
+    }
+
+    public async Task ResetPasswordAsync(string phoneNumber, string otp, string newPassword, CancellationToken ct = default)
+    {
+        var response = await _http.PostAsJsonAsync("api/auth/reset-password", new { phoneNumber, otp, newPassword }, JsonOptions, ct);
+        await EnsureSuccessOrThrowAsync(response, ct);
     }
 
     public async Task<List<StoryModel>> GetStoriesAsync(CancellationToken ct = default)
@@ -47,7 +116,6 @@ public sealed class PulsePollApiClient : IPulsePollApiClient
 
     public async Task MarkStorySeenAsync(int storyId, CancellationToken ct = default)
     {
-        await SetAuthHeaderAsync();
         var response = await _http.PostAsync($"api/stories/{storyId}/seen", content: null, ct);
         await EnsureSuccessOrThrowAsync(response, ct);
 
@@ -107,7 +175,6 @@ public sealed class PulsePollApiClient : IPulsePollApiClient
 
     public async Task AddBankAccountAsync(int bankId, string iban, CancellationToken ct = default)
     {
-        await SetAuthHeaderAsync();
         var payload = new AddBankAccountApiRequest(bankId, iban);
         var response = await _http.PostAsJsonAsync("api/wallet/banks", payload, JsonOptions, ct);
         await EnsureSuccessOrThrowAsync(response, ct);
@@ -115,7 +182,6 @@ public sealed class PulsePollApiClient : IPulsePollApiClient
 
     public async Task UpdateBankAccountAsync(int bankAccountId, int bankId, string iban, CancellationToken ct = default)
     {
-        await SetAuthHeaderAsync();
         var payload = new UpdateBankAccountApiRequest(bankId, iban);
         var response = await _http.PutAsJsonAsync($"api/wallet/banks/{bankAccountId}", payload, JsonOptions, ct);
         await EnsureSuccessOrThrowAsync(response, ct);
@@ -123,14 +189,12 @@ public sealed class PulsePollApiClient : IPulsePollApiClient
 
     public async Task DeleteBankAccountAsync(int bankAccountId, CancellationToken ct = default)
     {
-        await SetAuthHeaderAsync();
         var response = await _http.DeleteAsync($"api/wallet/banks/{bankAccountId}", ct);
         await EnsureSuccessOrThrowAsync(response, ct);
     }
 
     public async Task RequestWithdrawalAsync(decimal amount, int bankAccountId, CancellationToken ct = default)
     {
-        await SetAuthHeaderAsync();
         var payload = new WithdrawalRequestApiRequest(amount, bankAccountId);
         var response = await _http.PostAsJsonAsync("api/wallet/withdraw", payload, JsonOptions, ct);
         await EnsureSuccessOrThrowAsync(response, ct);
@@ -138,7 +202,6 @@ public sealed class PulsePollApiClient : IPulsePollApiClient
 
     public async Task<string> StartProjectAsync(int projectId, CancellationToken ct = default)
     {
-        await SetAuthHeaderAsync();
         var response = await _http.PostAsync($"api/projects/{projectId}/start", content: null, ct);
         await EnsureSuccessOrThrowAsync(response, ct);
 
@@ -151,7 +214,6 @@ public sealed class PulsePollApiClient : IPulsePollApiClient
 
     public async Task SubmitProjectResultAsync(int projectId, string status, string? rawPayload = null, CancellationToken ct = default)
     {
-        await SetAuthHeaderAsync();
         var payload = new
         {
             status,
@@ -167,7 +229,6 @@ public sealed class PulsePollApiClient : IPulsePollApiClient
 
     public async Task<ProfileApiDto?> UpdateProfileAsync(object dto, CancellationToken ct = default)
     {
-        await SetAuthHeaderAsync();
         var response = await _http.PutAsJsonAsync("api/profile", dto, JsonOptions, ct);
         await EnsureSuccessOrThrowAsync(response, ct);
         var result = await response.Content.ReadFromJsonAsync<ApiResponse<ProfileApiDto>>(JsonOptions, ct);
@@ -176,10 +237,9 @@ public sealed class PulsePollApiClient : IPulsePollApiClient
 
     public async Task<string?> UploadProfilePhotoAsync(Stream stream, string fileName, string contentType, CancellationToken ct = default)
     {
-        await SetAuthHeaderAsync();
         using var content = new MultipartFormDataContent();
         var streamContent = new StreamContent(stream);
-        streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(contentType);
+        streamContent.Headers.ContentType = new MediaTypeHeaderValue(contentType);
         content.Add(streamContent, "file", fileName);
         var response = await _http.PostAsync("api/profile/photo", content, ct);
         await EnsureSuccessOrThrowAsync(response, ct);
@@ -199,26 +259,31 @@ public sealed class PulsePollApiClient : IPulsePollApiClient
     public async Task<List<LookupItemDto>> GetEducationLevelsAsync(CancellationToken ct = default)
         => await GetAsync<List<LookupItemDto>>("api/lookups/education-levels", ct) ?? [];
 
+    public async Task<List<LookupItemDto>> GetRegisterCitiesAsync(CancellationToken ct = default)
+        => await GetAsync<List<LookupItemDto>>("api/auth/register/cities", ct) ?? [];
+
+    public async Task<List<LookupItemDto>> GetRegisterDistrictsAsync(int cityId, CancellationToken ct = default)
+        => await GetAsync<List<LookupItemDto>>($"api/auth/register/cities/{cityId}/districts", ct) ?? [];
+
+    public async Task<List<LookupItemDto>> GetRegisterProfessionsAsync(CancellationToken ct = default)
+        => await GetAsync<List<LookupItemDto>>("api/auth/register/professions", ct) ?? [];
+
+    public async Task<List<LookupItemDto>> GetRegisterEducationLevelsAsync(CancellationToken ct = default)
+        => await GetAsync<List<LookupItemDto>>("api/auth/register/education-levels", ct) ?? [];
+
+    public async Task<List<BankOptionApiDto>> GetRegisterBankOptionsAsync(CancellationToken ct = default)
+        => await GetAsync<List<BankOptionApiDto>>("api/auth/register/bank-options", ct) ?? [];
+
     private async Task<T?> GetAsync<T>(string path, CancellationToken ct)
     {
-        await SetAuthHeaderAsync();
         var result = await _http.GetFromJsonAsync<ApiResponse<T>>(path, JsonOptions, ct);
         return result is { Success: true } ? result.Data : default;
     }
 
     private async Task<List<T>?> GetPagedAsync<T>(string path, CancellationToken ct)
     {
-        await SetAuthHeaderAsync();
         var result = await _http.GetFromJsonAsync<PagedApiResponse<T>>(path, JsonOptions, ct);
         return result is { Success: true } ? result.Data : default;
-    }
-
-    private async Task SetAuthHeaderAsync()
-    {
-        var token = await _tokenProvider.GetAccessTokenAsync();
-        _http.DefaultRequestHeaders.Authorization = string.IsNullOrEmpty(token)
-            ? null
-            : new AuthenticationHeaderValue("Bearer", token);
     }
 
     private static async Task EnsureSuccessOrThrowAsync(HttpResponseMessage response, CancellationToken ct)
@@ -245,7 +310,6 @@ public sealed class PulsePollApiClient : IPulsePollApiClient
 
     public async Task PingAsync(CancellationToken ct = default)
     {
-        await SetAuthHeaderAsync();
         var response = await _http.GetAsync("api/projects", ct);
         response.EnsureSuccessStatusCode();
     }

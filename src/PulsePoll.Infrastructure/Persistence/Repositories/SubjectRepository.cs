@@ -22,6 +22,9 @@ public class SubjectRepository(AppDbContext db) : ISubjectRepository
     public Task<Subject?> GetByEmailAsync(string email)
         => db.Subjects.FirstOrDefaultAsync(s => s.Email == email);
 
+    public Task<Subject?> GetByPhoneAsync(string phoneNumber)
+        => db.Subjects.FirstOrDefaultAsync(s => s.PhoneNumber == phoneNumber);
+
     public Task<Subject?> GetByReferralCodeAsync(string referralCode)
         => db.Subjects.FirstOrDefaultAsync(s => s.ReferralCode == referralCode);
 

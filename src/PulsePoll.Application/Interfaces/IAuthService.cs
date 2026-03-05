@@ -10,4 +10,6 @@ public interface IAuthService
     Task QueueRegistrationAsync(RegisterSubjectDto dto);
     Task<AuthResultDto> RefreshTokenAsync(string refreshToken);
     Task LogoutAsync(int subjectId);
+    Task SendPasswordResetOtpAsync(string phoneNumber);
+    Task ResetPasswordAsync(string phoneNumber, string otp, string newPassword);
 }

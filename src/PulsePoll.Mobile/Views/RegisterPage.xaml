@@ -1,0 +1,323 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:PulsePoll.Mobile.ViewModels"
+             xmlns:converters="clr-namespace:PulsePoll.Mobile.Converters"
+             x:Class="PulsePoll.Mobile.Views.RegisterPage"
+             x:DataType="vm:RegisterViewModel"
+             Title="Kaydol"
+             BackgroundColor="{StaticResource PageBackground}">
+
+    <ContentPage.Resources>
+        <converters:InvertedBoolConverter x:Key="InvertedBoolConverter"/>
+    </ContentPage.Resources>
+
+    <Grid>
+
+        <!-- Adım 0-2: Kaydırılabilir içerik -->
+        <ScrollView IsVisible="{Binding IsKvkkStep, Converter={StaticResource InvertedBoolConverter}}">
+            <VerticalStackLayout Spacing="14" Padding="28,24">
+
+                <Label Text="{Binding StepTitle}"
+                       FontFamily="JakartaBold" FontSize="22"
+                       TextColor="{StaticResource TextPrimary}"
+                       HorizontalTextAlignment="Center"
+                       Margin="0,0,0,4"/>
+
+                <Label Text="{Binding ErrorMessage}"
+                       TextColor="{StaticResource Danger}"
+                       FontFamily="JakartaMedium" FontSize="13"
+                       HorizontalTextAlignment="Center"
+                       IsVisible="{Binding HasError}"/>
+
+                <!-- ADIM 0: Telefon -->
+                <VerticalStackLayout Spacing="16" IsVisible="{Binding IsPhoneStep}">
+                    <Label Text="Telefon numaranızı girin. Size bir doğrulama kodu göndereceğiz."
+                           FontFamily="JakartaMedium" FontSize="14"
+                           TextColor="{StaticResource TextSecondary}"
+                           HorizontalTextAlignment="Center"/>
+
+                    <Entry Placeholder="05XX XXX XX XX"
+                           Text="{Binding PhoneNumber}"
+                           Keyboard="Telephone"
+                           ReturnType="Done"
+                           FontFamily="JakartaMedium" FontSize="15"/>
+
+                    <Button Text="Kod Gönder"
+                            Command="{Binding SendOtpCommand}"
+                            BackgroundColor="{StaticResource PrimaryPurple}"
+                            TextColor="White"
+                            FontFamily="JakartaBold" FontSize="16"
+                            HeightRequest="52" CornerRadius="14"/>
+                </VerticalStackLayout>
+
+                <!-- ADIM 1: OTP -->
+                <VerticalStackLayout Spacing="16" IsVisible="{Binding IsOtpStep}">
+                    <Label Text="Telefonunuza gönderilen 6 haneli kodu girin."
+                           FontFamily="JakartaMedium" FontSize="14"
+                           TextColor="{StaticResource TextSecondary}"
+                           HorizontalTextAlignment="Center"/>
+
+                    <Entry Placeholder="Doğrulama Kodu"
+                           Text="{Binding OtpCode}"
+                           Keyboard="Numeric"
+                           ReturnType="Done"
+                           FontFamily="JakartaMedium" FontSize="15"/>
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <Button Text="Doğrula"
+                                Command="{Binding VerifyOtpCommand}"
+                                BackgroundColor="{StaticResource PrimaryPurple}"
+                                TextColor="White"
+                                FontFamily="JakartaBold" FontSize="15"
+                                HeightRequest="48" CornerRadius="14"/>
+                        <Button Grid.Column="1" Text="Geri"
+                                Command="{Binding GoBackCommand}"
+                                BackgroundColor="{StaticResource PrimaryLight}"
+                                TextColor="{StaticResource PrimaryPurple}"
+                                FontFamily="JakartaBold" FontSize="15"
+                                HeightRequest="48" CornerRadius="14"/>
+                    </Grid>
+                </VerticalStackLayout>
+
+                <!-- ADIM 2: Kişisel Bilgiler -->
+                <VerticalStackLayout Spacing="12" IsVisible="{Binding IsInfoStep}">
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <Entry Placeholder="Ad" Text="{Binding FirstName}"
+                               FontFamily="JakartaMedium" FontSize="14"/>
+                        <Entry Grid.Column="1" Placeholder="Soyad" Text="{Binding LastName}"
+                               FontFamily="JakartaMedium" FontSize="14"/>
+                    </Grid>
+
+                    <Entry Placeholder="E-posta" Text="{Binding Email}"
+                           Keyboard="Email" FontFamily="JakartaMedium" FontSize="14"/>
+
+                    <Entry Placeholder="Parola" Text="{Binding Password}"
+                           IsPassword="True" FontFamily="JakartaMedium" FontSize="14"/>
+                    <Entry Placeholder="Parola Tekrar" Text="{Binding PasswordConfirm}"
+                           IsPassword="True" FontFamily="JakartaMedium" FontSize="14"/>
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Cinsiyet" FontFamily="JakartaMedium" FontSize="12"
+                                   TextColor="{StaticResource TextSecondary}"/>
+                            <Picker ItemsSource="{Binding GenderOptions}"
+                                    SelectedIndex="{Binding SelectedGender}"
+                                    FontFamily="JakartaMedium" FontSize="14"/>
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1" Spacing="4">
+                            <Label Text="Medeni Durum" FontFamily="JakartaMedium" FontSize="12"
+                                   TextColor="{StaticResource TextSecondary}"/>
+                            <Picker ItemsSource="{Binding MaritalStatusOptions}"
+                                    SelectedIndex="{Binding SelectedMaritalStatus}"
+                                    FontFamily="JakartaMedium" FontSize="14"/>
+                        </VerticalStackLayout>
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Doğum Tarihi" FontFamily="JakartaMedium" FontSize="12"
+                                   TextColor="{StaticResource TextSecondary}"/>
+                            <DatePicker Date="{Binding BirthDate}"
+                                        MinimumDate="01/01/1940" MaximumDate="01/01/2010"
+                                        FontFamily="JakartaMedium" FontSize="14"/>
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1" Spacing="4">
+                            <Label Text="GSM Operatörü" FontFamily="JakartaMedium" FontSize="12"
+                                   TextColor="{StaticResource TextSecondary}"/>
+                            <Picker ItemsSource="{Binding GsmOperatorOptions}"
+                                    SelectedIndex="{Binding SelectedGsmOperator}"
+                                    FontFamily="JakartaMedium" FontSize="14"/>
+                        </VerticalStackLayout>
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="İl" FontFamily="JakartaMedium" FontSize="12"
+                                   TextColor="{StaticResource TextSecondary}"/>
+                            <Picker ItemsSource="{Binding Cities}"
+                                    SelectedItem="{Binding SelectedCity}"
+                                    ItemDisplayBinding="{Binding Name}"
+                                    FontFamily="JakartaMedium" FontSize="14"/>
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1" Spacing="4">
+                            <Label Text="İlçe" FontFamily="JakartaMedium" FontSize="12"
+                                   TextColor="{StaticResource TextSecondary}"/>
+                            <Picker ItemsSource="{Binding Districts}"
+                                    SelectedItem="{Binding SelectedDistrict}"
+                                    ItemDisplayBinding="{Binding Name}"
+                                    FontFamily="JakartaMedium" FontSize="14"/>
+                        </VerticalStackLayout>
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Meslek" FontFamily="JakartaMedium" FontSize="12"
+                                   TextColor="{StaticResource TextSecondary}"/>
+                            <Picker ItemsSource="{Binding Professions}"
+                                    SelectedItem="{Binding SelectedProfession}"
+                                    ItemDisplayBinding="{Binding Name}"
+                                    FontFamily="JakartaMedium" FontSize="14"/>
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1" Spacing="4">
+                            <Label Text="Eğitim Durumu" FontFamily="JakartaMedium" FontSize="12"
+                                   TextColor="{StaticResource TextSecondary}"/>
+                            <Picker ItemsSource="{Binding EducationLevels}"
+                                    SelectedItem="{Binding SelectedEducationLevel}"
+                                    ItemDisplayBinding="{Binding Name}"
+                                    FontFamily="JakartaMedium" FontSize="14"/>
+                        </VerticalStackLayout>
+                    </Grid>
+
+                    <HorizontalStackLayout Spacing="8">
+                        <CheckBox IsChecked="{Binding IsRetired}" Color="{StaticResource PrimaryPurple}"/>
+                        <Label Text="Emekli" FontFamily="JakartaMedium" FontSize="14"
+                               VerticalOptions="Center" TextColor="{StaticResource TextPrimary}"/>
+                    </HorizontalStackLayout>
+
+                    <!-- Hane Durumu -->
+                    <BoxView HeightRequest="1" Color="{StaticResource CardBorder}" Margin="0,4"/>
+                    <Label Text="Hane Durumu" FontFamily="JakartaSemiBold" FontSize="15"
+                           TextColor="{StaticResource TextPrimary}"/>
+
+                    <HorizontalStackLayout Spacing="8">
+                        <CheckBox IsChecked="{Binding IsHeadOfFamily}" Color="{StaticResource PrimaryPurple}"/>
+                        <Label Text="Hane Reisi misiniz?" FontFamily="JakartaMedium" FontSize="14"
+                               VerticalOptions="Center" TextColor="{StaticResource TextPrimary}"/>
+                    </HorizontalStackLayout>
+
+                    <VerticalStackLayout Spacing="12"
+                                         IsVisible="{Binding IsHeadOfFamily, Converter={StaticResource InvertedBoolConverter}}">
+                        <HorizontalStackLayout Spacing="8">
+                            <CheckBox IsChecked="{Binding IsHeadOfFamilyRetired}" Color="{StaticResource PrimaryPurple}"/>
+                            <Label Text="Hane Reisi Emekli" FontFamily="JakartaMedium" FontSize="14"
+                                   VerticalOptions="Center" TextColor="{StaticResource TextPrimary}"/>
+                        </HorizontalStackLayout>
+
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                            <VerticalStackLayout Spacing="4">
+                                <Label Text="Hane Reisi Meslek" FontFamily="JakartaMedium" FontSize="12"
+                                       TextColor="{StaticResource TextSecondary}"/>
+                                <Picker ItemsSource="{Binding Professions}"
+                                        SelectedItem="{Binding SelectedHofProfession}"
+                                        ItemDisplayBinding="{Binding Name}"
+                                        FontFamily="JakartaMedium" FontSize="14"/>
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Grid.Column="1" Spacing="4">
+                                <Label Text="Hane Reisi Eğitim" FontFamily="JakartaMedium" FontSize="12"
+                                       TextColor="{StaticResource TextSecondary}"/>
+                                <Picker ItemsSource="{Binding EducationLevels}"
+                                        SelectedItem="{Binding SelectedHofEducationLevel}"
+                                        ItemDisplayBinding="{Binding Name}"
+                                        FontFamily="JakartaMedium" FontSize="14"/>
+                            </VerticalStackLayout>
+                        </Grid>
+                    </VerticalStackLayout>
+
+                    <!-- Banka Bilgileri -->
+                    <BoxView HeightRequest="1" Color="{StaticResource CardBorder}" Margin="0,4"/>
+                    <Label Text="Banka Bilgileri" FontFamily="JakartaSemiBold" FontSize="15"
+                           TextColor="{StaticResource TextPrimary}"/>
+
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Banka" FontFamily="JakartaMedium" FontSize="12"
+                               TextColor="{StaticResource TextSecondary}"/>
+                        <Picker ItemsSource="{Binding Banks}"
+                                SelectedItem="{Binding SelectedBank}"
+                                ItemDisplayBinding="{Binding Name}"
+                                FontFamily="JakartaMedium" FontSize="14"/>
+                    </VerticalStackLayout>
+
+                    <Entry Placeholder="IBAN (TR...)" Text="{Binding Iban}"
+                           Keyboard="Default" FontFamily="JakartaMedium" FontSize="14"/>
+
+                    <Entry Placeholder="IBAN Ad Soyad" Text="{Binding IbanFullName}"
+                           FontFamily="JakartaMedium" FontSize="14"/>
+
+                    <Entry Placeholder="Referans Kodu (opsiyonel)" Text="{Binding ReferenceCode}"
+                           FontFamily="JakartaMedium" FontSize="14"/>
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12" Margin="0,8,0,0">
+                        <Button Text="Devam"
+                                Command="{Binding GoToKvkkCommand}"
+                                BackgroundColor="{StaticResource PrimaryPurple}"
+                                TextColor="White"
+                                FontFamily="JakartaBold" FontSize="15"
+                                HeightRequest="48" CornerRadius="14"/>
+                        <Button Grid.Column="1" Text="Geri"
+                                Command="{Binding GoBackCommand}"
+                                BackgroundColor="{StaticResource PrimaryLight}"
+                                TextColor="{StaticResource PrimaryPurple}"
+                                FontFamily="JakartaBold" FontSize="15"
+                                HeightRequest="48" CornerRadius="14"/>
+                    </Grid>
+
+                    <BoxView HeightRequest="40" Color="Transparent"/>
+                </VerticalStackLayout>
+
+                <ActivityIndicator IsRunning="{Binding IsBusy}"
+                                   IsVisible="{Binding IsBusy}"
+                                   Color="{StaticResource PrimaryPurple}"
+                                   HeightRequest="30"/>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- ADIM 3: KVKK — Tam ekran layout -->
+        <Grid RowDefinitions="Auto,*,Auto,Auto" Padding="28,24"
+              IsVisible="{Binding IsKvkkStep}">
+
+            <Label Text="KVKK Onayı"
+                   FontFamily="JakartaBold" FontSize="22"
+                   TextColor="{StaticResource TextPrimary}"
+                   HorizontalTextAlignment="Center"
+                   Margin="0,0,0,12"/>
+
+            <Border Grid.Row="1" StrokeShape="RoundRectangle 12" Stroke="{StaticResource CardBorder}"
+                    BackgroundColor="{StaticResource White}" Padding="16">
+                <ScrollView>
+                    <Label FontFamily="JakartaMedium" FontSize="13"
+                           TextColor="{StaticResource TextPrimary}"
+                           LineBreakMode="WordWrap"
+                           Text="KİŞİSEL VERİLERİN KORUNMASI HAKKINDA AYDINLATMA METNİ&#x0a;&#x0a;PulsePoll olarak kişisel verilerinizin güvenliğine önem veriyoruz. 6698 sayılı Kişisel Verilerin Korunması Kanunu (KVKK) kapsamında, kişisel verileriniz aşağıdaki amaçlarla işlenmektedir:&#x0a;&#x0a;1. Anket katılım süreçlerinin yönetilmesi&#x0a;2. Ödeme işlemlerinin gerçekleştirilmesi&#x0a;3. İletişim ve bilgilendirme yapılması&#x0a;4. Yasal yükümlülüklerin yerine getirilmesi&#x0a;&#x0a;Toplanan Kişisel Veriler:&#x0a;- Kimlik bilgileri (ad, soyad, doğum tarihi, cinsiyet)&#x0a;- İletişim bilgileri (telefon numarası, e-posta adresi)&#x0a;- Adres bilgileri (il, ilçe)&#x0a;- Mesleki ve eğitim bilgileri&#x0a;- Finansal bilgiler (banka hesap bilgileri, IBAN)&#x0a;- Hane bilgileri (hane reisi durumu)&#x0a;- Cihaz ve bağlantı bilgileri&#x0a;&#x0a;Verilerin İşlenmesinin Hukuki Sebepleri:&#x0a;- Sözleşmenin kurulması ve ifası&#x0a;- Kanuni yükümlülüklerin yerine getirilmesi&#x0a;- Meşru menfaat&#x0a;- Açık rıza&#x0a;&#x0a;Verilerin Aktarılması:&#x0a;Kişisel verileriniz, hizmet sağlayıcılarımız, iş ortaklarımız ve yasal zorunluluklar çerçevesinde yetkili kurum ve kuruluşlara aktarılabilir.&#x0a;&#x0a;Veri Saklama Süresi:&#x0a;Kişisel verileriniz, işleme amacının gerektirdiği süre boyunca ve yasal zorunluluklar çerçevesinde saklanır.&#x0a;&#x0a;Haklarınız:&#x0a;KVKK'nın 11. maddesi kapsamında aşağıdaki haklara sahipsiniz:&#x0a;- Kişisel verilerinizin işlenip işlenmediğini öğrenme&#x0a;- İşlenmişse buna ilişkin bilgi talep etme&#x0a;- İşleme amacını ve amacına uygun kullanılıp kullanılmadığını öğrenme&#x0a;- Yurt içinde veya yurt dışında aktarıldığı üçüncü kişileri bilme&#x0a;- Eksik veya yanlış işlenmişse düzeltilmesini isteme&#x0a;- Silinmesini veya yok edilmesini isteme&#x0a;- İşlenen verilerin münhasıran otomatik sistemler vasıtasıyla analiz edilmesi suretiyle aleyhinize bir sonucun ortaya çıkmasına itiraz etme&#x0a;- Kanuna aykırı olarak işlenmesi sebebiyle zarara uğramanız hâlinde zararın giderilmesini talep etme&#x0a;&#x0a;Bu metni onaylayarak, kişisel verilerinizin yukarıda belirtilen amaçlarla işlenmesine açık rıza verdiğinizi kabul etmiş olursunuz."/>
+                </ScrollView>
+            </Border>
+
+            <VerticalStackLayout Grid.Row="2" Spacing="8" Margin="0,12,0,0">
+                <Label Text="{Binding ErrorMessage}"
+                       TextColor="{StaticResource Danger}"
+                       FontFamily="JakartaMedium" FontSize="13"
+                       HorizontalTextAlignment="Center"
+                       IsVisible="{Binding HasError}"/>
+
+                <HorizontalStackLayout Spacing="8" HorizontalOptions="Center">
+                    <CheckBox IsChecked="{Binding KvkkAccepted}" Color="{StaticResource PrimaryPurple}"/>
+                    <Label Text="KVKK metnini okudum ve onaylıyorum."
+                           FontFamily="JakartaSemiBold" FontSize="13"
+                           TextColor="{StaticResource TextPrimary}"
+                           VerticalOptions="Center"/>
+                </HorizontalStackLayout>
+            </VerticalStackLayout>
+
+            <Grid Grid.Row="3" ColumnDefinitions="*,*" ColumnSpacing="12" Margin="0,12,0,16">
+                <Button Text="Kaydol"
+                        Command="{Binding RegisterCommand}"
+                        BackgroundColor="{StaticResource PrimaryPurple}"
+                        TextColor="White"
+                        FontFamily="JakartaBold" FontSize="15"
+                        HeightRequest="48" CornerRadius="14"/>
+                <Button Grid.Column="1" Text="Geri"
+                        Command="{Binding GoBackCommand}"
+                        BackgroundColor="{StaticResource PrimaryLight}"
+                        TextColor="{StaticResource PrimaryPurple}"
+                        FontFamily="JakartaBold" FontSize="15"
+                        HeightRequest="48" CornerRadius="14"/>
+            </Grid>
+
+            <ActivityIndicator Grid.Row="2" IsRunning="{Binding IsBusy}"
+                               IsVisible="{Binding IsBusy}"
+                               Color="{StaticResource PrimaryPurple}"
+                               HeightRequest="30"/>
+        </Grid>
+
+    </Grid>
+</ContentPage>
