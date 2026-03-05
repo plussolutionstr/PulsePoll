@@ -2,6 +2,7 @@ using FluentValidation;
 using Microsoft.Extensions.Logging;
 using PulsePoll.Application.DTOs;
 using PulsePoll.Application.Exceptions;
+using PulsePoll.Application.Extensions;
 using PulsePoll.Application.Helpers;
 using PulsePoll.Application.Interfaces;
 using PulsePoll.Application.Messaging;
@@ -118,9 +119,9 @@ public class AuthService(
         var passwordHash = passwordHasher.Hash(dto.Password);
 
         var message = new SubjectRegisteredMessage(
-            Email: dto.Email,
-            FirstName: dto.FirstName,
-            LastName: dto.LastName,
+            Email: dto.Email.Trim(),
+            FirstName: dto.FirstName.ToTitleCaseTr(),
+            LastName: dto.LastName.ToTitleCaseTr(),
             PasswordHash: passwordHash,
             PhoneNumber: phoneNumber,
             Gender: (int)dto.Gender,

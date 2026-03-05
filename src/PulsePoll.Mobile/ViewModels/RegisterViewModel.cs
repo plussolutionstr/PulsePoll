@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Text.RegularExpressions;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PulsePoll.Mobile.ApiModels;
@@ -77,6 +78,9 @@ public partial class RegisterViewModel : ObservableObject
     [ObservableProperty] private string _passwordConfirm = string.Empty;
     [ObservableProperty] private int _selectedGender;
     [ObservableProperty] private DateTime _birthDate = new(2000, 1, 1);
+
+    public DateTime MinBirthDate => DateTime.Today.AddYears(-100);
+    public DateTime MaxBirthDate => DateTime.Today.AddYears(-18);
     [ObservableProperty] private int _selectedMaritalStatus;
     [ObservableProperty] private int _selectedGsmOperator;
     [ObservableProperty] private LookupItemDto? _selectedCity;
@@ -162,17 +166,17 @@ public partial class RegisterViewModel : ObservableObject
     private async Task SendOtpAsync()
     {
         ErrorMessage = string.Empty;
-        var phone = PhoneNumber.Trim();
-        if (phone.Length < 10)
+        var phone = NormalizePhone(PhoneNumber);
+        if (phone.Length != 10 || !phone.StartsWith('5'))
         {
-            ErrorMessage = "Geçerli bir telefon numarası girin.";
+            ErrorMessage = "Geçerli bir telefon numarası girin. (05XX XXX XX XX)";
             return;
         }
 
         IsBusy = true;
         try
         {
-            await _api.SendOtpAsync(phone);
+            await _api.SendOtpAsync(PhoneNumber.Trim());
             CurrentStep = 1;
         }
         catch (Exception ex)
@@ -189,9 +193,9 @@ public partial class RegisterViewModel : ObservableObject
     private async Task VerifyOtpAsync()
     {
         ErrorMessage = string.Empty;
-        if (string.IsNullOrWhiteSpace(OtpCode) || OtpCode.Length < 4)
+        if (string.IsNullOrWhiteSpace(OtpCode) || OtpCode.Trim().Length != 6 || !OtpCode.Trim().All(char.IsDigit))
         {
-            ErrorMessage = "Doğrulama kodunu girin.";
+            ErrorMessage = "6 haneli doğrulama kodunu girin.";
             return;
         }
 
@@ -232,9 +236,9 @@ public partial class RegisterViewModel : ObservableObject
             ErrorMessage = "Ad ve soyad gerekli.";
             return;
         }
-        if (string.IsNullOrWhiteSpace(Email))
+        if (string.IsNullOrWhiteSpace(Email) || !IsValidEmail(Email.Trim()))
         {
-            ErrorMessage = "E-posta gerekli.";
+            ErrorMessage = "Geçerli bir e-posta adresi girin.";
             return;
         }
         if (string.IsNullOrWhiteSpace(Password) || !IsPasswordStrong(Password))
@@ -415,5 +419,18 @@ public partial class RegisterViewModel : ObservableObject
             else hasSpecial = true;
         }
         return hasUpper && hasLower && hasDigit && hasSpecial;
+    }
+
+    private static bool IsValidEmail(string email)
+        => Regex.IsMatch(email, @"^[^@\s]+@[^@\s]+\.[^@\s]+$");
+
+    private static string NormalizePhone(string raw)
+    {
+        var digits = new string(raw.Where(char.IsDigit).ToArray());
+        if (digits.StartsWith("90") && digits.Length == 12)
+            digits = digits[2..];
+        if (digits.StartsWith('0') && digits.Length == 11)
+            digits = digits[1..];
+        return digits;
     }
 }

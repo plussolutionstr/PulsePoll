@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using PulsePoll.Application.Extensions;
 using PulsePoll.Application.DTOs;
 using PulsePoll.Application.Exceptions;
 using PulsePoll.Application.Interfaces;
@@ -55,9 +56,9 @@ public class SubjectService(
         var subject = await repository.GetByIdAsync(subjectId)
             ?? throw new NotFoundException("Denek");
 
-        subject.FirstName = dto.FirstName;
-        subject.LastName = dto.LastName;
-        subject.Email = dto.Email;
+        subject.FirstName = dto.FirstName.ToTitleCaseTr();
+        subject.LastName = dto.LastName.ToTitleCaseTr();
+        subject.Email = dto.Email?.Trim();
         subject.Gender = dto.Gender;
         subject.BirthDate = dto.BirthDate;
         subject.MaritalStatus = dto.MaritalStatus;
