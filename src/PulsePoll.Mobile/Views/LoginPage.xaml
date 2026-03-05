@@ -7,63 +7,97 @@
              Title="Giriş Yap"
              BackgroundColor="{StaticResource PageBackground}">
 
-    <ScrollView>
-        <VerticalStackLayout Spacing="16" Padding="28,40" VerticalOptions="Center">
+    <Grid RowDefinitions="*,Auto">
+        <ScrollView>
+            <VerticalStackLayout Spacing="0" Padding="28,28,28,0">
 
-            <Label Text="PulsePoll"
-                   FontFamily="JakartaBold" FontSize="34"
-                   HorizontalTextAlignment="Center"
-                   TextColor="{StaticResource PrimaryPurple}"
-                   Margin="0,0,0,4"/>
+                <!-- Logo Mark -->
+                <Border BackgroundColor="{StaticResource PrimaryPurple}"
+                        StrokeShape="RoundRectangle 22" Stroke="Transparent"
+                        WidthRequest="72" HeightRequest="72"
+                        HorizontalOptions="Start"
+                        Margin="0,0,0,20">
+                    <Image Source="icon_pulse.png" WidthRequest="32" HeightRequest="32"
+                           HorizontalOptions="Center" VerticalOptions="Center"/>
+                </Border>
 
-            <Label Text="Hesabınıza giriş yapın"
-                   FontFamily="JakartaMedium" FontSize="15"
-                   HorizontalTextAlignment="Center"
-                   TextColor="{StaticResource TextSecondary}"
-                   Margin="0,0,0,20"/>
+                <!-- Title -->
+                <Label Text="Tekrar Hoş Geldin"
+                       Style="{StaticResource AuthTitleStyle}"
+                       Margin="0,0,0,6"/>
+                <Label Text="Hesabına giriş yap ve anketlere katılmaya devam et."
+                       Style="{StaticResource AuthSubtitleStyle}"
+                       Margin="0,0,0,28"/>
 
-            <Entry Placeholder="E-posta"
-                   Text="{Binding Email}"
-                   Keyboard="Email"
-                   ReturnType="Next"
-                   FontFamily="JakartaMedium" FontSize="15"/>
+                <!-- Error -->
+                <Label Text="{Binding ErrorMessage}"
+                       TextColor="{StaticResource Danger}"
+                       FontFamily="JakartaMedium" FontSize="13"
+                       HorizontalTextAlignment="Start"
+                       IsVisible="{Binding HasError}"
+                       Margin="0,0,0,12"/>
 
-            <Entry Placeholder="Parola"
-                   Text="{Binding Password}"
-                   IsPassword="True"
-                   ReturnType="Done"
-                   FontFamily="JakartaMedium" FontSize="15"/>
+                <!-- Phone Field -->
+                <Label Text="TELEFON" Style="{StaticResource FieldLabelStyle}"/>
+                <Border Style="{StaticResource AuthFieldBorderStyle}" Margin="0,0,0,14">
+                    <Grid ColumnDefinitions="44,*" Padding="0">
+                        <Image Source="icon_phone.png" WidthRequest="17" HeightRequest="17"
+                               HorizontalOptions="Center" VerticalOptions="Center"/>
+                        <Entry Grid.Column="1" Placeholder="05XX XXX XX XX"
+                               Text="{Binding PhoneNumber}"
+                               Keyboard="Telephone" ReturnType="Next"
+                               Style="{StaticResource AuthFieldEntryStyle}"/>
+                    </Grid>
+                </Border>
 
-            <Label Text="Parolamı Unuttum"
-                   FontFamily="JakartaSemiBold" FontSize="13"
-                   TextColor="{StaticResource PrimaryPurple}"
-                   HorizontalTextAlignment="End"
-                   Margin="0,-4,4,0">
+                <!-- Password Field with Forgot Password link -->
+                <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,6">
+                    <Label Text="ŞİFRE" Style="{StaticResource FieldLabelStyle}" Margin="0"/>
+                    <Label Grid.Column="1" Text="Şifremi Unuttum"
+                           FontFamily="JakartaSemiBold" FontSize="12"
+                           TextColor="{StaticResource PrimaryPurple}">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding GoToForgotPasswordCommand}"/>
+                        </Label.GestureRecognizers>
+                    </Label>
+                </Grid>
+                <Border Style="{StaticResource AuthFieldBorderStyle}" Margin="0,0,0,18">
+                    <Grid ColumnDefinitions="44,*" Padding="0">
+                        <Image Source="icon_lock.png" WidthRequest="17" HeightRequest="17"
+                               HorizontalOptions="Center" VerticalOptions="Center"/>
+                        <Entry Grid.Column="1" Placeholder="Parolanızı girin"
+                               Text="{Binding Password}"
+                               IsPassword="True" ReturnType="Done"
+                               Style="{StaticResource AuthFieldEntryStyle}"/>
+                    </Grid>
+                </Border>
+
+                <!-- Login Button -->
+                <Button Text="Giriş Yap"
+                        Command="{Binding LoginCommand}"
+                        Style="{StaticResource AuthPrimaryButtonStyle}"
+                        Margin="0,0,0,4"/>
+
+                <ActivityIndicator IsRunning="{Binding IsBusy}"
+                                   IsVisible="{Binding IsBusy}"
+                                   Color="{StaticResource PrimaryPurple}"
+                                   HeightRequest="30"
+                                   Margin="0,8,0,0"/>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- Bottom Link -->
+        <HorizontalStackLayout Grid.Row="1" Spacing="4"
+                                HorizontalOptions="Center"
+                                Padding="0,16,0,32">
+            <Label Text="Hesabın yok mu?"
+                   Style="{StaticResource AuthBottomLinkStyle}"/>
+            <Label Text="Kayıt Ol"
+                   Style="{StaticResource AuthLinkStyle}">
                 <Label.GestureRecognizers>
-                    <TapGestureRecognizer Command="{Binding GoToForgotPasswordCommand}"/>
+                    <TapGestureRecognizer Command="{Binding GoToRegisterCommand}"/>
                 </Label.GestureRecognizers>
             </Label>
-
-            <Label Text="{Binding ErrorMessage}"
-                   TextColor="{StaticResource Danger}"
-                   FontFamily="JakartaMedium" FontSize="13"
-                   HorizontalTextAlignment="Center"
-                   IsVisible="{Binding HasError}"/>
-
-            <Button Text="Giriş Yap"
-                    Command="{Binding LoginCommand}"
-                    BackgroundColor="{StaticResource PrimaryPurple}"
-                    TextColor="White"
-                    FontFamily="JakartaBold" FontSize="16"
-                    HeightRequest="52"
-                    CornerRadius="14"
-                    Margin="0,8,0,0"/>
-
-            <ActivityIndicator IsRunning="{Binding IsBusy}"
-                               IsVisible="{Binding IsBusy}"
-                               Color="{StaticResource PrimaryPurple}"
-                               HeightRequest="30"/>
-
-        </VerticalStackLayout>
-    </ScrollView>
+        </HorizontalStackLayout>
+    </Grid>
 </ContentPage>

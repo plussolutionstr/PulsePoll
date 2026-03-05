@@ -111,4 +111,10 @@ public partial class ForgotPasswordViewModel : ObservableObject
         if (CurrentStep > 0)
             CurrentStep--;
     }
+
+    [RelayCommand]
+    private async Task GoToLoginAsync()
+    {
+        await Application.Current!.Windows[0].Page!.Navigation.PopAsync();
+    }
 }

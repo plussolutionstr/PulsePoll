@@ -2,6 +2,7 @@ using FluentValidation;
 using Microsoft.Extensions.Logging;
 using PulsePoll.Application.DTOs;
 using PulsePoll.Application.Exceptions;
+using PulsePoll.Application.Helpers;
 using PulsePoll.Application.Interfaces;
 using PulsePoll.Application.Messaging;
 using PulsePoll.Domain.Entities;
@@ -31,58 +32,66 @@ public class AuthService(
     private const int MaxOtpRequestsPerHour = 5;
     private const int MaxVerifyFailsPerWindow = 3;
 
+    private static string NormalizePhone(string raw)
+        => PhoneHelper.Normalize(raw)
+           ?? throw new BusinessException("INVALID_PHONE", "Geçerli bir telefon numarası giriniz.");
+
     public async Task SendOtpAsync(string phoneNumber)
     {
-        if (await cache.ExistsAsync(BlacklistKey(phoneNumber)))
+        var phone = NormalizePhone(phoneNumber);
+
+        if (await cache.ExistsAsync(BlacklistKey(phone)))
             throw new BusinessException("BLACKLISTED", "Bu numara kara listeye alınmıştır. Lütfen destek ile iletişime geçin.");
 
-        if (await subjectRepository.ExistsByPhoneAsync(phoneNumber))
+        if (await subjectRepository.ExistsByPhoneAsync(phone))
             throw new BusinessException("ALREADY_EXISTS", "Bu telefon numarası zaten kayıtlı.");
 
-        var attempts = await cache.IncrementAsync(OtpAttemptsKey(phoneNumber), TimeSpan.FromHours(1));
+        var attempts = await cache.IncrementAsync(OtpAttemptsKey(phone), TimeSpan.FromHours(1));
 
         if (attempts > MaxOtpRequestsPerHour)
         {
-            await cache.SetAsync(true, BlacklistKey(phoneNumber));
-            logger.LogWarning("OTP limit aşıldı, kara listeye alındı: {PhoneNumber}", phoneNumber);
+            await cache.SetAsync(true, BlacklistKey(phone));
+            logger.LogWarning("OTP limit aşıldı, kara listeye alındı: {PhoneNumber}", phone);
             throw new BusinessException("BLACKLISTED", "Çok fazla OTP isteği gönderildi. Numara kara listeye alındı.");
         }
 
-        var otp = await smsService.SendOtpAsync(phoneNumber);
-        await cache.SetAsync(otp, OtpKey(phoneNumber), TimeSpan.FromMinutes(5));
+        var otp = await smsService.SendOtpAsync(phone);
+        await cache.SetAsync(otp, OtpKey(phone), TimeSpan.FromMinutes(5));
 
-        logger.LogInformation("OTP gönderildi: {PhoneNumber} (deneme: {Attempt}/{Max})", phoneNumber, attempts, MaxOtpRequestsPerHour);
+        logger.LogInformation("OTP gönderildi: {PhoneNumber} (deneme: {Attempt}/{Max})", phone, attempts, MaxOtpRequestsPerHour);
     }
 
     public async Task<OtpVerifiedDto> VerifyOtpAsync(string phoneNumber, string otp)
     {
-        if (await cache.ExistsAsync(BlacklistKey(phoneNumber)))
+        var phone = NormalizePhone(phoneNumber);
+
+        if (await cache.ExistsAsync(BlacklistKey(phone)))
             throw new BusinessException("BLACKLISTED", "Bu numara kara listeye alınmıştır. Lütfen destek ile iletişime geçin.");
 
-        var stored = await cache.GetAsync<string>(OtpKey(phoneNumber));
+        var stored = await cache.GetAsync<string>(OtpKey(phone));
 
         if (stored is null || stored != otp)
         {
-            var fails = await cache.IncrementAsync(VerifyFailKey(phoneNumber), TimeSpan.FromMinutes(15));
+            var fails = await cache.IncrementAsync(VerifyFailKey(phone), TimeSpan.FromMinutes(15));
 
             if (fails >= MaxVerifyFailsPerWindow)
             {
-                await cache.SetAsync(true, BlacklistKey(phoneNumber));
-                await cache.RemoveAsync(OtpKey(phoneNumber));
-                logger.LogWarning("OTP doğrulama limiti aşıldı, kara listeye alındı: {PhoneNumber}", phoneNumber);
+                await cache.SetAsync(true, BlacklistKey(phone));
+                await cache.RemoveAsync(OtpKey(phone));
+                logger.LogWarning("OTP doğrulama limiti aşıldı, kara listeye alındı: {PhoneNumber}", phone);
                 throw new BusinessException("BLACKLISTED", "Çok fazla hatalı OTP denemesi. Numara kara listeye alındı.");
             }
 
             throw new BusinessException("INVALID_OTP", "Geçersiz veya süresi dolmuş OTP.");
         }
 
-        await cache.RemoveAsync(OtpKey(phoneNumber));
-        await cache.RemoveAsync(VerifyFailKey(phoneNumber));
+        await cache.RemoveAsync(OtpKey(phone));
+        await cache.RemoveAsync(VerifyFailKey(phone));
 
         var token = Guid.NewGuid().ToString("N");
-        await cache.SetAsync(phoneNumber, RegTokenKey(token), TimeSpan.FromMinutes(15));
+        await cache.SetAsync(phone, RegTokenKey(token), TimeSpan.FromMinutes(15));
 
-        logger.LogInformation("OTP doğrulandı: {PhoneNumber}", phoneNumber);
+        logger.LogInformation("OTP doğrulandı: {PhoneNumber}", phone);
 
         return new OtpVerifiedDto(token);
     }
@@ -95,6 +104,8 @@ public class AuthService(
 
         if (phoneNumber is null)
             throw new BusinessException("INVALID_TOKEN", "Geçersiz veya süresi dolmuş kayıt tokeni.");
+
+        // phoneNumber already normalized when stored in VerifyOtpAsync
 
         if (await subjectRepository.ExistsByPhoneAsync(phoneNumber))
             throw new BusinessException("ALREADY_EXISTS", "Bu telefon numarası zaten kayıtlı.");
@@ -128,10 +139,10 @@ public class AuthService(
             BankId: dto.BankId,
             IBAN: dto.IBAN,
             IBANFullName: dto.IBANFullName,
-            SocioeconomicStatusId: 1, // Worker hesaplar
-            LSMSocioeconomicStatusId: 1, // TODO: LSM formülü gelince
+            SocioeconomicStatusId: 1,
+            LSMSocioeconomicStatusId: 1,
             ReferenceCode: dto.ReferenceCode,
-            SpecialCodeId: null, // Admin sonradan atar
+            SpecialCodeId: null,
             KVKKApproval: dto.KVKKApproval,
             KVKKDetail: dto.KVKKDetail,
             RegisteredAt: DateTime.UtcNow);
@@ -145,12 +156,13 @@ public class AuthService(
     {
         await loginValidator.ValidateAndThrowAsync(dto);
 
-        var subject = await subjectRepository.GetByEmailAsync(dto.Email);
+        var phone = NormalizePhone(dto.PhoneNumber);
+        var subject = await subjectRepository.GetByPhoneAsync(phone);
 
         if (subject is null || !passwordHasher.Verify(dto.Password, subject.PasswordHash))
         {
-            logger.LogWarning("Başarısız giriş denemesi: {Email}", dto.Email);
-            throw new BusinessException("INVALID_CREDENTIALS", "E-posta veya şifre hatalı.");
+            logger.LogWarning("Başarısız giriş denemesi: {PhoneNumber}", phone);
+            throw new BusinessException("INVALID_CREDENTIALS", "Telefon numarası veya şifre hatalı.");
         }
 
         if (subject.Status != ApprovalStatus.Approved)
@@ -216,9 +228,10 @@ public class AuthService(
         if (string.IsNullOrWhiteSpace(newPassword) || newPassword.Length < 6)
             throw new BusinessException("INVALID_PASSWORD", "Şifre en az 6 karakter olmalıdır.");
 
-        var verifyResult = await VerifyOtpAsync(phoneNumber, otp);
+        var phone = NormalizePhone(phoneNumber);
+        var verifyResult = await VerifyOtpAsync(phone, otp);
 
-        var subject = await subjectRepository.GetByPhoneAsync(phoneNumber)
+        var subject = await subjectRepository.GetByPhoneAsync(phone)
             ?? throw new NotFoundException("Bu telefon numarasına ait hesap bulunamadı.");
 
         subject.PasswordHash = passwordHasher.Hash(newPassword);
@@ -231,18 +244,20 @@ public class AuthService(
 
     public async Task SendPasswordResetOtpAsync(string phoneNumber)
     {
-        if (!await subjectRepository.ExistsByPhoneAsync(phoneNumber))
+        var phone = NormalizePhone(phoneNumber);
+
+        if (!await subjectRepository.ExistsByPhoneAsync(phone))
             throw new BusinessException("NOT_FOUND", "Bu telefon numarasına ait hesap bulunamadı.");
 
-        var attempts = await cache.IncrementAsync(OtpAttemptsKey(phoneNumber), TimeSpan.FromHours(1));
+        var attempts = await cache.IncrementAsync(OtpAttemptsKey(phone), TimeSpan.FromHours(1));
 
         if (attempts > MaxOtpRequestsPerHour)
             throw new BusinessException("TOO_MANY_REQUESTS", "Çok fazla istek gönderildi. Lütfen daha sonra tekrar deneyin.");
 
-        var otpCode = await smsService.SendOtpAsync(phoneNumber);
-        await cache.SetAsync(otpCode, OtpKey(phoneNumber), TimeSpan.FromMinutes(5));
+        var otpCode = await smsService.SendOtpAsync(phone);
+        await cache.SetAsync(otpCode, OtpKey(phone), TimeSpan.FromMinutes(5));
 
-        logger.LogInformation("Şifre sıfırlama OTP gönderildi: {PhoneNumber}", phoneNumber);
+        logger.LogInformation("Şifre sıfırlama OTP gönderildi: {PhoneNumber}", phone);
     }
 
     private static RefreshToken CreateRefreshToken(int subjectId)

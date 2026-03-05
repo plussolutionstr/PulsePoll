@@ -7,37 +7,147 @@
              Shell.NavBarIsVisible="False"
              BackgroundColor="{StaticResource PageBackground}">
 
-    <Grid RowDefinitions="*,Auto" Padding="32">
+    <ScrollView>
+        <VerticalStackLayout Spacing="0" Padding="28,0" VerticalOptions="Center">
 
-        <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="16">
+            <!-- Illustration Area -->
+            <Grid HorizontalOptions="Center" WidthRequest="200" HeightRequest="200" Margin="0,40,0,0">
+                <!-- Background circle -->
+                <Ellipse Fill="{StaticResource PrimaryLight}"
+                         WidthRequest="200" HeightRequest="200"
+                         HorizontalOptions="Center" VerticalOptions="Center"/>
+
+                <!-- Central logo box -->
+                <Border BackgroundColor="{StaticResource PrimaryPurple}"
+                        StrokeShape="RoundRectangle 26"
+                        Stroke="Transparent"
+                        WidthRequest="88" HeightRequest="88"
+                        HorizontalOptions="Center" VerticalOptions="Center">
+                    <Image Source="icon_pulse.png" WidthRequest="38" HeightRequest="38"
+                           HorizontalOptions="Center" VerticalOptions="Center"/>
+                </Border>
+
+                <!-- TL circle (top-right) -->
+                <Border BackgroundColor="{StaticResource AmberLight}"
+                        Stroke="{StaticResource Amber}"
+                        StrokeThickness="1"
+                        StrokeShape="RoundRectangle 20"
+                        WidthRequest="40" HeightRequest="40"
+                        HorizontalOptions="End" VerticalOptions="Start"
+                        Margin="0,10,10,0">
+                    <Label Text="&#x20BA;" FontFamily="JakartaBold" FontSize="18"
+                           TextColor="{StaticResource Amber}"
+                           HorizontalOptions="Center" VerticalOptions="Center"/>
+                </Border>
+
+                <!-- Check circle (bottom-left) -->
+                <Border BackgroundColor="{StaticResource SuccessLight}"
+                        Stroke="{StaticResource Success}"
+                        StrokeThickness="1"
+                        StrokeShape="RoundRectangle 18"
+                        WidthRequest="36" HeightRequest="36"
+                        HorizontalOptions="Start" VerticalOptions="End"
+                        Margin="4,0,0,8">
+                    <Image Source="icon_check.png" WidthRequest="16" HeightRequest="16"
+                           HorizontalOptions="Center" VerticalOptions="Center"/>
+                </Border>
+            </Grid>
+
+            <!-- Title -->
             <Label Text="PulsePoll"
-                   FontFamily="JakartaBold" FontSize="42"
+                   FontFamily="JakartaExtraBold" FontSize="26"
                    TextColor="{StaticResource PrimaryPurple}"
-                   HorizontalTextAlignment="Center"/>
+                   HorizontalTextAlignment="Center"
+                   Margin="0,36,0,4"/>
 
-            <Label Text="Anketlere katıl, para kazan."
-                   FontFamily="JakartaMedium" FontSize="16"
+            <Label Text="Ankete Katıl,&#x0a;Kazanmaya Başla"
+                   FontFamily="JakartaExtraBold" FontSize="22"
+                   TextColor="{StaticResource TextPrimary}"
+                   HorizontalTextAlignment="Center"
+                   LineBreakMode="WordWrap"
+                   Margin="0,0,0,10"/>
+
+            <Label Text="Türkiye'nin en güvenilir anket platformunda fikirlerini paylaş, anında kazan."
+                   FontFamily="JakartaRegular" FontSize="14"
                    TextColor="{StaticResource TextSecondary}"
-                   HorizontalTextAlignment="Center"/>
-        </VerticalStackLayout>
+                   HorizontalTextAlignment="Center"
+                   LineBreakMode="WordWrap"
+                   Margin="10,0,10,8"/>
 
-        <VerticalStackLayout Grid.Row="1" Spacing="12" Margin="0,0,0,40">
-            <Button Text="Giriş Yap"
-                    Command="{Binding GoToLoginCommand}"
-                    BackgroundColor="{StaticResource PrimaryPurple}"
-                    TextColor="White"
-                    FontFamily="JakartaBold" FontSize="16"
-                    HeightRequest="52"
-                    CornerRadius="14"/>
+            <!-- Feature Pills -->
+            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10" Margin="0,6,0,28">
+                <!-- Kisa Anketler -->
+                <Border Style="{StaticResource FeaturePillStyle}">
+                    <VerticalStackLayout Spacing="6" HorizontalOptions="Center">
+                        <Border BackgroundColor="{StaticResource PrimaryLight}"
+                                StrokeShape="RoundRectangle 11" Stroke="Transparent"
+                                WidthRequest="36" HeightRequest="36"
+                                HorizontalOptions="Center">
+                            <Image Source="icon_survey_check.png" WidthRequest="17" HeightRequest="17"
+                                   HorizontalOptions="Center" VerticalOptions="Center"/>
+                        </Border>
+                        <Label Text="Kısa&#x0a;Anketler" FontFamily="JakartaSemiBold" FontSize="10"
+                               TextColor="{StaticResource TextSecondary}"
+                               HorizontalTextAlignment="Center" LineBreakMode="WordWrap"/>
+                    </VerticalStackLayout>
+                </Border>
 
-            <Button Text="Kaydol"
+                <!-- Aninda Kazanc -->
+                <Border Grid.Column="1" Style="{StaticResource FeaturePillStyle}">
+                    <VerticalStackLayout Spacing="6" HorizontalOptions="Center">
+                        <Border BackgroundColor="{StaticResource AmberLight}"
+                                StrokeShape="RoundRectangle 11" Stroke="Transparent"
+                                WidthRequest="36" HeightRequest="36"
+                                HorizontalOptions="Center">
+                            <Label Text="&#x20BA;" FontFamily="JakartaBold" FontSize="16"
+                                   TextColor="{StaticResource Amber}"
+                                   HorizontalOptions="Center" VerticalOptions="Center"/>
+                        </Border>
+                        <Label Text="Anında&#x0a;Kazanç" FontFamily="JakartaSemiBold" FontSize="10"
+                               TextColor="{StaticResource TextSecondary}"
+                               HorizontalTextAlignment="Center" LineBreakMode="WordWrap"/>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Kolay Cekim -->
+                <Border Grid.Column="2" Style="{StaticResource FeaturePillStyle}">
+                    <VerticalStackLayout Spacing="6" HorizontalOptions="Center">
+                        <Border BackgroundColor="{StaticResource SuccessLight}"
+                                StrokeShape="RoundRectangle 11" Stroke="Transparent"
+                                WidthRequest="36" HeightRequest="36"
+                                HorizontalOptions="Center">
+                            <Image Source="icon_card.png" WidthRequest="17" HeightRequest="17"
+                                   HorizontalOptions="Center" VerticalOptions="Center"/>
+                        </Border>
+                        <Label Text="Kolay&#x0a;Çekim" FontFamily="JakartaSemiBold" FontSize="10"
+                               TextColor="{StaticResource TextSecondary}"
+                               HorizontalTextAlignment="Center" LineBreakMode="WordWrap"/>
+                    </VerticalStackLayout>
+                </Border>
+            </Grid>
+
+            <!-- Dots -->
+            <HorizontalStackLayout Spacing="5" HorizontalOptions="Center" Margin="0,0,0,28">
+                <Border BackgroundColor="{StaticResource PrimaryPurple}"
+                        StrokeShape="RoundRectangle 3" Stroke="Transparent"
+                        WidthRequest="20" HeightRequest="6"/>
+                <Ellipse Fill="{StaticResource PrimaryMid}"
+                         WidthRequest="6" HeightRequest="6"/>
+                <Ellipse Fill="{StaticResource PrimaryMid}"
+                         WidthRequest="6" HeightRequest="6"/>
+            </HorizontalStackLayout>
+
+            <!-- Buttons -->
+            <Button Text="Hemen Başla"
                     Command="{Binding GoToRegisterCommand}"
-                    BackgroundColor="{StaticResource PrimaryLight}"
-                    TextColor="{StaticResource PrimaryPurple}"
-                    FontFamily="JakartaBold" FontSize="16"
-                    HeightRequest="52"
-                    CornerRadius="14"/>
-        </VerticalStackLayout>
+                    Style="{StaticResource AuthPrimaryButtonStyle}"
+                    Margin="0,0,0,10"/>
 
-    </Grid>
+            <Button Text="Zaten hesabım var"
+                    Command="{Binding GoToLoginCommand}"
+                    Style="{StaticResource AuthOutlineButtonStyle}"
+                    Margin="0,0,0,40"/>
+
+        </VerticalStackLayout>
+    </ScrollView>
 </ContentPage>
