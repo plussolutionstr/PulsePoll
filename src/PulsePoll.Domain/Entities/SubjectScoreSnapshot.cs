@@ -23,7 +23,7 @@ public class SubjectScoreSnapshot : EntityBase
 
     public int? ActiveDays30 { get; set; }
     public DateTime? LastSeenAt { get; set; }
-    public DateTime CalculatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CalculatedAt { get; set; } = TurkeyTime.Now;
 
     public Subject Subject { get; set; } = null!;
 }

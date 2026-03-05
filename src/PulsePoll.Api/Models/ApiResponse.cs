@@ -18,7 +18,7 @@ public class ApiErrorResponse : ApiResponse
 
 public class ResponseMeta
 {
-    public DateTime Timestamp { get; init; } = DateTime.UtcNow;
+    public DateTime Timestamp { get; init; } = TurkeyTime.Now;
     public string RequestId { get; init; } = string.Empty;
 }
 

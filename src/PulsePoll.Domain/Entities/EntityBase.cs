@@ -32,21 +32,21 @@ public abstract class EntityBase : INotifyPropertyChanged
     [NotMapped]
     public bool IsHardDelete { get; set; } = false;
 
-    public void SetCreated(int userId) => SetCreated(userId, DateTime.UtcNow);
+    public void SetCreated(int userId) => SetCreated(userId, TurkeyTime.Now);
     public void SetCreated(int userId, DateTime createdAt)
     {
         CreatedAt = createdAt;
         CreatedBy = userId;
     }
 
-    public void SetUpdated(int userId) => SetUpdated(userId, DateTime.UtcNow);
+    public void SetUpdated(int userId) => SetUpdated(userId, TurkeyTime.Now);
     public void SetUpdated(int userId, DateTime updatedAt)
     {
         UpdatedAt = updatedAt;
         UpdatedBy = userId;
     }
 
-    public void SetDeleted(int userId) => SetDeleted(userId, DateTime.UtcNow);
+    public void SetDeleted(int userId) => SetDeleted(userId, TurkeyTime.Now);
     public void SetDeleted(int userId, DateTime deletedAt)
     {
         DeletedAt = deletedAt;

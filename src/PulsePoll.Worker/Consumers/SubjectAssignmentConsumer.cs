@@ -34,7 +34,7 @@ public class SubjectAssignmentConsumer(
             var existingIds = await projectRepository.GetAssignedSubjectIdsAsync(msg.ProjectId);
             var existingSet = existingIds.ToHashSet();
 
-            var now = DateTime.UtcNow;
+            var now = TurkeyTime.Now;
             var toAssign = msg.SubjectIds
                 .Where(id => !existingSet.Contains(id))
                 .Select(id =>
@@ -57,7 +57,7 @@ public class SubjectAssignmentConsumer(
             job.AssignedCount = toAssign.Count;
             job.SkippedCount  = msg.SubjectIds.Length - toAssign.Count;
             job.Status        = AssignmentJobStatus.Completed;
-            job.CompletedAt   = DateTime.UtcNow;
+            job.CompletedAt   = TurkeyTime.Now;
             await jobRepository.UpdateAsync(job);
 
             logger.LogInformation(

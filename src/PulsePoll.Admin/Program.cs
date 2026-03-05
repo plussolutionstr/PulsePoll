@@ -174,8 +174,8 @@ app.MapPost("/api/auth/login", async (
     {
         IsPersistent = request.RememberMe,
         ExpiresUtc   = request.RememberMe
-            ? DateTimeOffset.UtcNow.AddDays(30)
-            : DateTimeOffset.UtcNow.AddHours(8),
+            ? TurkeyTime.OffsetNow.AddDays(30)
+            : TurkeyTime.OffsetNow.AddHours(8),
         AllowRefresh = true
     };
 

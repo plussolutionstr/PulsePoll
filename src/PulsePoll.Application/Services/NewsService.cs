@@ -56,8 +56,8 @@ public class NewsService(
             ImageUrl = mediaAsset.ObjectKey,
             MediaAssetId = mediaAsset.Id,
             LinkUrl = dto.LinkUrl,
-            StartsAt = NormalizeToUtc(dto.StartsAt),
-            EndsAt = NormalizeToUtc(dto.EndsAt),
+            StartsAt = NormalizeToTurkeyLocal(dto.StartsAt),
+            EndsAt = NormalizeToTurkeyLocal(dto.EndsAt),
             Order = dto.Order,
             IsActive = dto.IsActive
         };
@@ -85,8 +85,8 @@ public class NewsService(
         news.Title = dto.Title;
         news.Summary = dto.Summary;
         news.LinkUrl = dto.LinkUrl;
-        news.StartsAt = NormalizeToUtc(dto.StartsAt);
-        news.EndsAt = NormalizeToUtc(dto.EndsAt);
+        news.StartsAt = NormalizeToTurkeyLocal(dto.StartsAt);
+        news.EndsAt = NormalizeToTurkeyLocal(dto.EndsAt);
         news.Order = dto.Order;
         news.IsActive = dto.IsActive;
         news.SetUpdated(userId: 0);
@@ -129,10 +129,10 @@ public class NewsService(
         return storage.GetPresignedUrlAsync(MediaLibraryBucketName, objectKey, PresignedUrlExpirySeconds);
     }
 
-    private static DateTime NormalizeToUtc(DateTime value) => value.Kind switch
+    private static DateTime NormalizeToTurkeyLocal(DateTime value) => value.Kind switch
     {
-        DateTimeKind.Utc => value,
-        DateTimeKind.Local => value.ToUniversalTime(),
-        _ => DateTime.SpecifyKind(value, DateTimeKind.Local).ToUniversalTime()
+        DateTimeKind.Utc => TurkeyTime.FromUtc(value),
+        DateTimeKind.Local => DateTime.SpecifyKind(value, DateTimeKind.Unspecified),
+        _ => DateTime.SpecifyKind(value, DateTimeKind.Unspecified)
     };
 }

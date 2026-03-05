@@ -15,7 +15,7 @@ public partial class LoginViewModel : ObservableObject
         _serviceProvider = serviceProvider;
     }
 
-    [ObservableProperty] private string _email = string.Empty;
+    [ObservableProperty] private string _phoneNumber = string.Empty;
     [ObservableProperty] private string _password = string.Empty;
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasError))]
@@ -29,23 +29,23 @@ public partial class LoginViewModel : ObservableObject
     {
         ErrorMessage = string.Empty;
 
-        if (string.IsNullOrWhiteSpace(Email) || string.IsNullOrWhiteSpace(Password))
+        if (string.IsNullOrWhiteSpace(PhoneNumber) || string.IsNullOrWhiteSpace(Password))
         {
-            ErrorMessage = "E-posta ve parola gerekli.";
+            ErrorMessage = "Telefon numarası ve parola gerekli.";
             return;
         }
 
         IsBusy = true;
         try
         {
-            var success = await _apiClient.LoginAsync(Email.Trim(), Password);
+            var success = await _apiClient.LoginAsync(PhoneNumber.Trim(), Password);
             if (success)
             {
                 Application.Current!.Windows[0].Page = _serviceProvider.GetRequiredService<AppShell>();
             }
             else
             {
-                ErrorMessage = "E-posta veya parola hatalı.";
+                ErrorMessage = "Telefon numarası veya parola hatalı.";
             }
         }
         catch
@@ -62,6 +62,13 @@ public partial class LoginViewModel : ObservableObject
     private async Task GoToForgotPasswordAsync()
     {
         var page = _serviceProvider.GetRequiredService<Views.ForgotPasswordPage>();
+        await Application.Current!.Windows[0].Page!.Navigation.PushAsync(page);
+    }
+
+    [RelayCommand]
+    private async Task GoToRegisterAsync()
+    {
+        var page = _serviceProvider.GetRequiredService<Views.RegisterPage>();
         await Application.Current!.Windows[0].Page!.Navigation.PushAsync(page);
     }
 }

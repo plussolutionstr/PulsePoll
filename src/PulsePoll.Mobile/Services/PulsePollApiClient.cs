@@ -23,9 +23,9 @@ public sealed class PulsePollApiClient : IPulsePollApiClient
         _tokenProvider = tokenProvider;
     }
 
-    public async Task<bool> LoginAsync(string email, string password, CancellationToken ct = default)
+    public async Task<bool> LoginAsync(string phoneNumber, string password, CancellationToken ct = default)
     {
-        var payload = new { email, password };
+        var payload = new { phoneNumber, password };
         var response = await _http.PostAsJsonAsync("api/auth/login", payload, JsonOptions, ct);
 
         if (!response.IsSuccessStatusCode)

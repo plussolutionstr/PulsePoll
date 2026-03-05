@@ -11,7 +11,7 @@ public class SubjectAssignmentJob
     public int AssignedCount { get; set; }
     public int SkippedCount { get; set; }
     public AssignmentJobStatus Status { get; set; } = AssignmentJobStatus.Pending;
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; } = TurkeyTime.Now;
     public DateTime? CompletedAt { get; set; }
 
     public Project Project { get; set; } = null!;

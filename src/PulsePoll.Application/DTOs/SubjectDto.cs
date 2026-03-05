@@ -92,7 +92,7 @@ public record VerifyOtpDto(string PhoneNumber, string Otp);
 
 public record OtpVerifiedDto(string RegistrationToken);
 
-public record LoginDto(string Email, string Password);
+public record LoginDto(string PhoneNumber, string Password);
 
 public record AuthResultDto(string AccessToken, string RefreshToken, DateTime ExpiresAt);
 

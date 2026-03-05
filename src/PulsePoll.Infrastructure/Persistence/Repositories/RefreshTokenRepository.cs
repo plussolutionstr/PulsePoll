@@ -26,12 +26,12 @@ public class RefreshTokenRepository(AppDbContext db) : IRefreshTokenRepository
     public async Task RevokeAllForSubjectAsync(int subjectId, string reason)
     {
         var tokens = await db.RefreshTokens
-            .Where(r => r.SubjectId == subjectId && r.RevokedAt == null && r.ExpiresAt > DateTime.UtcNow)
+            .Where(r => r.SubjectId == subjectId && r.RevokedAt == null && r.ExpiresAt > TurkeyTime.Now)
             .ToListAsync();
 
         foreach (var token in tokens)
         {
-            token.RevokedAt = DateTime.UtcNow;
+            token.RevokedAt = TurkeyTime.Now;
             token.RevokedReason = reason;
         }
 

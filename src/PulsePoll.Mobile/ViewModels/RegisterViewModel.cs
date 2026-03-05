@@ -24,6 +24,7 @@ public partial class RegisterViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(IsInfoStep))]
     [NotifyPropertyChangedFor(nameof(IsKvkkStep))]
     [NotifyPropertyChangedFor(nameof(StepTitle))]
+    [NotifyPropertyChangedFor(nameof(StepSubtitle))]
     private int _currentStep;
 
     public bool IsPhoneStep => CurrentStep == 0;
@@ -33,10 +34,19 @@ public partial class RegisterViewModel : ObservableObject
 
     public string StepTitle => CurrentStep switch
     {
-        0 => "Telefon Numarası",
+        0 => "Hesap Oluştur",
         1 => "Doğrulama Kodu",
         2 => "Kişisel Bilgiler",
         3 => "KVKK Onayı",
+        _ => ""
+    };
+
+    public string StepSubtitle => CurrentStep switch
+    {
+        0 => "Hemen ücretsiz kayıt ol, anketlere katılmaya başla.",
+        1 => "Telefonunuza gönderilen 6 haneli kodu girin.",
+        2 => "Bilgilerinizi eksiksiz doldurun.",
+        3 => "",
         _ => ""
     };
 
@@ -51,7 +61,14 @@ public partial class RegisterViewModel : ObservableObject
     [ObservableProperty] private string _firstName = string.Empty;
     [ObservableProperty] private string _lastName = string.Empty;
     [ObservableProperty] private string _email = string.Empty;
-    [ObservableProperty] private string _password = string.Empty;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(StrengthColor1))]
+    [NotifyPropertyChangedFor(nameof(StrengthColor2))]
+    [NotifyPropertyChangedFor(nameof(StrengthColor3))]
+    [NotifyPropertyChangedFor(nameof(StrengthColor4))]
+    [NotifyPropertyChangedFor(nameof(StrengthLabel))]
+    [NotifyPropertyChangedFor(nameof(StrengthLabelColor))]
+    private string _password = string.Empty;
     [ObservableProperty] private string _passwordConfirm = string.Empty;
     [ObservableProperty] private int _selectedGender;
     [ObservableProperty] private DateTime _birthDate = new(2000, 1, 1);
@@ -71,6 +88,9 @@ public partial class RegisterViewModel : ObservableObject
 
     // Referans kodu
     [ObservableProperty] private string _referenceCode = string.Empty;
+
+    // District loading race condition guard
+    private int _lastRequestedCityId;
 
     // Lookup collections
     [ObservableProperty] private ObservableCollection<LookupItemDto> _cities = [];
@@ -96,13 +116,25 @@ public partial class RegisterViewModel : ObservableObject
     async partial void OnSelectedCityChanged(LookupItemDto? value)
     {
         if (value is null) return;
+        var cityId = value.Id;
+        _lastRequestedCityId = cityId;
+
+        // Immediately clear district on UI thread before async call
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            SelectedDistrict = null;
+            Districts.Clear();
+        });
+
         try
         {
-            var list = await _api.GetRegisterDistrictsAsync(value.Id);
+            var list = await _api.GetRegisterDistrictsAsync(cityId);
+            if (_lastRequestedCityId != cityId) return; // stale response
             MainThread.BeginInvokeOnMainThread(() =>
             {
-                Districts = new ObservableCollection<LookupItemDto>(list);
-                SelectedDistrict = null;
+                Districts.Clear();
+                foreach (var item in list)
+                    Districts.Add(item);
             });
         }
         catch (Exception ex)
@@ -300,6 +332,70 @@ public partial class RegisterViewModel : ObservableObject
         if (CurrentStep > 0)
             CurrentStep--;
     }
+
+    [RelayCommand]
+    private async Task GoToLoginAsync()
+    {
+        await Application.Current!.Windows[0].Page!.Navigation.PopAsync();
+    }
+
+    // Password strength
+    private int PasswordStrengthLevel
+    {
+        get
+        {
+            if (string.IsNullOrEmpty(Password)) return 0;
+            int score = 0;
+            if (Password.Length >= 8) score++;
+            if (Password.Any(char.IsUpper) && Password.Any(char.IsLower)) score++;
+            if (Password.Any(char.IsDigit)) score++;
+            if (Password.Any(c => !char.IsLetterOrDigit(c))) score++;
+            return score;
+        }
+    }
+
+    private static Color GetBorderColor() =>
+        Application.Current!.Resources.TryGetValue("CardBorder", out var c) ? (Color)c : Colors.LightGray;
+    private static Color GetDangerColor() =>
+        Application.Current!.Resources.TryGetValue("Danger", out var c) ? (Color)c : Colors.Red;
+    private static Color GetAmberColor() =>
+        Application.Current!.Resources.TryGetValue("Amber", out var c) ? (Color)c : Colors.Orange;
+    private static Color GetSuccessColor() =>
+        Application.Current!.Resources.TryGetValue("Success", out var c) ? (Color)c : Colors.Green;
+
+    private Color GetStrengthSegColor(int segment)
+    {
+        var level = PasswordStrengthLevel;
+        if (segment > level) return GetBorderColor();
+        return level switch
+        {
+            1 => GetDangerColor(),
+            2 => GetAmberColor(),
+            _ => GetSuccessColor()
+        };
+    }
+
+    public Color StrengthColor1 => GetStrengthSegColor(1);
+    public Color StrengthColor2 => GetStrengthSegColor(2);
+    public Color StrengthColor3 => GetStrengthSegColor(3);
+    public Color StrengthColor4 => GetStrengthSegColor(4);
+
+    public string StrengthLabel => PasswordStrengthLevel switch
+    {
+        0 => "",
+        1 => "Zayıf",
+        2 => "Orta",
+        3 => "İyi",
+        4 => "Güçlü",
+        _ => ""
+    };
+
+    public Color StrengthLabelColor => PasswordStrengthLevel switch
+    {
+        1 => GetDangerColor(),
+        2 => GetAmberColor(),
+        _ => GetSuccessColor()
+    };
 
     private static bool IsPasswordStrong(string password)
     {

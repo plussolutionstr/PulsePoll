@@ -86,7 +86,7 @@ public class WalletRepository(AppDbContext db) : IWalletRepository
                 QueueName = Queues.WithdrawalRequested,
                 MessageType = nameof(WithdrawalRequestedMessage),
                 Payload = JsonSerializer.Serialize(message),
-                OccurredAt = DateTime.UtcNow
+                OccurredAt = TurkeyTime.Now
             };
             db.OutboxMessages.Add(outboxMessage);
 

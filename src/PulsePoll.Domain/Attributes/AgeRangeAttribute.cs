@@ -21,7 +21,7 @@ public class AgeRangeAttribute(int minimumAge = 18, int maximumAge = 90, bool al
         if (birthDate is null)
             return new ValidationResult("Geçersiz tarih formatı.");
 
-        var today = DateOnly.FromDateTime(DateTime.Today);
+        var today = DateOnly.FromDateTime(TurkeyTime.Today);
 
         if (birthDate > today)
             return new ValidationResult("Doğum tarihi gelecekte olamaz.");

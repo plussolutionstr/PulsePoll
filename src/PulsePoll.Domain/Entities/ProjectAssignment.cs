@@ -6,7 +6,7 @@ public class ProjectAssignment : EntityBase
 {
     public int ProjectId { get; set; }
     public int SubjectId { get; set; }
-    public DateTime AssignedAt { get; set; } = DateTime.UtcNow;
+    public DateTime AssignedAt { get; set; } = TurkeyTime.Now;
     public AssignmentStatus Status { get; set; } = AssignmentStatus.NotStarted;
     public DateTime? CompletedAt { get; set; }
     public decimal? EarnedAmount { get; set; }

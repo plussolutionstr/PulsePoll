@@ -25,7 +25,7 @@ public class SubjectScoreService(
             return new Dictionary<int, SubjectScoreDto>();
 
         var assignments = await projectRepository.GetAssignmentsBySubjectIdsAsync(ids);
-        var nowUtc = DateTime.UtcNow;
+        var nowUtc = TurkeyTime.Now;
         var config = await LoadConfigAsync();
         var activityStats = await activityRepository.GetStatsBySubjectIdsAsync(ids, nowUtc.AddDays(-30));
         var grouped = assignments

@@ -6,7 +6,7 @@ namespace PulsePoll.Mobile.Services;
 public interface IPulsePollApiClient
 {
     // Auth
-    Task<bool> LoginAsync(string email, string password, CancellationToken ct = default);
+    Task<bool> LoginAsync(string phoneNumber, string password, CancellationToken ct = default);
     Task SendOtpAsync(string phoneNumber, CancellationToken ct = default);
     Task<string> VerifyOtpAsync(string phoneNumber, string otp, CancellationToken ct = default);
     Task RegisterAsync(object dto, CancellationToken ct = default);

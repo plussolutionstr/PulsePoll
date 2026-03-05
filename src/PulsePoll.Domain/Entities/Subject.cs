@@ -29,7 +29,7 @@ public class Subject : EntityBase
     {
         get
         {
-            var today = DateOnly.FromDateTime(DateTime.Today);
+            var today = DateOnly.FromDateTime(TurkeyTime.Today);
             var age = today.Year - BirthDate.Year;
             if (BirthDate > today.AddYears(-age)) age--;
             return age;

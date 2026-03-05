@@ -4,7 +4,7 @@ public class Referral : EntityBase
 {
     public int ReferrerId { get; set; }
     public int ReferredSubjectId { get; set; }
-    public DateTime ReferredAt { get; set; } = DateTime.UtcNow;
+    public DateTime ReferredAt { get; set; } = TurkeyTime.Now;
     public decimal? CommissionEarned { get; set; }
     public decimal? CommissionAmountTry { get; set; }
     public string? CommissionUnitCode { get; set; }

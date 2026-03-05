@@ -66,6 +66,91 @@
         <Setter Property="Padding" Value="16"/>
     </Style>
 
+    <!-- ===== Auth Styles ===== -->
+    <Style x:Key="AuthTitleStyle" TargetType="Label">
+        <Setter Property="FontFamily" Value="JakartaExtraBold"/>
+        <Setter Property="FontSize" Value="24"/>
+        <Setter Property="TextColor" Value="{StaticResource TextPrimary}"/>
+        <Setter Property="HorizontalTextAlignment" Value="Start"/>
+    </Style>
+
+    <Style x:Key="AuthSubtitleStyle" TargetType="Label">
+        <Setter Property="FontFamily" Value="JakartaRegular"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="TextColor" Value="{StaticResource TextSecondary}"/>
+        <Setter Property="HorizontalTextAlignment" Value="Start"/>
+        <Setter Property="LineBreakMode" Value="WordWrap"/>
+    </Style>
+
+    <Style x:Key="FieldLabelStyle" TargetType="Label">
+        <Setter Property="FontFamily" Value="JakartaBold"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="TextColor" Value="{StaticResource TextSecondary}"/>
+        <Setter Property="TextTransform" Value="Uppercase"/>
+        <Setter Property="Margin" Value="0,0,0,6"/>
+    </Style>
+
+    <Style x:Key="AuthFieldBorderStyle" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="{StaticResource White}"/>
+        <Setter Property="Stroke" Value="{StaticResource CardBorder}"/>
+        <Setter Property="StrokeThickness" Value="1.5"/>
+        <Setter Property="StrokeShape" Value="RoundRectangle 14"/>
+        <Setter Property="HeightRequest" Value="50"/>
+        <Setter Property="Padding" Value="0"/>
+    </Style>
+
+    <Style x:Key="AuthFieldEntryStyle" TargetType="Entry">
+        <Setter Property="FontFamily" Value="JakartaMedium"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="TextColor" Value="{StaticResource TextPrimary}"/>
+        <Setter Property="PlaceholderColor" Value="{StaticResource TextTertiary}"/>
+        <Setter Property="BackgroundColor" Value="Transparent"/>
+        <Setter Property="Margin" Value="0"/>
+    </Style>
+
+    <Style x:Key="AuthPrimaryButtonStyle" TargetType="Button">
+        <Setter Property="BackgroundColor" Value="{StaticResource PrimaryPurple}"/>
+        <Setter Property="TextColor" Value="{StaticResource White}"/>
+        <Setter Property="FontFamily" Value="JakartaBold"/>
+        <Setter Property="FontSize" Value="15"/>
+        <Setter Property="HeightRequest" Value="52"/>
+        <Setter Property="CornerRadius" Value="16"/>
+        <Setter Property="BorderWidth" Value="0"/>
+    </Style>
+
+    <Style x:Key="AuthOutlineButtonStyle" TargetType="Button">
+        <Setter Property="BackgroundColor" Value="{StaticResource White}"/>
+        <Setter Property="TextColor" Value="{StaticResource TextPrimary}"/>
+        <Setter Property="FontFamily" Value="JakartaSemiBold"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="HeightRequest" Value="50"/>
+        <Setter Property="CornerRadius" Value="14"/>
+        <Setter Property="BorderColor" Value="{StaticResource CardBorder}"/>
+        <Setter Property="BorderWidth" Value="1.5"/>
+    </Style>
+
+    <Style x:Key="AuthBottomLinkStyle" TargetType="Label">
+        <Setter Property="FontFamily" Value="JakartaMedium"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="TextColor" Value="{StaticResource TextSecondary}"/>
+        <Setter Property="HorizontalTextAlignment" Value="Center"/>
+    </Style>
+
+    <Style x:Key="AuthLinkStyle" TargetType="Label">
+        <Setter Property="FontFamily" Value="JakartaSemiBold"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="TextColor" Value="{StaticResource PrimaryPurple}"/>
+    </Style>
+
+    <!-- Feature pill for welcome screen -->
+    <Style x:Key="FeaturePillStyle" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="{StaticResource White}"/>
+        <Setter Property="Stroke" Value="{StaticResource CardBorder}"/>
+        <Setter Property="StrokeThickness" Value="1"/>
+        <Setter Property="StrokeShape" Value="RoundRectangle 12"/>
+        <Setter Property="Padding" Value="8,14"/>
+    </Style>
+
     <!-- ===== Default Styles ===== -->
     <Style TargetType="Page" ApplyToDerivedTypes="True">
         <Setter Property="Padding" Value="0"/>

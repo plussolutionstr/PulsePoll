@@ -11,7 +11,7 @@ public class SubjectScoreSnapshotConfiguration : IEntityTypeConfiguration<Subjec
         builder.Property(x => x.Score).HasPrecision(6, 2);
         builder.Property(x => x.CoreScore).HasPrecision(6, 2);
         builder.Property(x => x.ActivityMultiplier).HasPrecision(6, 3);
-        builder.Property(x => x.CalculatedAt).HasColumnType("timestamp with time zone");
+        builder.Property(x => x.CalculatedAt).HasColumnType("timestamp without time zone");
 
         builder.HasIndex(x => x.SubjectId)
             .IsUnique()
@@ -24,4 +24,3 @@ public class SubjectScoreSnapshotConfiguration : IEntityTypeConfiguration<Subjec
             .OnDelete(DeleteBehavior.Cascade);
     }
 }
-

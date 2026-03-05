@@ -213,7 +213,7 @@ public class WalletService(
         var bankAccount = await walletRepository.GetBankAccountAsync(subjectId, dto.BankAccountId)
             ?? throw new NotFoundException("Banka hesabı");
         var referenceId = $"withdrawal:{Guid.NewGuid():N}";
-        var requestedAt = DateTime.UtcNow;
+        var requestedAt = TurkeyTime.Now;
         await walletRepository.CreateWithdrawalTransactionAsync(
             subjectId,
             dto.BankAccountId,
@@ -238,7 +238,7 @@ public class WalletService(
             throw new BusinessException("ALREADY_PROCESSED", "Bu talep zaten işlenmiş.");
 
         request.Status      = ApprovalStatus.Approved;
-        request.ProcessedAt = DateTime.UtcNow;
+        request.ProcessedAt = TurkeyTime.Now;
         request.ProcessedBy = adminId;
         request.SetUpdated(adminId);
         await withdrawalRequestRepository.UpdateAsync(request);
@@ -257,7 +257,7 @@ public class WalletService(
 
         request.Status          = ApprovalStatus.Rejected;
         request.RejectionReason = reason;
-        request.ProcessedAt     = DateTime.UtcNow;
+        request.ProcessedAt     = TurkeyTime.Now;
         request.ProcessedBy     = adminId;
         request.SetUpdated(adminId);
 

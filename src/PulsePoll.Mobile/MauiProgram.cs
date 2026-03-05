@@ -21,6 +21,28 @@ public static class MauiProgram
                 fonts.AddFont("PlusJakartaSans-SemiBold.ttf", "JakartaSemiBold");
                 fonts.AddFont("PlusJakartaSans-Bold.ttf", "JakartaBold");
                 fonts.AddFont("PlusJakartaSans-ExtraBold.ttf", "JakartaExtraBold");
+            })
+            .ConfigureMauiHandlers(handlers =>
+            {
+#if IOS
+                handlers.AddHandler<Entry, Microsoft.Maui.Handlers.EntryHandler>();
+                Microsoft.Maui.Handlers.EntryHandler.Mapper.AppendToMapping("NoBorder", (handler, view) =>
+                {
+                    handler.PlatformView.BorderStyle = UIKit.UITextBorderStyle.None;
+                });
+
+                handlers.AddHandler<Picker, Microsoft.Maui.Handlers.PickerHandler>();
+                Microsoft.Maui.Handlers.PickerHandler.Mapper.AppendToMapping("NoBorder", (handler, view) =>
+                {
+                    handler.PlatformView.BorderStyle = UIKit.UITextBorderStyle.None;
+                });
+
+                handlers.AddHandler<DatePicker, Microsoft.Maui.Handlers.DatePickerHandler>();
+                Microsoft.Maui.Handlers.DatePickerHandler.Mapper.AppendToMapping("NoBorder", (handler, view) =>
+                {
+                    handler.PlatformView.BorderStyle = UIKit.UITextBorderStyle.None;
+                });
+#endif
             });
 
         // Shell & Auth

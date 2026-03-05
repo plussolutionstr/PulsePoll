@@ -24,7 +24,7 @@ public class SubjectTelemetryService(
         {
             SubjectId = subjectId,
             Type = dto.Type,
-            OccurredAt = DateTime.UtcNow,
+            OccurredAt = TurkeyTime.Now,
             Platform = Truncate(dto.Platform, 40),
             AppVersion = Truncate(dto.AppVersion, 30),
             DeviceIdHash = HashDeviceId(dto.DeviceId)
