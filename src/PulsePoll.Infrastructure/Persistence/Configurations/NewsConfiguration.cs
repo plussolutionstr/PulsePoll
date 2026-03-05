@@ -9,7 +9,7 @@ public class NewsConfiguration : IEntityTypeConfiguration<News>
     public void Configure(EntityTypeBuilder<News> builder)
     {
         builder.Property(n => n.Title).IsRequired().HasMaxLength(200);
-        builder.Property(n => n.Summary).IsRequired().HasMaxLength(1000);
+        builder.Property(n => n.Summary).IsRequired().HasMaxLength(5000);
         builder.Property(n => n.ImageUrl).IsRequired().HasMaxLength(500);
         builder.Property(n => n.LinkUrl).HasMaxLength(500);
 
