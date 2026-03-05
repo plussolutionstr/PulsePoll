@@ -81,11 +81,17 @@ public class SubjectService(
             ?? throw new NotFoundException("Denek");
 
         var ext = Path.GetExtension(fileName);
-        var objectName = $"profile-photos/{subjectId}{ext}";
+        var objectName = $"{subjectId}{ext}";
 
         if (!string.IsNullOrEmpty(subject.ProfilePhotoUrl))
         {
-            try { await storageService.DeleteAsync("profile-photos", $"{subjectId}{Path.GetExtension(subject.ProfilePhotoUrl)}"); }
+            try
+            {
+                var oldKey = subject.ProfilePhotoUrl.StartsWith("profile-photos/")
+                    ? subject.ProfilePhotoUrl["profile-photos/".Length..]
+                    : subject.ProfilePhotoUrl;
+                await storageService.DeleteAsync("profile-photos", oldKey);
+            }
             catch { /* ignore if old photo doesn't exist */ }
         }
 
@@ -156,10 +162,10 @@ public class SubjectService(
         {
             try
             {
-                var objectName = s.ProfilePhotoUrl.StartsWith("profile-photos/")
+                var key = s.ProfilePhotoUrl.StartsWith("profile-photos/")
                     ? s.ProfilePhotoUrl["profile-photos/".Length..]
                     : s.ProfilePhotoUrl;
-                photoUrl = await storageService.GetPresignedUrlAsync("profile-photos", objectName);
+                photoUrl = await storageService.GetPresignedUrlAsync("profile-photos", key);
             }
             catch { /* presigned URL üretilemezse null bırak */ }
         }

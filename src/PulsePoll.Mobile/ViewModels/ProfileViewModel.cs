@@ -177,6 +177,17 @@ public partial class ProfileViewModel : ObservableObject
         _ = LoadDistrictsAsync(value.Id);
     }
 
+    partial void OnIsHeadOfFamilyChanged(bool value)
+    {
+        if (_isInitialLoad) return;
+        if (value)
+        {
+            SelectedHofProfession = null;
+            SelectedHofEducationLevel = null;
+            IsHeadOfFamilyRetired = false;
+        }
+    }
+
     private async Task LoadDistrictsAsync(int cityId)
     {
         var districts = await _api.GetDistrictsAsync(cityId);
