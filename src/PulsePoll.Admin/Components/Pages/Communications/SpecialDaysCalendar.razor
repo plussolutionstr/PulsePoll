@@ -201,7 +201,7 @@
 
 @code {
     private DxContextMenu? _contextMenu;
-    private int _year = DateTime.Now.Year;
+    private int _year = TurkeyTime.Now.Year;
     private List<SpecialDayDto> _items = [];
     private bool _isSyncing;
     private bool _popupVisible;
@@ -445,7 +445,7 @@
         public int? Id { get; set; }
         public string EventCode { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
-        public DateTime Date { get; set; } = DateTime.Today;
+        public DateTime Date { get; set; } = TurkeyTime.Today;
         public SpecialDayCategory Category { get; set; } = SpecialDayCategory.Special;
         public bool IsActive { get; set; } = true;
     }

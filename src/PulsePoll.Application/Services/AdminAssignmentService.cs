@@ -184,7 +184,7 @@ public class AdminAssignmentService(
             }
 
             assignment.RewardStatus = RewardStatus.Approved;
-            assignment.RewardProcessedAt = DateTime.UtcNow;
+            assignment.RewardProcessedAt = TurkeyTime.Now;
             assignment.RewardProcessedBy = adminId;
             assignment.RewardRejectionReason = null;
             assignment.SetUpdated(adminId);
@@ -240,7 +240,7 @@ public class AdminAssignmentService(
 
             processedAmount += assignment.EarnedAmount ?? 0m;
             assignment.RewardStatus = RewardStatus.Rejected;
-            assignment.RewardProcessedAt = DateTime.UtcNow;
+            assignment.RewardProcessedAt = TurkeyTime.Now;
             assignment.RewardProcessedBy = adminId;
             assignment.RewardRejectionReason = reason.Trim();
             assignment.SetUpdated(adminId);
@@ -272,7 +272,7 @@ public class AdminAssignmentService(
             throw new BusinessException("JOB_NOT_CANCELLABLE", "Yalnızca bekleyen veya işlenen işler iptal edilebilir.");
 
         job.Status = AssignmentJobStatus.Failed;
-        job.CompletedAt = DateTime.UtcNow;
+        job.CompletedAt = TurkeyTime.Now;
         await jobRepository.UpdateAsync(job);
 
         logger.LogInformation("Atama işi iptal edildi: JobId={JobId}", jobId);

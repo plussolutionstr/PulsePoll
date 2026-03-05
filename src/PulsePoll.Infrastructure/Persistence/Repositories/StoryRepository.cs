@@ -17,7 +17,7 @@ public class StoryRepository(AppDbContext db) : IStoryRepository
 
     public Task<List<Story>> GetActiveAsync()
     {
-        var now = DateTime.UtcNow;
+        var now = TurkeyTime.Now;
         return db.Stories
             .Include(s => s.MediaAsset)
             .Include(s => s.StoryMediaAsset)
@@ -52,7 +52,7 @@ public class StoryRepository(AppDbContext db) : IStoryRepository
         {
             SubjectId = subjectId,
             StoryId = storyId,
-            SeenAt = DateTime.UtcNow
+            SeenAt = TurkeyTime.Now
         };
         storyView.SetCreated(subjectId);
 

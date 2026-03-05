@@ -50,7 +50,7 @@ public class AssignmentService(
         if (IsTerminalStatus(assignment.Status))
             return;
 
-        var now = DateTime.UtcNow;
+        var now = TurkeyTime.Now;
         assignment.Status = status;
         assignment.CompletedAt = IsTerminalStatus(status) ? now : null;
 

@@ -359,7 +359,7 @@ else
         await LoadPermissionsAsync();
         _activeTab = IsTemplatesRoute() ? "templates" : "campaigns";
         await LoadAsync();
-        await LoadSpecialDayOptionsAsync(DateTime.Now.Year);
+        await LoadSpecialDayOptionsAsync(TurkeyTime.Now.Year);
     }
 
     private async Task LoadPermissionsAsync()
@@ -622,7 +622,7 @@ else
         try
         {
             var adminId = await GetAdminIdAsync();
-            var date = DateOnly.FromDateTime(DateTime.Now);
+            var date = DateOnly.FromDateTime(TurkeyTime.Now);
             var result = await MessageAutomationService.RunCampaignAsync(campaignId, date, adminId);
             Toast.Success($"Kampanya çalıştı. Hedef: {result.TargetCount}, Kuyruk: {result.QueuedCount}, Atlanan: {result.SkippedCount}");
         }
@@ -651,7 +651,7 @@ else
         try
         {
             var adminId = await GetAdminIdAsync();
-            var year = DateTime.Now.Year;
+            var year = TurkeyTime.Now.Year;
             var result = await SpecialDayCalendarService.SyncYearAsync(year, adminId);
             await LoadSpecialDayOptionsAsync(year);
             Toast.Success($"Takvim senkronize edildi. Yıl: {result.Year}, Toplam gün: {result.Count}");

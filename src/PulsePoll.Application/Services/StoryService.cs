@@ -84,8 +84,8 @@ public class StoryService(
             StoryMediaAssetId = storyMediaAssetId,
             LinkUrl   = dto.LinkUrl,
             Description = dto.Description,
-            StartsAt  = NormalizeToUtc(dto.StartsAt),
-            EndsAt    = NormalizeToUtc(dto.EndsAt),
+            StartsAt  = NormalizeToTurkeyLocal(dto.StartsAt),
+            EndsAt    = NormalizeToTurkeyLocal(dto.EndsAt),
             Order     = dto.Order,
             IsActive  = dto.IsActive
         };
@@ -132,8 +132,8 @@ public class StoryService(
         story.Title     = dto.Title;
         story.LinkUrl   = dto.LinkUrl;
         story.Description = dto.Description;
-        story.StartsAt  = NormalizeToUtc(dto.StartsAt);
-        story.EndsAt    = NormalizeToUtc(dto.EndsAt);
+        story.StartsAt  = NormalizeToTurkeyLocal(dto.StartsAt);
+        story.EndsAt    = NormalizeToTurkeyLocal(dto.EndsAt);
         story.Order     = dto.Order;
         story.IsActive  = dto.IsActive;
         story.SetUpdated(userId: 0);
@@ -220,10 +220,10 @@ public class StoryService(
         return await storage.GetPresignedUrlAsync(MediaLibraryBucketName, story.StoryImageUrl, PresignedUrlExpirySeconds);
     }
 
-    private static DateTime NormalizeToUtc(DateTime value) => value.Kind switch
+    private static DateTime NormalizeToTurkeyLocal(DateTime value) => value.Kind switch
     {
-        DateTimeKind.Utc => value,
-        DateTimeKind.Local => value.ToUniversalTime(),
-        _ => DateTime.SpecifyKind(value, DateTimeKind.Local).ToUniversalTime()
+        DateTimeKind.Utc => TurkeyTime.FromUtc(value),
+        DateTimeKind.Local => DateTime.SpecifyKind(value, DateTimeKind.Unspecified),
+        _ => DateTime.SpecifyKind(value, DateTimeKind.Unspecified)
     };
 }

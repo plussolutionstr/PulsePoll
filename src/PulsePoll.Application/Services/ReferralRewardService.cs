@@ -69,7 +69,7 @@ public class ReferralRewardService(
         referral.CommissionUnitCode = rewardUnit.UnitCode;
         referral.CommissionUnitLabel = rewardUnit.UnitLabel;
         referral.CommissionUnitTryMultiplier = rewardUnit.TryMultiplier;
-        referral.CommissionGrantedAt = DateTime.UtcNow;
+        referral.CommissionGrantedAt = TurkeyTime.Now;
         referral.SetUpdated(actorId);
         await subjectRepository.UpdateReferralAsync(referral);
 

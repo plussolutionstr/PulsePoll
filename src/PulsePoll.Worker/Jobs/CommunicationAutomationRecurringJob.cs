@@ -13,7 +13,7 @@ public class CommunicationAutomationRecurringJob(
     {
         var config = await communicationAutomationConfigService.GetAsync();
         var timeZone = ResolveTimeZone(config.TimeZoneId);
-        var nowLocal = TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, timeZone).DateTime;
+        var nowLocal = TimeZoneInfo.ConvertTime(TurkeyTime.OffsetNow, timeZone).DateTime;
         var today = DateOnly.FromDateTime(nowLocal);
 
         await specialDayCalendarService.SyncYearAsync(nowLocal.Year, adminId: 0);

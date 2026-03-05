@@ -45,7 +45,7 @@ public class NotificationRepository(AppDbContext db) : INotificationRepository
     {
         await db.Notifications
             .Where(n => n.Id == notificationId && n.SubjectId == subjectId && n.DeletedAt == null)
-            .ExecuteUpdateAsync(s => s.SetProperty(n => n.DeletedAt, DateTime.UtcNow));
+            .ExecuteUpdateAsync(s => s.SetProperty(n => n.DeletedAt, TurkeyTime.Now));
     }
 
     public async Task UpdateDeliveryStatusAsync(int notificationId, DeliveryStatus status, string? errorMessage)

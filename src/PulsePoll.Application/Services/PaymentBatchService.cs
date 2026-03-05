@@ -40,7 +40,7 @@ public class PaymentBatchService(
             throw new BusinessException("ALREADY_PROCESSED", "Bu talep zaten işlenmiş.");
 
         request.Status      = ApprovalStatus.Approved;
-        request.ProcessedAt = DateTime.UtcNow;
+        request.ProcessedAt = TurkeyTime.Now;
         request.ProcessedBy = adminId;
         request.SetUpdated(adminId);
         await withdrawalRepo.UpdateAsync(request);
@@ -58,7 +58,7 @@ public class PaymentBatchService(
 
         request.Status          = ApprovalStatus.Rejected;
         request.RejectionReason = reason;
-        request.ProcessedAt     = DateTime.UtcNow;
+        request.ProcessedAt     = TurkeyTime.Now;
         request.ProcessedBy     = adminId;
         request.SetUpdated(adminId);
 
@@ -119,7 +119,7 @@ public class PaymentBatchService(
         var selectedRequests = dto.WithdrawalRequestIds.Select(id => selectedMap[id]).ToList();
 
         // Batch numarası: PB-YYYYMMDD-NNN
-        var datePrefix  = DateTime.UtcNow.ToString("yyyyMMdd");
+        var datePrefix  = TurkeyTime.Now.ToString("yyyyMMdd");
         var seq         = await batchRepo.GetNextSequenceAsync(datePrefix);
         var batchNumber = $"PB-{datePrefix}-{seq:D3}";
 
@@ -161,7 +161,7 @@ public class PaymentBatchService(
             throw new BusinessException("INVALID_STATUS", "Yalnızca Taslak paketler gönderilebilir.");
 
         batch.Status  = PaymentBatchStatus.Sent;
-        batch.SentAt  = DateTime.UtcNow;
+        batch.SentAt  = TurkeyTime.Now;
         batch.SetUpdated(adminId);
         await batchRepo.UpdateAsync(batch);
 
@@ -181,7 +181,7 @@ public class PaymentBatchService(
 
         item.Status        = dto.Status;
         item.FailureReason = dto.FailureReason;
-        item.ProcessedAt   = DateTime.UtcNow;
+        item.ProcessedAt   = TurkeyTime.Now;
         item.SetUpdated(adminId);
 
         batch.SetUpdated(adminId);
@@ -202,7 +202,7 @@ public class PaymentBatchService(
                 $"{pendingItems.Count} kalem hâlâ beklemede. Önce tüm kalemlerin durumunu güncelleyin.");
 
         batch.Status      = PaymentBatchStatus.Completed;
-        batch.CompletedAt = DateTime.UtcNow;
+        batch.CompletedAt = TurkeyTime.Now;
         batch.SetUpdated(adminId);
         await batchRepo.UpdateAsync(batch);
 
@@ -224,7 +224,7 @@ public class PaymentBatchService(
             PaymentSettingKeys.BankTransferFileNameTemplate,
             PaymentFileTemplateDefaults.BankTransferFileNameTemplate);
 
-        var now = DateTime.Now;
+        var now = TurkeyTime.Now;
         var (headerTemplate, detailTemplate, trailerTemplate) = ParseBankTransferTemplate(fileTemplate);
         var detailLines = batch.Items.Select(i => BuildDetailLine(i, detailTemplate, now)).ToList();
 

@@ -677,8 +677,8 @@
                 && between.BeginExpression is OperandValue { Value: int minAge }
                 && between.EndExpression is OperandValue { Value: int maxAge }
                 => new GroupOperator(GroupOperatorType.And,
-                    new BinaryOperator("BirthDate", DateOnly.FromDateTime(DateTime.Today).AddYears(-maxAge - 1), BinaryOperatorType.Greater),
-                    new BinaryOperator("BirthDate", DateOnly.FromDateTime(DateTime.Today).AddYears(-minAge), BinaryOperatorType.LessOrEqual)),
+                    new BinaryOperator("BirthDate", DateOnly.FromDateTime(TurkeyTime.Today).AddYears(-maxAge - 1), BinaryOperatorType.Greater),
+                    new BinaryOperator("BirthDate", DateOnly.FromDateTime(TurkeyTime.Today).AddYears(-minAge), BinaryOperatorType.LessOrEqual)),
 
             GroupOperator group => new GroupOperator(group.OperatorType,
                 group.Operands.Select(o => TransformAgeToBirthDate(o)!).ToList()),
@@ -691,7 +691,7 @@
 
     private static CriteriaOperator TransformAgeBinary(BinaryOperatorType opType, int age)
     {
-        var today = DateOnly.FromDateTime(DateTime.Today);
+        var today = DateOnly.FromDateTime(TurkeyTime.Today);
         return opType switch
         {
             BinaryOperatorType.Equal => new GroupOperator(GroupOperatorType.And,

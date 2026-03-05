@@ -8,7 +8,7 @@ public class SubjectAppActivityConfiguration : IEntityTypeConfiguration<SubjectA
 {
     public void Configure(EntityTypeBuilder<SubjectAppActivity> builder)
     {
-        builder.Property(x => x.OccurredAt).HasColumnType("timestamp with time zone");
+        builder.Property(x => x.OccurredAt).HasColumnType("timestamp without time zone");
         builder.Property(x => x.Platform).HasMaxLength(40);
         builder.Property(x => x.AppVersion).HasMaxLength(30);
         builder.Property(x => x.DeviceIdHash).HasMaxLength(128);
@@ -23,4 +23,3 @@ public class SubjectAppActivityConfiguration : IEntityTypeConfiguration<SubjectA
             .OnDelete(DeleteBehavior.Cascade);
     }
 }
-

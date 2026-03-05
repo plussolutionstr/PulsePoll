@@ -290,8 +290,8 @@
         _formError = null;
         _form = new FormModel
         {
-            StartsAt = DateTime.Today,
-            EndsAt = DateTime.Today.AddDays(7),
+            StartsAt = TurkeyTime.Today,
+            EndsAt = TurkeyTime.Today.AddDays(7),
             IsActive = true,
             Order = (_newsItems.Count == 0 ? 0 : _newsItems.Max(n => n.Order)) + 1
         };

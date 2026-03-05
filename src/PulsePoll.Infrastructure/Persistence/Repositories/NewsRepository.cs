@@ -16,7 +16,7 @@ public class NewsRepository(AppDbContext db) : INewsRepository
 
     public Task<List<News>> GetActiveAsync()
     {
-        var now = DateTime.UtcNow;
+        var now = TurkeyTime.Now;
         return db.News
             .Include(n => n.MediaAsset)
             .Where(n => n.IsActive && n.StartsAt <= now && n.EndsAt >= now && n.DeletedAt == null)

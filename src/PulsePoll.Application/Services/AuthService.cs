@@ -145,7 +145,7 @@ public class AuthService(
             SpecialCodeId: null,
             KVKKApproval: dto.KVKKApproval,
             KVKKDetail: dto.KVKKDetail,
-            RegisteredAt: DateTime.UtcNow);
+            RegisteredAt: TurkeyTime.Now);
 
         await publisher.PublishAsync(message, Queues.SubjectRegistered);
 
@@ -179,7 +179,7 @@ public class AuthService(
 
         logger.LogInformation("Denek girişi başarılı: {SubjectId}", subject.Id);
 
-        return new AuthResultDto(accessToken, refreshToken.Token, DateTime.UtcNow.AddMinutes(15));
+        return new AuthResultDto(accessToken, refreshToken.Token, TurkeyTime.Now.AddMinutes(15));
     }
 
     public async Task<AuthResultDto> RefreshTokenAsync(string refreshToken)
@@ -199,7 +199,7 @@ public class AuthService(
         var subject = await subjectRepository.GetByIdAsync(stored.SubjectId)
             ?? throw new NotFoundException("Denek");
 
-        stored.RevokedAt = DateTime.UtcNow;
+        stored.RevokedAt = TurkeyTime.Now;
         stored.RevokedReason = "Replaced by new token";
 
         var newRefreshToken = CreateRefreshToken(subject.Id);
@@ -213,7 +213,7 @@ public class AuthService(
 
         logger.LogInformation("Token yenilendi: {SubjectId}", subject.Id);
 
-        return new AuthResultDto(accessToken, newRefreshToken.Token, DateTime.UtcNow.AddMinutes(15));
+        return new AuthResultDto(accessToken, newRefreshToken.Token, TurkeyTime.Now.AddMinutes(15));
     }
 
     public async Task LogoutAsync(int subjectId)
@@ -268,8 +268,8 @@ public class AuthService(
         {
             Token = Convert.ToBase64String(bytes),
             SubjectId = subjectId,
-            CreatedAt = DateTime.UtcNow,
-            ExpiresAt = DateTime.UtcNow.AddDays(30)
+            CreatedAt = TurkeyTime.Now,
+            ExpiresAt = TurkeyTime.Now.AddDays(30)
         };
     }
 }

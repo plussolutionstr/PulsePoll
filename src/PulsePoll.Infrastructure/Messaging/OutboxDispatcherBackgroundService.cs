@@ -46,7 +46,7 @@ public class OutboxDispatcherBackgroundService(
         using var scope = scopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var publisher = scope.ServiceProvider.GetRequiredService<IMessagePublisher>();
-        var now = DateTime.UtcNow;
+        var now = TurkeyTime.Now;
 
         List<OutboxMessage> messages;
         await using (var lockTx = await db.Database.BeginTransactionAsync(ct))
@@ -79,7 +79,7 @@ public class OutboxDispatcherBackgroundService(
             try
             {
                 await DispatchMessageAsync(message, publisher, ct);
-                message.ProcessedAt = DateTime.UtcNow;
+                message.ProcessedAt = TurkeyTime.Now;
                 message.LockedUntil = null;
                 message.LastError = null;
             }
@@ -87,7 +87,7 @@ public class OutboxDispatcherBackgroundService(
             {
                 message.RetryCount += 1;
                 message.LastError = Truncate(ex.Message, 2000);
-                message.LockedUntil = DateTime.UtcNow.AddSeconds(Math.Min(120, 5 * message.RetryCount));
+                message.LockedUntil = TurkeyTime.Now.AddSeconds(Math.Min(120, 5 * message.RetryCount));
 
                 logger.LogError(ex,
                     "Outbox mesajı gönderilemedi. OutboxId={OutboxId} Type={Type} Retry={RetryCount}",

@@ -40,7 +40,7 @@ public class CommunicationAutomationConfigService(
                     entity.DailyRunTime,
                     entity.TimeZoneId,
                     adminId,
-                    DateTime.UtcNow),
+                    TurkeyTime.Now),
                 Queues.CommunicationAutomationScheduleChanged);
         }
         catch (Exception ex)
