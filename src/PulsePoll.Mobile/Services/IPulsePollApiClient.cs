@@ -22,4 +22,11 @@ public interface IPulsePollApiClient
     Task RequestWithdrawalAsync(decimal amount, int bankAccountId, CancellationToken ct = default);
     Task<string> StartProjectAsync(int projectId, CancellationToken ct = default);
     Task SubmitProjectResultAsync(int projectId, string status, string? rawPayload = null, CancellationToken ct = default);
+    Task<ProfileApiDto?> GetProfileAsync(CancellationToken ct = default);
+    Task<ProfileApiDto?> UpdateProfileAsync(object dto, CancellationToken ct = default);
+    Task<string?> UploadProfilePhotoAsync(Stream stream, string fileName, string contentType, CancellationToken ct = default);
+    Task<List<LookupItemDto>> GetCitiesAsync(CancellationToken ct = default);
+    Task<List<LookupItemDto>> GetDistrictsAsync(int cityId, CancellationToken ct = default);
+    Task<List<LookupItemDto>> GetProfessionsAsync(CancellationToken ct = default);
+    Task<List<LookupItemDto>> GetEducationLevelsAsync(CancellationToken ct = default);
 }

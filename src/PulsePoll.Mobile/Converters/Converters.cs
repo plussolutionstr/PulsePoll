@@ -140,6 +140,89 @@ public class BoolToReadBgConverter : IValueConverter
         => throw new NotSupportedException();
 }
 
+public class StringToBoolConverter : IValueConverter
+{
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => !string.IsNullOrEmpty(value as string);
+
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}
+
+public class InvertedBoolConverter : IValueConverter
+{
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => value is bool b ? !b : value;
+
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => value is bool b ? !b : value;
+}
+
+public class StarConverter : IValueConverter
+{
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        var star = value is int s ? s : 0;
+        var filled = new string('★', star);
+        var empty = new string('☆', 5 - star);
+        return filled + empty;
+    }
+
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}
+
+public class EditButtonTextConverter : IValueConverter
+{
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => value is true ? "İptal" : "Düzenle";
+
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}
+
+public class GenderDisplayConverter : IValueConverter
+{
+    private static readonly string[] Items = ["Erkek", "Kadın", "Diğer"];
+
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => value is int i && i >= 0 && i < Items.Length ? Items[i] : "-";
+
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}
+
+public class MaritalStatusDisplayConverter : IValueConverter
+{
+    private static readonly string[] Items = ["Bekar", "Evli", "Boşanmış", "Dul"];
+
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => value is int i && i >= 0 && i < Items.Length ? Items[i] : "-";
+
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}
+
+public class GsmOperatorDisplayConverter : IValueConverter
+{
+    private static readonly string[] Items = ["Turkcell", "Vodafone", "Türk Telekom", "Diğer"];
+
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => value is int i && i >= 0 && i < Items.Length ? Items[i] : "-";
+
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}
+
+public class BoolToYesNoConverter : IValueConverter
+{
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => value is true ? "Evet" : "Hayır";
+
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}
+
 public class BoolToIconConverter : IValueConverter
 {
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)

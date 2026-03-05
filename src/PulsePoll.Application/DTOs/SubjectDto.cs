@@ -33,10 +33,14 @@ public record SubjectDto(
     string? LSMSocioeconomicStatusCode,
     string? ReferenceCode,
     string ReferralCode,
+    string? ProfilePhotoUrl,
     ApprovalStatus Status,
     DateTime CreatedAt,
     decimal? Score,
-    int? Star);
+    int? Star,
+    int CompletedCount,
+    int DisqualifiedCount,
+    int SuccessRate);
 
 public record RegisterSubjectDto(
     string RegistrationToken,
@@ -63,6 +67,24 @@ public record RegisterSubjectDto(
     string? ReferenceCode,
     bool KVKKApproval,
     string? KVKKDetail);
+
+public record UpdateProfileDto(
+    string FirstName,
+    string LastName,
+    string Email,
+    Gender Gender,
+    DateOnly BirthDate,
+    MaritalStatus MaritalStatus,
+    GsmOperator GsmOperator,
+    int CityId,
+    int DistrictId,
+    int ProfessionId,
+    int EducationLevelId,
+    bool IsRetired,
+    bool IsHeadOfFamily,
+    bool IsHeadOfFamilyRetired,
+    int? HeadOfFamilyProfessionId,
+    int? HeadOfFamilyEducationLevelId);
 
 public record SendOtpDto(string PhoneNumber);
 

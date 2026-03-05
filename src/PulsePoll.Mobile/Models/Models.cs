@@ -78,18 +78,6 @@ public record QuestionModel(int Number, string Text, List<OptionModel> Options);
 
 public record OptionModel(int Id, string Text);
 
-public record ProfileModel(
-    string FullName,
-    string Email,
-    string AvatarUrl,
-    string Tier,
-    int Points,
-    int CompletedCount,
-    int DisqualifiedCount,
-    int SuccessRate,
-    List<DemographicField> Demographics,
-    List<string> Interests);
-
 public record DemographicField(string Label, string Value);
 
 public record HistoryItemModel(

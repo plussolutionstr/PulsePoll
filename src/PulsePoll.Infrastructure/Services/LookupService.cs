@@ -32,4 +32,10 @@ public class LookupService(AppDbContext db) : ILookupService
 
     public Task<Bank?> GetBankByIdAsync(int bankId)
         => db.Banks.FirstOrDefaultAsync(b => b.Id == bankId);
+
+    public Task<List<Profession>> GetProfessionsAsync()
+        => db.Professions.OrderBy(p => p.Id).ToListAsync();
+
+    public Task<List<EducationLevel>> GetEducationLevelsAsync()
+        => db.EducationLevels.OrderBy(e => e.OrderIndex).ToListAsync();
 }

@@ -21,6 +21,7 @@ public partial class HomePage : ContentPage
     {
         base.OnAppearing();
         UpdateShimmerState();
+        await _viewModel.LoadNotificationBadgeCommand.ExecuteAsync(null);
 
         if (_viewModel.Stories.Count == 0)
             await _viewModel.LoadDataCommand.ExecuteAsync(null);

@@ -89,26 +89,6 @@ public class MockDataService
             ])
     ];
 
-    public ProfileModel GetProfile() => new(
-        "Ahmet Yılmaz",
-        "ahmet.yilmaz@email.com",
-        "avatar",
-        "Gold",
-        4250,
-        48,
-        3,
-        94,
-        [
-            new("Yaş", "28"),
-            new("Cinsiyet", "Erkek"),
-            new("Eğitim", "Lisans"),
-            new("Medeni Durum", "Bekar"),
-            new("Konum", "İstanbul, Kadıköy"),
-            new("Meslek", "Yazılım Geliştirici"),
-            new("Gelir", "25.000 - 35.000 ₺")
-        ],
-        ["Teknoloji", "Otomotiv", "Fintech", "Yazılım", "Yatırım"]);
-
     public List<HistoryGroup> GetHistory() =>
     [
         new("Mart 2026",

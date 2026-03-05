@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PulsePoll.Mobile.Models;
@@ -8,44 +9,78 @@ namespace PulsePoll.Mobile.ViewModels;
 
 public partial class NotificationsViewModel : ObservableObject
 {
-    private readonly List<NotificationModel> _allNotifications;
+    private readonly NotificationCenterService _notificationCenter;
 
-    public NotificationsViewModel(MockDataService dataService)
+    public NotificationsViewModel(NotificationCenterService notificationCenter)
     {
-        _allNotifications = dataService.GetNotifications();
-        LoadData();
+        _notificationCenter = notificationCenter;
+        _notificationCenter.PropertyChanged += OnNotificationCenterPropertyChanged;
+        ApplyFilter();
     }
 
     [ObservableProperty] private ObservableCollection<NotificationModel> _notifications = [];
     [ObservableProperty] private string _selectedFilter = "Tümü";
+    [ObservableProperty] private bool _isLoading;
+    [ObservableProperty] private bool _hasNotifications;
+    [ObservableProperty] private bool _canMarkAllRead;
+    [ObservableProperty] private bool _showEmptyState;
 
     public List<string> Filters => ["Tümü", "Anketler", "Kazançlar", "Sistem"];
+
+    [RelayCommand]
+    private async Task LoadAsync()
+    {
+        if (IsLoading)
+            return;
+
+        IsLoading = true;
+        try
+        {
+            await _notificationCenter.LoadAsync(force: true);
+            ApplyFilter();
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
 
     [RelayCommand]
     private void SetFilter(string filter)
     {
         SelectedFilter = filter;
-        LoadData();
+        ApplyFilter();
     }
 
     [RelayCommand]
-    private void MarkAllRead()
+    private async Task MarkAllReadAsync()
     {
-        var updated = _allNotifications.Select(n => n with { IsRead = true }).ToList();
-        _allNotifications.Clear();
-        _allNotifications.AddRange(updated);
-        LoadData();
+        if (!CanMarkAllRead)
+            return;
+
+        try
+        {
+            await _notificationCenter.MarkAllReadAsync();
+            ApplyFilter();
+        }
+        catch
+        {
+            if (Shell.Current is not null)
+            {
+                await Shell.Current.DisplayAlertAsync("Hata", "Bildirimler işaretlenemedi.", "Tamam");
+            }
+        }
     }
 
     [RelayCommand]
-    private async Task GoBack()
+    private async Task GoBackAsync()
     {
         await Shell.Current.GoToAsync("..");
     }
 
-    private void LoadData()
+    private void ApplyFilter()
     {
-        var items = _allNotifications.AsEnumerable();
+        var items = _notificationCenter.Items.AsEnumerable();
 
         items = SelectedFilter switch
         {
@@ -56,5 +91,19 @@ public partial class NotificationsViewModel : ObservableObject
         };
 
         Notifications = new ObservableCollection<NotificationModel>(items.OrderByDescending(n => n.Date));
+        HasNotifications = Notifications.Count > 0;
+        CanMarkAllRead = _notificationCenter.HasUnread;
+        ShowEmptyState = !IsLoading && !HasNotifications;
+    }
+
+    partial void OnIsLoadingChanged(bool value)
+    {
+        ShowEmptyState = !value && !HasNotifications;
+    }
+
+    private void OnNotificationCenterPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(NotificationCenterService.Items) or nameof(NotificationCenterService.UnreadCount))
+            ApplyFilter();
     }
 }

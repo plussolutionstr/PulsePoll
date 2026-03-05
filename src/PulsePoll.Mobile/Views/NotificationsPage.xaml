@@ -11,6 +11,7 @@
     <ContentPage.Resources>
         <converters:NotificationTypeToBgConverter x:Key="TypeToBg"/>
         <converters:BoolToReadBgConverter x:Key="BoolToReadBg"/>
+        <converters:InvertedBoolConverter x:Key="InvertedBool"/>
     </ContentPage.Resources>
 
     <VerticalStackLayout Spacing="16" Padding="20,16">
@@ -28,7 +29,16 @@
             <Label Grid.Column="2" Text="Tümünü Okundu İşaretle"
                    FontFamily="JakartaSemiBold" FontSize="12"
                    TextColor="{StaticResource PrimaryPurple}"
-                   VerticalOptions="Center">
+                   VerticalOptions="Center"
+                   IsEnabled="{Binding CanMarkAllRead}"
+                   Opacity="1">
+                <Label.Triggers>
+                    <DataTrigger TargetType="Label"
+                                 Binding="{Binding CanMarkAllRead}"
+                                 Value="False">
+                        <Setter Property="Opacity" Value="0.5"/>
+                    </DataTrigger>
+                </Label.Triggers>
                 <Label.GestureRecognizers>
                     <TapGestureRecognizer Command="{Binding MarkAllReadCommand}"/>
                 </Label.GestureRecognizers>
@@ -59,43 +69,74 @@
             </HorizontalStackLayout>
         </ScrollView>
 
-        <!-- Notifications List -->
-        <ScrollView>
-            <VerticalStackLayout Spacing="8"
-                                 BindableLayout.ItemsSource="{Binding Notifications}">
-                <BindableLayout.ItemTemplate>
-                    <DataTemplate x:DataType="models:NotificationModel">
-                        <Border StrokeShape="RoundRectangle 16"
-                                Stroke="{StaticResource CardBorder}"
-                                BackgroundColor="{Binding IsRead, Converter={StaticResource BoolToReadBg}}"
-                                Padding="14">
-                            <Grid ColumnDefinitions="40,*,Auto" ColumnSpacing="12">
-                                <Border StrokeThickness="0"
-                                        StrokeShape="RoundRectangle 20"
-                                        HeightRequest="40" WidthRequest="40"
-                                        BackgroundColor="{Binding Type, Converter={StaticResource TypeToBg}}">
-                                    <Image Source="icon_bell.png"
-                                           HeightRequest="18" WidthRequest="18"
-                                           HorizontalOptions="Center" VerticalOptions="Center"/>
-                                </Border>
-                                <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
-                                    <Label Text="{Binding Title}"
-                                           FontFamily="JakartaSemiBold" FontSize="14"
-                                           TextColor="{StaticResource TextPrimary}"/>
-                                    <Label Text="{Binding Message}"
-                                           Style="{StaticResource CaptionStyle}"
-                                           MaxLines="2" LineBreakMode="TailTruncation"/>
-                                </VerticalStackLayout>
-                                <Label Grid.Column="2"
-                                       Text="{Binding Date, StringFormat='{0:HH:mm}'}"
-                                       Style="{StaticResource CaptionStyle}"
-                                       VerticalOptions="Start"/>
-                            </Grid>
-                        </Border>
-                    </DataTemplate>
-                </BindableLayout.ItemTemplate>
+        <Grid>
+            <ActivityIndicator IsVisible="{Binding IsLoading}"
+                               IsRunning="{Binding IsLoading}"
+                               Color="{StaticResource PrimaryPurple}"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center"/>
+
+            <VerticalStackLayout IsVisible="{Binding ShowEmptyState}"
+                                 Spacing="8"
+                                 VerticalOptions="Center"
+                                 HorizontalOptions="Center">
+                <Label Text="Bildirim bulunamadı"
+                       FontFamily="JakartaSemiBold"
+                       FontSize="16"
+                       TextColor="{StaticResource TextPrimary}"
+                       HorizontalTextAlignment="Center"/>
+                <Label Text="Yeni bildirimler geldiğinde burada listelenecek."
+                       Style="{StaticResource CaptionStyle}"
+                       HorizontalTextAlignment="Center"/>
             </VerticalStackLayout>
-        </ScrollView>
+
+            <!-- Notifications List -->
+            <ScrollView IsVisible="{Binding HasNotifications}">
+                <VerticalStackLayout Spacing="8"
+                                     BindableLayout.ItemsSource="{Binding Notifications}">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="models:NotificationModel">
+                            <Border StrokeShape="RoundRectangle 16"
+                                    Stroke="{StaticResource CardBorder}"
+                                    BackgroundColor="{Binding IsRead, Converter={StaticResource BoolToReadBg}}"
+                                    Padding="14">
+                                <Grid ColumnDefinitions="40,*,Auto" ColumnSpacing="12">
+                                    <Border StrokeThickness="0"
+                                            StrokeShape="RoundRectangle 20"
+                                            HeightRequest="40" WidthRequest="40"
+                                            BackgroundColor="{Binding Type, Converter={StaticResource TypeToBg}}">
+                                        <Image Source="icon_bell.png"
+                                               HeightRequest="18" WidthRequest="18"
+                                               HorizontalOptions="Center" VerticalOptions="Center"/>
+                                    </Border>
+                                    <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="6">
+                                            <Border StrokeThickness="0"
+                                                    StrokeShape="RoundRectangle 4"
+                                                    HeightRequest="8" WidthRequest="8"
+                                                    BackgroundColor="{StaticResource PrimaryPurple}"
+                                                    IsVisible="{Binding IsRead, Converter={StaticResource InvertedBool}}"
+                                                    VerticalOptions="Center"/>
+                                            <Label Grid.Column="1"
+                                                   Text="{Binding Title}"
+                                                   FontFamily="JakartaSemiBold" FontSize="14"
+                                                   TextColor="{StaticResource TextPrimary}"/>
+                                        </Grid>
+                                        <Label Text="{Binding Message}"
+                                               Style="{StaticResource CaptionStyle}"
+                                               MaxLines="2" LineBreakMode="TailTruncation"/>
+                                    </VerticalStackLayout>
+                                    <Label Grid.Column="2"
+                                           Text="{Binding Date, StringFormat='{0:HH:mm}'}"
+                                           Style="{StaticResource CaptionStyle}"
+                                           VerticalOptions="Start"/>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+            </ScrollView>
+        </Grid>
 
     </VerticalStackLayout>
 </ContentPage>

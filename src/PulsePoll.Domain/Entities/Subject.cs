@@ -94,6 +94,9 @@ public class Subject : EntityBase
     [MaxLength(512)]
     public string? FcmToken { get; set; }
 
+    [MaxLength(512)]
+    public string? ProfilePhotoUrl { get; set; }
+
     // Navigation properties
     public City City { get; set; } = null!;
     public District District { get; set; } = null!;

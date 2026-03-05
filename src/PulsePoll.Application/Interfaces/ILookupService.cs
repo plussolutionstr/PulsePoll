@@ -9,4 +9,6 @@ public interface ILookupService
     Task<List<TaxOffice>> GetTaxOfficesByCityIdAsync(int cityId);
     Task<List<Bank>> GetBanksAsync(bool onlyActive = true);
     Task<Bank?> GetBankByIdAsync(int bankId);
+    Task<List<Profession>> GetProfessionsAsync();
+    Task<List<EducationLevel>> GetEducationLevelsAsync();
 }

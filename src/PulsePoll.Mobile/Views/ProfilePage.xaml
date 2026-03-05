@@ -2,54 +2,113 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:PulsePoll.Mobile.ViewModels"
-             xmlns:models="clr-namespace:PulsePoll.Mobile.Models"
+             xmlns:converters="clr-namespace:PulsePoll.Mobile.Converters"
              x:Class="PulsePoll.Mobile.Views.ProfilePage"
              x:DataType="vm:ProfileViewModel"
              Shell.NavBarIsVisible="False">
+
+    <ContentPage.Resources>
+        <converters:StringToBoolConverter x:Key="StringToBoolConverter"/>
+        <converters:InvertedBoolConverter x:Key="InvertedBoolConverter"/>
+        <converters:StarConverter x:Key="StarConverter"/>
+        <converters:EditButtonTextConverter x:Key="EditButtonTextConverter"/>
+        <converters:BoolToYesNoConverter x:Key="BoolToYesNoConverter"/>
+        <converters:GenderDisplayConverter x:Key="GenderDisplayConverter"/>
+        <converters:MaritalStatusDisplayConverter x:Key="MaritalStatusDisplayConverter"/>
+        <converters:GsmOperatorDisplayConverter x:Key="GsmOperatorDisplayConverter"/>
+    </ContentPage.Resources>
 
     <ScrollView>
         <VerticalStackLayout Spacing="16" Padding="20,16">
 
             <Label Text="Profil" Style="{StaticResource PageTitleStyle}"/>
 
+            <!-- Loading -->
+            <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}"
+                               Color="{StaticResource PrimaryPurple}" HeightRequest="40"/>
+
+            <!-- Status Message -->
+            <Label Text="{Binding StatusMessage}"
+                   IsVisible="{Binding StatusMessage, Converter={StaticResource StringToBoolConverter}}"
+                   FontFamily="JakartaMedium" FontSize="13"
+                   TextColor="{StaticResource PrimaryPurple}"
+                   HorizontalTextAlignment="Center"/>
+
             <!-- Avatar Card -->
             <Border Style="{StaticResource CardBorderStyle}" Padding="20">
                 <VerticalStackLayout Spacing="12" HorizontalOptions="Center">
-                    <Border StrokeThickness="3"
-                            Stroke="{StaticResource PrimaryPurple}"
-                            StrokeShape="RoundRectangle 40"
-                            HeightRequest="80" WidthRequest="80"
-                            BackgroundColor="{StaticResource PrimaryLight}"
-                            HorizontalOptions="Center">
-                        <Label Text="{Binding FullName, StringFormat='{0:0}'}"
-                               FontFamily="JakartaBold" FontSize="24"
-                               HorizontalOptions="Center" VerticalOptions="Center"
-                               TextColor="{StaticResource PrimaryPurple}"/>
-                    </Border>
+                    <!-- Avatar with camera overlay -->
+                    <Grid HeightRequest="88" WidthRequest="88" HorizontalOptions="Center">
+                        <!-- Avatar circle (initials) -->
+                        <Border StrokeThickness="3"
+                                Stroke="{StaticResource PrimaryPurple}"
+                                StrokeShape="RoundRectangle 44"
+                                HeightRequest="88" WidthRequest="88"
+                                BackgroundColor="{StaticResource PrimaryLight}"
+                                HorizontalOptions="Center"
+                                IsVisible="{Binding HasProfilePhoto, Converter={StaticResource InvertedBoolConverter}}">
+                            <Label Text="{Binding Initials}"
+                                   FontFamily="JakartaBold" FontSize="28"
+                                   HorizontalOptions="Center" VerticalOptions="Center"
+                                   TextColor="{StaticResource PrimaryPurple}"/>
+                        </Border>
+                        <!-- Profile photo -->
+                        <Border StrokeThickness="3"
+                                Stroke="{StaticResource PrimaryPurple}"
+                                StrokeShape="RoundRectangle 44"
+                                HeightRequest="88" WidthRequest="88"
+                                IsVisible="{Binding HasProfilePhoto}"
+                                HorizontalOptions="Center">
+                            <Image Source="{Binding ProfilePhotoUrl}"
+                                   Aspect="AspectFill"/>
+                        </Border>
+                        <!-- Camera icon -->
+                        <Border StrokeThickness="2"
+                                Stroke="{StaticResource White}"
+                                StrokeShape="RoundRectangle 14"
+                                HeightRequest="30" WidthRequest="30"
+                                BackgroundColor="{StaticResource PrimaryPurple}"
+                                HorizontalOptions="End" VerticalOptions="End"
+                                Margin="0,0,2,2">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding PickPhotoCommand}"/>
+                            </Border.GestureRecognizers>
+                            <Label Text="✎" FontSize="15"
+                                   TextColor="{StaticResource White}"
+                                   HorizontalOptions="Center" VerticalOptions="Center"/>
+                        </Border>
+                    </Grid>
+
+                    <!-- Full Name -->
                     <Label Text="{Binding FullName}"
                            FontFamily="JakartaBold" FontSize="18"
                            TextColor="{StaticResource TextPrimary}"
                            HorizontalTextAlignment="Center"/>
-                    <Label Text="{Binding Email}"
-                           Style="{StaticResource BodyStyle}"
-                           HorizontalTextAlignment="Center"/>
+
+                    <!-- Referral Code (tappable to copy) -->
                     <Border StrokeThickness="0"
                             StrokeShape="RoundRectangle 12"
-                            BackgroundColor="{StaticResource AmberLight}"
-                            Padding="12,6"
+                            BackgroundColor="{StaticResource PrimaryLight}"
+                            Padding="14,8"
                             HorizontalOptions="Center">
-                        <Label FontFamily="JakartaSemiBold" FontSize="13" TextColor="{StaticResource Amber}">
-                            <Label.FormattedText>
-                                <FormattedString>
-                                    <Span Text="🥇 "/>
-                                    <Span Text="{Binding Tier}"/>
-                                    <Span Text=" · "/>
-                                    <Span Text="{Binding Points, StringFormat='{0:N0}'}"/>
-                                    <Span Text=" Puan"/>
-                                </FormattedString>
-                            </Label.FormattedText>
-                        </Label>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding CopyReferralCodeCommand}"/>
+                        </Border.GestureRecognizers>
+                        <HorizontalStackLayout Spacing="8">
+                            <Label Text="{Binding ReferralCode}"
+                                   FontFamily="JakartaSemiBold" FontSize="14"
+                                   TextColor="{StaticResource PrimaryPurple}"
+                                   VerticalOptions="Center"/>
+                            <Label Text="⧉" FontSize="16" VerticalOptions="Center"
+                                   TextColor="{StaticResource PrimaryPurple}"/>
+                        </HorizontalStackLayout>
                     </Border>
+
+                    <!-- Stars -->
+                    <Label FontFamily="JakartaBold" FontSize="22"
+                           TextColor="{StaticResource Amber}"
+                           HorizontalTextAlignment="Center"
+                           Text="{Binding Star, Converter={StaticResource StarConverter}}"/>
                 </VerticalStackLayout>
             </Border>
 
@@ -90,51 +149,240 @@
                 </Border>
             </Grid>
 
-            <!-- Demographics -->
+            <!-- Profile Info Card -->
             <Border Style="{StaticResource CardBorderStyle}">
-                <VerticalStackLayout Spacing="12">
-                    <Label Text="Demografik Bilgiler"
-                           FontFamily="JakartaSemiBold" FontSize="16"
-                           TextColor="{StaticResource TextPrimary}"/>
-                    <Grid ColumnDefinitions="*,*" RowSpacing="12" ColumnSpacing="12"
-                          BindableLayout.ItemsSource="{Binding Demographics}">
-                        <BindableLayout.ItemTemplate>
-                            <DataTemplate x:DataType="models:DemographicField">
-                                <VerticalStackLayout Spacing="2">
-                                    <Label Text="{Binding Label}"
-                                           Style="{StaticResource CaptionStyle}"/>
-                                    <Label Text="{Binding Value}"
-                                           FontFamily="JakartaSemiBold" FontSize="14"
-                                           TextColor="{StaticResource TextPrimary}"/>
-                                </VerticalStackLayout>
-                            </DataTemplate>
-                        </BindableLayout.ItemTemplate>
+                <VerticalStackLayout Spacing="14">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="Profil Bilgileri"
+                               FontFamily="JakartaSemiBold" FontSize="16"
+                               TextColor="{StaticResource TextPrimary}"/>
+                        <Button Grid.Column="1"
+                                Text="{Binding IsEditing, Converter={StaticResource EditButtonTextConverter}}"
+                                FontFamily="JakartaSemiBold" FontSize="12"
+                                BackgroundColor="{StaticResource PrimaryLight}"
+                                TextColor="{StaticResource PrimaryPurple}"
+                                Padding="12,6"
+                                CornerRadius="12"
+                                BorderWidth="0"
+                                Command="{Binding ToggleEditCommand}"/>
                     </Grid>
-                </VerticalStackLayout>
-            </Border>
 
-            <!-- Interests -->
-            <Border Style="{StaticResource CardBorderStyle}">
-                <VerticalStackLayout Spacing="12">
-                    <Label Text="İlgi Alanları"
-                           FontFamily="JakartaSemiBold" FontSize="16"
-                           TextColor="{StaticResource TextPrimary}"/>
-                    <FlexLayout Wrap="Wrap" JustifyContent="Start"
-                                BindableLayout.ItemsSource="{Binding Interests}">
-                        <BindableLayout.ItemTemplate>
-                            <DataTemplate x:DataType="x:String">
-                                <Border StrokeThickness="0"
-                                        StrokeShape="RoundRectangle 12"
-                                        BackgroundColor="{StaticResource PrimaryLight}"
-                                        Padding="12,6"
-                                        Margin="0,0,8,8">
-                                    <Label Text="{Binding .}"
-                                           FontFamily="JakartaMedium" FontSize="13"
-                                           TextColor="{StaticResource PrimaryPurple}"/>
-                                </Border>
-                            </DataTemplate>
-                        </BindableLayout.ItemTemplate>
-                    </FlexLayout>
+                    <!-- Read-Only View -->
+                    <VerticalStackLayout Spacing="12"
+                                         IsVisible="{Binding IsEditing, Converter={StaticResource InvertedBoolConverter}}">
+                        <!-- Ad / Soyad -->
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                            <VerticalStackLayout Spacing="2">
+                                <Label Text="Ad" Style="{StaticResource CaptionStyle}"/>
+                                <Label Text="{Binding FirstName}" FontFamily="JakartaSemiBold" FontSize="14"
+                                       TextColor="{StaticResource TextPrimary}"/>
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                <Label Text="Soyad" Style="{StaticResource CaptionStyle}"/>
+                                <Label Text="{Binding LastName}" FontFamily="JakartaSemiBold" FontSize="14"
+                                       TextColor="{StaticResource TextPrimary}"/>
+                            </VerticalStackLayout>
+                        </Grid>
+                        <!-- E-posta / Telefon -->
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                            <VerticalStackLayout Spacing="2">
+                                <Label Text="E-posta" Style="{StaticResource CaptionStyle}"/>
+                                <Label Text="{Binding Email}" FontFamily="JakartaSemiBold" FontSize="14"
+                                       TextColor="{StaticResource TextPrimary}"/>
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                <Label Text="Telefon" Style="{StaticResource CaptionStyle}"/>
+                                <Label Text="{Binding PhoneNumber}" FontFamily="JakartaSemiBold" FontSize="14"
+                                       TextColor="{StaticResource TextPrimary}"/>
+                            </VerticalStackLayout>
+                        </Grid>
+                        <!-- Cinsiyet / Doğum Tarihi -->
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                            <VerticalStackLayout Spacing="2">
+                                <Label Text="Cinsiyet" Style="{StaticResource CaptionStyle}"/>
+                                <Label Text="{Binding SelectedGender, Converter={StaticResource GenderDisplayConverter}}"
+                                       FontFamily="JakartaSemiBold" FontSize="14"
+                                       TextColor="{StaticResource TextPrimary}"/>
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                <Label Text="Doğum Tarihi" Style="{StaticResource CaptionStyle}"/>
+                                <Label Text="{Binding BirthDateDisplay}" FontFamily="JakartaSemiBold" FontSize="14"
+                                       TextColor="{StaticResource TextPrimary}"/>
+                            </VerticalStackLayout>
+                        </Grid>
+                        <!-- Medeni Durum / GSM -->
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                            <VerticalStackLayout Spacing="2">
+                                <Label Text="Medeni Durum" Style="{StaticResource CaptionStyle}"/>
+                                <Label Text="{Binding SelectedMaritalStatus, Converter={StaticResource MaritalStatusDisplayConverter}}"
+                                       FontFamily="JakartaSemiBold" FontSize="14"
+                                       TextColor="{StaticResource TextPrimary}"/>
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                <Label Text="GSM Operatörü" Style="{StaticResource CaptionStyle}"/>
+                                <Label Text="{Binding SelectedGsmOperator, Converter={StaticResource GsmOperatorDisplayConverter}}"
+                                       FontFamily="JakartaSemiBold" FontSize="14"
+                                       TextColor="{StaticResource TextPrimary}"/>
+                            </VerticalStackLayout>
+                        </Grid>
+                        <!-- İl / İlçe -->
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                            <VerticalStackLayout Spacing="2">
+                                <Label Text="İl" Style="{StaticResource CaptionStyle}"/>
+                                <Label Text="{Binding SelectedCity.Name}" FontFamily="JakartaSemiBold" FontSize="14"
+                                       TextColor="{StaticResource TextPrimary}"/>
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                <Label Text="İlçe" Style="{StaticResource CaptionStyle}"/>
+                                <Label Text="{Binding SelectedDistrict.Name}" FontFamily="JakartaSemiBold" FontSize="14"
+                                       TextColor="{StaticResource TextPrimary}"/>
+                            </VerticalStackLayout>
+                        </Grid>
+                        <!-- Meslek (tek satır) -->
+                        <VerticalStackLayout Spacing="2">
+                            <Label Text="Meslek" Style="{StaticResource CaptionStyle}"/>
+                            <Label Text="{Binding SelectedProfession.Name}" FontFamily="JakartaSemiBold" FontSize="14"
+                                   TextColor="{StaticResource TextPrimary}"/>
+                        </VerticalStackLayout>
+                        <!-- Eğitim Durumu (tek satır) -->
+                        <VerticalStackLayout Spacing="2">
+                            <Label Text="Eğitim Durumu" Style="{StaticResource CaptionStyle}"/>
+                            <Label Text="{Binding SelectedEducationLevel.Name}" FontFamily="JakartaSemiBold" FontSize="14"
+                                   TextColor="{StaticResource TextPrimary}"/>
+                        </VerticalStackLayout>
+                        <!-- Emekli / Hane Reisi -->
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                            <VerticalStackLayout Spacing="2">
+                                <Label Text="Emekli" Style="{StaticResource CaptionStyle}"/>
+                                <Label Text="{Binding IsRetired, Converter={StaticResource BoolToYesNoConverter}}"
+                                       FontFamily="JakartaSemiBold" FontSize="14"
+                                       TextColor="{StaticResource TextPrimary}"/>
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                <Label Text="Hane Reisi" Style="{StaticResource CaptionStyle}"/>
+                                <Label Text="{Binding IsHeadOfFamily, Converter={StaticResource BoolToYesNoConverter}}"
+                                       FontFamily="JakartaSemiBold" FontSize="14"
+                                       TextColor="{StaticResource TextPrimary}"/>
+                            </VerticalStackLayout>
+                        </Grid>
+                    </VerticalStackLayout>
+
+                    <!-- Edit View -->
+                    <VerticalStackLayout Spacing="14" IsVisible="{Binding IsEditing}">
+                        <!-- Medeni Durum / GSM -->
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                            <VerticalStackLayout Spacing="4">
+                                <Label Text="Medeni Durum" Style="{StaticResource CaptionStyle}"/>
+                                <Picker ItemsSource="{Binding MaritalStatusOptions}"
+                                        SelectedIndex="{Binding SelectedMaritalStatus}"
+                                        FontFamily="JakartaMedium" FontSize="14"/>
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Grid.Column="1" Spacing="4">
+                                <Label Text="GSM Operatörü" Style="{StaticResource CaptionStyle}"/>
+                                <Picker ItemsSource="{Binding GsmOperatorOptions}"
+                                        SelectedIndex="{Binding SelectedGsmOperator}"
+                                        FontFamily="JakartaMedium" FontSize="14"/>
+                            </VerticalStackLayout>
+                        </Grid>
+
+                        <!-- İl / İlçe -->
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                            <VerticalStackLayout Spacing="4">
+                                <Label Text="İl" Style="{StaticResource CaptionStyle}"/>
+                                <Picker ItemsSource="{Binding Cities}"
+                                        SelectedItem="{Binding SelectedCity}"
+                                        ItemDisplayBinding="{Binding Name}"
+                                        FontFamily="JakartaMedium" FontSize="14"/>
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Grid.Column="1" Spacing="4">
+                                <Label Text="İlçe" Style="{StaticResource CaptionStyle}"/>
+                                <Picker ItemsSource="{Binding Districts}"
+                                        SelectedItem="{Binding SelectedDistrict}"
+                                        ItemDisplayBinding="{Binding Name}"
+                                        FontFamily="JakartaMedium" FontSize="14"/>
+                            </VerticalStackLayout>
+                        </Grid>
+
+                        <!-- Meslek (tek satır) -->
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Meslek" Style="{StaticResource CaptionStyle}"/>
+                            <Picker ItemsSource="{Binding Professions}"
+                                    SelectedItem="{Binding SelectedProfession}"
+                                    ItemDisplayBinding="{Binding Name}"
+                                    FontFamily="JakartaMedium" FontSize="14"/>
+                        </VerticalStackLayout>
+
+                        <!-- Eğitim Durumu (tek satır) -->
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Eğitim Durumu" Style="{StaticResource CaptionStyle}"/>
+                            <Picker ItemsSource="{Binding EducationLevels}"
+                                    SelectedItem="{Binding SelectedEducationLevel}"
+                                    ItemDisplayBinding="{Binding Name}"
+                                    FontFamily="JakartaMedium" FontSize="14"/>
+                        </VerticalStackLayout>
+
+                        <!-- Emekli / Hane Reisi -->
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                            <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
+                                <CheckBox IsChecked="{Binding IsRetired}" Color="{StaticResource PrimaryPurple}"/>
+                                <Label Text="Emekli" FontFamily="JakartaMedium" FontSize="14"
+                                       VerticalOptions="Center" TextColor="{StaticResource TextPrimary}"/>
+                            </HorizontalStackLayout>
+                            <HorizontalStackLayout Grid.Column="1" Spacing="8" VerticalOptions="Center">
+                                <CheckBox IsChecked="{Binding IsHeadOfFamily}" Color="{StaticResource PrimaryPurple}"/>
+                                <Label Text="Hane Reisi" FontFamily="JakartaMedium" FontSize="14"
+                                       VerticalOptions="Center" TextColor="{StaticResource TextPrimary}"/>
+                            </HorizontalStackLayout>
+                        </Grid>
+
+                        <!-- Hane Reisi detayları (kendisi hane reisi değilse göster) -->
+                        <VerticalStackLayout Spacing="12"
+                                             IsVisible="{Binding IsHeadOfFamily, Converter={StaticResource InvertedBoolConverter}}">
+                            <Label Text="Hane Reisi Bilgileri"
+                                   FontFamily="JakartaSemiBold" FontSize="14"
+                                   TextColor="{StaticResource TextSecondary}"/>
+                            <!-- Hane Reisi Meslek (tek satır) -->
+                            <VerticalStackLayout Spacing="4">
+                                <Label Text="Hane Reisi Meslek" Style="{StaticResource CaptionStyle}"/>
+                                <Picker ItemsSource="{Binding Professions}"
+                                        SelectedItem="{Binding SelectedHofProfession}"
+                                        ItemDisplayBinding="{Binding Name}"
+                                        FontFamily="JakartaMedium" FontSize="14"/>
+                            </VerticalStackLayout>
+                            <!-- Hane Reisi Eğitim (tek satır) -->
+                            <VerticalStackLayout Spacing="4">
+                                <Label Text="Hane Reisi Eğitim Durumu" Style="{StaticResource CaptionStyle}"/>
+                                <Picker ItemsSource="{Binding EducationLevels}"
+                                        SelectedItem="{Binding SelectedHofEducationLevel}"
+                                        ItemDisplayBinding="{Binding Name}"
+                                        FontFamily="JakartaMedium" FontSize="14"/>
+                            </VerticalStackLayout>
+                            <HorizontalStackLayout Spacing="8">
+                                <CheckBox IsChecked="{Binding IsHeadOfFamilyRetired}" Color="{StaticResource PrimaryPurple}"/>
+                                <Label Text="Hane Reisi Emekli" FontFamily="JakartaMedium" FontSize="14"
+                                       VerticalOptions="Center" TextColor="{StaticResource TextPrimary}"/>
+                            </HorizontalStackLayout>
+                        </VerticalStackLayout>
+
+                        <!-- Kaydet / İptal -->
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="12" Margin="0,8,0,0">
+                            <Button Text="Kaydet"
+                                    Command="{Binding SaveProfileCommand}"
+                                    IsEnabled="{Binding IsSaving, Converter={StaticResource InvertedBoolConverter}}"
+                                    FontFamily="JakartaSemiBold" FontSize="14"
+                                    BackgroundColor="{StaticResource PrimaryPurple}"
+                                    TextColor="{StaticResource White}"
+                                    CornerRadius="12"
+                                    HeightRequest="44"/>
+                            <Button Grid.Column="1" Text="İptal"
+                                    Command="{Binding CancelEditCommand}"
+                                    FontFamily="JakartaSemiBold" FontSize="14"
+                                    BackgroundColor="{StaticResource PrimaryLight}"
+                                    TextColor="{StaticResource PrimaryPurple}"
+                                    CornerRadius="12"
+                                    HeightRequest="44"/>
+                        </Grid>
+                    </VerticalStackLayout>
                 </VerticalStackLayout>
             </Border>
 

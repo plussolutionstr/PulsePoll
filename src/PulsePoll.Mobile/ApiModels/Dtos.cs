@@ -129,6 +129,50 @@ public record WithdrawalRequestApiRequest(decimal Amount, int BankAccountId);
 
 public record AuthResultDto(string AccessToken, string RefreshToken, DateTime ExpiresAt);
 
+public record ProfileApiDto(
+    int Id,
+    Guid PublicId,
+    string Email,
+    string FirstName,
+    string LastName,
+    string FullName,
+    string PhoneNumber,
+    int Gender,
+    int Age,
+    string BirthDate,
+    int MaritalStatus,
+    int GsmOperator,
+    string CityName,
+    string DistrictName,
+    string ProfessionName,
+    string EducationLevelName,
+    bool IsRetired,
+    bool IsHeadOfFamily,
+    bool IsHeadOfFamilyRetired,
+    string? HeadOfFamilyProfessionName,
+    string? HeadOfFamilyEducationLevelName,
+    string BankName,
+    string IBAN,
+    string IBANFullName,
+    string SocioeconomicStatusName,
+    string? SocioeconomicStatusCode,
+    string LSMSocioeconomicStatusName,
+    string? LSMSocioeconomicStatusCode,
+    string? ReferenceCode,
+    string ReferralCode,
+    string? ProfilePhotoUrl,
+    int Status,
+    DateTime CreatedAt,
+    decimal? Score,
+    int? Star,
+    int CompletedCount,
+    int DisqualifiedCount,
+    int SuccessRate);
+
+public record LookupItemDto(int Id, string Name);
+
+public record PhotoUploadResultDto(string Url);
+
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum ProjectStatus
 {

@@ -162,6 +162,43 @@ public sealed class PulsePollApiClient : IPulsePollApiClient
         await EnsureSuccessOrThrowAsync(response, ct);
     }
 
+    public Task<ProfileApiDto?> GetProfileAsync(CancellationToken ct = default)
+        => GetAsync<ProfileApiDto>("api/profile", ct);
+
+    public async Task<ProfileApiDto?> UpdateProfileAsync(object dto, CancellationToken ct = default)
+    {
+        await SetAuthHeaderAsync();
+        var response = await _http.PutAsJsonAsync("api/profile", dto, JsonOptions, ct);
+        await EnsureSuccessOrThrowAsync(response, ct);
+        var result = await response.Content.ReadFromJsonAsync<ApiResponse<ProfileApiDto>>(JsonOptions, ct);
+        return result is { Success: true } ? result.Data : null;
+    }
+
+    public async Task<string?> UploadProfilePhotoAsync(Stream stream, string fileName, string contentType, CancellationToken ct = default)
+    {
+        await SetAuthHeaderAsync();
+        using var content = new MultipartFormDataContent();
+        var streamContent = new StreamContent(stream);
+        streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(contentType);
+        content.Add(streamContent, "file", fileName);
+        var response = await _http.PostAsync("api/profile/photo", content, ct);
+        await EnsureSuccessOrThrowAsync(response, ct);
+        var result = await response.Content.ReadFromJsonAsync<ApiResponse<PhotoUploadResultDto>>(JsonOptions, ct);
+        return result is { Success: true } ? result.Data?.Url : null;
+    }
+
+    public async Task<List<LookupItemDto>> GetCitiesAsync(CancellationToken ct = default)
+        => await GetAsync<List<LookupItemDto>>("api/lookups/cities", ct) ?? [];
+
+    public async Task<List<LookupItemDto>> GetDistrictsAsync(int cityId, CancellationToken ct = default)
+        => await GetAsync<List<LookupItemDto>>($"api/lookups/cities/{cityId}/districts", ct) ?? [];
+
+    public async Task<List<LookupItemDto>> GetProfessionsAsync(CancellationToken ct = default)
+        => await GetAsync<List<LookupItemDto>>("api/lookups/professions", ct) ?? [];
+
+    public async Task<List<LookupItemDto>> GetEducationLevelsAsync(CancellationToken ct = default)
+        => await GetAsync<List<LookupItemDto>>("api/lookups/education-levels", ct) ?? [];
+
     private async Task<T?> GetAsync<T>(string path, CancellationToken ct)
     {
         await SetAuthHeaderAsync();

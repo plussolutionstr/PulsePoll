@@ -36,6 +36,7 @@
                             StrokeShape="RoundRectangle 5"
                             HeightRequest="10" WidthRequest="10"
                             BackgroundColor="{StaticResource Danger}"
+                            IsVisible="{Binding HasUnreadNotifications}"
                             HorizontalOptions="End" VerticalOptions="Start"
                             Margin="0,-2,-2,0"/>
                 </Grid>

@@ -11,6 +11,7 @@ public class SubjectService(
     ISubjectRepository repository,
     ISubjectScoreService scoreService,
     IReferralRewardService referralRewardService,
+    IStorageService storageService,
     IMessagePublisher publisher,
     ILogger<SubjectService> logger) : ISubjectService
 {
@@ -21,7 +22,7 @@ public class SubjectService(
             return null;
 
         var score = await scoreService.GetCurrentAsync(subject.Id);
-        return MapToDto(subject, score);
+        return await MapToDtoAsync(subject, score);
     }
 
     public async Task<SubjectDto?> GetByEmailAsync(string email)
@@ -31,7 +32,7 @@ public class SubjectService(
             return null;
 
         var score = await scoreService.GetCurrentAsync(subject.Id);
-        return MapToDto(subject, score);
+        return await MapToDtoAsync(subject, score);
     }
 
     public Task<bool> ExistsAsync(string email)
@@ -46,6 +47,56 @@ public class SubjectService(
         await repository.UpdateAsync(subject);
 
         logger.LogInformation("FCM token güncellendi: {SubjectId}", subjectId);
+    }
+
+    public async Task UpdateProfileAsync(int subjectId, UpdateProfileDto dto)
+    {
+        var subject = await repository.GetByIdAsync(subjectId)
+            ?? throw new NotFoundException("Denek");
+
+        subject.FirstName = dto.FirstName;
+        subject.LastName = dto.LastName;
+        subject.Email = dto.Email;
+        subject.Gender = dto.Gender;
+        subject.BirthDate = dto.BirthDate;
+        subject.MaritalStatus = dto.MaritalStatus;
+        subject.GsmOperator = dto.GsmOperator;
+        subject.CityId = dto.CityId;
+        subject.DistrictId = dto.DistrictId;
+        subject.ProfessionId = dto.ProfessionId;
+        subject.EducationLevelId = dto.EducationLevelId;
+        subject.IsRetired = dto.IsRetired;
+        subject.IsHeadOfFamily = dto.IsHeadOfFamily;
+        subject.IsHeadOfFamilyRetired = dto.IsHeadOfFamilyRetired;
+        subject.HeadOfFamilyProfessionId = dto.IsHeadOfFamily ? null : dto.HeadOfFamilyProfessionId;
+        subject.HeadOfFamilyEducationLevelId = dto.IsHeadOfFamily ? null : dto.HeadOfFamilyEducationLevelId;
+
+        await repository.UpdateAsync(subject);
+        logger.LogInformation("Profil güncellendi: {SubjectId}", subjectId);
+    }
+
+    public async Task<string> UploadProfilePhotoAsync(int subjectId, Stream stream, string contentType, string fileName)
+    {
+        var subject = await repository.GetByIdAsync(subjectId)
+            ?? throw new NotFoundException("Denek");
+
+        var ext = Path.GetExtension(fileName);
+        var objectName = $"profile-photos/{subjectId}{ext}";
+
+        if (!string.IsNullOrEmpty(subject.ProfilePhotoUrl))
+        {
+            try { await storageService.DeleteAsync("profile-photos", $"{subjectId}{Path.GetExtension(subject.ProfilePhotoUrl)}"); }
+            catch { /* ignore if old photo doesn't exist */ }
+        }
+
+        await storageService.UploadAsync("profile-photos", objectName, stream, contentType);
+
+        subject.ProfilePhotoUrl = objectName;
+        await repository.UpdateAsync(subject);
+
+        var presignedUrl = await storageService.GetPresignedUrlAsync("profile-photos", objectName);
+        logger.LogInformation("Profil fotoğrafı yüklendi: {SubjectId}", subjectId);
+        return presignedUrl;
     }
 
     public async Task<List<SubjectDto>> GetAllAsync()
@@ -98,41 +149,74 @@ public class SubjectService(
         logger.LogInformation("Toplu SMS gönderildi: {Count} denek by Admin {AdminId}", targets.Count, sentByAdminId);
     }
 
-    private static SubjectDto MapToDto(Domain.Entities.Subject s, SubjectScoreDto? score = null) => new(
-        s.Id,
-        s.PublicId,
-        s.Email,
-        s.FirstName,
-        s.LastName,
-        s.FullName,
-        s.PhoneNumber,
-        s.Gender,
-        s.Age,
-        s.BirthDate,
-        s.MaritalStatus,
-        s.GsmOperator,
-        s.City?.Name ?? string.Empty,
-        s.District?.Name ?? string.Empty,
-        s.Profession?.Name ?? string.Empty,
-        s.EducationLevel?.Name ?? string.Empty,
-        s.IsRetired,
-        s.IsHeadOfFamily,
-        s.IsHeadOfFamilyRetired,
-        s.HeadOfFamilyProfession?.Name,
-        s.HeadOfFamilyEducationLevel?.Name,
-        ResolvePrimaryBankName(s),
-        ResolvePrimaryIban(s),
-        string.Empty,
-        s.SocioeconomicStatus?.Name ?? string.Empty,
-        s.SocioeconomicStatus?.Code,
-        s.LSMSocioeconomicStatus?.Name ?? string.Empty,
-        s.LSMSocioeconomicStatus?.Code,
-        s.ReferenceCode,
-        s.ReferralCode,
-        s.Status,
-        s.CreatedAt,
-        score?.Score,
-        score?.Star);
+    private async Task<SubjectDto> MapToDtoAsync(Domain.Entities.Subject s, SubjectScoreDto? score = null)
+    {
+        string? photoUrl = null;
+        if (!string.IsNullOrEmpty(s.ProfilePhotoUrl))
+        {
+            try
+            {
+                var objectName = s.ProfilePhotoUrl.StartsWith("profile-photos/")
+                    ? s.ProfilePhotoUrl["profile-photos/".Length..]
+                    : s.ProfilePhotoUrl;
+                photoUrl = await storageService.GetPresignedUrlAsync("profile-photos", objectName);
+            }
+            catch { /* presigned URL üretilemezse null bırak */ }
+        }
+
+        return BuildDto(s, score, photoUrl);
+    }
+
+    private static SubjectDto MapToDto(Domain.Entities.Subject s, SubjectScoreDto? score = null)
+        => BuildDto(s, score, s.ProfilePhotoUrl);
+
+    private static SubjectDto BuildDto(Domain.Entities.Subject s, SubjectScoreDto? score, string? photoUrl)
+    {
+        var completed = score?.Completed ?? 0;
+        var disqualified = (score?.Disqualify ?? 0) + (score?.ScreenOut ?? 0);
+        var total = score?.Started ?? 0;
+        var successRate = total > 0 ? (int)Math.Round(100.0 * completed / total) : 0;
+
+        return new SubjectDto(
+            s.Id,
+            s.PublicId,
+            s.Email,
+            s.FirstName,
+            s.LastName,
+            s.FullName,
+            s.PhoneNumber,
+            s.Gender,
+            s.Age,
+            s.BirthDate,
+            s.MaritalStatus,
+            s.GsmOperator,
+            s.City?.Name ?? string.Empty,
+            s.District?.Name ?? string.Empty,
+            s.Profession?.Name ?? string.Empty,
+            s.EducationLevel?.Name ?? string.Empty,
+            s.IsRetired,
+            s.IsHeadOfFamily,
+            s.IsHeadOfFamilyRetired,
+            s.HeadOfFamilyProfession?.Name,
+            s.HeadOfFamilyEducationLevel?.Name,
+            ResolvePrimaryBankName(s),
+            ResolvePrimaryIban(s),
+            string.Empty,
+            s.SocioeconomicStatus?.Name ?? string.Empty,
+            s.SocioeconomicStatus?.Code,
+            s.LSMSocioeconomicStatus?.Name ?? string.Empty,
+            s.LSMSocioeconomicStatus?.Code,
+            s.ReferenceCode,
+            s.ReferralCode,
+            photoUrl,
+            s.Status,
+            s.CreatedAt,
+            score?.Score,
+            score?.Star,
+            completed,
+            disqualified,
+            successRate);
+    }
 
     private static string ResolvePrimaryBankName(Domain.Entities.Subject subject)
         => subject.BankAccounts

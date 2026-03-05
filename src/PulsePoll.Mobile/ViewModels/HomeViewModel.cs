@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PulsePoll.Mobile.Models;
@@ -10,11 +11,18 @@ public partial class HomeViewModel : ObservableObject
 {
     private readonly IPulsePollApiClient _apiClient;
     private readonly MockDataService _mockDataService;
+    private readonly NotificationCenterService _notificationCenter;
 
-    public HomeViewModel(IPulsePollApiClient apiClient, MockDataService mockDataService)
+    public HomeViewModel(
+        IPulsePollApiClient apiClient,
+        MockDataService mockDataService,
+        NotificationCenterService notificationCenter)
     {
         _apiClient = apiClient;
         _mockDataService = mockDataService;
+        _notificationCenter = notificationCenter;
+        _notificationCenter.PropertyChanged += OnNotificationCenterPropertyChanged;
+        SyncNotificationBadge();
     }
 
     [ObservableProperty] private ObservableCollection<StoryModel> _stories = [];
@@ -23,6 +31,8 @@ public partial class HomeViewModel : ObservableObject
     [ObservableProperty] private bool _isLoading;
     [ObservableProperty] private bool _isRefreshing;
     [ObservableProperty] private bool _needsRefreshOnReturn;
+    [ObservableProperty] private bool _hasUnreadNotifications;
+    [ObservableProperty] private int _unreadNotificationCount;
 
     private bool _isLoaded;
 
@@ -56,6 +66,21 @@ public partial class HomeViewModel : ObservableObject
         {
             IsRefreshing = false;
         }
+    }
+
+    [RelayCommand]
+    private async Task LoadNotificationBadgeAsync()
+    {
+        try
+        {
+            await _notificationCenter.LoadAsync();
+        }
+        catch
+        {
+            // Bildirim badge yüklenemese de anasayfa çalışmaya devam etmeli.
+        }
+
+        SyncNotificationBadge();
     }
 
     private async Task FetchDataAsync()
@@ -150,5 +175,17 @@ public partial class HomeViewModel : ObservableObject
         {
             // Story seen senkronizasyonu kritik bir akış değil.
         }
+    }
+
+    private void OnNotificationCenterPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(NotificationCenterService.UnreadCount) or nameof(NotificationCenterService.Items))
+            SyncNotificationBadge();
+    }
+
+    private void SyncNotificationBadge()
+    {
+        UnreadNotificationCount = _notificationCenter.UnreadCount;
+        HasUnreadNotifications = _notificationCenter.HasUnread;
     }
 }
