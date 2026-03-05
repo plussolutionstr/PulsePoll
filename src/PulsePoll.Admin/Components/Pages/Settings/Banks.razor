@@ -33,7 +33,7 @@
                 </span>
             </CellDisplayTemplate>
         </DxGridDataColumn>
-        <DxGridDataColumn Caption="Thumbnail" Width="100px">
+        <DxGridDataColumn Caption="Thumbnail" Width="120px">
             <CellDisplayTemplate>
                 @{
                     var row = (Bank)context.DataItem;
@@ -41,11 +41,11 @@
                 }
                 @if (!string.IsNullOrWhiteSpace(thumbnailUrl))
                 {
-                    <img src="@thumbnailUrl" style="width:32px; height:32px; object-fit:contain;" alt="@row.Name thumbnail" />
+                    <img src="@thumbnailUrl" style="width:48px; height:48px; object-fit:contain;" alt="@row.Name thumbnail" />
                 }
             </CellDisplayTemplate>
         </DxGridDataColumn>
-        <DxGridDataColumn Caption="Büyük Logo" Width="120px">
+        <DxGridDataColumn Caption="Büyük Logo" Width="180px">
             <CellDisplayTemplate>
                 @{
                     var row = (Bank)context.DataItem;
@@ -53,7 +53,7 @@
                 }
                 @if (!string.IsNullOrWhiteSpace(logoUrl))
                 {
-                    <img src="@logoUrl" style="max-width:90px; max-height:32px; object-fit:contain;" alt="@row.Name logo" />
+                    <img src="@logoUrl" style="max-width:150px; max-height:48px; object-fit:contain;" alt="@row.Name logo" />
                 }
             </CellDisplayTemplate>
         </DxGridDataColumn>

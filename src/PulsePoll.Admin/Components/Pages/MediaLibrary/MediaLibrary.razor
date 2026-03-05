@@ -69,43 +69,80 @@
     }
 </DxLoadingPanel>
 
-<!-- Yükleme Popup -->
+<!-- Toplu Yükleme Popup -->
 <DxPopup @bind-Visible="_uploadPopupVisible"
          HeaderText="Görsel Yükle"
-         Width="480px"
+         Width="600px"
          CloseOnOutsideClick="false"
          ShowFooter="true">
     <BodyContentTemplate Context="_">
         <div class="mb-3">
             <DxFileInput MaxFileSize="5242880"
-                         MaxFileCount="1"
-                         FilesUploading="OnFileUploading"
-                         AcceptedFileTypes="@_acceptedTypes" />
-            <div class="small text-muted mt-1">
-                <i class="bi bi-info-circle me-1"></i>JPG, PNG, GIF, WebP — maks. 5 MB<br/>
-                <i class="bi bi-aspect-ratio me-1"></i>Önerilen boyut: <strong>900×300px (3:1 oran)</strong>
+                         MaxFileCount="20"
+                         FilesUploading="OnFilesUploading"
+                         AcceptedFileTypes="@_acceptedTypes"
+                         DropZoneContainerCssSelector="#upload-drop-zone"
+                         DropZoneDragOverCssClass="drop-zone-active" />
+            <div id="upload-drop-zone"
+                 class="border border-2 border-dashed rounded-3 text-center text-muted p-4 mt-2"
+                 style="min-height:120px; display:flex; align-items:center; justify-content:center; flex-direction:column; cursor:pointer;">
+                <i class="bi bi-cloud-arrow-up" style="font-size:2.5rem;"></i>
+                <p class="mb-0 mt-2">Görselleri buraya sürükleyin veya yukarıdan seçin</p>
+                <p class="small mb-0">JPG, PNG, GIF, WebP — maks. 5 MB / dosya — en fazla 20 dosya</p>
             </div>
         </div>
-        @if (_pendingBytes != null)
+        @if (_pendingFiles.Count > 0)
         {
-            <div class="mt-2">
-                <img src="@($"data:{_pendingFileType};base64,{Convert.ToBase64String(_pendingBytes)}")"
-                     style="max-height:120px; max-width:100%; object-fit:contain; border:1px solid #dee2e6; border-radius:4px;"
-                     alt="Önizleme" />
-                <div class="small text-muted mt-1">@_pendingFileName — @FormatSize(_pendingBytes.LongLength)</div>
+            <div class="mt-2" style="max-height:260px; overflow-y:auto;">
+                <table class="table table-sm table-borderless mb-0">
+                    @foreach (var pf in _pendingFiles)
+                    {
+                        <tr>
+                            <td style="width:50px;">
+                                <img src="@($"data:{pf.ContentType};base64,{Convert.ToBase64String(pf.Bytes)}")"
+                                     style="width:40px; height:40px; object-fit:contain; border:1px solid #dee2e6; border-radius:4px;"
+                                     alt="Önizleme" />
+                            </td>
+                            <td class="align-middle">
+                                <span class="small fw-semibold text-truncate d-inline-block" style="max-width:280px;" title="@pf.FileName">@pf.FileName</span>
+                                <span class="small text-muted ms-2">@FormatSize(pf.Bytes.LongLength)</span>
+                            </td>
+                            <td class="align-middle text-end" style="width:36px;">
+                                @if (pf.Status == UploadFileStatus.Pending)
+                                {
+                                    <DxButton IconCssClass="bi bi-x"
+                                              RenderStyle="ButtonRenderStyle.Danger"
+                                              RenderStyleMode="ButtonRenderStyleMode.Text"
+                                              SizeMode="SizeMode.Small"
+                                              Click="@(() => _pendingFiles.Remove(pf))" />
+                                }
+                                else if (pf.Status == UploadFileStatus.Uploaded)
+                                {
+                                    <i class="bi bi-check-circle-fill text-success"></i>
+                                }
+                                else if (pf.Status == UploadFileStatus.Failed)
+                                {
+                                    <i class="bi bi-exclamation-circle-fill text-danger" title="@pf.Error"></i>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </table>
             </div>
         }
     </BodyContentTemplate>
     <FooterContentTemplate>
-        <DxButton Text="Yükle" IconCssClass="bi bi-upload"
+        <DxButton Text="@(_isUploading ? $"Yükleniyor... ({_uploadedCount}/{_pendingFiles.Count})" : $"Tümünü Yükle ({_pendingFiles.Count(f => f.Status == UploadFileStatus.Pending)})")"
+                  IconCssClass="@(_isUploading ? "spinner-border spinner-border-sm" : "bi bi-upload")"
                   RenderStyle="ButtonRenderStyle.Primary"
                   RenderStyleMode="ButtonRenderStyleMode.Outline"
-                  Click="DoUpload"
-                  Enabled="@(_pendingBytes != null && !_isUploading)" />
-        <DxButton Text="İptal"
+                  Click="DoUploadAll"
+                  Enabled="@(_pendingFiles.Any(f => f.Status == UploadFileStatus.Pending) && !_isUploading)" />
+        <DxButton Text="Kapat"
                   RenderStyle="ButtonRenderStyle.Secondary"
                   RenderStyleMode="ButtonRenderStyleMode.Outline"
-                  Click="CloseUploadPopup" />
+                  Click="CloseUploadPopup"
+                  Enabled="@(!_isUploading)" />
     </FooterContentTemplate>
 </DxPopup>
 
@@ -146,9 +183,8 @@
     // Yükleme
     private bool _uploadPopupVisible;
     private bool _isUploading;
-    private byte[]? _pendingBytes;
-    private string? _pendingFileName;
-    private string? _pendingFileType;
+    private int _uploadedCount;
+    private List<PendingFile> _pendingFiles = [];
     private readonly List<string> _acceptedTypes = [".jpg", ".jpeg", ".png", ".gif", ".webp"];
 
     // Silme
@@ -184,46 +220,49 @@
             return;
         }
 
-        _pendingBytes    = null;
-        _pendingFileName = null;
-        _pendingFileType = null;
+        _pendingFiles = [];
+        _uploadedCount = 0;
         _uploadPopupVisible = true;
     }
 
     private void CloseUploadPopup()
     {
         _uploadPopupVisible = false;
-        _pendingBytes       = null;
-        _pendingFileName    = null;
-        _pendingFileType    = null;
+        _pendingFiles = [];
+        _uploadedCount = 0;
     }
 
-    private async Task OnFileUploading(FilesUploadingEventArgs args)
+    private async Task OnFilesUploading(FilesUploadingEventArgs args)
     {
-        var file = args.Files[0];
-        _pendingFileName = file.Name;
-        // Tarayıcı bazen Type'ı boş döner; uzantıdan türet
-        _pendingFileType = string.IsNullOrEmpty(file.Type)
-            ? GetContentTypeFromExtension(file.Name)
-            : file.Type;
-        _pendingBytes    = new byte[(int)file.Size];
+        foreach (var file in args.Files)
+        {
+            if (_pendingFiles.Any(p => p.FileName == file.Name))
+                continue;
 
-        var stream = file.OpenReadStream((long)file.Size);
-        try
-        {
-            int read, offset = 0;
-            while ((read = await stream.ReadAsync(_pendingBytes, offset, (int)file.Size - offset)) > 0)
-                offset += read;
-        }
-        finally
-        {
-            stream.Close();
+            var contentType = string.IsNullOrEmpty(file.Type)
+                ? GetContentTypeFromExtension(file.Name)
+                : file.Type;
+
+            var bytes = new byte[(int)file.Size];
+            var stream = file.OpenReadStream((long)file.Size);
+            try
+            {
+                int read, offset = 0;
+                while ((read = await stream.ReadAsync(bytes, offset, (int)file.Size - offset)) > 0)
+                    offset += read;
+            }
+            finally
+            {
+                stream.Close();
+            }
+
+            _pendingFiles.Add(new PendingFile(file.Name, contentType, bytes));
         }
 
         await InvokeAsync(StateHasChanged);
     }
 
-    private async Task DoUpload()
+    private async Task DoUploadAll()
     {
         if (!_canUpload)
         {
@@ -231,21 +270,40 @@
             return;
         }
 
-        if (_pendingBytes is null || _pendingFileName is null || _pendingFileType is null) return;
+        var pending = _pendingFiles.Where(f => f.Status == UploadFileStatus.Pending).ToList();
+        if (pending.Count == 0) return;
 
         _isUploading = true;
+        _uploadedCount = 0;
         try
         {
             var adminId = await GetAdminIdAsync();
-            using var ms = new MemoryStream(_pendingBytes, false);
-            await MediaAssetService.UploadAsync(ms, _pendingFileName, _pendingFileType, _pendingBytes.LongLength, adminId);
-            Toast.Success("Görsel yüklendi.");
-            CloseUploadPopup();
+            foreach (var pf in pending)
+            {
+                try
+                {
+                    using var ms = new MemoryStream(pf.Bytes, false);
+                    await MediaAssetService.UploadAsync(ms, pf.FileName, pf.ContentType, pf.Bytes.LongLength, adminId);
+                    pf.Status = UploadFileStatus.Uploaded;
+                }
+                catch (Exception ex)
+                {
+                    pf.Status = UploadFileStatus.Failed;
+                    pf.Error = ex.Message;
+                }
+                _uploadedCount++;
+                await InvokeAsync(StateHasChanged);
+            }
+
+            var successCount = pending.Count(f => f.Status == UploadFileStatus.Uploaded);
+            var failCount = pending.Count(f => f.Status == UploadFileStatus.Failed);
+
+            if (failCount == 0)
+                Toast.Success($"{successCount} görsel yüklendi.");
+            else
+                Toast.Warning($"{successCount} yüklendi, {failCount} başarısız.");
+
             await LoadDataAsync();
-        }
-        catch (Exception ex)
-        {
-            ErrorHandler.HandleOperation(ex, Toast);
         }
         finally
         {
@@ -318,4 +376,15 @@
             ".webp"           => "image/webp",
             _                 => "application/octet-stream"
         };
+
+    private sealed class PendingFile(string fileName, string contentType, byte[] bytes)
+    {
+        public string FileName { get; } = fileName;
+        public string ContentType { get; } = contentType;
+        public byte[] Bytes { get; } = bytes;
+        public UploadFileStatus Status { get; set; } = UploadFileStatus.Pending;
+        public string? Error { get; set; }
+    }
+
+    private enum UploadFileStatus { Pending, Uploaded, Failed }
 }

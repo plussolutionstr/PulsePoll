@@ -76,3 +76,12 @@ body {
     justify-content: center;
     width: 100%;
 }
+
+.border-dashed {
+    border-style: dashed !important;
+}
+
+.drop-zone-active {
+    border-color: var(--pp-accent) !important;
+    background-color: var(--pp-surface) !important;
+}
