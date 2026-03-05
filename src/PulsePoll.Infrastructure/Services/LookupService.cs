@@ -25,8 +25,7 @@ public class LookupService(AppDbContext db) : ILookupService
         return query
             .Include(b => b.ThumbnailMediaAsset)
             .Include(b => b.LogoMediaAsset)
-            .OrderBy(b => b.SortOrder)
-            .ThenBy(b => b.Name)
+            .OrderBy(b => b.Name)
             .ToListAsync();
     }
 

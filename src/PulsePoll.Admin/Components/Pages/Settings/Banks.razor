@@ -23,7 +23,6 @@
     <Columns>
         <DxGridDataColumn FieldName="Name" Caption="Banka Adı" MinWidth="200" />
         <DxGridDataColumn FieldName="Code" Caption="Kod" Width="120px" />
-        <DxGridDataColumn FieldName="SortOrder" Caption="Sıra" Width="90px" />
         <DxGridDataColumn FieldName="IsActive" Caption="Durum" Width="90px">
             <CellDisplayTemplate>
                 @{
@@ -101,11 +100,7 @@
                 <label class="form-label">Kod</label>
                 <DxTextBox @bind-Text="_form.Code" />
             </DxFormLayoutItem>
-            <DxFormLayoutItem ColSpanMd="4">
-                <label class="form-label">Sıra</label>
-                <DxSpinEdit @bind-Value="_form.SortOrder" MinValue="1" />
-            </DxFormLayoutItem>
-            <DxFormLayoutItem ColSpanMd="8">
+            <DxFormLayoutItem ColSpanMd="12">
                 <label class="form-label">Thumbnail</label>
                 <div class="d-flex align-items-center gap-3">
                     @if (!string.IsNullOrWhiteSpace(_thumbnailMedia?.Url))
@@ -213,8 +208,7 @@
     {
         await using var db = await ContextFactory.CreateDbContextAsync();
         _items = await db.Banks
-            .OrderBy(b => b.SortOrder)
-            .ThenBy(b => b.Name)
+            .OrderBy(b => b.Name)
             .ToListAsync();
 
         _allMedia = await MediaAssetService.GetAllAsync();
@@ -229,8 +223,7 @@
         _formError = null;
         _form = new BankForm
         {
-            IsActive = true,
-            SortOrder = (_items.LastOrDefault()?.SortOrder ?? 0) + 1
+            IsActive = true
         };
         _thumbnailMedia = null;
         _logoMedia = null;
@@ -271,7 +264,6 @@
             Id = item.Id,
             Name = item.Name,
             Code = item.Code,
-            SortOrder = item.SortOrder,
             IsActive = item.IsActive,
             ThumbnailMediaAssetId = item.ThumbnailMediaAssetId,
             LogoMediaAssetId = item.LogoMediaAssetId
@@ -377,7 +369,6 @@
 
             entity.Name = normalizedName;
             entity.Code = string.IsNullOrWhiteSpace(_form.Code) ? null : _form.Code.Trim().ToUpperInvariant();
-            entity.SortOrder = _form.SortOrder > 0 ? _form.SortOrder : 1;
             entity.IsActive = _form.IsActive;
             entity.ThumbnailMediaAssetId = _form.ThumbnailMediaAssetId;
             entity.LogoMediaAssetId = _form.LogoMediaAssetId;
@@ -403,7 +394,6 @@
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public string? Code { get; set; }
-        public int SortOrder { get; set; } = 1;
         public bool IsActive { get; set; } = true;
         public int? ThumbnailMediaAssetId { get; set; }
         public int? LogoMediaAssetId { get; set; }

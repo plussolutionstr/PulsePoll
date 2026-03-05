@@ -18,8 +18,6 @@ public class Bank
     public int? ThumbnailMediaAssetId { get; set; }
     public int? LogoMediaAssetId { get; set; }
 
-    public int SortOrder { get; set; }
-
     public MediaAsset? ThumbnailMediaAsset { get; set; }
     public MediaAsset? LogoMediaAsset { get; set; }
 }
