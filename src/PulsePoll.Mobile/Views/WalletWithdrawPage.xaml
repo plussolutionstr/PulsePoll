@@ -8,63 +8,123 @@
              Title="Para Çek">
 
     <ScrollView>
-        <VerticalStackLayout Padding="20,24" Spacing="16">
-            <Label Text="Para Çek"
-                   FontFamily="JakartaBold"
-                   FontSize="24"
-                   TextColor="{StaticResource TextPrimary}" />
+        <VerticalStackLayout Padding="20,16" Spacing="16">
 
-            <VerticalStackLayout Spacing="8">
-                <Label Text="Banka Hesabı"
-                       FontFamily="JakartaSemiBold"
-                       FontSize="14"
-                       TextColor="{StaticResource TextSecondary}" />
-                <Picker Title="Hesap seçin"
-                        ItemsSource="{Binding BankAccounts}"
-                        ItemDisplayBinding="{Binding DisplayTitle}"
-                        SelectedItem="{Binding SelectedBankAccount}" />
-            </VerticalStackLayout>
+            <!-- Mini Balance Card -->
+            <Border StrokeThickness="0"
+                    StrokeShape="RoundRectangle 20"
+                    Padding="20,16">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="{StaticResource PrimaryPurple}" Offset="0"/>
+                        <GradientStop Color="{StaticResource PrimaryDark}" Offset="1"/>
+                    </LinearGradientBrush>
+                </Border.Background>
+                <HorizontalStackLayout Spacing="12" VerticalOptions="Center">
+                    <Border StrokeThickness="0"
+                            StrokeShape="RoundRectangle 20"
+                            HeightRequest="40" WidthRequest="40"
+                            BackgroundColor="#30FFFFFF">
+                        <Label Text="&#x20BA;"
+                               FontFamily="JakartaExtraBold" FontSize="20"
+                               TextColor="White"
+                               HorizontalOptions="Center" VerticalOptions="Center"/>
+                    </Border>
+                    <VerticalStackLayout Spacing="2" VerticalOptions="Center">
+                        <Label Text="Çekilebilir Bakiye"
+                               FontFamily="JakartaRegular" FontSize="12"
+                               TextColor="#BBFFFFFF"/>
+                        <Label Text="{Binding WithdrawableBalanceInfo}"
+                               FontFamily="JakartaBold" FontSize="16"
+                               TextColor="White"/>
+                    </VerticalStackLayout>
+                </HorizontalStackLayout>
+            </Border>
 
-            <VerticalStackLayout Spacing="8">
-                <Label Text="Tutar"
-                       FontFamily="JakartaSemiBold"
-                       FontSize="14"
-                       TextColor="{StaticResource TextSecondary}" />
-                <Entry Placeholder="0,00"
-                       Text="{Binding Amount}"
-                       MaxLength="16"
-                       Keyboard="Numeric">
-                    <Entry.Behaviors>
-                        <behaviors:DecimalEntryBehavior />
-                    </Entry.Behaviors>
-                </Entry>
-                <Label Text="TL cinsinden tutar girin."
-                       FontFamily="JakartaRegular"
-                       FontSize="12"
-                       TextColor="{StaticResource TextTertiary}" />
-                <Label Text="{Binding WithdrawableBalanceInfo}"
-                       FontFamily="JakartaRegular"
-                       FontSize="12"
-                       TextColor="{StaticResource TextTertiary}" />
-                <Label Text="{Binding ConversionInfo}"
-                       FontFamily="JakartaRegular"
-                       FontSize="12"
-                       TextColor="{StaticResource TextTertiary}" />
-            </VerticalStackLayout>
+            <!-- Bank Account Selection -->
+            <Border Style="{StaticResource CardBorderStyle}" Padding="16">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Banka Hesabı"
+                           FontFamily="JakartaSemiBold"
+                           FontSize="13"
+                           TextColor="{StaticResource TextSecondary}" />
+                    <Border StrokeShape="RoundRectangle 12"
+                            Stroke="{StaticResource CardBorder}"
+                            StrokeThickness="1"
+                            BackgroundColor="{StaticResource PageBackground}"
+                            Padding="4,0">
+                        <Picker Title="Hesap seçin"
+                                ItemsSource="{Binding BankAccounts}"
+                                ItemDisplayBinding="{Binding DisplayTitle}"
+                                SelectedItem="{Binding SelectedBankAccount}" />
+                    </Border>
+                </VerticalStackLayout>
+            </Border>
 
+            <!-- Amount Entry -->
+            <Border Style="{StaticResource CardBorderStyle}" Padding="16">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Tutar"
+                           FontFamily="JakartaSemiBold"
+                           FontSize="13"
+                           TextColor="{StaticResource TextSecondary}" />
+
+                    <Border StrokeShape="RoundRectangle 12"
+                            Stroke="{StaticResource CardBorder}"
+                            StrokeThickness="1"
+                            BackgroundColor="{StaticResource PageBackground}"
+                            Padding="0">
+                        <Grid ColumnDefinitions="48,*,48">
+                            <Label Text="&#x20BA;"
+                                   FontFamily="JakartaBold" FontSize="18"
+                                   TextColor="{StaticResource PrimaryPurple}"
+                                   HorizontalOptions="Center" VerticalOptions="Center"/>
+                            <Entry Grid.Column="1"
+                                   Placeholder="0,00"
+                                   Text="{Binding Amount}"
+                                   MaxLength="16"
+                                   Keyboard="Numeric"
+                                   FontFamily="JakartaSemiBold"
+                                   FontSize="18">
+                                <Entry.Behaviors>
+                                    <behaviors:DecimalEntryBehavior />
+                                </Entry.Behaviors>
+                            </Entry>
+                            <Label Grid.Column="2"
+                                   Text="TL"
+                                   FontFamily="JakartaSemiBold" FontSize="14"
+                                   TextColor="{StaticResource TextTertiary}"
+                                   HorizontalOptions="Center" VerticalOptions="Center"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Info Hint -->
+                    <Border StrokeThickness="0"
+                            StrokeShape="RoundRectangle 10"
+                            BackgroundColor="{StaticResource PrimaryLight}"
+                            Padding="12,10">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="{Binding ConversionInfo}"
+                                   FontFamily="JakartaRegular"
+                                   FontSize="12"
+                                   TextColor="{StaticResource PrimaryDark}" />
+                        </VerticalStackLayout>
+                    </Border>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Buttons -->
             <Button Text="Talep Gönder"
-                    HeightRequest="46"
-                    CornerRadius="14"
-                    FontFamily="JakartaSemiBold"
+                    Style="{StaticResource PrimaryButtonStyle}"
+                    HorizontalOptions="Fill"
                     Clicked="OnSubmitClicked" />
 
             <Button Text="İptal"
-                    HeightRequest="44"
-                    CornerRadius="14"
-                    FontFamily="JakartaSemiBold"
-                    Clicked="OnCancelClicked"
-                    BackgroundColor="#EEEEF8"
-                    TextColor="{StaticResource TextPrimary}" />
+                    Style="{StaticResource SecondaryButtonStyle}"
+                    HorizontalOptions="Fill"
+                    Clicked="OnCancelClicked" />
+
+            <BoxView HeightRequest="20" Color="Transparent"/>
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>

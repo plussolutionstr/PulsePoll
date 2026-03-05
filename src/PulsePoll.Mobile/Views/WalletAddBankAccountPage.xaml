@@ -7,56 +7,107 @@
              Title="{Binding PageTitle}">
 
     <ScrollView>
-        <VerticalStackLayout Padding="20,24" Spacing="16">
+        <VerticalStackLayout Padding="20,16" Spacing="16">
+
+            <!-- Header Icon -->
+            <Border StrokeThickness="0"
+                    StrokeShape="RoundRectangle 28"
+                    HeightRequest="56" WidthRequest="56"
+                    BackgroundColor="{StaticResource PrimaryLight}"
+                    HorizontalOptions="Center"
+                    Margin="0,8,0,0">
+                <Label Text="&#x1F3E6;"
+                       FontSize="26"
+                       HorizontalOptions="Center" VerticalOptions="Center"/>
+            </Border>
             <Label Text="{Binding PageTitle}"
                    FontFamily="JakartaBold"
-                   FontSize="24"
+                   FontSize="20"
+                   HorizontalTextAlignment="Center"
                    TextColor="{StaticResource TextPrimary}" />
 
-            <VerticalStackLayout Spacing="8">
-                <Label Text="Banka"
-                       FontFamily="JakartaSemiBold"
-                       FontSize="14"
-                       TextColor="{StaticResource TextSecondary}" />
-                <Picker Title="Banka seçin"
-                        ItemsSource="{Binding Banks}"
-                        ItemDisplayBinding="{Binding Name}"
-                        SelectedItem="{Binding SelectedBank}" />
-            </VerticalStackLayout>
+            <!-- Bank Selection -->
+            <Border Style="{StaticResource CardBorderStyle}" Padding="16">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Banka"
+                           FontFamily="JakartaSemiBold"
+                           FontSize="13"
+                           TextColor="{StaticResource TextSecondary}" />
+                    <Border StrokeShape="RoundRectangle 12"
+                            Stroke="{StaticResource CardBorder}"
+                            StrokeThickness="1"
+                            BackgroundColor="{StaticResource PageBackground}"
+                            Padding="4,0">
+                        <Picker Title="Banka seçin"
+                                ItemsSource="{Binding Banks}"
+                                ItemDisplayBinding="{Binding Name}"
+                                SelectedItem="{Binding SelectedBank}" />
+                    </Border>
+                </VerticalStackLayout>
+            </Border>
 
-            <VerticalStackLayout Spacing="8">
-                <Label Text="IBAN"
-                       FontFamily="JakartaSemiBold"
-                       FontSize="14"
-                       TextColor="{StaticResource TextSecondary}" />
-                <Entry Placeholder="TR ile başlayan 26 karakter"
-                       Text="{Binding Iban}"
-                       Keyboard="Text"
-                       MaxLength="34" />
-            </VerticalStackLayout>
+            <!-- IBAN Entry -->
+            <Border Style="{StaticResource CardBorderStyle}" Padding="16">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="IBAN"
+                           FontFamily="JakartaSemiBold"
+                           FontSize="13"
+                           TextColor="{StaticResource TextSecondary}" />
+                    <Border StrokeShape="RoundRectangle 12"
+                            Stroke="{StaticResource CardBorder}"
+                            StrokeThickness="1"
+                            BackgroundColor="{StaticResource PageBackground}"
+                            Padding="0">
+                        <Grid ColumnDefinitions="48,*">
+                            <Label Text="TR"
+                                   FontFamily="JakartaBold" FontSize="16"
+                                   TextColor="{StaticResource PrimaryPurple}"
+                                   HorizontalOptions="Center" VerticalOptions="Center"/>
+                            <Entry Grid.Column="1"
+                                   Placeholder="00 0000 0000 0000 0000 0000 00"
+                                   Text="{Binding Iban}"
+                                   Keyboard="Text"
+                                   MaxLength="34"
+                                   FontFamily="JakartaRegular"
+                                   FontSize="14" />
+                        </Grid>
+                    </Border>
 
+                    <!-- IBAN Hint -->
+                    <Border StrokeThickness="0"
+                            StrokeShape="RoundRectangle 10"
+                            BackgroundColor="{StaticResource PrimaryLight}"
+                            Padding="12,10">
+                        <Label Text="26 karakter uzunluğunda, TR ile başlayan IBAN numaranızı girin."
+                               FontFamily="JakartaRegular"
+                               FontSize="12"
+                               TextColor="{StaticResource PrimaryDark}" />
+                    </Border>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Buttons -->
             <Button Text="{Binding SaveButtonText}"
-                    HeightRequest="46"
-                    CornerRadius="14"
-                    FontFamily="JakartaSemiBold"
+                    Style="{StaticResource PrimaryButtonStyle}"
+                    HorizontalOptions="Fill"
                     Clicked="OnSaveClicked" />
 
             <Button Text="Sil"
                     HeightRequest="44"
-                    CornerRadius="14"
+                    CornerRadius="22"
                     FontFamily="JakartaSemiBold"
+                    FontSize="14"
                     Clicked="OnDeleteClicked"
                     IsVisible="{Binding IsEditMode}"
-                    BackgroundColor="#FDECEC"
-                    TextColor="#D14343" />
+                    BackgroundColor="{StaticResource DangerLight}"
+                    TextColor="{StaticResource Danger}" />
 
             <Button Text="İptal"
-                    HeightRequest="44"
-                    CornerRadius="14"
-                    FontFamily="JakartaSemiBold"
-                    Clicked="OnCancelClicked"
-                    BackgroundColor="#EEEEF8"
-                    TextColor="{StaticResource TextPrimary}" />
+                    Style="{StaticResource SecondaryButtonStyle}"
+                    HorizontalOptions="Fill"
+                    Clicked="OnCancelClicked" />
+
+            <BoxView HeightRequest="20" Color="Transparent"/>
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>
