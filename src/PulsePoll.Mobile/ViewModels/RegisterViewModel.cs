@@ -69,12 +69,6 @@ public partial class RegisterViewModel : ObservableObject
     [ObservableProperty] private LookupItemDto? _selectedHofProfession;
     [ObservableProperty] private LookupItemDto? _selectedHofEducationLevel;
 
-    // Banka
-    [ObservableProperty] private BankOptionApiDto? _selectedBank;
-    [ObservableProperty] private string _iban = string.Empty;
-    [ObservableProperty] private string _ibanFullName = string.Empty;
-    [ObservableProperty] private ObservableCollection<BankOptionApiDto> _banks = [];
-
     // Referans kodu
     [ObservableProperty] private string _referenceCode = string.Empty;
 
@@ -99,10 +93,22 @@ public partial class RegisterViewModel : ObservableObject
 
     public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
 
-    partial void OnSelectedCityChanged(LookupItemDto? value)
+    async partial void OnSelectedCityChanged(LookupItemDto? value)
     {
         if (value is null) return;
-        _ = LoadDistrictsAsync(value.Id);
+        try
+        {
+            var list = await _api.GetRegisterDistrictsAsync(value.Id);
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                Districts = new ObservableCollection<LookupItemDto>(list);
+                SelectedDistrict = null;
+            });
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+        }
     }
 
     partial void OnIsHeadOfFamilyChanged(bool value)
@@ -113,13 +119,6 @@ public partial class RegisterViewModel : ObservableObject
             SelectedHofEducationLevel = null;
             IsHeadOfFamilyRetired = false;
         }
-    }
-
-    private async Task LoadDistrictsAsync(int cityId)
-    {
-        var list = await _api.GetRegisterDistrictsAsync(cityId);
-        Districts = new ObservableCollection<LookupItemDto>(list);
-        SelectedDistrict = null;
     }
 
     [RelayCommand]
@@ -181,12 +180,9 @@ public partial class RegisterViewModel : ObservableObject
         var cities = await _api.GetRegisterCitiesAsync();
         var professions = await _api.GetRegisterProfessionsAsync();
         var educationLevels = await _api.GetRegisterEducationLevelsAsync();
-        var banks = await _api.GetRegisterBankOptionsAsync();
-
         Cities = new ObservableCollection<LookupItemDto>(cities);
         Professions = new ObservableCollection<LookupItemDto>(professions);
         EducationLevels = new ObservableCollection<LookupItemDto>(educationLevels);
-        Banks = new ObservableCollection<BankOptionApiDto>(banks);
     }
 
     [RelayCommand]
@@ -225,11 +221,6 @@ public partial class RegisterViewModel : ObservableObject
             ErrorMessage = "Hane reisi bilgilerini doldurun.";
             return;
         }
-        if (SelectedBank is null || string.IsNullOrWhiteSpace(Iban) || string.IsNullOrWhiteSpace(IbanFullName))
-        {
-            ErrorMessage = "Banka bilgilerini doldurun.";
-            return;
-        }
 
         CurrentStep = 3;
     }
@@ -248,7 +239,15 @@ public partial class RegisterViewModel : ObservableObject
         IsBusy = true;
         try
         {
-            var deviceInfo = $"{DeviceInfo.Manufacturer} {DeviceInfo.Model} - {DeviceInfo.Platform} {DeviceInfo.VersionString}";
+            var ip = "unknown";
+            try
+            {
+                using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
+                ip = (await http.GetStringAsync("https://api.ipify.org")).Trim();
+            }
+            catch { /* IP alınamazsa devam et */ }
+
+            var deviceInfo = $"{DeviceInfo.Manufacturer} {DeviceInfo.Model} - {DeviceInfo.Platform} {DeviceInfo.VersionString} | IP: {ip}";
 
             var dto = new
             {
@@ -270,9 +269,6 @@ public partial class RegisterViewModel : ObservableObject
                 isHeadOfFamilyRetired = IsHeadOfFamily ? false : IsHeadOfFamilyRetired,
                 headOfFamilyProfessionId = IsHeadOfFamily ? (int?)null : SelectedHofProfession?.Id,
                 headOfFamilyEducationLevelId = IsHeadOfFamily ? (int?)null : SelectedHofEducationLevel?.Id,
-                bankId = SelectedBank!.Id,
-                iban = Iban.Replace(" ", "").Trim(),
-                ibanFullName = IbanFullName.Trim(),
                 referenceCode = string.IsNullOrWhiteSpace(ReferenceCode) ? null : ReferenceCode.Trim(),
                 kvkkApproval = true,
                 kvkkDetail = deviceInfo

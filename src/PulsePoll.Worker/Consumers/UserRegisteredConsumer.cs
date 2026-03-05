@@ -78,20 +78,23 @@ public class SubjectRegisteredConsumer(
         await walletRepository.AddAsync(wallet);
         logger.LogInformation("Cüzdan oluşturuldu: {SubjectId}", subject.Id);
 
-        var bank = await lookupService.GetBankByIdAsync(msg.BankId);
-        if (bank is not null)
+        if (msg.BankId.HasValue && !string.IsNullOrWhiteSpace(msg.IBAN))
         {
-            var account = new BankAccount
+            var bank = await lookupService.GetBankByIdAsync(msg.BankId.Value);
+            if (bank is not null)
             {
-                SubjectId = subject.Id,
-                BankName = bank.Name,
-                IbanEncrypted = msg.IBAN,
-                IbanLast4 = msg.IBAN.Length >= 4 ? msg.IBAN[^4..] : msg.IBAN,
-                IsDefault = true
-            };
-            account.SetCreated(subject.Id, msg.RegisteredAt);
-            await walletRepository.AddBankAccountAsync(account);
-            logger.LogInformation("Kayıt sırasında banka hesabı eklendi: SubjectId={SubjectId}", subject.Id);
+                var account = new BankAccount
+                {
+                    SubjectId = subject.Id,
+                    BankName = bank.Name,
+                    IbanEncrypted = msg.IBAN,
+                    IbanLast4 = msg.IBAN.Length >= 4 ? msg.IBAN[^4..] : msg.IBAN,
+                    IsDefault = true
+                };
+                account.SetCreated(subject.Id, msg.RegisteredAt);
+                await walletRepository.AddBankAccountAsync(account);
+                logger.LogInformation("Kayıt sırasında banka hesabı eklendi: SubjectId={SubjectId}", subject.Id);
+            }
         }
 
         await TryCreateReferralAsync(subject, msg.ReferenceCode, msg.RegisteredAt);

@@ -17,9 +17,9 @@ public class RegisterRequestValidator : AbstractValidator<RegisterSubjectDto>
         RuleFor(x => x.DistrictId).GreaterThan(0);
         RuleFor(x => x.ProfessionId).GreaterThan(0);
         RuleFor(x => x.EducationLevelId).GreaterThan(0);
-        RuleFor(x => x.BankId).GreaterThan(0);
-        RuleFor(x => x.IBAN).NotEmpty().MaximumLength(34);
-        RuleFor(x => x.IBANFullName).NotEmpty().MaximumLength(200);
+        RuleFor(x => x.BankId).GreaterThan(0).When(x => x.BankId.HasValue);
+        RuleFor(x => x.IBAN).MaximumLength(34).When(x => !string.IsNullOrEmpty(x.IBAN));
+        RuleFor(x => x.IBANFullName).MaximumLength(200).When(x => !string.IsNullOrEmpty(x.IBANFullName));
         RuleFor(x => x.KVKKApproval).Equal(true).WithMessage("KVKK onayı zorunludur.");
         RuleFor(x => x.HeadOfFamilyProfessionId).NotNull().When(x => !x.IsHeadOfFamily)
             .WithMessage("Hane reisi değilseniz hane reisinin mesleğini belirtmelisiniz.");
