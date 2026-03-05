@@ -32,7 +32,7 @@
                         <DataTemplate x:DataType="models:StoryModel">
                             <VerticalStackLayout Spacing="6" WidthRequest="68">
                                 <Border StrokeThickness="3"
-                                        Stroke="{StaticResource PrimaryPurple}"
+                                        Stroke="{Binding RingStroke}"
                                         StrokeShape="RoundRectangle 32"
                                         HeightRequest="64" WidthRequest="64"
                                         HorizontalOptions="Center"

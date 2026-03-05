@@ -7,10 +7,12 @@ using PulsePoll.Mobile.Services;
 namespace PulsePoll.Mobile.ViewModels;
 
 [QueryProperty(nameof(StoryId), "id")]
+[QueryProperty(nameof(SessionKey), "session")]
 public partial class StoryViewerViewModel : ObservableObject
 {
     private readonly IPulsePollApiClient _apiClient;
     private readonly MockDataService _mockDataService;
+    private readonly HashSet<int> _seenSyncStoryIds = [];
 
     private CancellationTokenSource? _progressCts;
 
@@ -24,6 +26,7 @@ public partial class StoryViewerViewModel : ObservableObject
     }
 
     [ObservableProperty] private int _storyId;
+    [ObservableProperty] private string _sessionKey = string.Empty;
     [ObservableProperty] private ObservableCollection<StoryModel> _stories = [];
     [ObservableProperty] private ObservableCollection<StoryProgressSegment> _progressSegments = [];
     [ObservableProperty] private StoryModel? _currentStory;
@@ -36,12 +39,23 @@ public partial class StoryViewerViewModel : ObservableObject
 
     partial void OnStoryIdChanged(int value)
     {
-        _ = LoadStoriesAsync(value);
+        // SessionKey üzerinden kontrollü yükleme yapılıyor.
+    }
+
+    partial void OnSessionKeyChanged(string value)
+    {
+        if (StoryId <= 0)
+            return;
+
+        _ = LoadStoriesAsync(StoryId);
     }
 
     partial void OnCurrentStoryChanged(StoryModel? value)
     {
         OnPropertyChanged(nameof(HasLink));
+
+        if (value is not null)
+            _ = MarkStorySeenSafeAsync(value.Id);
     }
 
     partial void OnCurrentIndexChanged(int value)
@@ -131,8 +145,20 @@ public partial class StoryViewerViewModel : ObservableObject
 
         PauseProgress();
 
-        if (Uri.TryCreate(CurrentStory.LinkUrl, UriKind.Absolute, out var uri))
+        if (!Uri.TryCreate(CurrentStory.LinkUrl, UriKind.Absolute, out var uri))
+        {
+            ResumeProgress();
+            return;
+        }
+
+        try
+        {
             await Browser.Default.OpenAsync(uri, BrowserLaunchMode.SystemPreferred);
+        }
+        finally
+        {
+            ResumeProgress();
+        }
     }
 
     [RelayCommand]
@@ -248,6 +274,22 @@ public partial class StoryViewerViewModel : ObservableObject
         catch
         {
             return fallback();
+        }
+    }
+
+    private async Task MarkStorySeenSafeAsync(int storyId)
+    {
+        if (_seenSyncStoryIds.Contains(storyId))
+            return;
+
+        try
+        {
+            await _apiClient.MarkStorySeenAsync(storyId);
+            _seenSyncStoryIds.Add(storyId);
+        }
+        catch
+        {
+            // Story seen bilgisi senkronize edilemese de story akışı devam etsin.
         }
     }
 }

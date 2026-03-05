@@ -11,7 +11,8 @@ public static class ApiDtoMapper
             dto.ImageUrl,
             dto.StoryImageUrl ?? dto.ImageUrl,
             dto.LinkUrl,
-            dto.Description ?? string.Empty);
+            dto.Description ?? string.Empty,
+            IsSeen: dto.IsSeen);
 
     public static NewsModel ToModel(this NewsApiDto dto)
         => new(dto.Id, "", dto.Title, dto.Summary, ImageUrl: dto.ImageUrl);

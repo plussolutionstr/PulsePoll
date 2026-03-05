@@ -28,18 +28,33 @@ public class StoryService(
         return dtos;
     }
 
-    public async Task<IEnumerable<StoryDto>> GetActiveStoriesAsync()
+    public async Task<IEnumerable<StoryDto>> GetActiveStoriesAsync(int subjectId)
     {
         var stories = await repository.GetActiveAsync();
+        var seenStoryIds = await repository.GetSeenStoryIdsAsync(subjectId, stories.Select(s => s.Id).ToList());
+        var orderedStories = stories
+            .OrderBy(s => seenStoryIds.Contains(s.Id))
+            .ThenBy(s => s.Order)
+            .ToList();
+
         var dtos = new List<StoryDto>(stories.Count);
 
-        foreach (var s in stories)
+        foreach (var s in orderedStories)
         {
             var (previewImageUrl, storyImageUrl) = await ResolveImageUrlsAsync(s);
-            dtos.Add(ToDto(s, previewImageUrl, storyImageUrl));
+            dtos.Add(ToDto(s, previewImageUrl, storyImageUrl, seenStoryIds.Contains(s.Id)));
         }
 
         return dtos;
+    }
+
+    public async Task MarkSeenAsync(int subjectId, int storyId)
+    {
+        var storyExists = await repository.ExistsAsync(storyId);
+        if (!storyExists)
+            throw new NotFoundException("Hikaye");
+
+        await repository.MarkSeenAsync(subjectId, storyId);
     }
 
     public async Task<StoryDto> CreateAsync(CreateStoryDto dto)
@@ -158,7 +173,7 @@ public class StoryService(
         await repository.DeleteAsync(story);
     }
 
-    private static StoryDto ToDto(Story s, string previewImageUrl, string storyImageUrl) =>
+    private static StoryDto ToDto(Story s, string previewImageUrl, string storyImageUrl, bool isSeen = false) =>
         new(
             s.Id,
             s.Title,
@@ -171,7 +186,8 @@ public class StoryService(
             s.StartsAt,
             s.EndsAt,
             s.Order,
-            s.IsActive);
+            s.IsActive,
+            isSeen);
 
     private async Task<(string PreviewImageUrl, string StoryImageUrl)> ResolveImageUrlsAsync(Story story)
     {

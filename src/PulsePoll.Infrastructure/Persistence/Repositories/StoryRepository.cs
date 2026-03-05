@@ -26,6 +26,43 @@ public class StoryRepository(AppDbContext db) : IStoryRepository
             .ToListAsync();
     }
 
+    public async Task<HashSet<int>> GetSeenStoryIdsAsync(int subjectId, IReadOnlyCollection<int> storyIds)
+    {
+        if (storyIds.Count == 0)
+            return [];
+
+        var ids = storyIds.Distinct().ToList();
+        var seenStoryIds = await db.StoryViews
+            .Where(v => v.SubjectId == subjectId && ids.Contains(v.StoryId) && v.DeletedAt == null)
+            .Select(v => v.StoryId)
+            .ToListAsync();
+
+        return [.. seenStoryIds];
+    }
+
+    public async Task MarkSeenAsync(int subjectId, int storyId)
+    {
+        var alreadySeen = await db.StoryViews
+            .AnyAsync(v => v.SubjectId == subjectId && v.StoryId == storyId && v.DeletedAt == null);
+
+        if (alreadySeen)
+            return;
+
+        var storyView = new StoryView
+        {
+            SubjectId = subjectId,
+            StoryId = storyId,
+            SeenAt = DateTime.UtcNow
+        };
+        storyView.SetCreated(subjectId);
+
+        db.StoryViews.Add(storyView);
+        await db.SaveChangesAsync();
+    }
+
+    public Task<bool> ExistsAsync(int storyId)
+        => db.Stories.AnyAsync(s => s.Id == storyId && s.DeletedAt == null);
+
     public Task<Story?> GetByIdAsync(int id)
         => db.Stories
             .Include(s => s.MediaAsset)

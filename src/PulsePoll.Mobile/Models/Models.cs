@@ -1,3 +1,6 @@
+using Microsoft.Maui.Controls;
+using Microsoft.Maui.Graphics;
+
 namespace PulsePoll.Mobile.Models;
 
 public record StoryModel(
@@ -12,6 +15,7 @@ public record StoryModel(
 {
     public string DisplayStoryImageUrl => string.IsNullOrWhiteSpace(StoryImageUrl) ? ImageUrl : StoryImageUrl;
     public bool HasDescription => !string.IsNullOrWhiteSpace(Description);
+    public Brush RingStroke => new SolidColorBrush(Color.FromArgb(IsSeen ? "#B8BCC5" : BrandColor));
 }
 
 public record NewsModel(

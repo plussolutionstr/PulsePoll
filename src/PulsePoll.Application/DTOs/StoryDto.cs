@@ -12,7 +12,8 @@ public record StoryDto(
     DateTime StartsAt,
     DateTime EndsAt,
     int Order,
-    bool IsActive);
+    bool IsActive,
+    bool IsSeen = false);
 
 public record CreateStoryDto(
     string Title,

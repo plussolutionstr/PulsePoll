@@ -29,6 +29,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<BankAccount> BankAccounts => Set<BankAccount>();
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<Story> Stories => Set<Story>();
+    public DbSet<StoryView> StoryViews => Set<StoryView>();
     public DbSet<News> News => Set<News>();
     public DbSet<MediaAsset> MediaAssets => Set<MediaAsset>();
     public DbSet<WithdrawalRequest> WithdrawalRequests => Set<WithdrawalRequest>();

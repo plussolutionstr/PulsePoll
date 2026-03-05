@@ -55,7 +55,7 @@
                                 </VerticalStackLayout.GestureRecognizers>
                                 <!-- Story ring — gradient ring simulated with border -->
                                 <Border StrokeThickness="2.5"
-                                        Stroke="{StaticResource PrimaryPurple}"
+                                        Stroke="{Binding RingStroke}"
                                         StrokeShape="RoundRectangle 30"
                                         HeightRequest="60" WidthRequest="60"
                                         HorizontalOptions="Center"

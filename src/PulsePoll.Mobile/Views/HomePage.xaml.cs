@@ -19,7 +19,11 @@ public partial class HomePage : ContentPage
     {
         base.OnAppearing();
         UpdateShimmerState();
-        await _viewModel.LoadDataCommand.ExecuteAsync(null);
+
+        if (_viewModel.Stories.Count == 0)
+            await _viewModel.LoadDataCommand.ExecuteAsync(null);
+        else
+            await _viewModel.RefreshCommand.ExecuteAsync(null);
     }
 
     protected override void OnDisappearing()

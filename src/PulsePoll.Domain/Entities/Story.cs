@@ -15,4 +15,5 @@ public class Story : EntityBase
     public int Order { get; set; }
     public MediaAsset? MediaAsset { get; set; }
     public MediaAsset? StoryMediaAsset { get; set; }
+    public ICollection<StoryView> StoryViews { get; set; } = [];
 }

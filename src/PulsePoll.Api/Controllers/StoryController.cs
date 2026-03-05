@@ -10,13 +10,23 @@ namespace PulsePoll.Api.Controllers;
 [Route("api/stories")]
 public class StoryController(IStoryService storyService) : ControllerBase
 {
+    private int SubjectId => int.Parse(User.FindFirst("sub")!.Value);
+
     /// <summary>Mobil ana ekran — aktif hikayeleri döner.</summary>
     [Authorize]
     [HttpGet]
     public async Task<IActionResult> Get()
     {
-        var stories = await storyService.GetActiveStoriesAsync();
+        var stories = await storyService.GetActiveStoriesAsync(SubjectId);
         return this.OkResponse(stories);
+    }
+
+    [Authorize]
+    [HttpPost("{id:int}/seen")]
+    public async Task<IActionResult> MarkSeen(int id)
+    {
+        await storyService.MarkSeenAsync(SubjectId, id);
+        return this.NoContentResponse();
     }
 
     // TODO: Admin auth eklenince [Authorize(Roles = "Admin")] eklenmeli

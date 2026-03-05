@@ -14,7 +14,8 @@ public record StoryApiDto(
     DateTime StartsAt,
     DateTime EndsAt,
     int Order,
-    bool IsActive);
+    bool IsActive,
+    bool IsSeen);
 
 public record NewsApiDto(
     int Id,
