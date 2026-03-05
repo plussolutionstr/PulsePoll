@@ -2,8 +2,10 @@ using Hangfire;
 using Hangfire.PostgreSql;
 using MassTransit;
 using PulsePoll.Application;
+using PulsePoll.Application.Interfaces;
 using PulsePoll.Application.Messaging;
 using PulsePoll.Infrastructure;
+using PulsePoll.Infrastructure.Storage;
 using PulsePoll.Worker.BackgroundServices;
 using PulsePoll.Worker.Jobs;
 using PulsePoll.Worker.Services;
@@ -19,6 +21,7 @@ builder.Services.AddSerilog((lc) => lc
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddScoped<IMediaUrlService, PresignedMediaUrlService>();
 
 var postgresConnection = builder.Configuration.GetConnectionString("Postgres")
                          ?? throw new InvalidOperationException("Postgres connection string is missing.");

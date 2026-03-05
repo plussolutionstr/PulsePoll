@@ -5,7 +5,9 @@ using System.Threading.RateLimiting;
 using MassTransit;
 using Microsoft.AspNetCore.RateLimiting;
 using PulsePoll.Api.Models;
+using PulsePoll.Api.Services;
 using PulsePoll.Application;
+using PulsePoll.Application.Interfaces;
 using PulsePoll.Infrastructure;
 using PulsePoll.Infrastructure.Messaging;
 
@@ -18,6 +20,7 @@ public static class ServiceExtensions
         services.AddHttpContextAccessor();
         services.AddApplication();
         services.AddInfrastructure(config);
+        services.AddScoped<IMediaUrlService, ProxyMediaUrlService>();
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen();
         services.AddAuthorization(options =>

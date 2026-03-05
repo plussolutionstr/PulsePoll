@@ -16,6 +16,7 @@ using PulsePoll.Application.Services;
 using PulsePoll.Infrastructure;
 using PulsePoll.Infrastructure.Persistence;
 using PulsePoll.Infrastructure.Persistence.Seeding;
+using PulsePoll.Infrastructure.Storage;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -49,6 +50,9 @@ builder.Services.AddMassTransit(x =>
         });
     });
 });
+
+// Media URL: Admin presigned URL kullanır
+builder.Services.AddScoped<IMediaUrlService, PresignedMediaUrlService>();
 
 // Application services
 builder.Services.AddScoped<IAdminAuthService, AdminAuthService>();

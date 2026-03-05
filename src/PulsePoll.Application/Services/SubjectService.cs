@@ -12,6 +12,7 @@ public class SubjectService(
     ISubjectScoreService scoreService,
     IReferralRewardService referralRewardService,
     IStorageService storageService,
+    IMediaUrlService mediaUrlService,
     IMessagePublisher publisher,
     ILogger<SubjectService> logger) : ISubjectService
 {
@@ -100,9 +101,9 @@ public class SubjectService(
         subject.ProfilePhotoUrl = objectName;
         await repository.UpdateAsync(subject);
 
-        var presignedUrl = await storageService.GetPresignedUrlAsync("profile-photos", objectName);
+        var photoUrl = await mediaUrlService.GetMediaUrlAsync("profile-photos", objectName);
         logger.LogInformation("Profil fotoğrafı yüklendi: {SubjectId}", subjectId);
-        return presignedUrl;
+        return photoUrl;
     }
 
     public async Task<List<SubjectDto>> GetAllAsync()
@@ -165,7 +166,7 @@ public class SubjectService(
                 var key = s.ProfilePhotoUrl.StartsWith("profile-photos/")
                     ? s.ProfilePhotoUrl["profile-photos/".Length..]
                     : s.ProfilePhotoUrl;
-                photoUrl = await storageService.GetPresignedUrlAsync("profile-photos", key);
+                photoUrl = await mediaUrlService.GetMediaUrlAsync("profile-photos", key);
             }
             catch { /* presigned URL üretilemezse null bırak */ }
         }

@@ -8,11 +8,11 @@ namespace PulsePoll.Application.Services;
 public class StoryService(
     IStoryRepository repository,
     IMediaAssetRepository mediaAssetRepository,
-    IStorageService storage) : IStoryService
+    IStorageService storage,
+    IMediaUrlService mediaUrlService) : IStoryService
 {
     private const string MediaLibraryBucketName = "media-library";
     private const string LegacyStoryBucketName = "stories";
-    private const int PresignedUrlExpirySeconds = 7 * 24 * 3600; // 7 gün
 
     public async Task<List<StoryDto>> GetAllAsync()
     {
@@ -200,24 +200,24 @@ public class StoryService(
     {
         if (story.MediaAsset is not null)
         {
-            return storage.GetPresignedUrlAsync(MediaLibraryBucketName, story.MediaAsset.ObjectKey, PresignedUrlExpirySeconds);
+            return mediaUrlService.GetMediaUrlAsync(MediaLibraryBucketName, story.MediaAsset.ObjectKey);
         }
 
         var bucket = story.MediaAssetId.HasValue ? MediaLibraryBucketName : LegacyStoryBucketName;
-        return storage.GetPresignedUrlAsync(bucket, story.ImageUrl, PresignedUrlExpirySeconds);
+        return mediaUrlService.GetMediaUrlAsync(bucket, story.ImageUrl);
     }
 
     private async Task<string> ResolveStoryImageUrlAsync(Story story, string fallbackUrl)
     {
         if (story.StoryMediaAsset is not null)
         {
-            return await storage.GetPresignedUrlAsync(MediaLibraryBucketName, story.StoryMediaAsset.ObjectKey, PresignedUrlExpirySeconds);
+            return await mediaUrlService.GetMediaUrlAsync(MediaLibraryBucketName, story.StoryMediaAsset.ObjectKey);
         }
 
         if (!story.StoryMediaAssetId.HasValue || string.IsNullOrWhiteSpace(story.StoryImageUrl))
             return fallbackUrl;
 
-        return await storage.GetPresignedUrlAsync(MediaLibraryBucketName, story.StoryImageUrl, PresignedUrlExpirySeconds);
+        return await mediaUrlService.GetMediaUrlAsync(MediaLibraryBucketName, story.StoryImageUrl);
     }
 
     private static DateTime NormalizeToTurkeyLocal(DateTime value) => value.Kind switch

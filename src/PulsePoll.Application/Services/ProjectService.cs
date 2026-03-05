@@ -9,13 +9,12 @@ namespace PulsePoll.Application.Services;
 
 public class ProjectService(
     IProjectRepository repository,
-    IStorageService storage,
+    IMediaUrlService mediaUrlService,
     IRewardUnitConfigService rewardUnitConfigService,
     IValidator<CreateProjectDto> createValidator,
     IValidator<UpdateProjectDto> updateValidator) : IProjectService
 {
     private const string MediaBucket = "media-library";
-    private const int PresignedUrlExpirySeconds = 7 * 24 * 3600;
 
     public async Task<List<ProjectDto>> GetAllAsync()
     {
@@ -151,7 +150,7 @@ public class ProjectService(
 
         string? coverImageUrl = null;
         if (p.CoverMedia is not null)
-            coverImageUrl = await storage.GetPresignedUrlAsync(MediaBucket, p.CoverMedia.ObjectKey, PresignedUrlExpirySeconds);
+            coverImageUrl = await mediaUrlService.GetMediaUrlAsync(MediaBucket, p.CoverMedia.ObjectKey);
 
         return new ProjectDto(
             p.Id,

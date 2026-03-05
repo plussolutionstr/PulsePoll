@@ -24,7 +24,31 @@ public static class MauiProgram
             })
             .ConfigureMauiHandlers(handlers =>
             {
-#if IOS
+#if ANDROID
+                Microsoft.Maui.Handlers.EntryHandler.Mapper.AppendToMapping("NoUnderline", (handler, view) =>
+                {
+                    handler.PlatformView.BackgroundTintList =
+                        Android.Content.Res.ColorStateList.ValueOf(Android.Graphics.Color.Transparent);
+                });
+
+                Microsoft.Maui.Handlers.PickerHandler.Mapper.AppendToMapping("NoUnderline", (handler, view) =>
+                {
+                    handler.PlatformView.BackgroundTintList =
+                        Android.Content.Res.ColorStateList.ValueOf(Android.Graphics.Color.Transparent);
+                });
+
+                Microsoft.Maui.Handlers.DatePickerHandler.Mapper.AppendToMapping("NoUnderline", (handler, view) =>
+                {
+                    handler.PlatformView.BackgroundTintList =
+                        Android.Content.Res.ColorStateList.ValueOf(Android.Graphics.Color.Transparent);
+                });
+
+                Microsoft.Maui.Handlers.EditorHandler.Mapper.AppendToMapping("NoUnderline", (handler, view) =>
+                {
+                    handler.PlatformView.BackgroundTintList =
+                        Android.Content.Res.ColorStateList.ValueOf(Android.Graphics.Color.Transparent);
+                });
+#elif IOS
                 handlers.AddHandler<Entry, Microsoft.Maui.Handlers.EntryHandler>();
                 Microsoft.Maui.Handlers.EntryHandler.Mapper.AppendToMapping("NoBorder", (handler, view) =>
                 {
@@ -45,6 +69,9 @@ public static class MauiProgram
 #endif
             });
 
+        var settings = AppSettings.Load();
+        builder.Services.AddSingleton(settings);
+
         // Shell & Auth
         builder.Services.AddTransient<AppShell>();
 
@@ -55,11 +82,7 @@ public static class MauiProgram
 
         builder.Services.AddHttpClient<IPulsePollApiClient, PulsePollApiClient>(client =>
         {
-#if ANDROID
-            client.BaseAddress = new Uri("https://10.0.2.2:5001");
-#else
-            client.BaseAddress = new Uri("https://localhost:5001");
-#endif
+            client.BaseAddress = new Uri(settings.ApiBaseUrl);
         })
         .AddHttpMessageHandler<AuthDelegatingHandler>()
 #if DEBUG
@@ -72,11 +95,7 @@ public static class MauiProgram
 
         builder.Services.AddHttpClient<INotificationApiClient, NotificationApiClient>(client =>
         {
-#if ANDROID
-            client.BaseAddress = new Uri("https://10.0.2.2:5001");
-#else
-            client.BaseAddress = new Uri("https://localhost:5001");
-#endif
+            client.BaseAddress = new Uri(settings.ApiBaseUrl);
         })
         .AddHttpMessageHandler<AuthDelegatingHandler>()
 #if DEBUG

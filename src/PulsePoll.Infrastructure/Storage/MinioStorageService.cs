@@ -30,4 +30,20 @@ public class MinioStorageService(IMinioClient minio) : IStorageService
             .WithBucket(bucketName)
             .WithObject(objectName)
             .WithExpiry(expirySeconds));
+
+    public async Task<(Stream Stream, string ContentType)> GetObjectStreamAsync(string bucketName, string objectName)
+    {
+        var stat = await minio.StatObjectAsync(new StatObjectArgs()
+            .WithBucket(bucketName)
+            .WithObject(objectName));
+
+        var ms = new MemoryStream();
+        await minio.GetObjectAsync(new GetObjectArgs()
+            .WithBucket(bucketName)
+            .WithObject(objectName)
+            .WithCallbackStream(stream => stream.CopyTo(ms)));
+
+        ms.Position = 0;
+        return (ms, stat.ContentType);
+    }
 }

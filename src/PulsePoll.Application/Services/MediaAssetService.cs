@@ -7,10 +7,10 @@ namespace PulsePoll.Application.Services;
 
 public class MediaAssetService(
     IMediaAssetRepository repository,
-    IStorageService storage) : IMediaAssetService
+    IStorageService storage,
+    IMediaUrlService mediaUrlService) : IMediaAssetService
 {
     private const string BucketName = "media-library";
-    private const int PresignedUrlExpirySeconds = 7 * 24 * 3600; // 7 gün
     private const long MaxFileSizeBytes = 5 * 1024 * 1024; // 5 MB
 
     private static readonly HashSet<string> AllowedContentTypes =
@@ -25,7 +25,7 @@ public class MediaAssetService(
 
         foreach (var asset in assets)
         {
-            var url = await storage.GetPresignedUrlAsync(BucketName, asset.ObjectKey, PresignedUrlExpirySeconds);
+            var url = await mediaUrlService.GetMediaUrlAsync(BucketName, asset.ObjectKey);
             dtos.Add(ToDto(asset, url));
         }
 
@@ -56,7 +56,7 @@ public class MediaAssetService(
 
         await repository.AddAsync(asset);
 
-        var url = await storage.GetPresignedUrlAsync(BucketName, asset.ObjectKey, PresignedUrlExpirySeconds);
+        var url = await mediaUrlService.GetMediaUrlAsync(BucketName, asset.ObjectKey);
         return ToDto(asset, url);
     }
 

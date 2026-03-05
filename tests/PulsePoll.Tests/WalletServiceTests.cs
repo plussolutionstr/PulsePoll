@@ -22,6 +22,8 @@ public class WalletServiceTests
     private readonly Mock<IPaymentSettingRepository>        _paymentSettingRepoMock      = new();
     private readonly Mock<INotificationRepository>          _notificationRepoMock        = new();
     private readonly Mock<ISubjectRepository>               _subjectRepoMock             = new();
+    private readonly Mock<ILookupService>                   _lookupServiceMock           = new();
+    private readonly Mock<IMediaUrlService>                 _mediaUrlServiceMock         = new();
     private readonly Mock<IRewardUnitConfigService>         _rewardUnitConfigServiceMock = new();
     private readonly Mock<IMessagePublisher>                _publisherMock               = new();
     private readonly Mock<IValidator<WithdrawalRequestDto>> _withdrawalValidator         = new();
@@ -38,6 +40,8 @@ public class WalletServiceTests
             _paymentSettingRepoMock.Object,
             _notificationRepoMock.Object,
             _subjectRepoMock.Object,
+            _lookupServiceMock.Object,
+            _mediaUrlServiceMock.Object,
             _rewardUnitConfigServiceMock.Object,
             _publisherMock.Object,
             _withdrawalValidator.Object,
@@ -293,7 +297,8 @@ public class WalletServiceTests
             .Callback<BankAccount>(a => captured = a)
             .Returns(Task.CompletedTask);
 
-        await _sut.AddBankAccountAsync(subjectId: 1, new AddBankAccountDto("Test Bank", "TR123456789012345678901234"));
+        _lookupServiceMock.Setup(l => l.GetBankByIdAsync(1)).ReturnsAsync(new Domain.Entities.Bank { Id = 1, Name = "Test Bank", IsActive = true });
+        await _sut.AddBankAccountAsync(subjectId: 1, new AddBankAccountDto(1, "TR123456789012345678901234"));
 
         captured.Should().NotBeNull();
         captured!.IsDefault.Should().BeTrue();
@@ -311,7 +316,8 @@ public class WalletServiceTests
             .Callback<BankAccount>(a => captured = a)
             .Returns(Task.CompletedTask);
 
-        await _sut.AddBankAccountAsync(1, new AddBankAccountDto("Another Bank", "TR000000000000000000000099"));
+        _lookupServiceMock.Setup(l => l.GetBankByIdAsync(2)).ReturnsAsync(new Domain.Entities.Bank { Id = 2, Name = "Another Bank", IsActive = true });
+        await _sut.AddBankAccountAsync(1, new AddBankAccountDto(2, "TR000000000000000000000099"));
 
         captured!.IsDefault.Should().BeFalse();
     }

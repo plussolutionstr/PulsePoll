@@ -21,7 +21,7 @@ public class WalletService(
     INotificationRepository notificationRepository,
     ISubjectRepository subjectRepository,
     ILookupService lookupService,
-    IStorageService storageService,
+    IMediaUrlService mediaUrlService,
     IRewardUnitConfigService rewardUnitConfigService,
     IMessagePublisher publisher,
     IValidator<WithdrawalRequestDto> withdrawalValidator,
@@ -29,7 +29,6 @@ public class WalletService(
     ILogger<WalletService> logger) : IWalletService
 {
     private const string MediaBucketName = "media-library";
-    private const int PresignedUrlExpirySeconds = 7 * 24 * 3600;
 
     public async Task<WalletDto> GetBySubjectIdAsync(int subjectId)
     {
@@ -507,10 +506,7 @@ public class WalletService(
         if (string.IsNullOrWhiteSpace(objectKey))
             return null;
 
-        return await storageService.GetPresignedUrlAsync(
-            MediaBucketName,
-            objectKey,
-            PresignedUrlExpirySeconds);
+        return await mediaUrlService.GetMediaUrlAsync(MediaBucketName, objectKey);
     }
 
     private static string? NormalizeDescription(string? description)

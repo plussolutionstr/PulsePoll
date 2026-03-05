@@ -8,10 +8,9 @@ namespace PulsePoll.Application.Services;
 public class NewsService(
     INewsRepository repository,
     IMediaAssetRepository mediaAssetRepository,
-    IStorageService storage) : INewsService
+    IMediaUrlService mediaUrlService) : INewsService
 {
     private const string MediaLibraryBucketName = "media-library";
-    private const int PresignedUrlExpirySeconds = 7 * 24 * 3600; // 7 gün
 
     public async Task<List<NewsDto>> GetAllAsync()
     {
@@ -126,7 +125,7 @@ public class NewsService(
     private Task<string> ResolveImageUrlAsync(News news)
     {
         var objectKey = news.MediaAsset?.ObjectKey ?? news.ImageUrl;
-        return storage.GetPresignedUrlAsync(MediaLibraryBucketName, objectKey, PresignedUrlExpirySeconds);
+        return mediaUrlService.GetMediaUrlAsync(MediaLibraryBucketName, objectKey);
     }
 
     private static DateTime NormalizeToTurkeyLocal(DateTime value) => value.Kind switch

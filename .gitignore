@@ -18,6 +18,7 @@ Thumbs.db
 .idea/
 *.iml
 *.DotSettings.user
+*.csproj.user
 
 # Environment
 .env

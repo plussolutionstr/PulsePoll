@@ -10,6 +10,7 @@ namespace PulsePoll.Application.Services;
 public class CustomerService(
     ICustomerRepository repository,
     IStorageService storage,
+    IMediaUrlService mediaUrlService,
     IValidator<CreateCustomerDto> createValidator,
     IValidator<UpdateCustomerDto> updateValidator) : ICustomerService
 {
@@ -123,8 +124,6 @@ public class CustomerService(
         await repository.DeleteAsync(customer);
     }
 
-    private const int PresignedUrlExpirySeconds = 7 * 24 * 3600;
-
     private static string GetContentType(string fileName) =>
         Path.GetExtension(fileName).ToLowerInvariant() switch
         {
@@ -138,7 +137,7 @@ public class CustomerService(
     {
         string? logoUrl = null;
         if (c.LogoUrl is not null)
-            logoUrl = await storage.GetPresignedUrlAsync(BucketName, c.LogoUrl, PresignedUrlExpirySeconds);
+            logoUrl = await mediaUrlService.GetMediaUrlAsync(BucketName, c.LogoUrl);
 
         return new CustomerDto(
             c.Id,
