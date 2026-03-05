@@ -111,14 +111,25 @@ public partial class NotificationsViewModel : ObservableObject
     [RelayCommand]
     private async Task DeleteNotificationAsync(NotificationModel notification)
     {
+        if (Shell.Current is null)
+            return;
+
+        var confirmed = await Shell.Current.DisplayAlertAsync(
+            "Bildirim Silinsin mi?",
+            "Bu bildirim listeden kaldırılacak.",
+            "Sil",
+            "Vazgeç");
+
+        if (!confirmed)
+            return;
+
         try
         {
             await _notificationCenter.DeleteAsync(notification.Id);
         }
         catch
         {
-            if (Shell.Current is not null)
-                await Shell.Current.DisplayAlertAsync("Hata", "Bildirim silinemedi.", "Tamam");
+            await Shell.Current.DisplayAlertAsync("Hata", "Bildirim silinemedi.", "Tamam");
         }
     }
 

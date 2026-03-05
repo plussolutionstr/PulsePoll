@@ -122,6 +122,25 @@ public class NotificationTypeToBgConverter : IValueConverter
         => throw new NotSupportedException();
 }
 
+public class NotificationTypeToIconConverter : IValueConverter
+{
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        var type = value?.ToString();
+        return type switch
+        {
+            "survey" => "icon_play.png",
+            "earning" => "icon_wallet.png",
+            "rank" => "icon_star.png",
+            "disqualified" => "icon_x_circle.png",
+            _ => "icon_bell.png"
+        };
+    }
+
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}
+
 public class BoolToReadBgConverter : IValueConverter
 {
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)

@@ -5,11 +5,13 @@
              xmlns:models="clr-namespace:PulsePoll.Mobile.Models"
              xmlns:converters="clr-namespace:PulsePoll.Mobile.Converters"
              x:Class="PulsePoll.Mobile.Views.NotificationsPage"
+             x:Name="NotificationsPageRoot"
              x:DataType="vm:NotificationsViewModel"
              Shell.NavBarIsVisible="False">
 
     <ContentPage.Resources>
         <converters:NotificationTypeToBgConverter x:Key="TypeToBg"/>
+        <converters:NotificationTypeToIconConverter x:Key="TypeToIcon"/>
         <converters:BoolToReadBgConverter x:Key="BoolToReadBg"/>
         <converters:InvertedBoolConverter x:Key="InvertedBool"/>
     </ContentPage.Resources>
@@ -94,28 +96,30 @@
         <CollectionView Grid.Row="1"
                         ItemsSource="{Binding Notifications}"
                         IsVisible="{Binding HasNotifications}"
+                        SelectionMode="None"
                         Margin="20,0">
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="models:NotificationModel">
-                    <SwipeView Margin="0,4">
+                    <SwipeView Margin="0,4"
+                               Threshold="64">
                         <!-- Swipe Right: Mark as Read -->
                         <SwipeView.LeftItems>
-                            <SwipeItems Mode="Reveal">
+                            <SwipeItems Mode="Reveal" SwipeBehaviorOnInvoked="Close">
                                 <SwipeItem Text="Okundu"
                                            IconImageSource="icon_check.png"
                                            BackgroundColor="{StaticResource Success}"
-                                           Command="{Binding Source={RelativeSource AncestorType={x:Type vm:NotificationsViewModel}}, Path=MarkOneReadCommand}"
+                                           Command="{Binding Source={x:Reference NotificationsPageRoot}, Path=BindingContext.MarkOneReadCommand}"
                                            CommandParameter="{Binding .}"/>
                             </SwipeItems>
                         </SwipeView.LeftItems>
 
                         <!-- Swipe Left: Delete -->
                         <SwipeView.RightItems>
-                            <SwipeItems Mode="Reveal">
+                            <SwipeItems Mode="Reveal" SwipeBehaviorOnInvoked="Close">
                                 <SwipeItem Text="Sil"
                                            IconImageSource="icon_x_circle.png"
                                            BackgroundColor="{StaticResource Danger}"
-                                           Command="{Binding Source={RelativeSource AncestorType={x:Type vm:NotificationsViewModel}}, Path=DeleteNotificationCommand}"
+                                           Command="{Binding Source={x:Reference NotificationsPageRoot}, Path=BindingContext.DeleteNotificationCommand}"
                                            CommandParameter="{Binding .}"/>
                             </SwipeItems>
                         </SwipeView.RightItems>
@@ -124,36 +128,37 @@
                         <Border StrokeShape="RoundRectangle 16"
                                 Stroke="{StaticResource CardBorder}"
                                 BackgroundColor="{Binding IsRead, Converter={StaticResource BoolToReadBg}}"
-                                Padding="14">
+                                Padding="13">
                             <Border.GestureRecognizers>
                                 <TapGestureRecognizer
                                     Command="{Binding Source={RelativeSource AncestorType={x:Type vm:NotificationsViewModel}}, Path=ShowNotificationCommand}"
                                     CommandParameter="{Binding .}"/>
                             </Border.GestureRecognizers>
-                            <Grid ColumnDefinitions="40,*,Auto" ColumnSpacing="12">
+                            <Grid ColumnDefinitions="36,*,Auto" ColumnSpacing="11">
                                 <Border StrokeThickness="0"
-                                        StrokeShape="RoundRectangle 20"
-                                        HeightRequest="40" WidthRequest="40"
+                                        StrokeShape="RoundRectangle 14"
+                                        HeightRequest="36" WidthRequest="36"
                                         BackgroundColor="{Binding Type, Converter={StaticResource TypeToBg}}">
-                                    <Image Source="icon_bell.png"
-                                           HeightRequest="18" WidthRequest="18"
+                                    <Image Source="{Binding Type, Converter={StaticResource TypeToIcon}}"
+                                           HeightRequest="14" WidthRequest="14"
                                            HorizontalOptions="Center" VerticalOptions="Center"/>
                                 </Border>
                                 <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
                                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="6">
                                         <Border StrokeThickness="0"
-                                                StrokeShape="RoundRectangle 4"
-                                                HeightRequest="8" WidthRequest="8"
+                                                StrokeShape="RoundRectangle 3"
+                                                HeightRequest="6" WidthRequest="6"
                                                 BackgroundColor="{StaticResource PrimaryPurple}"
                                                 IsVisible="{Binding IsRead, Converter={StaticResource InvertedBool}}"
                                                 VerticalOptions="Center"/>
                                         <Label Grid.Column="1"
                                                Text="{Binding Title}"
-                                               FontFamily="JakartaSemiBold" FontSize="14"
+                                               FontFamily="JakartaSemiBold" FontSize="13"
                                                TextColor="{StaticResource TextPrimary}"/>
                                     </Grid>
                                     <Label Text="{Binding Message}"
                                            Style="{StaticResource CaptionStyle}"
+                                           TextColor="{StaticResource TextSecondary}"
                                            MaxLines="2" LineBreakMode="TailTruncation"/>
                                 </VerticalStackLayout>
                                 <Label Grid.Column="2"
