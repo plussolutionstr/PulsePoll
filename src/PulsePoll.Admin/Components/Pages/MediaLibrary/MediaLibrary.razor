@@ -77,18 +77,14 @@
          ShowFooter="true">
     <BodyContentTemplate Context="_">
         <div class="mb-3">
-            <DxFileInput MaxFileSize="5242880"
-                         MaxFileCount="20"
-                         FilesUploading="OnFilesUploading"
-                         AcceptedFileTypes="@_acceptedTypes"
-                         DropZoneContainerCssSelector="#upload-drop-zone"
-                         DropZoneDragOverCssClass="drop-zone-active" />
-            <div id="upload-drop-zone"
-                 class="border border-2 border-dashed rounded-3 text-center text-muted p-4 mt-2"
-                 style="min-height:120px; display:flex; align-items:center; justify-content:center; flex-direction:column; cursor:pointer;">
-                <i class="bi bi-cloud-arrow-up" style="font-size:2.5rem;"></i>
-                <p class="mb-0 mt-2">Görselleri buraya sürükleyin veya yukarıdan seçin</p>
-                <p class="small mb-0">JPG, PNG, GIF, WebP — maks. 5 MB / dosya — en fazla 20 dosya</p>
+            <div class="d-flex align-items-center gap-2">
+                <label class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-folder2-open me-1"></i>Dosya Seç
+                    <InputFile OnChange="OnInputFileChange" multiple
+                               accept=".jpg,.jpeg,.png,.gif,.webp"
+                               style="display:none;" />
+                </label>
+                <span class="text-muted small">JPG, PNG, GIF, WebP — maks. 5 MB / dosya — en fazla 20 dosya</span>
             </div>
         </div>
         @if (_pendingFiles.Count > 0)
@@ -185,7 +181,7 @@
     private bool _isUploading;
     private int _uploadedCount;
     private List<PendingFile> _pendingFiles = [];
-    private readonly List<string> _acceptedTypes = [".jpg", ".jpeg", ".png", ".gif", ".webp"];
+    private static readonly string[] AcceptedExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp"];
 
     // Silme
     private bool _deleteConfirmVisible;
@@ -232,29 +228,36 @@
         _uploadedCount = 0;
     }
 
-    private async Task OnFilesUploading(FilesUploadingEventArgs args)
+    private async Task OnInputFileChange(InputFileChangeEventArgs e)
     {
-        foreach (var file in args.Files)
+        const long maxSize = 5 * 1024 * 1024;
+
+        foreach (var file in e.GetMultipleFiles(20))
         {
+            var ext = Path.GetExtension(file.Name).ToLowerInvariant();
+            if (!AcceptedExtensions.Contains(ext))
+                continue;
+
             if (_pendingFiles.Any(p => p.FileName == file.Name))
                 continue;
 
-            var contentType = string.IsNullOrEmpty(file.Type)
-                ? GetContentTypeFromExtension(file.Name)
-                : file.Type;
+            if (file.Size > maxSize)
+            {
+                _pendingFiles.Add(new PendingFile(file.Name, file.ContentType, [])
+                {
+                    Status = UploadFileStatus.Failed,
+                    Error = "Dosya 5 MB sınırını aşıyor."
+                });
+                continue;
+            }
 
-            var bytes = new byte[(int)file.Size];
-            var stream = file.OpenReadStream((long)file.Size);
-            try
-            {
-                int read, offset = 0;
-                while ((read = await stream.ReadAsync(bytes, offset, (int)file.Size - offset)) > 0)
-                    offset += read;
-            }
-            finally
-            {
-                stream.Close();
-            }
+            using var ms = new MemoryStream();
+            await file.OpenReadStream(maxSize).CopyToAsync(ms);
+            var bytes = ms.ToArray();
+
+            var contentType = string.IsNullOrEmpty(file.ContentType)
+                ? GetContentTypeFromExtension(file.Name)
+                : file.ContentType;
 
             _pendingFiles.Add(new PendingFile(file.Name, contentType, bytes));
         }

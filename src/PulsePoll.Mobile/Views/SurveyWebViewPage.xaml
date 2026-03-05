@@ -6,7 +6,7 @@
              x:DataType="vm:SurveyWebViewViewModel"
              Shell.NavBarIsVisible="False">
 
-    <Grid RowDefinitions="Auto,*">
+    <Grid RowDefinitions="Auto,Auto,*">
         <Grid RowDefinitions="Auto"
               ColumnDefinitions="Auto,*,Auto"
               Padding="16,14,16,10"
@@ -33,7 +33,18 @@
                                VerticalOptions="Center"/>
         </Grid>
 
-        <WebView Grid.Row="1"
+        <!-- DEBUG: URL gösterimi — sonra kaldırılacak -->
+        <Label Grid.Row="1"
+               Text="{Binding CurrentUrl}"
+               FontFamily="JakartaRegular"
+               FontSize="10"
+               TextColor="Red"
+               BackgroundColor="#FFFFDD"
+               Padding="8,4"
+               LineBreakMode="CharacterWrap"
+               MaxLines="3"/>
+
+        <WebView Grid.Row="2"
                  x:Name="SurveyWebView"
                  Source="{Binding ResolvedUrl}"
                  Navigating="OnWebViewNavigating"

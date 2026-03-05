@@ -20,11 +20,15 @@
                             Stroke="{StaticResource CardBorder}"
                             StrokeThickness="1"
                             BackgroundColor="{StaticResource PageBackground}"
-                            Padding="4,0">
+                            Padding="12,4"
+                            HeightRequest="48">
                         <Picker Title="Banka seçin"
                                 ItemsSource="{Binding Banks}"
                                 ItemDisplayBinding="{Binding Name}"
-                                SelectedItem="{Binding SelectedBank}" />
+                                SelectedItem="{Binding SelectedBank}"
+                                FontFamily="JakartaSemiBold"
+                                FontSize="15"
+                                VerticalOptions="Center" />
                     </Border>
                 </VerticalStackLayout>
             </Border>
