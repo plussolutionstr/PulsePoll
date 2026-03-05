@@ -13,5 +13,13 @@ public class Bank
     [MaxLength(20)]
     public string? Code { get; set; }
 
+    public bool IsActive { get; set; } = true;
+
+    public int? ThumbnailMediaAssetId { get; set; }
+    public int? LogoMediaAssetId { get; set; }
+
     public int SortOrder { get; set; }
+
+    public MediaAsset? ThumbnailMediaAsset { get; set; }
+    public MediaAsset? LogoMediaAsset { get; set; }
 }

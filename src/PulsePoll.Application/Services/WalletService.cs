@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text;
 using FluentValidation;
 using Microsoft.Extensions.Logging;
 using PulsePoll.Application.Constants;
@@ -19,12 +20,17 @@ public class WalletService(
     IPaymentSettingRepository paymentSettingRepository,
     INotificationRepository notificationRepository,
     ISubjectRepository subjectRepository,
+    ILookupService lookupService,
+    IStorageService storageService,
     IRewardUnitConfigService rewardUnitConfigService,
     IMessagePublisher publisher,
     IValidator<WithdrawalRequestDto> withdrawalValidator,
     IValidator<AddBankAccountDto> bankAccountValidator,
     ILogger<WalletService> logger) : IWalletService
 {
+    private const string MediaBucketName = "media-library";
+    private const int PresignedUrlExpirySeconds = 7 * 24 * 3600;
+
     public async Task<WalletDto> GetBySubjectIdAsync(int subjectId)
     {
         var wallet = await walletRepository.GetBySubjectIdAsync(subjectId)
@@ -344,7 +350,47 @@ public class WalletService(
     public async Task<IEnumerable<BankAccountDto>> GetBankAccountsAsync(int subjectId)
     {
         var accounts = await walletRepository.GetBankAccountsAsync(subjectId);
-        return accounts.Select(b => new BankAccountDto(b.Id, b.BankName, b.IbanLast4, b.IsDefault));
+        var banks = await lookupService.GetBanksAsync(onlyActive: false);
+        var bankMap = banks
+            .GroupBy(b => NormalizeBankName(b.Name), StringComparer.Ordinal)
+            .ToDictionary(g => g.Key, g => g.First(), StringComparer.Ordinal);
+
+        var items = new List<BankAccountDto>(accounts.Count);
+        foreach (var account in accounts)
+        {
+            bankMap.TryGetValue(NormalizeBankName(account.BankName), out var bank);
+            var thumbnailImageUrl = await ResolveBankMediaUrlAsync(bank?.ThumbnailMediaAsset?.ObjectKey);
+            var logoImageUrl = await ResolveBankMediaUrlAsync(bank?.LogoMediaAsset?.ObjectKey);
+
+            items.Add(new BankAccountDto(
+                account.Id,
+                account.BankName,
+                account.IbanLast4,
+                account.IsDefault,
+                thumbnailImageUrl,
+                logoImageUrl));
+        }
+
+        return items;
+    }
+
+    public async Task<IEnumerable<AvailableBankDto>> GetAvailableBanksAsync()
+    {
+        var banks = await lookupService.GetBanksAsync(onlyActive: true);
+        var items = new List<AvailableBankDto>(banks.Count);
+        foreach (var bank in banks)
+        {
+            var thumbnailImageUrl = await ResolveBankMediaUrlAsync(bank.ThumbnailMediaAsset?.ObjectKey);
+            var logoImageUrl = await ResolveBankMediaUrlAsync(bank.LogoMediaAsset?.ObjectKey);
+            items.Add(new AvailableBankDto(
+                bank.Id,
+                bank.Name,
+                bank.Code,
+                thumbnailImageUrl,
+                logoImageUrl));
+        }
+
+        return items;
     }
 
     public async Task AddBankAccountAsync(int subjectId, AddBankAccountDto dto)
@@ -352,11 +398,17 @@ public class WalletService(
         await bankAccountValidator.ValidateAndThrowAsync(dto);
 
         var existing = await walletRepository.GetBankAccountsAsync(subjectId);
+        if (existing.Count >= 5)
+            throw new BusinessException("BANK_ACCOUNT_LIMIT_EXCEEDED", "En fazla 5 banka hesabı ekleyebilirsiniz.");
+
+        var bank = await lookupService.GetBankByIdAsync(dto.BankId);
+        if (bank is null || !bank.IsActive)
+            throw new BusinessException("BANK_NOT_AVAILABLE", "Seçilen banka aktif değil.");
 
         var account = new BankAccount
         {
             SubjectId      = subjectId,
-            BankName       = dto.BankName,
+            BankName       = bank.Name,
             IbanLast4      = dto.Iban[^4..],
             IbanEncrypted  = dto.Iban,
             IsDefault      = existing.Count == 0
@@ -366,6 +418,29 @@ public class WalletService(
         await walletRepository.AddBankAccountAsync(account);
 
         logger.LogInformation("Banka hesabı eklendi: SubjectId={SubjectId}", subjectId);
+    }
+
+    public async Task UpdateBankAccountAsync(int subjectId, int accountId, AddBankAccountDto dto)
+    {
+        await bankAccountValidator.ValidateAndThrowAsync(dto);
+
+        var account = await walletRepository.GetBankAccountAsync(subjectId, accountId)
+            ?? throw new NotFoundException("Banka hesabı");
+
+        var bank = await lookupService.GetBankByIdAsync(dto.BankId);
+        if (bank is null || !bank.IsActive)
+            throw new BusinessException("BANK_NOT_AVAILABLE", "Seçilen banka aktif değil.");
+
+        account.BankName = bank.Name;
+        account.IbanLast4 = dto.Iban[^4..];
+        account.IbanEncrypted = dto.Iban;
+        account.SetUpdated(subjectId);
+
+        await walletRepository.UpdateBankAccountAsync(account);
+
+        logger.LogInformation(
+            "Banka hesabı güncellendi: SubjectId={SubjectId} AccountId={AccountId}",
+            subjectId, accountId);
     }
 
     public async Task DeleteBankAccountAsync(int subjectId, int accountId)
@@ -427,6 +502,17 @@ public class WalletService(
             or AssignmentStatus.QuotaFull
             or AssignmentStatus.ScreenOut;
 
+    private async Task<string?> ResolveBankMediaUrlAsync(string? objectKey)
+    {
+        if (string.IsNullOrWhiteSpace(objectKey))
+            return null;
+
+        return await storageService.GetPresignedUrlAsync(
+            MediaBucketName,
+            objectKey,
+            PresignedUrlExpirySeconds);
+    }
+
     private static string? NormalizeDescription(string? description)
     {
         if (string.IsNullOrWhiteSpace(description))
@@ -436,6 +522,25 @@ public class WalletService(
         return description.StartsWith(manualPrefix, StringComparison.OrdinalIgnoreCase)
             ? description[manualPrefix.Length..].Trim()
             : description;
+    }
+
+    private static string NormalizeBankName(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return string.Empty;
+
+        var normalized = value.Trim().ToUpperInvariant().Normalize(NormalizationForm.FormD);
+        var sb = new StringBuilder(normalized.Length);
+        foreach (var c in normalized)
+        {
+            var category = char.GetUnicodeCategory(c);
+            if (category == System.Globalization.UnicodeCategory.NonSpacingMark)
+                continue;
+            if (char.IsLetterOrDigit(c))
+                sb.Append(c);
+        }
+
+        return sb.ToString();
     }
 
     private async Task<decimal> GetMinWithdrawalThresholdTryAsync()

@@ -28,7 +28,8 @@ public static class ApiDtoMapper
             dto.RewardUnitLabel,
             dto.DurationMinutes,
             dto.RewardAmount,
-            dto.ConsolationRewardAmount);
+            dto.ConsolationRewardAmount,
+            dto.RewardStatus.ToString());
 
     public static SurveyModel ToModel(this ProjectApiDto dto)
         => new(
@@ -70,4 +71,53 @@ public static class ApiDtoMapper
         AssignmentStatus.ScreenOut => "Elenmiş",
         _ => "Bilinmiyor"
     };
+
+    public static BankAccountModel ToModel(this BankAccountApiDto dto)
+        => new BankAccountModel(
+            dto.Id,
+            dto.BankName,
+            $"TR** **** **** **** **** {dto.IbanLast4}",
+            dto.IbanLast4,
+            dto.IsDefault)
+        {
+            ThumbnailImageUrl = dto.ThumbnailImageUrl,
+            LogoImageUrl = dto.LogoImageUrl
+        };
+
+    public static BankOptionModel ToModel(this BankOptionApiDto dto)
+        => new(dto.Id, dto.Name, dto.Code, dto.ThumbnailImageUrl, dto.LogoImageUrl);
+
+    public static TransactionModel ToModel(this WalletTransactionApiDto dto)
+    {
+        var isIncome = dto.Type == WalletTransactionType.Credit;
+        var title = ResolveTransactionTitle(dto);
+        var description = string.IsNullOrWhiteSpace(dto.Description)
+            ? (isIncome ? "Kazanç hareketi" : "Çekim hareketi")
+            : dto.Description!;
+
+        return new TransactionModel(
+            dto.Id,
+            title,
+            description,
+            isIncome ? dto.Amount : -dto.Amount,
+            dto.CreatedAt,
+            isIncome,
+            dto.UnitLabel);
+    }
+
+    private static string ResolveTransactionTitle(WalletTransactionApiDto dto)
+    {
+        if (!string.IsNullOrWhiteSpace(dto.Description) &&
+            dto.Description.StartsWith("Anket ödülü:", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Anket Ödülü";
+        }
+
+        return dto.Type switch
+        {
+            WalletTransactionType.Credit => "Bakiye Girişi",
+            WalletTransactionType.Withdrawal => "Para Çekme",
+            _ => "Cüzdan Hareketi"
+        };
+    }
 }

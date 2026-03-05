@@ -131,11 +131,12 @@ public class MockDataService
 
     public WalletModel GetWallet() => new(
         215.00m,
-        4250,
+        "Poll",
         380.00m,
+        "Poll",
         [
-            new(1, "Akbank", "TR** **** **** **** **** 4521"),
-            new(2, "Garanti BBVA", "TR** **** **** **** **** 7834")
+            new(1, "Akbank", "TR** **** **** **** **** 4521", "4521"),
+            new(2, "Garanti BBVA", "TR** **** **** **** **** 7834", "7834")
         ],
         [
             new(1, "Ev Aletleri Anketi", "Arçelik", 15m, new DateTime(2026, 3, 2), true),

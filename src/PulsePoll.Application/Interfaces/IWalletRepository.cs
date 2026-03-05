@@ -29,5 +29,6 @@ public interface IWalletRepository
     Task<List<BankAccount>> GetBankAccountsAsync(int subjectId);
     Task<BankAccount?> GetBankAccountAsync(int subjectId, int accountId);
     Task AddBankAccountAsync(BankAccount account);
+    Task UpdateBankAccountAsync(BankAccount account);
     Task DeleteBankAccountAsync(BankAccount account);
 }

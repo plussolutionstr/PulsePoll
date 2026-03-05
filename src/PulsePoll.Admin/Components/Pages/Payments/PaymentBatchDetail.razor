@@ -71,11 +71,35 @@
         }
         @if (_batch.Status == PaymentBatchStatus.Sent && _canManage)
         {
+            <DxButton Text="Tumunu Sec"
+                      IconCssClass="bi bi-check2-square"
+                      RenderStyle="ButtonRenderStyle.Secondary"
+                      RenderStyleMode="ButtonRenderStyleMode.Outline"
+                      Enabled="@(!_isLoading && PendingSelectableCount > 0)"
+                      Click="SelectAllPending"/>
+            <DxButton Text="Secimi Temizle"
+                      IconCssClass="bi bi-x-square"
+                      RenderStyle="ButtonRenderStyle.Secondary"
+                      RenderStyleMode="ButtonRenderStyleMode.Outline"
+                      Enabled="@(!_isLoading && SelectedPendingCount > 0)"
+                      Click="ClearSelection"/>
             <DxButton Text="Paketi Tamamla"
                       IconCssClass="bi bi-check-circle"
                       RenderStyle="ButtonRenderStyle.Success"
                       RenderStyleMode="ButtonRenderStyleMode.Outline"
                       Click="FinalizeAsync"/>
+            <DxButton Text="Secilenleri Odendi Yap"
+                      IconCssClass="bi bi-check2-all"
+                      RenderStyle="ButtonRenderStyle.Success"
+                      RenderStyleMode="ButtonRenderStyleMode.Outline"
+                      Enabled="@(SelectedPendingCount > 0 && !_isLoading)"
+                      Click="OnBulkPaidAsync"/>
+            <DxButton Text="Secilenleri Hata Yap"
+                      IconCssClass="bi bi-x-octagon"
+                      RenderStyle="ButtonRenderStyle.Danger"
+                      RenderStyleMode="ButtonRenderStyleMode.Outline"
+                      Enabled="@(SelectedPendingCount > 0 && !_isLoading)"
+                      Click="OnBulkFailureClick"/>
         }
     </div>
 
@@ -85,10 +109,16 @@
                     IndicatorAreaVisible="false"
                     Text="Yukleniyor...">
         <DxGrid Data="@_batch.Items"
+                SelectionMode="GridSelectionMode.Multiple"
+                @bind-SelectedDataItems="_selectedItems"
                 ShowFilterRow="true"
                 PageSize="50"
                 ColumnResizeMode="GridColumnResizeMode.ColumnsContainer">
             <Columns>
+                @if (_batch.Status == PaymentBatchStatus.Sent && _canManage)
+                {
+                    <DxGridSelectionColumn Width="40px"/>
+                }
                 <DxGridDataColumn FieldName="SubjectFullName" Caption="Denek" MinWidth="140"/>
                 <DxGridDataColumn FieldName="PhoneNumber" Caption="Telefon" Width="130px"/>
                 <DxGridDataColumn FieldName="BankName" Caption="Banka" Width="130px"/>
@@ -114,7 +144,7 @@
                 <DxGridDataColumn FieldName="ProcessedAt" Caption="Islem Tarihi" DisplayFormat="dd.MM.yyyy HH:mm" Width="150px"/>
                 @if (_batch.Status == PaymentBatchStatus.Sent && _canManage)
                 {
-                    <DxGridCommandColumn Width="130px" Caption="Guncelle">
+                    <DxGridCommandColumn Width="130px" Caption="Guncelle" NewButtonVisible="false">
                         <CellDisplayTemplate>
                             @{
                                 var actionItem = (PaymentBatchItemDto)context.DataItem;
@@ -145,6 +175,12 @@
 <DxPopup @bind-Visible="_failurePopupVisible" HeaderText="Hata Nedeni" Width="420px" CloseOnOutsideClick="false" ShowFooter="true">
     <BodyContentTemplate Context="popupCtx">
         <DxFormLayout>
+            @if (!string.IsNullOrWhiteSpace(_failureTargetLabel))
+            {
+                <DxFormLayoutItem Caption="Secim" ColSpanMd="12">
+                    <div class="small text-muted">@_failureTargetLabel</div>
+                </DxFormLayoutItem>
+            }
             <DxFormLayoutItem Caption="Hata Aciklamasi" ColSpanMd="12">
                 <DxMemo @bind-Text="_failureReason" Rows="3" style="width:100%"/>
             </DxFormLayoutItem>
@@ -171,7 +207,11 @@
     bool _canManage;
     bool _canExport;
     string _failureReason = string.Empty;
-    PaymentBatchItemDto? _failureItem;
+    List<int> _failureItemIds = [];
+    string _failureTargetLabel = string.Empty;
+    IReadOnlyList<object> _selectedItems = [];
+    int PendingSelectableCount => _batch?.Items.Count(x => x.Status == PaymentStatus.Pending) ?? 0;
+    int SelectedPendingCount => GetSelectedPendingIds().Count;
 
     protected override async Task OnInitializedAsync()
     {
@@ -192,6 +232,7 @@
         try
         {
             _batch = await PaymentBatchService.GetBatchDetailAsync(Id);
+            _selectedItems = [];
         }
         catch (Exception ex) { ErrorHandler.HandleOperation(ex, Toast); }
         finally { _isLoading = false; }
@@ -241,6 +282,9 @@
     }
 
     private async Task UpdateItemAsync(PaymentBatchItemDto item, PaymentStatus status, string? reason)
+        => await UpdateItemsAsync([item.Id], status, reason);
+
+    private async Task UpdateItemsAsync(IEnumerable<int> itemIds, PaymentStatus status, string? reason)
     {
         if (!_canManage)
         {
@@ -248,12 +292,45 @@
             return;
         }
 
+        var ids = itemIds.Distinct().ToList();
+        if (ids.Count == 0)
+        {
+            Toast.Error("Guncellenecek odeme bulunamadi.");
+            return;
+        }
+
         var adminId = await GetAdminIdAsync();
         _isLoading = true;
         try
         {
-            await PaymentBatchService.UpdateItemStatusAsync(Id, item.Id,
-                new UpdatePaymentItemStatusDto(status, reason), adminId);
+            var successCount = 0;
+            foreach (var itemId in ids)
+            {
+                try
+                {
+                    await PaymentBatchService.UpdateItemStatusAsync(
+                        Id,
+                        itemId,
+                        new UpdatePaymentItemStatusDto(status, reason),
+                        adminId);
+                    successCount++;
+                }
+                catch
+                {
+                    // toplu işlemde tek kayıt hatası diğerlerini durdurmasın
+                }
+            }
+
+            if (successCount == 0)
+            {
+                Toast.Error("Secili odemeler guncellenemedi.");
+            }
+            else
+            {
+                var statusText = status == PaymentStatus.Paid ? "odendi" : "hatali";
+                Toast.Success($"{successCount} odeme {statusText} olarak guncellendi.");
+            }
+
             await LoadAsync();
         }
         catch (Exception ex) { ErrorHandler.HandleOperation(ex, Toast); }
@@ -268,7 +345,8 @@
             return;
         }
 
-        _failureItem         = item;
+        _failureItemIds      = [item.Id];
+        _failureTargetLabel  = $"1 odeme secildi: #{item.Id}";
         _failureReason       = string.Empty;
         _failurePopupVisible = true;
     }
@@ -281,8 +359,67 @@
             return;
         }
 
+        if (_failureItemIds.Count == 0)
+        {
+            Toast.Error("Hata olarak isaretlenecek odeme yok.");
+            return;
+        }
+
         _failurePopupVisible = false;
-        await UpdateItemAsync(_failureItem!, PaymentStatus.Failed, _failureReason);
+        await UpdateItemsAsync(_failureItemIds, PaymentStatus.Failed, _failureReason);
+        _failureItemIds = [];
+        _failureTargetLabel = string.Empty;
+    }
+
+    private async Task OnBulkPaidAsync()
+    {
+        var ids = GetSelectedPendingIds();
+        if (ids.Count == 0)
+        {
+            Toast.Error("Lutfen bekleyen odemeleri secin.");
+            return;
+        }
+
+        await UpdateItemsAsync(ids, PaymentStatus.Paid, null);
+    }
+
+    private void OnBulkFailureClick()
+    {
+        var ids = GetSelectedPendingIds();
+        if (ids.Count == 0)
+        {
+            Toast.Error("Lutfen bekleyen odemeleri secin.");
+            return;
+        }
+
+        _failureItemIds = ids;
+        _failureTargetLabel = $"{ids.Count} odeme secildi.";
+        _failureReason = string.Empty;
+        _failurePopupVisible = true;
+    }
+
+    private List<int> GetSelectedPendingIds()
+        => _selectedItems
+            .OfType<PaymentBatchItemDto>()
+            .Where(x => x.Status == PaymentStatus.Pending)
+            .Select(x => x.Id)
+            .Distinct()
+            .ToList();
+
+    private void SelectAllPending()
+    {
+        if (_batch is null)
+            return;
+
+        _selectedItems = _batch.Items
+            .Where(x => x.Status == PaymentStatus.Pending)
+            .Cast<object>()
+            .ToList();
+    }
+
+    private void ClearSelection()
+    {
+        _selectedItems = [];
     }
 
     private async Task DownloadBankFileAsync()

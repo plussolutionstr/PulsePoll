@@ -8,6 +8,7 @@ public record ProjectHistoryDto(
     string ProjectName,
     string CustomerShortName,
     AssignmentStatus Status,
+    RewardStatus RewardStatus,
     DateTime AssignedAt,
     DateTime? CompletedAt,
     int DurationMinutes,

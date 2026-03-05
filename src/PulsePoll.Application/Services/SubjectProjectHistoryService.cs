@@ -17,6 +17,7 @@ public class SubjectProjectHistoryService(
             a.Project.Name,
             a.Project.Customer.ShortName,
             a.Status,
+            a.RewardStatus,
             a.AssignedAt,
             a.CompletedAt,
             a.Project.EstimatedMinutes,

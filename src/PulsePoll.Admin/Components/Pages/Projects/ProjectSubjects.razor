@@ -60,8 +60,6 @@
                     <DxFilterBuilderField FieldName="HeadOfFamilyEducationLevel.Name" Caption="A.R. Eğitim" Type="@typeof(string)"/>
                     <DxFilterBuilderField FieldName="SocioeconomicStatus.Code" Caption="SES" Type="@typeof(string)"/>
                     <DxFilterBuilderField FieldName="LSMSocioeconomicStatus.Code" Caption="LSM SES" Type="@typeof(string)"/>
-                    <DxFilterBuilderField FieldName="Bank.Name" Caption="Banka" Type="@typeof(string)"/>
-                    <DxFilterBuilderField FieldName="IBAN" Caption="IBAN" Type="@typeof(string)"/>
                     <DxFilterBuilderField FieldName="ReferenceCode" Caption="Referans Kodu" Type="@typeof(string)"/>
                     <DxFilterBuilderField FieldName="ReferralCode" Caption="Davet Kodu" Type="@typeof(string)"/>
 
@@ -220,8 +218,14 @@
                                               TextAlignment="GridTextAlignment.Center"/>
                             <DxGridDataColumn FieldName="LSMSocioeconomicStatus.Code" Caption="LSM SES" Width="80px"
                                               TextAlignment="GridTextAlignment.Center"/>
-                            <DxGridDataColumn FieldName="Bank.Name" Caption="Banka" Width="120px"/>
-                            <DxGridDataColumn FieldName="IBAN" Caption="IBAN" Width="200px"/>
+                            <DxGridDataColumn Caption="Banka Hesapları" Width="220px">
+                                <CellDisplayTemplate>
+                                    @{
+                                        var s = (Subject)context.DataItem;
+                                    }
+                                    @GetPrimaryBankAccountSummary(s.Id)
+                                </CellDisplayTemplate>
+                            </DxGridDataColumn>
                             <DxGridDataColumn FieldName="ReferenceCode" Caption="Referans Kodu" Width="115px"
                                               TextAlignment="GridTextAlignment.Center"/>
                             <DxGridDataColumn FieldName="ReferralCode" Caption="Davet Kodu" Width="110px"
@@ -524,6 +528,7 @@
     private IReadOnlyList<object> _selectedAssignments = [];
     private HashSet<int> _assignedSubjectIds = [];
     private List<SubjectAssignmentJobDto> _jobs = [];
+    private Dictionary<int, List<BankAccount>> _bankAccountMap = [];
 
     private bool _isLoading = true;
     private bool _isLoadingAssignments;
@@ -580,6 +585,19 @@
         _rewardUnitLabel = string.IsNullOrWhiteSpace(project.RewardUnitLabel) ? "TL" : project.RewardUnitLabel;
         _projectStatus = project.Status;
 
+        await using (var bankContext = await ContextFactory.CreateDbContextAsync())
+        {
+            var bankAccounts = await bankContext.BankAccounts
+                .Where(b => b.DeletedAt == null)
+                .OrderByDescending(b => b.IsDefault)
+                .ThenBy(b => b.CreatedAt)
+                .AsNoTracking()
+                .ToListAsync();
+            _bankAccountMap = bankAccounts
+                .GroupBy(b => b.SubjectId)
+                .ToDictionary(g => g.Key, g => g.ToList());
+        }
+
         _context = await ContextFactory.CreateDbContextAsync();
         var query = _context.Subjects
             .Include(s => s.City)
@@ -590,7 +608,6 @@
             .Include(s => s.HeadOfFamilyEducationLevel)
             .Include(s => s.SocioeconomicStatus)
             .Include(s => s.LSMSocioeconomicStatus)
-            .Include(s => s.Bank)
             .AsNoTracking();
         _dataSource = new GridDevExtremeDataSource<Subject>(query);
 
@@ -694,6 +711,22 @@
                     new BinaryOperator("BirthDate", today.AddYears(-age), BinaryOperatorType.LessOrEqual))),
             _ => new BinaryOperator("BirthDate", today.AddYears(-age), BinaryOperatorType.LessOrEqual)
         };
+    }
+
+    private List<BankAccount> GetBankAccounts(int subjectId)
+        => _bankAccountMap.TryGetValue(subjectId, out var accounts)
+            ? accounts
+            : [];
+
+    private string GetPrimaryBankAccountSummary(int subjectId)
+    {
+        var accounts = GetBankAccounts(subjectId);
+        if (accounts.Count == 0)
+            return "-";
+
+        var primary = accounts[0];
+        var summary = $"{primary.BankName} ...{primary.IbanLast4}";
+        return accounts.Count > 1 ? $"{summary} (+{accounts.Count - 1})" : summary;
     }
 
     private async Task SelectAllAsync()

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewModels="clr-namespace:PulsePoll.Mobile.ViewModels"
+             xmlns:models="clr-namespace:PulsePoll.Mobile.Models"
+             xmlns:converters="clr-namespace:PulsePoll.Mobile.Converters"
+             x:Class="PulsePoll.Mobile.Views.WalletTransactionsPage"
+             x:DataType="viewModels:WalletTransactionsViewModel"
+             Title="İşlem Geçmişi">
+
+    <ContentPage.Resources>
+        <converters:AmountToColorConverter x:Key="AmountToColor"/>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*">
+        <VerticalStackLayout Padding="20,16,20,10" Spacing="6">
+            <Label Text="İşlem Geçmişi"
+                   FontFamily="JakartaBold"
+                   FontSize="24"
+                   TextColor="{StaticResource TextPrimary}" />
+            <Label Text="Tüm cüzdan işlemleri"
+                   FontFamily="JakartaRegular"
+                   FontSize="13"
+                   TextColor="{StaticResource TextTertiary}" />
+        </VerticalStackLayout>
+
+        <CollectionView Grid.Row="1"
+                        ItemsSource="{Binding Transactions}"
+                        RemainingItemsThreshold="3"
+                        RemainingItemsThresholdReachedCommand="{Binding LoadMoreCommand}">
+            <CollectionView.EmptyView>
+                <Label Text="Henüz işlem yok."
+                       HorizontalOptions="Center"
+                       VerticalOptions="Center"
+                       FontFamily="JakartaRegular"
+                       FontSize="14"
+                       TextColor="{StaticResource TextTertiary}" />
+            </CollectionView.EmptyView>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:TransactionModel">
+                    <Border Margin="20,6"
+                            Style="{StaticResource CardBorderStyle}"
+                            Padding="14">
+                        <Grid ColumnDefinitions="40,*,Auto" ColumnSpacing="12">
+                            <Border StrokeThickness="0"
+                                    StrokeShape="RoundRectangle 20"
+                                    HeightRequest="40" WidthRequest="40"
+                                    BackgroundColor="{StaticResource PrimaryLight}">
+                                <Image Source="icon_money.png"
+                                       HeightRequest="18" WidthRequest="18"
+                                       HorizontalOptions="Center"
+                                       VerticalOptions="Center"/>
+                            </Border>
+                            <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                                <Label Text="{Binding Title}"
+                                       FontFamily="JakartaSemiBold"
+                                       FontSize="14"
+                                       TextColor="{StaticResource TextPrimary}"/>
+                                <Label Text="{Binding Description}"
+                                       Style="{StaticResource CaptionStyle}"/>
+                            </VerticalStackLayout>
+                            <Label Grid.Column="2"
+                                   Text="{Binding AmountDisplay}"
+                                   FontFamily="JakartaSemiBold"
+                                   FontSize="14"
+                                   TextColor="{Binding Amount, Converter={StaticResource AmountToColor}}"
+                                   VerticalOptions="Center"/>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <ActivityIndicator Grid.RowSpan="2"
+                           IsRunning="{Binding IsLoading}"
+                           IsVisible="{Binding IsLoading}"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center" />
+
+        <ActivityIndicator Grid.RowSpan="2"
+                           IsRunning="{Binding IsLoadingMore}"
+                           IsVisible="{Binding IsLoadingMore}"
+                           HorizontalOptions="Center"
+                           VerticalOptions="End"
+                           Margin="0,0,0,20" />
+    </Grid>
+</ContentPage>

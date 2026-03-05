@@ -12,6 +12,7 @@ public class SubjectRegisteredConsumer(
     ILogger<SubjectRegisteredConsumer> logger,
     ISubjectRepository subjectRepository,
     IWalletRepository walletRepository,
+    ILookupService lookupService,
     IReferralRewardService referralRewardService,
     ISesCalculator sesCalculator,
     SmtpMailService mailService) : IConsumer<SubjectRegisteredMessage>
@@ -56,9 +57,6 @@ public class SubjectRegisteredConsumer(
             IsHeadOfFamilyRetired = msg.IsHeadOfFamilyRetired,
             HeadOfFamilyProfessionId = msg.HeadOfFamilyProfessionId,
             HeadOfFamilyEducationLevelId = msg.HeadOfFamilyEducationLevelId,
-            BankId = msg.BankId,
-            IBAN = msg.IBAN,
-            IBANFullName = msg.IBANFullName,
             SocioeconomicStatusId = sesId ?? 1,
             LSMSocioeconomicStatusId = lsmId,
             ReferenceCode = msg.ReferenceCode,
@@ -79,6 +77,22 @@ public class SubjectRegisteredConsumer(
         wallet.SetCreated(subject.Id, msg.RegisteredAt);
         await walletRepository.AddAsync(wallet);
         logger.LogInformation("Cüzdan oluşturuldu: {SubjectId}", subject.Id);
+
+        var bank = await lookupService.GetBankByIdAsync(msg.BankId);
+        if (bank is not null)
+        {
+            var account = new BankAccount
+            {
+                SubjectId = subject.Id,
+                BankName = bank.Name,
+                IbanEncrypted = msg.IBAN,
+                IbanLast4 = msg.IBAN.Length >= 4 ? msg.IBAN[^4..] : msg.IBAN,
+                IsDefault = true
+            };
+            account.SetCreated(subject.Id, msg.RegisteredAt);
+            await walletRepository.AddBankAccountAsync(account);
+            logger.LogInformation("Kayıt sırasında banka hesabı eklendi: SubjectId={SubjectId}", subject.Id);
+        }
 
         await TryCreateReferralAsync(subject, msg.ReferenceCode, msg.RegisteredAt);
         await referralRewardService.TryGrantAsync(

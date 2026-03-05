@@ -7,9 +7,8 @@ public class AddBankAccountValidator : AbstractValidator<AddBankAccountDto>
 {
     public AddBankAccountValidator()
     {
-        RuleFor(x => x.BankName)
-            .NotEmpty().WithMessage("Banka adı zorunludur.")
-            .MaximumLength(100);
+        RuleFor(x => x.BankId)
+            .GreaterThan(0).WithMessage("Banka seçimi zorunludur.");
 
         RuleFor(x => x.Iban)
             .NotEmpty().WithMessage("IBAN zorunludur.")

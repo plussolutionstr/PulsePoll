@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewModels="clr-namespace:PulsePoll.Mobile.ViewModels"
+             xmlns:behaviors="clr-namespace:PulsePoll.Mobile.Behaviors"
+             x:Class="PulsePoll.Mobile.Views.WalletWithdrawPage"
+             x:DataType="viewModels:WalletWithdrawViewModel"
+             Title="Para Çek">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20,24" Spacing="16">
+            <Label Text="Para Çek"
+                   FontFamily="JakartaBold"
+                   FontSize="24"
+                   TextColor="{StaticResource TextPrimary}" />
+
+            <VerticalStackLayout Spacing="8">
+                <Label Text="Banka Hesabı"
+                       FontFamily="JakartaSemiBold"
+                       FontSize="14"
+                       TextColor="{StaticResource TextSecondary}" />
+                <Picker Title="Hesap seçin"
+                        ItemsSource="{Binding BankAccounts}"
+                        ItemDisplayBinding="{Binding DisplayTitle}"
+                        SelectedItem="{Binding SelectedBankAccount}" />
+            </VerticalStackLayout>
+
+            <VerticalStackLayout Spacing="8">
+                <Label Text="Tutar"
+                       FontFamily="JakartaSemiBold"
+                       FontSize="14"
+                       TextColor="{StaticResource TextSecondary}" />
+                <Entry Placeholder="0,00"
+                       Text="{Binding Amount}"
+                       MaxLength="16"
+                       Keyboard="Numeric">
+                    <Entry.Behaviors>
+                        <behaviors:DecimalEntryBehavior />
+                    </Entry.Behaviors>
+                </Entry>
+                <Label Text="TL cinsinden tutar girin."
+                       FontFamily="JakartaRegular"
+                       FontSize="12"
+                       TextColor="{StaticResource TextTertiary}" />
+                <Label Text="{Binding WithdrawableBalanceInfo}"
+                       FontFamily="JakartaRegular"
+                       FontSize="12"
+                       TextColor="{StaticResource TextTertiary}" />
+                <Label Text="{Binding ConversionInfo}"
+                       FontFamily="JakartaRegular"
+                       FontSize="12"
+                       TextColor="{StaticResource TextTertiary}" />
+            </VerticalStackLayout>
+
+            <Button Text="Talep Gönder"
+                    HeightRequest="46"
+                    CornerRadius="14"
+                    FontFamily="JakartaSemiBold"
+                    Clicked="OnSubmitClicked" />
+
+            <Button Text="İptal"
+                    HeightRequest="44"
+                    CornerRadius="14"
+                    FontFamily="JakartaSemiBold"
+                    Clicked="OnCancelClicked"
+                    BackgroundColor="#EEEEF8"
+                    TextColor="{StaticResource TextPrimary}" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

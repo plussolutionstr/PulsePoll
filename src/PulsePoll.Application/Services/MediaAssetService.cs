@@ -65,7 +65,7 @@ public class MediaAssetService(
         var asset = await repository.GetByIdAsync(id)
             ?? throw new NotFoundException("Medya dosyası");
 
-        if (asset.Projects.Any() || asset.Stories.Any() || asset.News.Any())
+        if (asset.Projects.Any() || asset.Stories.Any() || asset.News.Any() || asset.BankThumbnails.Any() || asset.BankLogos.Any())
             throw new BusinessException("MEDIA_IN_USE", "Bu görsel kullanımda. Silmek için önce bağlı proje/story/haber kayıtlarından kaldırın.");
 
         await storage.DeleteAsync(BucketName, asset.ObjectKey);
@@ -75,5 +75,6 @@ public class MediaAssetService(
     }
 
     private static MediaAssetDto ToDto(MediaAsset a, string url) =>
-        new(a.Id, a.Name, a.ContentType, a.Size, url, a.Projects.Count);
+        new(a.Id, a.Name, a.ContentType, a.Size, url,
+            a.Projects.Count + a.Stories.Count + a.News.Count + a.BankThumbnails.Count + a.BankLogos.Count);
 }

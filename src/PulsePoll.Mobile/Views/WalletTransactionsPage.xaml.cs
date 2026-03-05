@@ -2,11 +2,11 @@ using PulsePoll.Mobile.ViewModels;
 
 namespace PulsePoll.Mobile.Views;
 
-public partial class WalletPage : ContentPage
+public partial class WalletTransactionsPage : ContentPage
 {
-    private readonly WalletViewModel _viewModel;
+    private readonly WalletTransactionsViewModel _viewModel;
 
-    public WalletPage(WalletViewModel viewModel)
+    public WalletTransactionsPage(WalletTransactionsViewModel viewModel)
     {
         InitializeComponent();
         BindingContext = _viewModel = viewModel;
@@ -15,6 +15,6 @@ public partial class WalletPage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
-        await _viewModel.LoadCommand.ExecuteAsync(null);
+        await _viewModel.InitializeAsync();
     }
 }

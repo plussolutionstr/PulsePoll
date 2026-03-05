@@ -90,7 +90,7 @@ public class AdminAssignmentService(
         if (ids.Length == 0)
             throw new BusinessException("NO_SUBJECTS", "En az bir denek seçiniz.");
 
-        _ = await projectRepository.GetByIdAsync(projectId)
+        var project = await projectRepository.GetByIdAsync(projectId)
             ?? throw new NotFoundException("Proje");
 
         var assignments = await projectRepository.GetAssignmentsByProjectAndSubjectsAsync(projectId, ids);
@@ -115,7 +115,7 @@ public class AdminAssignmentService(
         if (ids.Length == 0)
             throw new BusinessException("NO_SUBJECTS", "En az bir denek seçiniz.");
 
-        _ = await projectRepository.GetByIdAsync(projectId)
+        var project = await projectRepository.GetByIdAsync(projectId)
             ?? throw new NotFoundException("Proje");
 
         var assignments = await projectRepository.GetAssignmentsByProjectAndSubjectsAsync(projectId, ids);
@@ -170,7 +170,7 @@ public class AdminAssignmentService(
                         Amount = earnedAmount,
                         Type = WalletTransactionType.Credit,
                         ReferenceId = referenceId,
-                        Description = "Proje kazancı onayı"
+                        Description = $"Anket ödülü: {project.Name}"
                     };
                     tx.SetCreated(adminId);
                     await walletRepository.AddTransactionAsync(tx);

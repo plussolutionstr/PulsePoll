@@ -27,9 +27,6 @@ public class SubjectConfiguration : IEntityTypeConfiguration<Subject>
                .IsUnique()
                .HasDatabaseName("idx_subjects_referral_code");
 
-        builder.Property(s => s.IBAN).IsRequired().HasMaxLength(34);
-        builder.Property(s => s.IBANFullName).IsRequired().HasMaxLength(200);
-
         builder.HasOne(s => s.City)
                .WithMany()
                .HasForeignKey(s => s.CityId)
@@ -64,12 +61,6 @@ public class SubjectConfiguration : IEntityTypeConfiguration<Subject>
                .WithMany()
                .HasForeignKey(s => s.HeadOfFamilyEducationLevelId)
                .HasConstraintName("fk_subjects_hof_education_levels")
-               .OnDelete(DeleteBehavior.Restrict);
-
-        builder.HasOne(s => s.Bank)
-               .WithMany()
-               .HasForeignKey(s => s.BankId)
-               .HasConstraintName("fk_subjects_banks")
                .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(s => s.SocioeconomicStatus)

@@ -153,6 +153,30 @@
         </div>
     </div>
     }
+
+    @if (_canBankManagement)
+    {
+        <div class="col-12 col-md-6 col-lg-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body d-flex flex-column">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <i class="bi bi-bank fs-5 text-primary"></i>
+                    <h5 class="mb-0">Banka Yönetimi</h5>
+                </div>
+                <p class="text-muted small mb-3">
+                    Mobil banka listesi, sıralama, logo URL ve aktif/pasif durum yönetimi.
+                </p>
+                <div class="mt-auto">
+                    <DxButton Text="Aç"
+                              IconCssClass="bi bi-arrow-right"
+                              RenderStyle="ButtonRenderStyle.Secondary"
+                              RenderStyleMode="ButtonRenderStyleMode.Outline"
+                              Click="@(() => Nav.NavigateTo("/settings/banks"))" />
+                </div>
+            </div>
+        </div>
+    </div>
+    }
 </div>
 
 @code {
@@ -162,6 +186,7 @@
     private bool _canReferralReward;
     private bool _canAppContent;
     private bool _canCommunicationAutomation;
+    private bool _canBankManagement;
 
     protected override async Task OnInitializedAsync()
     {
@@ -173,5 +198,6 @@
         _canAppContent = permissions.Contains(PermissionCodes.Settings.AppContentEdit);
         _canCommunicationAutomation = permissions.Contains(PermissionCodes.Communications.View) ||
                                       permissions.Contains(PermissionCodes.Communications.Edit);
+        _canBankManagement = permissions.Contains(PermissionCodes.Settings.View);
     }
 }

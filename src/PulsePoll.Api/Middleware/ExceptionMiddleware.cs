@@ -24,7 +24,10 @@ public class ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddlewa
             ? corrId?.ToString() ?? context.TraceIdentifier
             : context.TraceIdentifier;
 
-        logger.LogError(ex, "İşlenmemiş hata. RequestId: {RequestId}", requestId);
+        if (ex is BusinessException or ValidationException or NotFoundException or ForbiddenException or UnauthorizedAccessException)
+            logger.LogWarning(ex, "İstek iş kuralı/doğrulama hatası ile sonuçlandı. RequestId: {RequestId}", requestId);
+        else
+            logger.LogError(ex, "İşlenmemiş hata. RequestId: {RequestId}", requestId);
 
         var (statusCode, response) = ex switch
         {

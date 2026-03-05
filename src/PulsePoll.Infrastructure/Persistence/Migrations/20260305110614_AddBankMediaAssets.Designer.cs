@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using PulsePoll.Infrastructure.Persistence;
@@ -11,9 +12,11 @@ using PulsePoll.Infrastructure.Persistence;
 namespace PulsePoll.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260305110614_AddBankMediaAssets")]
+    partial class AddBankMediaAssets
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2436,6 +2439,10 @@ namespace PulsePoll.Infrastructure.Persistence.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("BankId")
+                        .HasColumnType("integer")
+                        .HasColumnName("bank_id");
+
                     b.Property<DateOnly>("BirthDate")
                         .HasColumnType("date")
                         .HasColumnName("birth_date");
@@ -2500,6 +2507,18 @@ namespace PulsePoll.Infrastructure.Persistence.Migrations
                     b.Property<int?>("HeadOfFamilyProfessionId")
                         .HasColumnType("integer")
                         .HasColumnName("head_of_family_profession_id");
+
+                    b.Property<string>("IBAN")
+                        .IsRequired()
+                        .HasMaxLength(34)
+                        .HasColumnType("character varying(34)")
+                        .HasColumnName("iban");
+
+                    b.Property<string>("IBANFullName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("iban_full_name");
 
                     b.Property<bool>("IsHeadOfFamily")
                         .HasColumnType("boolean")
@@ -2594,6 +2613,9 @@ namespace PulsePoll.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id")
                         .HasName("pk_subjects");
+
+                    b.HasIndex("BankId")
+                        .HasDatabaseName("ix_subjects_bank_id");
 
                     b.HasIndex("CityId")
                         .HasDatabaseName("ix_subjects_city_id");
@@ -3449,7 +3471,7 @@ namespace PulsePoll.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("PulsePoll.Domain.Entities.BankAccount", b =>
                 {
                     b.HasOne("PulsePoll.Domain.Entities.Subject", "Subject")
-                        .WithMany("BankAccounts")
+                        .WithMany()
                         .HasForeignKey("SubjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
@@ -3733,6 +3755,13 @@ namespace PulsePoll.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("PulsePoll.Domain.Entities.Subject", b =>
                 {
+                    b.HasOne("PulsePoll.Domain.Entities.Bank", "Bank")
+                        .WithMany()
+                        .HasForeignKey("BankId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_subjects_banks");
+
                     b.HasOne("PulsePoll.Domain.Entities.City", "City")
                         .WithMany()
                         .HasForeignKey("CityId")
@@ -3792,6 +3821,8 @@ namespace PulsePoll.Infrastructure.Persistence.Migrations
                         .HasForeignKey("SpecialCodeId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("fk_subjects_special_codes");
+
+                    b.Navigation("Bank");
 
                     b.Navigation("City");
 
@@ -3977,8 +4008,6 @@ namespace PulsePoll.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("PulsePoll.Domain.Entities.Subject", b =>
                 {
-                    b.Navigation("BankAccounts");
-
                     b.Navigation("ReferralsGiven");
 
                     b.Navigation("ReferredBy");

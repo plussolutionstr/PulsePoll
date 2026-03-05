@@ -49,7 +49,7 @@ public sealed class PulsePollApiClient : IPulsePollApiClient
     {
         await SetAuthHeaderAsync();
         var response = await _http.PostAsync($"api/stories/{storyId}/seen", content: null, ct);
-        response.EnsureSuccessStatusCode();
+        await EnsureSuccessOrThrowAsync(response, ct);
 
         var result = await response.Content.ReadFromJsonAsync<ApiResponse<object?>>(JsonOptions, ct);
         if (result is not { Success: true })
@@ -84,11 +84,63 @@ public sealed class PulsePollApiClient : IPulsePollApiClient
         return response?.Select(h => h.ToModel()).ToList() ?? [];
     }
 
+    public Task<WalletApiDto?> GetWalletAsync(CancellationToken ct = default)
+        => GetAsync<WalletApiDto>("api/wallet", ct);
+
+    public async Task<List<WalletTransactionApiDto>> GetWalletTransactionsAsync(int page = 1, int pageSize = 20, CancellationToken ct = default)
+    {
+        var result = await GetPagedAsync<WalletTransactionApiDto>($"api/wallet/transactions?page={page}&pageSize={pageSize}", ct);
+        return result ?? [];
+    }
+
+    public async Task<List<BankAccountApiDto>> GetBankAccountsAsync(CancellationToken ct = default)
+    {
+        var result = await GetAsync<List<BankAccountApiDto>>("api/wallet/banks", ct);
+        return result ?? [];
+    }
+
+    public async Task<List<BankOptionApiDto>> GetAvailableBanksAsync(CancellationToken ct = default)
+    {
+        var result = await GetAsync<List<BankOptionApiDto>>("api/wallet/bank-options", ct);
+        return result ?? [];
+    }
+
+    public async Task AddBankAccountAsync(int bankId, string iban, CancellationToken ct = default)
+    {
+        await SetAuthHeaderAsync();
+        var payload = new AddBankAccountApiRequest(bankId, iban);
+        var response = await _http.PostAsJsonAsync("api/wallet/banks", payload, JsonOptions, ct);
+        await EnsureSuccessOrThrowAsync(response, ct);
+    }
+
+    public async Task UpdateBankAccountAsync(int bankAccountId, int bankId, string iban, CancellationToken ct = default)
+    {
+        await SetAuthHeaderAsync();
+        var payload = new UpdateBankAccountApiRequest(bankId, iban);
+        var response = await _http.PutAsJsonAsync($"api/wallet/banks/{bankAccountId}", payload, JsonOptions, ct);
+        await EnsureSuccessOrThrowAsync(response, ct);
+    }
+
+    public async Task DeleteBankAccountAsync(int bankAccountId, CancellationToken ct = default)
+    {
+        await SetAuthHeaderAsync();
+        var response = await _http.DeleteAsync($"api/wallet/banks/{bankAccountId}", ct);
+        await EnsureSuccessOrThrowAsync(response, ct);
+    }
+
+    public async Task RequestWithdrawalAsync(decimal amount, int bankAccountId, CancellationToken ct = default)
+    {
+        await SetAuthHeaderAsync();
+        var payload = new WithdrawalRequestApiRequest(amount, bankAccountId);
+        var response = await _http.PostAsJsonAsync("api/wallet/withdraw", payload, JsonOptions, ct);
+        await EnsureSuccessOrThrowAsync(response, ct);
+    }
+
     public async Task<string> StartProjectAsync(int projectId, CancellationToken ct = default)
     {
         await SetAuthHeaderAsync();
         var response = await _http.PostAsync($"api/projects/{projectId}/start", content: null, ct);
-        response.EnsureSuccessStatusCode();
+        await EnsureSuccessOrThrowAsync(response, ct);
 
         var result = await response.Content.ReadFromJsonAsync<ApiResponse<StartProjectApiDto>>(JsonOptions, ct);
         if (result is not { Success: true } || string.IsNullOrWhiteSpace(result.Data?.Url))
@@ -107,7 +159,7 @@ public sealed class PulsePollApiClient : IPulsePollApiClient
         };
 
         var response = await _http.PostAsJsonAsync($"api/projects/{projectId}/result", payload, JsonOptions, ct);
-        response.EnsureSuccessStatusCode();
+        await EnsureSuccessOrThrowAsync(response, ct);
     }
 
     private async Task<T?> GetAsync<T>(string path, CancellationToken ct)
@@ -117,11 +169,40 @@ public sealed class PulsePollApiClient : IPulsePollApiClient
         return result is { Success: true } ? result.Data : default;
     }
 
+    private async Task<List<T>?> GetPagedAsync<T>(string path, CancellationToken ct)
+    {
+        await SetAuthHeaderAsync();
+        var result = await _http.GetFromJsonAsync<PagedApiResponse<T>>(path, JsonOptions, ct);
+        return result is { Success: true } ? result.Data : default;
+    }
+
     private async Task SetAuthHeaderAsync()
     {
         var token = await _tokenProvider.GetAccessTokenAsync();
         _http.DefaultRequestHeaders.Authorization = string.IsNullOrEmpty(token)
             ? null
             : new AuthenticationHeaderValue("Bearer", token);
+    }
+
+    private static async Task EnsureSuccessOrThrowAsync(HttpResponseMessage response, CancellationToken ct)
+    {
+        if (response.IsSuccessStatusCode)
+            return;
+
+        string? message = null;
+        try
+        {
+            var errorResponse = await response.Content.ReadFromJsonAsync<ApiResponse<object?>>(JsonOptions, ct);
+            message = errorResponse?.Error?.Message;
+        }
+        catch
+        {
+            // ignore deserialization errors and fallback to status line
+        }
+
+        if (string.IsNullOrWhiteSpace(message))
+            message = $"İstek başarısız oldu ({(int)response.StatusCode}).";
+
+        throw new HttpRequestException(message, null, response.StatusCode);
     }
 }

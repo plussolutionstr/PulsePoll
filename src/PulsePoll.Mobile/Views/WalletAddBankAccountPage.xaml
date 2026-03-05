@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewModels="clr-namespace:PulsePoll.Mobile.ViewModels"
+             x:Class="PulsePoll.Mobile.Views.WalletAddBankAccountPage"
+             x:DataType="viewModels:WalletAddBankAccountViewModel"
+             Title="{Binding PageTitle}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20,24" Spacing="16">
+            <Label Text="{Binding PageTitle}"
+                   FontFamily="JakartaBold"
+                   FontSize="24"
+                   TextColor="{StaticResource TextPrimary}" />
+
+            <VerticalStackLayout Spacing="8">
+                <Label Text="Banka"
+                       FontFamily="JakartaSemiBold"
+                       FontSize="14"
+                       TextColor="{StaticResource TextSecondary}" />
+                <Picker Title="Banka seçin"
+                        ItemsSource="{Binding Banks}"
+                        ItemDisplayBinding="{Binding Name}"
+                        SelectedItem="{Binding SelectedBank}" />
+            </VerticalStackLayout>
+
+            <VerticalStackLayout Spacing="8">
+                <Label Text="IBAN"
+                       FontFamily="JakartaSemiBold"
+                       FontSize="14"
+                       TextColor="{StaticResource TextSecondary}" />
+                <Entry Placeholder="TR ile başlayan 26 karakter"
+                       Text="{Binding Iban}"
+                       Keyboard="Text"
+                       MaxLength="34" />
+            </VerticalStackLayout>
+
+            <Button Text="{Binding SaveButtonText}"
+                    HeightRequest="46"
+                    CornerRadius="14"
+                    FontFamily="JakartaSemiBold"
+                    Clicked="OnSaveClicked" />
+
+            <Button Text="Sil"
+                    HeightRequest="44"
+                    CornerRadius="14"
+                    FontFamily="JakartaSemiBold"
+                    Clicked="OnDeleteClicked"
+                    IsVisible="{Binding IsEditMode}"
+                    BackgroundColor="#FDECEC"
+                    TextColor="#D14343" />
+
+            <Button Text="İptal"
+                    HeightRequest="44"
+                    CornerRadius="14"
+                    FontFamily="JakartaSemiBold"
+                    Clicked="OnCancelClicked"
+                    BackgroundColor="#EEEEF8"
+                    TextColor="{StaticResource TextPrimary}" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

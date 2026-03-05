@@ -102,7 +102,8 @@ public record HistoryItemModel(
     string RewardUnitLabel = "Poll",
     int DurationMinutes = 0,
     decimal RewardAmount = 0m,
-    decimal ConsolationRewardAmount = 0m)
+    decimal ConsolationRewardAmount = 0m,
+    string RewardStatus = "None")
 {
     public string RewardAmountDisplay => $"{RewardAmount:0.##} {RewardUnitLabel}";
     public string ConsolationAmountDisplay => $"{ConsolationRewardAmount:0.##} {RewardUnitLabel}";
@@ -112,12 +113,32 @@ public record HistoryGroup(string Month, List<HistoryItemModel> Items);
 
 public record WalletModel(
     decimal WithdrawableBalance,
-    int Points,
+    string PointsLabel,
     decimal TotalEarned,
+    string RewardUnitLabel,
     List<BankAccountModel> BankAccounts,
     List<TransactionModel> RecentTransactions);
 
-public record BankAccountModel(int Id, string BankName, string MaskedIban);
+public record BankAccountModel(int Id, string BankName, string MaskedIban, string IbanLast4, bool IsDefault = false)
+{
+    public string DisplayTitle => $"{BankName} {IbanLast4}";
+    public string? ThumbnailImageUrl { get; init; }
+    public string? LogoImageUrl { get; init; }
+    public string DisplayImageUrl => !string.IsNullOrWhiteSpace(ThumbnailImageUrl)
+        ? ThumbnailImageUrl!
+        : (LogoImageUrl ?? string.Empty);
+}
+public record BankOptionModel(
+    int Id,
+    string Name,
+    string? Code = null,
+    string? ThumbnailImageUrl = null,
+    string? LogoImageUrl = null)
+{
+    public string DisplayImageUrl => !string.IsNullOrWhiteSpace(ThumbnailImageUrl)
+        ? ThumbnailImageUrl!
+        : (LogoImageUrl ?? string.Empty);
+}
 
 public record TransactionModel(
     int Id,
@@ -125,7 +146,11 @@ public record TransactionModel(
     string Description,
     decimal Amount,
     DateTime Date,
-    bool IsIncome);
+    bool IsIncome,
+    string UnitLabel = "Poll")
+{
+    public string AmountDisplay => $"{Amount:+0.##;-0.##;0} {UnitLabel}";
+}
 
 public record NotificationModel(
     int Id,

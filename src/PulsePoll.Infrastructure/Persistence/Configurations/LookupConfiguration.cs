@@ -60,9 +60,23 @@ public class BankConfiguration : IEntityTypeConfiguration<Bank>
     public void Configure(EntityTypeBuilder<Bank> builder)
     {
         builder.Property(b => b.Name).IsRequired().HasMaxLength(200);
+        builder.Property(b => b.Code).HasMaxLength(20);
+        builder.Property(b => b.IsActive).HasDefaultValue(true);
         builder.HasIndex(b => b.Name)
                .IsUnique()
                .HasDatabaseName("uq_banks_name");
+
+        builder.HasOne(b => b.ThumbnailMediaAsset)
+            .WithMany(m => m.BankThumbnails)
+            .HasForeignKey(b => b.ThumbnailMediaAssetId)
+            .HasConstraintName("fk_banks_thumbnail_media_asset")
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasOne(b => b.LogoMediaAsset)
+            .WithMany(m => m.BankLogos)
+            .HasForeignKey(b => b.LogoMediaAssetId)
+            .HasConstraintName("fk_banks_logo_media_asset")
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }
 

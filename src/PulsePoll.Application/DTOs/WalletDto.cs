@@ -40,8 +40,17 @@ public record BankAccountDto(
     int Id,
     string BankName,
     string IbanLast4,
-    bool IsDefault);
+    bool IsDefault,
+    string? ThumbnailImageUrl,
+    string? LogoImageUrl);
 
 public record AddBankAccountDto(
-    string BankName,
+    int BankId,
     string Iban);
+
+public record AvailableBankDto(
+    int Id,
+    string Name,
+    string? Code,
+    string? ThumbnailImageUrl,
+    string? LogoImageUrl);

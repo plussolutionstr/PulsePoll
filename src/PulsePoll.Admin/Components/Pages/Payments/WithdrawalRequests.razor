@@ -30,6 +30,43 @@
 </ul>
 
 <div class="d-flex justify-content-end mb-2">
+    @if (_activeTab == "pending")
+    {
+        <DxButton Text="Tumunu Sec"
+                  IconCssClass="bi bi-check2-square"
+                  CssClass="me-2"
+                  RenderStyle="ButtonRenderStyle.Secondary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Enabled="@(!_isActionRunning && _pendingTotal > 0)"
+                  Click="SelectAllPendingAsync"/>
+        <DxButton Text="Secimi Temizle"
+                  IconCssClass="bi bi-x-square"
+                  CssClass="me-2"
+                  RenderStyle="ButtonRenderStyle.Secondary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Enabled="@(!_isActionRunning && SelectedPendingCount > 0)"
+                  Click="ClearSelection"/>
+        @if (_canApprove)
+        {
+            <DxButton Text="Secilenleri Onayla"
+                      IconCssClass="bi bi-check2-circle"
+                      CssClass="me-2"
+                      RenderStyle="ButtonRenderStyle.Success"
+                      RenderStyleMode="ButtonRenderStyleMode.Outline"
+                      Enabled="@(!_isActionRunning && SelectedPendingCount > 0)"
+                      Click="OnBulkApproveAsync"/>
+        }
+        @if (_canReject)
+        {
+            <DxButton Text="Secilenleri Reddet"
+                      IconCssClass="bi bi-x-circle"
+                      CssClass="me-2"
+                      RenderStyle="ButtonRenderStyle.Danger"
+                      RenderStyleMode="ButtonRenderStyleMode.Outline"
+                      Enabled="@(!_isActionRunning && SelectedPendingCount > 0)"
+                      Click="OnBulkRejectClick"/>
+        }
+    }
     @if (_canExport && _activeTab == "pending")
     {
         <DxButton Text="Excel"
@@ -51,10 +88,16 @@
 <DxGrid @ref="_grid"
         Data="@_dataSource"
         KeyFieldName="Id"
+        SelectionMode="GridSelectionMode.Multiple"
+        @bind-SelectedDataItems="_selectedRows"
         ShowFilterRow="true"
         PageSize="25"
         ColumnResizeMode="GridColumnResizeMode.ColumnsContainer">
     <Columns>
+        @if (_activeTab == "pending")
+        {
+            <DxGridSelectionColumn Width="40px"/>
+        }
         <DxGridDataColumn FieldName="Id" Caption="ID" Width="70px"/>
         <DxGridDataColumn FieldName="Subject.FullName" Caption="Denek" MinWidth="150"/>
         <DxGridDataColumn FieldName="BankAccount.BankName" Caption="Banka" Width="130px"/>
@@ -78,13 +121,13 @@
         </DxGridDataColumn>
         <DxGridDataColumn FieldName="CreatedAt" Caption="Talep Tarihi" DisplayFormat="dd.MM.yyyy HH:mm" Width="150px"/>
         <DxGridDataColumn FieldName="RejectionReason" Caption="Red Nedeni" MinWidth="150"/>
-        <DxGridCommandColumn Width="130px" Caption="Islemler" NewButtonVisible="false">
-            <CellDisplayTemplate>
-                @{
-                    var rowItem2 = (WithdrawalRequest)context.DataItem;
-                }
-                @if (_activeTab == "pending")
-                {
+        @if (_activeTab == "pending")
+        {
+            <DxGridCommandColumn Width="130px" Caption="Islemler" NewButtonVisible="false">
+                <CellDisplayTemplate>
+                    @{
+                        var rowItem2 = (WithdrawalRequest)context.DataItem;
+                    }
                     <div class="d-flex gap-1">
                         @if (_canApprove)
                         {
@@ -103,9 +146,9 @@
                                       Click="@(() => OnRejectClick(rowItem2))"/>
                         }
                     </div>
-                }
-            </CellDisplayTemplate>
-        </DxGridCommandColumn>
+                </CellDisplayTemplate>
+            </DxGridCommandColumn>
+        }
     </Columns>
     <TotalSummary>
         <DxGridSummaryItem SummaryType="GridSummaryItemType.Count"
@@ -122,6 +165,9 @@
 <DxPopup @bind-Visible="_rejectPopupVisible" HeaderText="Talebi Reddet" Width="420px" CloseOnOutsideClick="false" ShowFooter="true">
     <BodyContentTemplate Context="popupCtx">
         <DxFormLayout>
+            <DxFormLayoutItem Caption="Secili Talep" ColSpanMd="12">
+                <div class="small text-muted">@_rejectTargetLabel</div>
+            </DxFormLayoutItem>
             <DxFormLayoutItem Caption="Red Nedeni" ColSpanMd="12">
                 <DxMemo @bind-Text="_rejectReason" Rows="3" style="width:100%"/>
             </DxFormLayoutItem>
@@ -147,13 +193,18 @@
     bool _canApprove;
     bool _canReject;
     bool _canExport;
+    bool _isActionRunning;
 
     AppDbContext? _context;
     GridDevExtremeDataSource<WithdrawalRequest>? _dataSource;
 
     WithdrawalRequest? _selectedItem;
+    IReadOnlyList<object> _selectedRows = [];
+    List<int> _rejectIds = [];
+    string _rejectTargetLabel = string.Empty;
     bool _rejectPopupVisible;
     string _rejectReason = string.Empty;
+    int SelectedPendingCount => _selectedRows.Count;
 
     protected override async Task OnInitializedAsync()
     {
@@ -177,7 +228,7 @@
             query = query.Where(w => w.Status == ApprovalStatus.Pending);
         else
             query = query.Where(w => w.Status == ApprovalStatus.Approved
-                                     && !_context.Set<PaymentBatchItem>().Any(i => i.WithdrawalRequestId == w.Id));
+                                     && !_context.Set<PaymentBatchItem>().Any(i => i.WithdrawalRequestId == w.Id && i.DeletedAt == null));
 
         _dataSource = new GridDevExtremeDataSource<WithdrawalRequest>(query);
     }
@@ -201,6 +252,7 @@
     private async Task SetTab(string tab)
     {
         _activeTab = tab;
+        _selectedRows = [];
         await LoadCountsAsync();
         RecreateDataSource();
     }
@@ -218,6 +270,9 @@
         {
             await PaymentBatchService.ApproveWithdrawalAsync(item.Id, adminId);
             Toast.Success("Talep onaylandi.");
+            _selectedRows = _selectedRows
+                .Where(x => x is not WithdrawalRequest wr || wr.Id != item.Id)
+                .ToList();
             await LoadCountsAsync();
             RecreateDataSource();
         }
@@ -233,7 +288,78 @@
         }
 
         _selectedItem       = item;
+        _rejectIds          = [item.Id];
+        _rejectTargetLabel  = $"1 talep: #{item.Id}";
         _rejectReason       = string.Empty;
+        _rejectPopupVisible = true;
+    }
+
+    private async Task OnBulkApproveAsync()
+    {
+        if (!_canApprove)
+        {
+            Toast.Error("Çekim onaylama yetkiniz yok.");
+            return;
+        }
+
+        var selectedIds = await GetSelectedPendingIdsAsync();
+        if (selectedIds.Count == 0)
+        {
+            Toast.Error("Lutfen en az bir bekleyen talep secin.");
+            return;
+        }
+
+        var adminId = await GetAdminIdAsync();
+        _isActionRunning = true;
+        var approvedCount = 0;
+        try
+        {
+            foreach (var id in selectedIds)
+            {
+                try
+                {
+                    await PaymentBatchService.ApproveWithdrawalAsync(id, adminId);
+                    approvedCount++;
+                }
+                catch
+                {
+                    // tek bir kaydın hatası toplu işlemi tamamen durdurmasın
+                }
+            }
+
+            if (approvedCount > 0)
+                Toast.Success($"{approvedCount} talep onaylandi.");
+            else
+                Toast.Error("Secili talepler onaylanamadi.");
+        }
+        finally
+        {
+            _isActionRunning = false;
+            _selectedRows = [];
+            await LoadCountsAsync();
+            RecreateDataSource();
+        }
+    }
+
+    private void OnBulkRejectClick()
+    {
+        if (!_canReject)
+        {
+            Toast.Error("Çekim reddetme yetkiniz yok.");
+            return;
+        }
+
+        var selectedIds = GetSelectedPendingIds();
+        if (selectedIds.Count == 0)
+        {
+            Toast.Error("Lutfen en az bir bekleyen talep secin.");
+            return;
+        }
+
+        _selectedItem = null;
+        _rejectIds = selectedIds;
+        _rejectTargetLabel = $"{_rejectIds.Count} talep secildi.";
+        _rejectReason = string.Empty;
         _rejectPopupVisible = true;
     }
 
@@ -250,16 +376,49 @@
             Toast.Error("Red nedeni zorunludur.");
             return;
         }
+        if (_rejectIds.Count == 0 && _selectedItem is not null)
+            _rejectIds = [_selectedItem.Id];
+
+        if (_rejectIds.Count == 0)
+        {
+            Toast.Error("Reddedilecek talep bulunamadi.");
+            return;
+        }
+
         var adminId = await GetAdminIdAsync();
         _rejectPopupVisible = false;
+        _isActionRunning = true;
+        var rejectedCount = 0;
         try
         {
-            await PaymentBatchService.RejectWithdrawalAsync(_selectedItem!.Id, _rejectReason, adminId);
-            Toast.Success("Talep reddedildi, tutar iade edildi.");
+            foreach (var id in _rejectIds.Distinct())
+            {
+                try
+                {
+                    await PaymentBatchService.RejectWithdrawalAsync(id, _rejectReason, adminId);
+                    rejectedCount++;
+                }
+                catch
+                {
+                    // tekil hata toplu süreci komple bozmasın
+                }
+            }
+
+            if (rejectedCount > 0)
+                Toast.Success($"{rejectedCount} talep reddedildi, tutar iade edildi.");
+            else
+                Toast.Error("Secili talepler reddedilemedi.");
+        }
+        catch (Exception ex) { ErrorHandler.HandleOperation(ex, Toast); }
+        finally
+        {
+            _isActionRunning = false;
+            _selectedRows = [];
+            _rejectIds.Clear();
+            _rejectTargetLabel = string.Empty;
             await LoadCountsAsync();
             RecreateDataSource();
         }
-        catch (Exception ex) { ErrorHandler.HandleOperation(ex, Toast); }
     }
 
     private static string StatusBadge(ApprovalStatus status) => status switch
@@ -311,5 +470,46 @@
     public void Dispose()
     {
         _context?.Dispose();
+    }
+
+    private async Task SelectAllPendingAsync()
+    {
+        if (_context is null)
+            return;
+
+        var allPendingRows = await _context.WithdrawalRequests
+            .Include(w => w.Subject)
+            .Include(w => w.BankAccount)
+            .AsNoTracking()
+            .Where(w => w.Status == ApprovalStatus.Pending)
+            .OrderByDescending(w => w.CreatedAt)
+            .ToListAsync();
+
+        _selectedRows = allPendingRows.Cast<object>().ToList();
+    }
+
+    private void ClearSelection()
+    {
+        _selectedRows = [];
+    }
+
+    private List<int> GetSelectedPendingIds()
+        => _selectedRows
+            .OfType<WithdrawalRequest>()
+            .Select(w => w.Id)
+            .Distinct()
+            .ToList();
+
+    private async Task<List<int>> GetSelectedPendingIdsAsync()
+    {
+        var selectedIds = GetSelectedPendingIds();
+        if (_context is null || selectedIds.Count == 0)
+            return [];
+
+        return await _context.WithdrawalRequests
+            .AsNoTracking()
+            .Where(w => w.Status == ApprovalStatus.Pending && selectedIds.Contains(w.Id))
+            .Select(w => w.Id)
+            .ToListAsync();
     }
 }

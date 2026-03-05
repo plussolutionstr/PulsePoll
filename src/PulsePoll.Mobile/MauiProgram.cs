@@ -55,6 +55,9 @@ public static class MauiProgram
         builder.Services.AddTransient<ProfileViewModel>();
         builder.Services.AddTransient<HistoryViewModel>();
         builder.Services.AddTransient<WalletViewModel>();
+        builder.Services.AddTransient<WalletAddBankAccountViewModel>();
+        builder.Services.AddTransient<WalletWithdrawViewModel>();
+        builder.Services.AddTransient<WalletTransactionsViewModel>();
         builder.Services.AddTransient<NotificationsViewModel>();
         builder.Services.AddTransient<StoryViewerViewModel>();
         builder.Services.AddTransient<NewsDetailViewModel>();
@@ -70,6 +73,9 @@ public static class MauiProgram
         builder.Services.AddTransient<ProfilePage>();
         builder.Services.AddTransient<HistoryPage>();
         builder.Services.AddTransient<WalletPage>();
+        builder.Services.AddTransient<WalletAddBankAccountPage>();
+        builder.Services.AddTransient<WalletWithdrawPage>();
+        builder.Services.AddTransient<WalletTransactionsPage>();
         builder.Services.AddTransient<NotificationsPage>();
         builder.Services.AddTransient<StoryViewerPage>();
         builder.Services.AddTransient<NewsDetailPage>();

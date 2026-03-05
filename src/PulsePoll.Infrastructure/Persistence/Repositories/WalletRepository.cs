@@ -149,6 +149,12 @@ public class WalletRepository(AppDbContext db) : IWalletRepository
         await db.SaveChangesAsync();
     }
 
+    public async Task UpdateBankAccountAsync(BankAccount account)
+    {
+        db.BankAccounts.Update(account);
+        await db.SaveChangesAsync();
+    }
+
     public async Task DeleteBankAccountAsync(BankAccount account)
     {
         db.BankAccounts.Remove(account);

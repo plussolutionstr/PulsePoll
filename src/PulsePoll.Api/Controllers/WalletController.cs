@@ -36,11 +36,26 @@ public class WalletController(IWalletService walletService) : ControllerBase
         return this.OkResponse(accounts);
     }
 
+    [HttpGet("bank-options")]
+    public async Task<IActionResult> GetBankOptions()
+    {
+        var banks = await walletService.GetAvailableBanksAsync();
+        return this.OkResponse(banks);
+    }
+
     [HttpPost("banks")]
     [EnableRateLimiting("bank-add")]
     public async Task<IActionResult> AddBank([FromBody] AddBankAccountDto dto)
     {
         await walletService.AddBankAccountAsync(SubjectId, dto);
+        return this.NoContentResponse();
+    }
+
+    [HttpPut("banks/{id:int}")]
+    [EnableRateLimiting("bank-add")]
+    public async Task<IActionResult> UpdateBank(int id, [FromBody] AddBankAccountDto dto)
+    {
+        await walletService.UpdateBankAccountAsync(SubjectId, id, dto);
         return this.NoContentResponse();
     }
 

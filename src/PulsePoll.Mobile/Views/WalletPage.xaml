@@ -32,7 +32,7 @@
                         <Label Text="Çekilebilir Bakiye"
                                FontFamily="JakartaRegular" FontSize="13"
                                TextColor="#AAFFFFFF"/>
-                        <Label Text="{Binding WithdrawableBalance, StringFormat='₺{0:N2}'}"
+                        <Label Text="{Binding WithdrawableBalanceDisplay}"
                                FontFamily="JakartaExtraBold" FontSize="32"
                                TextColor="White"/>
                     </VerticalStackLayout>
@@ -40,12 +40,12 @@
                     <Grid ColumnDefinitions="*,*" ColumnSpacing="16">
                         <VerticalStackLayout Spacing="2">
                             <Label Text="Puan" FontFamily="JakartaRegular" FontSize="12" TextColor="#AAFFFFFF"/>
-                            <Label Text="{Binding Points, StringFormat='{0:N0}'}"
+                            <Label Text="{Binding PointsDisplay}"
                                    FontFamily="JakartaBold" FontSize="16" TextColor="White"/>
                         </VerticalStackLayout>
                         <VerticalStackLayout Grid.Column="1" Spacing="2">
                             <Label Text="Toplam Kazanç" FontFamily="JakartaRegular" FontSize="12" TextColor="#AAFFFFFF"/>
-                            <Label Text="{Binding TotalEarned, StringFormat='₺{0:N2}'}"
+                            <Label Text="{Binding TotalEarnedDisplay}"
                                    FontFamily="JakartaBold" FontSize="16" TextColor="White"/>
                         </VerticalStackLayout>
                     </Grid>
@@ -55,13 +55,15 @@
                                 FontFamily="JakartaSemiBold" FontSize="14"
                                 BackgroundColor="White"
                                 TextColor="{StaticResource PrimaryPurple}"
-                                CornerRadius="22" HeightRequest="44"/>
+                                CornerRadius="22" HeightRequest="44"
+                                Command="{Binding NavigateToWithdrawCommand}"/>
                         <Button Grid.Column="1" Text="Geçmiş"
                                 FontFamily="JakartaSemiBold" FontSize="14"
                                 BackgroundColor="#30FFFFFF"
                                 TextColor="White"
                                 CornerRadius="22" HeightRequest="44"
-                                BorderWidth="0"/>
+                                BorderWidth="0"
+                                Command="{Binding NavigateToHistoryCommand}"/>
                     </Grid>
                 </VerticalStackLayout>
             </Border>
@@ -75,16 +77,26 @@
                 <BindableLayout.ItemTemplate>
                     <DataTemplate x:DataType="models:BankAccountModel">
                         <Border Style="{StaticResource CardBorderStyle}" Padding="14">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.NavigateToEditBankAccountCommand}"
+                                    CommandParameter="{Binding .}" />
+                            </Border.GestureRecognizers>
                             <HorizontalStackLayout Spacing="12">
                                 <Border StrokeThickness="0"
                                         StrokeShape="RoundRectangle 20"
                                         HeightRequest="40" WidthRequest="40"
                                         BackgroundColor="{StaticResource PrimaryLight}">
-                                    <Label Text="{Binding BankName, StringFormat='{0:0}'}"
-                                           FontFamily="JakartaBold" FontSize="10"
-                                           HorizontalOptions="Center" VerticalOptions="Center"
-                                           TextColor="{StaticResource PrimaryPurple}"
-                                           MaxLines="1"/>
+                                    <Image Source="{Binding DisplayImageUrl}"
+                                           HeightRequest="40"
+                                           WidthRequest="40"
+                                           Aspect="AspectFill"
+                                           HorizontalOptions="Center"
+                                           VerticalOptions="Center">
+                                        <Image.Clip>
+                                            <EllipseGeometry Center="20,20" RadiusX="20" RadiusY="20"/>
+                                        </Image.Clip>
+                                    </Image>
                                 </Border>
                                 <VerticalStackLayout Spacing="2" VerticalOptions="Center">
                                     <Label Text="{Binding BankName}"
@@ -101,7 +113,8 @@
 
             <Button Text="+ Yeni Hesap Ekle"
                     Style="{StaticResource SecondaryButtonStyle}"
-                    HorizontalOptions="Fill"/>
+                    HorizontalOptions="Fill"
+                    Command="{Binding NavigateToAddBankAccountCommand}"/>
 
             <!-- Recent Transactions -->
             <Label Text="Son İşlemler"
@@ -129,7 +142,7 @@
                                            Style="{StaticResource CaptionStyle}"/>
                                 </VerticalStackLayout>
                                 <Label Grid.Column="2"
-                                       Text="{Binding Amount, StringFormat='{0:+₺#.##;-₺#.##;₺0}'}"
+                                       Text="{Binding AmountDisplay}"
                                        FontFamily="JakartaSemiBold" FontSize="14"
                                        TextColor="{Binding Amount, Converter={StaticResource AmountToColor}}"
                                        VerticalOptions="Center"/>

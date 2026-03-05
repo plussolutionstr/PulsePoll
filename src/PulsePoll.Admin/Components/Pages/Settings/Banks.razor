@@ -1,0 +1,422 @@
+@page "/settings/banks"
+@attribute [HasPermission(PermissionCodes.Settings.View)]
+@using PulsePoll.Application.DTOs
+@using PulsePoll.Domain.Entities
+@inject IDbContextFactory<AppDbContext> ContextFactory
+@inject IAppToastService Toast
+@inject IPermissionAuthorizationService PermissionService
+@inject IMediaAssetService MediaAssetService
+
+<PageTitle>Banka Yönetimi — PulsePoll Admin</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">Banka Yönetimi</h3>
+    <DxButton Text="Yeni Banka"
+              IconCssClass="bi bi-plus-lg"
+              RenderStyle="ButtonRenderStyle.Primary"
+              RenderStyleMode="ButtonRenderStyleMode.Outline"
+              Enabled="@_canEdit"
+              Click="OpenNew" />
+</div>
+
+<DxGrid Data="@_items" ShowFilterRow="true" PageSize="20">
+    <Columns>
+        <DxGridDataColumn FieldName="Name" Caption="Banka Adı" MinWidth="200" />
+        <DxGridDataColumn FieldName="Code" Caption="Kod" Width="120px" />
+        <DxGridDataColumn FieldName="SortOrder" Caption="Sıra" Width="90px" />
+        <DxGridDataColumn FieldName="IsActive" Caption="Durum" Width="90px">
+            <CellDisplayTemplate>
+                @{
+                    var row = (Bank)context.DataItem;
+                }
+                <span class="badge @(row.IsActive ? "bg-success-subtle text-success" : "bg-secondary-subtle text-secondary")">
+                    @(row.IsActive ? "Aktif" : "Pasif")
+                </span>
+            </CellDisplayTemplate>
+        </DxGridDataColumn>
+        <DxGridDataColumn Caption="Thumbnail" Width="100px">
+            <CellDisplayTemplate>
+                @{
+                    var row = (Bank)context.DataItem;
+                    var thumbnailUrl = GetMediaUrl(row.ThumbnailMediaAssetId);
+                }
+                @if (!string.IsNullOrWhiteSpace(thumbnailUrl))
+                {
+                    <img src="@thumbnailUrl" style="width:32px; height:32px; object-fit:contain;" alt="@row.Name thumbnail" />
+                }
+            </CellDisplayTemplate>
+        </DxGridDataColumn>
+        <DxGridDataColumn Caption="Büyük Logo" Width="120px">
+            <CellDisplayTemplate>
+                @{
+                    var row = (Bank)context.DataItem;
+                    var logoUrl = GetMediaUrl(row.LogoMediaAssetId);
+                }
+                @if (!string.IsNullOrWhiteSpace(logoUrl))
+                {
+                    <img src="@logoUrl" style="max-width:90px; max-height:32px; object-fit:contain;" alt="@row.Name logo" />
+                }
+            </CellDisplayTemplate>
+        </DxGridDataColumn>
+        <DxGridCommandColumn Caption="" Width="50px" TextAlignment="GridTextAlignment.Center"
+                             NewButtonVisible="false" EditButtonVisible="false" DeleteButtonVisible="false">
+            <CellDisplayTemplate>
+                @{
+                    var row = (Bank)context.DataItem;
+                }
+                <DxButton IconCssClass="bi bi-three-dots-vertical"
+                          RenderStyle="ButtonRenderStyle.Link"
+                          Enabled="@_canEdit"
+                          Click="@(async e => await ShowMenuAsync(e, row))"
+                          title="İşlemler" />
+            </CellDisplayTemplate>
+        </DxGridCommandColumn>
+    </Columns>
+</DxGrid>
+
+<DxContextMenu @ref="_contextMenu" ItemClick="OnContextMenuItemClick">
+    <Items>
+        <DxContextMenuItem Text="Düzenle" Name="edit" IconCssClass="bi bi-pencil" />
+        <DxContextMenuItem Text="Aktif/Pasif Değiştir" Name="toggle" IconCssClass="bi bi-toggle-on" />
+    </Items>
+</DxContextMenu>
+
+<DxPopup @bind-Visible="_popupVisible"
+         HeaderText="@(_form.Id > 0 ? "Banka Düzenle" : "Yeni Banka")"
+         Width="760px"
+         CloseOnOutsideClick="false"
+         ShowFooter="true">
+    <BodyContentTemplate Context="_">
+        @if (!string.IsNullOrWhiteSpace(_formError))
+        {
+            <div class="alert alert-danger py-2 mb-3">@_formError</div>
+        }
+
+        <DxFormLayout>
+            <DxFormLayoutItem ColSpanMd="8">
+                <label class="form-label">Banka Adı *</label>
+                <DxTextBox @bind-Text="_form.Name" />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanMd="4">
+                <label class="form-label">Kod</label>
+                <DxTextBox @bind-Text="_form.Code" />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanMd="4">
+                <label class="form-label">Sıra</label>
+                <DxSpinEdit @bind-Value="_form.SortOrder" MinValue="1" />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanMd="8">
+                <label class="form-label">Thumbnail</label>
+                <div class="d-flex align-items-center gap-3">
+                    @if (!string.IsNullOrWhiteSpace(_thumbnailMedia?.Url))
+                    {
+                        <img src="@_thumbnailMedia.Url"
+                             style="width:38px; height:38px; object-fit:contain; border:1px solid #dee2e6; border-radius:4px;"
+                             alt="thumbnail" />
+                    }
+                    <DxButton Text="Medya Kütüphanesinden Seç"
+                              IconCssClass="bi bi-images"
+                              RenderStyle="ButtonRenderStyle.Secondary"
+                              RenderStyleMode="ButtonRenderStyleMode.Outline"
+                              SizeMode="SizeMode.Small"
+                              Click="OpenThumbnailMediaPicker"/>
+                    @if (_form.ThumbnailMediaAssetId.HasValue)
+                    {
+                        <DxButton Text="Temizle"
+                                  IconCssClass="bi bi-x-circle"
+                                  RenderStyle="ButtonRenderStyle.Danger"
+                                  RenderStyleMode="ButtonRenderStyleMode.Text"
+                                  SizeMode="SizeMode.Small"
+                                  Click="ClearThumbnailMedia"/>
+                    }
+                </div>
+            </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanMd="12">
+                <label class="form-label">Büyük Logo</label>
+                <div class="d-flex align-items-center gap-3">
+                    @if (!string.IsNullOrWhiteSpace(_logoMedia?.Url))
+                    {
+                        <img src="@_logoMedia.Url"
+                             style="max-width:140px; max-height:38px; object-fit:contain; border:1px solid #dee2e6; border-radius:4px;"
+                             alt="büyük logo" />
+                    }
+                    <DxButton Text="Medya Kütüphanesinden Seç"
+                              IconCssClass="bi bi-images"
+                              RenderStyle="ButtonRenderStyle.Secondary"
+                              RenderStyleMode="ButtonRenderStyleMode.Outline"
+                              SizeMode="SizeMode.Small"
+                              Click="OpenLogoMediaPicker"/>
+                    @if (_form.LogoMediaAssetId.HasValue)
+                    {
+                        <DxButton Text="Temizle"
+                                  IconCssClass="bi bi-x-circle"
+                                  RenderStyle="ButtonRenderStyle.Danger"
+                                  RenderStyleMode="ButtonRenderStyleMode.Text"
+                                  SizeMode="SizeMode.Small"
+                                  Click="ClearLogoMedia"/>
+                    }
+                </div>
+            </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanMd="12">
+                <DxCheckBox @bind-Checked="_form.IsActive" Text="Aktif" />
+            </DxFormLayoutItem>
+        </DxFormLayout>
+    </BodyContentTemplate>
+    <FooterContentTemplate>
+        <DxButton Text="@(_isSaving ? "Kaydediliyor..." : "Kaydet")"
+                  IconCssClass="@(_isSaving ? "spinner-border spinner-border-sm" : "bi bi-check-lg")"
+                  RenderStyle="ButtonRenderStyle.Primary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Enabled="@(!_isSaving)"
+                  Click="SaveAsync" />
+        <DxButton Text="İptal"
+                  RenderStyle="ButtonRenderStyle.Secondary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Enabled="@(!_isSaving)"
+                  Click="@(() => _popupVisible = false)" />
+    </FooterContentTemplate>
+</DxPopup>
+
+<MediaPickerPopup @bind-Visible="_mediaPickerVisible"
+                  CurrentMediaId="@CurrentMediaPickerMediaId"
+                  OnSelected="OnMediaSelected" />
+
+@code {
+    private List<Bank> _items = [];
+    private List<MediaAssetDto> _allMedia = [];
+    private Dictionary<int, string> _mediaUrlMap = [];
+    private bool _popupVisible;
+    private bool _isSaving;
+    private bool _canEdit;
+    private bool _mediaPickerVisible;
+    private string? _formError;
+    private DxContextMenu? _contextMenu;
+    private Bank? _selectedItem;
+    private MediaSelectionTarget _mediaSelectionTarget = MediaSelectionTarget.Thumbnail;
+    private MediaAssetDto? _thumbnailMedia;
+    private MediaAssetDto? _logoMedia;
+
+    private BankForm _form = new();
+    private int? CurrentMediaPickerMediaId =>
+        _mediaSelectionTarget == MediaSelectionTarget.Thumbnail
+            ? _form.ThumbnailMediaAssetId
+            : _form.LogoMediaAssetId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var permissions = await PermissionService.GetCurrentPermissionsAsync();
+        _canEdit = permissions.Contains(PermissionCodes.Settings.AppContentEdit);
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        await using var db = await ContextFactory.CreateDbContextAsync();
+        _items = await db.Banks
+            .OrderBy(b => b.SortOrder)
+            .ThenBy(b => b.Name)
+            .ToListAsync();
+
+        _allMedia = await MediaAssetService.GetAllAsync();
+        _mediaUrlMap = _allMedia.ToDictionary(m => m.Id, m => m.Url);
+    }
+
+    private void OpenNew()
+    {
+        if (!_canEdit)
+            return;
+
+        _formError = null;
+        _form = new BankForm
+        {
+            IsActive = true,
+            SortOrder = (_items.LastOrDefault()?.SortOrder ?? 0) + 1
+        };
+        _thumbnailMedia = null;
+        _logoMedia = null;
+        _popupVisible = true;
+    }
+
+    private async Task ShowMenuAsync(MouseEventArgs e, Bank item)
+    {
+        if (!_canEdit)
+            return;
+
+        _selectedItem = item;
+        if (_contextMenu is not null)
+            await _contextMenu.ShowAsync(e);
+    }
+
+    private async Task OnContextMenuItemClick(ContextMenuItemClickEventArgs e)
+    {
+        if (_selectedItem is null || !_canEdit)
+            return;
+
+        switch (e.ItemInfo.Name)
+        {
+            case "edit":
+                OpenEdit(_selectedItem);
+                break;
+            case "toggle":
+                await ToggleActiveAsync(_selectedItem);
+                break;
+        }
+    }
+
+    private void OpenEdit(Bank item)
+    {
+        _formError = null;
+        _form = new BankForm
+        {
+            Id = item.Id,
+            Name = item.Name,
+            Code = item.Code,
+            SortOrder = item.SortOrder,
+            IsActive = item.IsActive,
+            ThumbnailMediaAssetId = item.ThumbnailMediaAssetId,
+            LogoMediaAssetId = item.LogoMediaAssetId
+        };
+        _thumbnailMedia = _allMedia.FirstOrDefault(m => m.Id == item.ThumbnailMediaAssetId);
+        _logoMedia = _allMedia.FirstOrDefault(m => m.Id == item.LogoMediaAssetId);
+        _popupVisible = true;
+    }
+
+    private void OpenThumbnailMediaPicker()
+    {
+        _mediaSelectionTarget = MediaSelectionTarget.Thumbnail;
+        _mediaPickerVisible = true;
+    }
+
+    private void OpenLogoMediaPicker()
+    {
+        _mediaSelectionTarget = MediaSelectionTarget.Logo;
+        _mediaPickerVisible = true;
+    }
+
+    private void ClearThumbnailMedia()
+    {
+        _form.ThumbnailMediaAssetId = null;
+        _thumbnailMedia = null;
+    }
+
+    private void ClearLogoMedia()
+    {
+        _form.LogoMediaAssetId = null;
+        _logoMedia = null;
+    }
+
+    private Task OnMediaSelected(MediaAssetDto? asset)
+    {
+        if (_mediaSelectionTarget == MediaSelectionTarget.Thumbnail)
+        {
+            _form.ThumbnailMediaAssetId = asset?.Id;
+            _thumbnailMedia = asset;
+        }
+        else
+        {
+            _form.LogoMediaAssetId = asset?.Id;
+            _logoMedia = asset;
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private async Task ToggleActiveAsync(Bank item)
+    {
+        await using var db = await ContextFactory.CreateDbContextAsync();
+        var bank = await db.Banks.FirstOrDefaultAsync(b => b.Id == item.Id);
+        if (bank is null)
+        {
+            Toast.Error("Banka kaydı bulunamadı.");
+            return;
+        }
+
+        bank.IsActive = !bank.IsActive;
+        await db.SaveChangesAsync();
+        await LoadAsync();
+        Toast.Success("Banka durumu güncellendi.");
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_isSaving || !_canEdit)
+            return;
+
+        if (string.IsNullOrWhiteSpace(_form.Name))
+        {
+            _formError = "Banka adı zorunludur.";
+            return;
+        }
+
+        _isSaving = true;
+        _formError = null;
+        try
+        {
+            await using var db = await ContextFactory.CreateDbContextAsync();
+            var normalizedName = _form.Name.Trim();
+
+            var duplicateExists = await db.Banks
+                .AnyAsync(b => b.Name == normalizedName && b.Id != _form.Id);
+            if (duplicateExists)
+            {
+                _formError = "Aynı isimde bir banka zaten mevcut.";
+                return;
+            }
+
+            Bank entity;
+            if (_form.Id > 0)
+            {
+                entity = await db.Banks.FirstOrDefaultAsync(b => b.Id == _form.Id)
+                    ?? throw new InvalidOperationException("Banka kaydı bulunamadı.");
+            }
+            else
+            {
+                entity = new Bank();
+                db.Banks.Add(entity);
+            }
+
+            entity.Name = normalizedName;
+            entity.Code = string.IsNullOrWhiteSpace(_form.Code) ? null : _form.Code.Trim().ToUpperInvariant();
+            entity.SortOrder = _form.SortOrder > 0 ? _form.SortOrder : 1;
+            entity.IsActive = _form.IsActive;
+            entity.ThumbnailMediaAssetId = _form.ThumbnailMediaAssetId;
+            entity.LogoMediaAssetId = _form.LogoMediaAssetId;
+
+            await db.SaveChangesAsync();
+
+            _popupVisible = false;
+            await LoadAsync();
+            Toast.Success("Banka kaydedildi.");
+        }
+        catch (Exception ex)
+        {
+            _formError = ErrorHandler.HandleFormSave(ex, Toast);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private sealed class BankForm
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string? Code { get; set; }
+        public int SortOrder { get; set; } = 1;
+        public bool IsActive { get; set; } = true;
+        public int? ThumbnailMediaAssetId { get; set; }
+        public int? LogoMediaAssetId { get; set; }
+    }
+
+    private string? GetMediaUrl(int? mediaId)
+        => mediaId.HasValue && _mediaUrlMap.TryGetValue(mediaId.Value, out var url)
+            ? url
+            : null;
+
+    private enum MediaSelectionTarget
+    {
+        Thumbnail = 0,
+        Logo = 1
+    }
+}

@@ -67,14 +67,6 @@ public class Subject : EntityBase
     [RequiredIf(nameof(IsHeadOfFamily), false)]
     public int? HeadOfFamilyEducationLevelId { get; set; }
 
-    public int BankId { get; set; }
-
-    [Required, MaxLength(34)]
-    public string IBAN { get; set; } = string.Empty;
-
-    [Required, MaxLength(200)]
-    public string IBANFullName { get; set; } = string.Empty;
-
     public int SocioeconomicStatusId { get; set; }
 
     public int LSMSocioeconomicStatusId { get; set; }
@@ -109,10 +101,10 @@ public class Subject : EntityBase
     public EducationLevel EducationLevel { get; set; } = null!;
     public Profession? HeadOfFamilyProfession { get; set; }
     public EducationLevel? HeadOfFamilyEducationLevel { get; set; }
-    public Bank Bank { get; set; } = null!;
     public SocioeconomicStatus SocioeconomicStatus { get; set; } = null!;
     public LSMSocioeconomicStatus LSMSocioeconomicStatus { get; set; } = null!;
     public SpecialCode? SpecialCode { get; set; }
+    public ICollection<BankAccount> BankAccounts { get; set; } = [];
 
     public SubjectScoreSnapshot? ScoreSnapshot { get; set; }
 

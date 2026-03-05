@@ -24,5 +24,8 @@ public partial class AppShell : Shell
         Routing.RegisterRoute("newsdetail", typeof(NewsDetailPage));
         Routing.RegisterRoute("surveywebview", typeof(SurveyWebViewPage));
         Routing.RegisterRoute("surveyresult", typeof(SurveyResultPage));
+        Routing.RegisterRoute("wallet-add-bank", typeof(WalletAddBankAccountPage));
+        Routing.RegisterRoute("wallet-withdraw", typeof(WalletWithdrawPage));
+        Routing.RegisterRoute("wallet-transactions", typeof(WalletTransactionsPage));
     }
 }

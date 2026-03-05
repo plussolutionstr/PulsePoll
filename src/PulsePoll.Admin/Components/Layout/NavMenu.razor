@@ -79,7 +79,10 @@
                     <Items>
                         @if (Has(PermissionCodes.Settings.View))
                         {
-                            <DxMenuItem NavigateUrl="/settings" Text="Genel Ayarlar" CssClass="@MenuItemCssClass("/settings")" IconCssClass="bi bi-gear"/>
+                            <DxMenuItem NavigateUrl="/settings" Text="Genel Ayarlar"
+                                        CssClass="@MenuItemCssClass("/settings", "/settings/admin-users", "/settings/roles", "/settings/referral-reward", "/settings/app-content", "/settings/communication-automation", "/settings/banks")"
+                                        IconCssClass="bi bi-gear"/>
+                            <DxMenuItem NavigateUrl="/settings/banks" Text="Banka Yönetimi" CssClass="@MenuItemCssClass("/settings/banks")" IconCssClass="bi bi-bank"/>
                         }
                         @if (Has(PermissionCodes.AdminUsers.View))
                         {

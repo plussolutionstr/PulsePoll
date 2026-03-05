@@ -11,6 +11,8 @@ public class MediaAssetRepository(AppDbContext db) : IMediaAssetRepository
              .Include(a => a.Projects.Where(p => p.DeletedAt == null))
              .Include(a => a.Stories.Where(s => s.DeletedAt == null))
              .Include(a => a.News.Where(n => n.DeletedAt == null))
+             .Include(a => a.BankThumbnails)
+             .Include(a => a.BankLogos)
              .Where(a => a.DeletedAt == null)
              .OrderByDescending(a => a.CreatedAt)
              .ToListAsync();
@@ -20,6 +22,8 @@ public class MediaAssetRepository(AppDbContext db) : IMediaAssetRepository
              .Include(a => a.Projects.Where(p => p.DeletedAt == null))
              .Include(a => a.Stories.Where(s => s.DeletedAt == null))
              .Include(a => a.News.Where(n => n.DeletedAt == null))
+             .Include(a => a.BankThumbnails)
+             .Include(a => a.BankLogos)
              .FirstOrDefaultAsync(a => a.Id == id && a.DeletedAt == null);
 
     public async Task AddAsync(MediaAsset asset)

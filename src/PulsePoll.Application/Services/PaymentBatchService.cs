@@ -27,7 +27,7 @@ public class PaymentBatchService(
 
     public async Task<(List<WithdrawalRequestAdminDto> Items, int Total)> GetApprovedWithdrawalsAsync(int skip, int take)
     {
-        var (items, total) = await withdrawalRepo.GetPagedAsync(ApprovalStatus.Approved, skip, take);
+        var (items, total) = await withdrawalRepo.GetApprovedWithoutBatchPagedAsync(skip, take);
         return (items.Select(ToAdminDto).ToList(), total);
     }
 

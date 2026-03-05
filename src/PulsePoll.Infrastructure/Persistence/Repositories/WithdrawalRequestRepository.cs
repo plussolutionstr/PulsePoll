@@ -38,12 +38,30 @@ public class WithdrawalRequestRepository(AppDbContext db) : IWithdrawalRequestRe
         return (items, total);
     }
 
+    public async Task<(List<WithdrawalRequest> Items, int Total)> GetApprovedWithoutBatchPagedAsync(int skip, int take)
+    {
+        var query = db.WithdrawalRequests
+            .Include(w => w.Subject)
+            .Include(w => w.BankAccount)
+            .Where(w => w.Status == ApprovalStatus.Approved &&
+                        !db.PaymentBatchItems.Any(i => i.WithdrawalRequestId == w.Id && i.DeletedAt == null));
+
+        var total = await query.CountAsync();
+        var items = await query
+            .OrderByDescending(w => w.CreatedAt)
+            .Skip(skip)
+            .Take(take)
+            .ToListAsync();
+
+        return (items, total);
+    }
+
     public Task<List<WithdrawalRequest>> GetApprovedWithoutBatchAsync()
         => db.WithdrawalRequests
              .Include(w => w.Subject)
              .Include(w => w.BankAccount)
              .Where(w => w.Status == ApprovalStatus.Approved &&
-                         !db.PaymentBatchItems.Any(i => i.WithdrawalRequestId == w.Id))
+                         !db.PaymentBatchItems.Any(i => i.WithdrawalRequestId == w.Id && i.DeletedAt == null))
              .OrderBy(w => w.CreatedAt)
              .ToListAsync();
 

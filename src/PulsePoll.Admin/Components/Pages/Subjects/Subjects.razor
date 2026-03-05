@@ -87,8 +87,6 @@
                     <DxFilterBuilderField FieldName="SocioeconomicStatus.Code" Caption="SES" Type="@typeof(string)"/>
                     <DxFilterBuilderField FieldName="LSMSocioeconomicStatus.Code" Caption="LSM SES"
                                           Type="@typeof(string)"/>
-                    <DxFilterBuilderField FieldName="Bank.Name" Caption="Banka" Type="@typeof(string)"/>
-                    <DxFilterBuilderField FieldName="IBAN" Caption="IBAN" Type="@typeof(string)"/>
                     <DxFilterBuilderField FieldName="PublicId" Caption="Public ID" Type="@typeof(Guid)"/>
                     <DxFilterBuilderField FieldName="ReferenceCode" Caption="Referans Kodu" Type="@typeof(string)"/>
                     <DxFilterBuilderField FieldName="ReferralCode" Caption="Davet Kodu" Type="@typeof(string)"/>
@@ -227,8 +225,14 @@
                               TextAlignment="GridTextAlignment.Center"/>
             <DxGridDataColumn FieldName="LSMSocioeconomicStatus.Code" Caption="LSM SES" Width="80px"
                               TextAlignment="GridTextAlignment.Center"/>
-            <DxGridDataColumn FieldName="Bank.Name" Caption="Banka" Width="120px"/>
-            <DxGridDataColumn FieldName="IBAN" Caption="IBAN" Width="200px"/>
+            <DxGridDataColumn Caption="Banka Hesapları" Width="220px">
+                <CellDisplayTemplate>
+                    @{
+                        var r = (Subject)context.DataItem;
+                    }
+                    @GetPrimaryBankAccountSummary(r.Id)
+                </CellDisplayTemplate>
+            </DxGridDataColumn>
             <DxGridDataColumn FieldName="PublicId" Caption="Public ID" Width="280px"/>
             <DxGridDataColumn FieldName="ReferenceCode" Caption="Referans Kodu" Width="115px"
                               TextAlignment="GridTextAlignment.Center"/>
@@ -379,17 +383,27 @@
                     </DxFormLayoutItem>
                 </DxFormLayoutGroup>
                 <DxFormLayoutGroup Caption="Finansal Bilgiler" ColSpanMd="12">
-                    <DxFormLayoutItem ColSpanMd="4">
-                        <label class="form-label">Banka</label>
-                        <DxTextBox Text="@(_selectedItem.Bank?.Name)" ReadOnly="true"/>
-                    </DxFormLayoutItem>
-                    <DxFormLayoutItem ColSpanMd="8">
-                        <label class="form-label">IBAN</label>
-                        <DxTextBox Text="@_selectedItem.IBAN" ReadOnly="true"/>
-                    </DxFormLayoutItem>
                     <DxFormLayoutItem ColSpanMd="12">
-                        <label class="form-label">IBAN Hesap Adı</label>
-                        <DxTextBox Text="@_selectedItem.IBANFullName" ReadOnly="true"/>
+                        <label class="form-label">Banka Hesapları</label>
+                        @{
+                            var accounts = GetBankAccounts(_selectedItem.Id);
+                        }
+                        @if (accounts.Count == 0)
+                        {
+                            <div class="text-muted small">Kayıtlı banka hesabı yok.</div>
+                        }
+                        else
+                        {
+                            <div class="d-flex flex-column gap-2">
+                                @foreach (var account in accounts)
+                                {
+                                    <div class="border rounded px-2 py-1">
+                                        <div class="fw-semibold">@account.BankName @(account.IsDefault ? "(Varsayılan)" : string.Empty)</div>
+                                        <div class="small text-muted">@account.IbanEncrypted</div>
+                                    </div>
+                                }
+                            </div>
+                        }
                     </DxFormLayoutItem>
                 </DxFormLayoutGroup>
             </DxFormLayout>
@@ -523,6 +537,7 @@
     private bool _canViewLedger;
     private bool _canViewProjects;
     private bool _canViewReferrals;
+    private Dictionary<int, List<BankAccount>> _bankAccountMap = [];
 
     private CriteriaOperator? _builderCriteria;
     private bool _filterActive;
@@ -548,6 +563,19 @@
     {
         await LoadPermissionsAsync();
 
+        await using (var bankContext = await ContextFactory.CreateDbContextAsync())
+        {
+            var bankAccounts = await bankContext.BankAccounts
+                .Where(b => b.DeletedAt == null)
+                .OrderByDescending(b => b.IsDefault)
+                .ThenBy(b => b.CreatedAt)
+                .AsNoTracking()
+                .ToListAsync();
+            _bankAccountMap = bankAccounts
+                .GroupBy(b => b.SubjectId)
+                .ToDictionary(g => g.Key, g => g.ToList());
+        }
+
         _context = await ContextFactory.CreateDbContextAsync();
         var query = _context.Subjects
             .Include(s => s.City)
@@ -558,7 +586,6 @@
             .Include(s => s.HeadOfFamilyEducationLevel)
             .Include(s => s.SocioeconomicStatus)
             .Include(s => s.LSMSocioeconomicStatus)
-            .Include(s => s.Bank)
             .Include(s => s.ScoreSnapshot)
             .AsNoTracking();
         _dataSource = new GridDevExtremeDataSource<Subject>(query);
@@ -656,6 +683,22 @@
         ApprovalStatus.Rejected => "bg-danger",
         _ => "bg-secondary"
     };
+
+    private List<BankAccount> GetBankAccounts(int subjectId)
+        => _bankAccountMap.TryGetValue(subjectId, out var accounts)
+            ? accounts
+            : [];
+
+    private string GetPrimaryBankAccountSummary(int subjectId)
+    {
+        var accounts = GetBankAccounts(subjectId);
+        if (accounts.Count == 0)
+            return "-";
+
+        var primary = accounts[0];
+        var summary = $"{primary.BankName} ...{primary.IbanLast4}";
+        return accounts.Count > 1 ? $"{summary} (+{accounts.Count - 1})" : summary;
+    }
 
     private async Task ShowMenuAsync(MouseEventArgs e, Subject item)
     {

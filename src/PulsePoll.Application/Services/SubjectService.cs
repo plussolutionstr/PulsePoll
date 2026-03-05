@@ -120,9 +120,9 @@ public class SubjectService(
         s.IsHeadOfFamilyRetired,
         s.HeadOfFamilyProfession?.Name,
         s.HeadOfFamilyEducationLevel?.Name,
-        s.Bank?.Name ?? string.Empty,
-        s.IBAN,
-        s.IBANFullName,
+        ResolvePrimaryBankName(s),
+        ResolvePrimaryIban(s),
+        string.Empty,
         s.SocioeconomicStatus?.Name ?? string.Empty,
         s.SocioeconomicStatus?.Code,
         s.LSMSocioeconomicStatus?.Name ?? string.Empty,
@@ -133,4 +133,18 @@ public class SubjectService(
         s.CreatedAt,
         score?.Score,
         score?.Star);
+
+    private static string ResolvePrimaryBankName(Domain.Entities.Subject subject)
+        => subject.BankAccounts
+            .OrderByDescending(b => b.IsDefault)
+            .ThenBy(b => b.CreatedAt)
+            .Select(b => b.BankName)
+            .FirstOrDefault() ?? string.Empty;
+
+    private static string ResolvePrimaryIban(Domain.Entities.Subject subject)
+        => subject.BankAccounts
+            .OrderByDescending(b => b.IsDefault)
+            .ThenBy(b => b.CreatedAt)
+            .Select(b => b.IbanEncrypted)
+            .FirstOrDefault() ?? string.Empty;
 }

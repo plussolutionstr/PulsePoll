@@ -34,6 +34,7 @@ public record ProjectHistoryApiDto(
     string ProjectName,
     string CustomerShortName,
     AssignmentStatus Status,
+    RewardStatus RewardStatus,
     DateTime AssignedAt,
     DateTime? CompletedAt,
     int DurationMinutes,
@@ -86,6 +87,46 @@ public record SurveyResultPatternApiDto(
 
 public record StartProjectApiDto(string Url);
 
+public record WalletApiDto(
+    int SubjectId,
+    decimal Balance,
+    decimal TotalEarned,
+    decimal PendingBalance,
+    decimal RejectedBalance,
+    DateTime UpdatedAt,
+    string UnitCode,
+    string UnitLabel,
+    decimal UnitTryMultiplier);
+
+public record WalletTransactionApiDto(
+    int Id,
+    decimal Amount,
+    WalletTransactionType Type,
+    string? Description,
+    DateTime CreatedAt,
+    bool IsManual,
+    string UnitLabel);
+
+public record BankAccountApiDto(
+    int Id,
+    string BankName,
+    string IbanLast4,
+    bool IsDefault,
+    string? ThumbnailImageUrl,
+    string? LogoImageUrl);
+
+public record BankOptionApiDto(
+    int Id,
+    string Name,
+    string? Code,
+    string? ThumbnailImageUrl,
+    string? LogoImageUrl);
+
+public record AddBankAccountApiRequest(int BankId, string Iban);
+public record UpdateBankAccountApiRequest(int BankId, string Iban);
+
+public record WithdrawalRequestApiRequest(decimal Amount, int BankAccountId);
+
 public record AuthResultDto(string AccessToken, string RefreshToken, DateTime ExpiresAt);
 
 [JsonConverter(typeof(JsonStringEnumConverter))]
@@ -107,4 +148,20 @@ public enum AssignmentStatus
     Disqualify = 3,
     QuotaFull = 4,
     ScreenOut = 5
+}
+
+[JsonConverter(typeof(JsonStringEnumConverter))]
+public enum RewardStatus
+{
+    None = 0,
+    Pending = 1,
+    Approved = 2,
+    Rejected = 3
+}
+
+[JsonConverter(typeof(JsonStringEnumConverter))]
+public enum WalletTransactionType
+{
+    Credit = 0,
+    Withdrawal = 1
 }

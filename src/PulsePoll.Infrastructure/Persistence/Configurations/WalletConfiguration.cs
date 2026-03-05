@@ -48,7 +48,7 @@ public class BankAccountConfiguration : IEntityTypeConfiguration<BankAccount>
         builder.Property(b => b.IbanEncrypted).IsRequired();
 
         builder.HasOne(b => b.Subject)
-               .WithMany()
+               .WithMany(s => s.BankAccounts)
                .HasForeignKey(b => b.SubjectId)
                .HasConstraintName("fk_bank_accounts_subjects")
                .OnDelete(DeleteBehavior.Cascade);
