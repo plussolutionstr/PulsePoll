@@ -1,9 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using PulsePoll.Mobile.Models;
-using PulsePoll.Mobile.Services;
-using System.Text.Json;
-using System.Text.RegularExpressions;
 
 namespace PulsePoll.Mobile.ViewModels;
 
@@ -12,32 +8,15 @@ namespace PulsePoll.Mobile.ViewModels;
 [QueryProperty(nameof(Url), "url")]
 public partial class SurveyWebViewViewModel : ObservableObject
 {
-    private readonly IPulsePollApiClient _apiClient;
     private bool _resultHandled;
-    private bool _isHandlingResult;
-    private bool _patternsLoaded;
-    private Task? _patternsLoadTask;
-    private List<SurveyResultPatternModel> _patterns = [];
-    private static readonly Regex InputTagRegex = new("<input\\b[^>]*>", RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.Compiled);
-    private static readonly Regex AttributeRegex = new("(?<name>[a-zA-Z_:][\\w:.-]*)\\s*=\\s*(\"(?<dq>[^\"]*)\"|'(?<sq>[^']*)'|(?<bare>[^\\s>]+))", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-
-    public SurveyWebViewViewModel(IPulsePollApiClient apiClient)
-    {
-        _apiClient = apiClient;
-    }
 
     [ObservableProperty] private int _projectId;
     [ObservableProperty] private string _title = "Anket";
     [ObservableProperty] private string _url = string.Empty;
     [ObservableProperty] private bool _isLoading = true;
+    [ObservableProperty] private string _currentUrl = string.Empty;
 
     public string ResolvedUrl => Uri.UnescapeDataString(Url ?? string.Empty);
-
-    partial void OnProjectIdChanged(int value)
-    {
-        _patternsLoaded = false;
-        _patternsLoadTask = LoadPatternsAsync(value);
-    }
 
     partial void OnUrlChanged(string value)
     {
@@ -50,285 +29,73 @@ public partial class SurveyWebViewViewModel : ObservableObject
         await Shell.Current.GoToAsync("..");
     }
 
-    public async Task<bool> TryHandleSurveyResultFromHtmlAsync(string html)
+    /// <summary>
+    /// WebView navigating/navigated sırasında URL'yi kontrol eder.
+    /// /survey-result/{status} pattern'ini yakalayıp SurveyResultPage'e yönlendirir.
+    /// </summary>
+    public async Task<bool> TryHandleSurveyResultUrlAsync(string? url)
     {
-        if (_resultHandled || _isHandlingResult || string.IsNullOrWhiteSpace(html))
+        if (_resultHandled || string.IsNullOrWhiteSpace(url))
             return false;
 
-        await EnsurePatternsLoadedAsync();
-
-        var preparedHtml = PrepareHtml(html);
-        var matched = MatchPattern(preparedHtml);
-        if (matched is null)
+        var status = ParseStatusFromUrl(url);
+        if (status is null)
             return false;
 
-        var status = NormalizeStatus(matched.Status);
-        if (!IsTerminalResult(status))
-            return false;
+        _resultHandled = true;
 
-        _isHandlingResult = true;
-        try
+        await MainThread.InvokeOnMainThreadAsync(async () =>
         {
-            try
-            {
-                await _apiClient.SubmitProjectResultAsync(ProjectId, status);
-            }
-            catch
-            {
-                // Sonuç kaydı başarısız olsa da kullanıcı deneyimi kesilmesin.
-            }
+            var encodedStatus = Uri.EscapeDataString(status);
+            await Shell.Current.GoToAsync($"surveyresult?projectId={ProjectId}&status={encodedStatus}");
+        });
 
-            await MainThread.InvokeOnMainThreadAsync(async () =>
-            {
-                var encodedStatus = Uri.EscapeDataString(status);
-                await Shell.Current.GoToAsync($"surveyresult?projectId={ProjectId}&status={encodedStatus}");
-            });
-
-            _resultHandled = true;
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
-        finally
-        {
-            _isHandlingResult = false;
-        }
+        return true;
     }
 
-    private async Task LoadPatternsAsync(int projectId)
+    /// <summary>
+    /// URL'den survey-result status'unu parse eder.
+    /// Desteklenen formatlar:
+    ///   /survey-result/completed?sguid=...
+    ///   /survey-result/set?sguid=...&amp;status=completed
+    /// </summary>
+    private static string? ParseStatusFromUrl(string url)
     {
-        if (projectId <= 0)
-        {
-            _patterns = [];
-            _patternsLoaded = true;
-            return;
-        }
-
-        try
-        {
-            var survey = await _apiClient.GetProjectByIdAsync(projectId);
-
-            _patterns = survey?.ResultPatterns?
-                .Where(p => !string.IsNullOrWhiteSpace(p.MatchPattern))
-                .OrderBy(p => p.Order)
-                .ToList() ?? [];
-        }
-        catch
-        {
-            _patterns = [];
-        }
-        finally
-        {
-            _patternsLoaded = true;
-        }
-    }
-
-    private SurveyResultPatternModel? MatchPattern(string html)
-    {
-        var normalizedHtml = Normalize(html);
-        var normalizedInputPairs = ExtractNormalizedInputPairs(html);
-
-        foreach (var pattern in _patterns)
-        {
-            var raw = pattern.MatchPattern.Trim();
-            if (raw.Length == 0)
-                continue;
-
-            if (html.Contains(raw, StringComparison.OrdinalIgnoreCase))
-                return pattern;
-
-            var normalizedPattern = Normalize(raw);
-            if (normalizedPattern.Length == 0)
-                continue;
-
-            if (normalizedHtml.Contains(normalizedPattern, StringComparison.OrdinalIgnoreCase))
-                return pattern;
-
-            var normalizedPairPattern = NormalizePairPattern(raw);
-            if (!string.IsNullOrWhiteSpace(normalizedPairPattern) &&
-                normalizedInputPairs.Contains(normalizedPairPattern))
-            {
-                return pattern;
-            }
-        }
-
-        var fallback = MatchSawtoothFallback(normalizedHtml, normalizedInputPairs);
-        if (fallback is not null)
-            return fallback;
-
-        return null;
-    }
-
-    private async Task EnsurePatternsLoadedAsync()
-    {
-        if (_patternsLoaded)
-            return;
-
-        if (_patternsLoadTask is null && ProjectId > 0)
-            _patternsLoadTask = LoadPatternsAsync(ProjectId);
-
-        if (_patternsLoadTask is not null)
-        {
-            try
-            {
-                await _patternsLoadTask;
-            }
-            catch
-            {
-                _patterns = [];
-                _patternsLoaded = true;
-            }
-        }
-    }
-
-    private static HashSet<string> ExtractNormalizedInputPairs(string html)
-    {
-        var result = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        foreach (Match inputMatch in InputTagRegex.Matches(html))
-        {
-            string? name = null;
-            string? value = null;
-
-            foreach (Match attributeMatch in AttributeRegex.Matches(inputMatch.Value))
-            {
-                if (!attributeMatch.Groups["name"].Success)
-                    continue;
-
-                var attributeName = attributeMatch.Groups["name"].Value.Trim();
-                var attributeValue =
-                    attributeMatch.Groups["dq"].Success ? attributeMatch.Groups["dq"].Value :
-                    attributeMatch.Groups["sq"].Success ? attributeMatch.Groups["sq"].Value :
-                    attributeMatch.Groups["bare"].Success ? attributeMatch.Groups["bare"].Value :
-                    string.Empty;
-
-                if (attributeName.Equals("name", StringComparison.OrdinalIgnoreCase))
-                    name = attributeValue;
-                else if (attributeName.Equals("value", StringComparison.OrdinalIgnoreCase))
-                    value = attributeValue;
-            }
-
-            if (string.IsNullOrWhiteSpace(name) || value is null)
-                continue;
-
-            var normalizedPair = $"{Normalize(name)}={Normalize(value)}";
-            result.Add(normalizedPair);
-        }
-
-        return result;
-    }
-
-    private static string? NormalizePairPattern(string pattern)
-    {
-        var index = pattern.IndexOf('=');
-        if (index <= 0 || index >= pattern.Length - 1)
+        if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
             return null;
 
-        var left = pattern[..index].Trim().Trim('"', '\'');
-        var right = pattern[(index + 1)..].Trim().Trim('"', '\'');
-        if (left.Length == 0 || right.Length == 0)
+        // Path: /survey-result/{segment}
+        var segments = uri.AbsolutePath.Trim('/').Split('/');
+        if (segments.Length < 2 || !segments[0].Equals("survey-result", StringComparison.OrdinalIgnoreCase))
             return null;
 
-        return $"{Normalize(left)}={Normalize(right)}";
+        var segment = segments[1].ToLowerInvariant();
+
+        // /survey-result/set?status=completed
+        if (segment == "set")
+        {
+            var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+            var statusParam = query["status"];
+            return NormalizeStatus(statusParam);
+        }
+
+        // /survey-result/completed, /survey-result/disqualify, etc.
+        return NormalizeStatus(segment);
     }
 
-    private static SurveyResultPatternModel? MatchSawtoothFallback(
-        string normalizedHtml,
-        HashSet<string> normalizedInputPairs)
+    private static string? NormalizeStatus(string? status)
     {
-        if (normalizedInputPairs.Contains("hid_q_completed=completed") ||
-            normalizedInputPairs.Contains("hid_destination=completed") ||
-            normalizedHtml.Contains("id=completed_div", StringComparison.OrdinalIgnoreCase))
-        {
-            return new SurveyResultPatternModel("Completed", "__sawtooth_fallback_completed__", int.MaxValue);
-        }
+        if (string.IsNullOrWhiteSpace(status))
+            return null;
 
-        if (normalizedInputPairs.Contains("hid_q_disqualified=disqualified") ||
-            normalizedInputPairs.Contains("hid_destination=disqualified") ||
-            normalizedHtml.Contains("id=disqualified_div", StringComparison.OrdinalIgnoreCase))
+        return status.Trim().ToLowerInvariant() switch
         {
-            return new SurveyResultPatternModel("Disqualify", "__sawtooth_fallback_disqualify__", int.MaxValue);
-        }
-
-        if (normalizedInputPairs.Contains("hid_q_quotafull=quotafull") ||
-            normalizedInputPairs.Contains("hid_destination=quotafull") ||
-            normalizedHtml.Contains("id=quotafull_div", StringComparison.OrdinalIgnoreCase))
-        {
-            return new SurveyResultPatternModel("QuotaFull", "__sawtooth_fallback_quotafull__", int.MaxValue);
-        }
-
-        if (normalizedInputPairs.Contains("hid_q_screenout=screenout") ||
-            normalizedInputPairs.Contains("hid_destination=screenout") ||
-            normalizedHtml.Contains("id=screenout_div", StringComparison.OrdinalIgnoreCase))
-        {
-            return new SurveyResultPatternModel("ScreenOut", "__sawtooth_fallback_screenout__", int.MaxValue);
-        }
-
-        if (normalizedInputPairs.Contains("hid_q_partial=partial") ||
-            normalizedInputPairs.Contains("hid_destination=partial") ||
-            normalizedHtml.Contains("id=partial_div", StringComparison.OrdinalIgnoreCase))
-        {
-            return new SurveyResultPatternModel("Partial", "__sawtooth_fallback_partial__", int.MaxValue);
-        }
-
-        return null;
+            "completed" => "Completed",
+            "disqualify" or "disqualified" => "Disqualify",
+            "quotafull" => "QuotaFull",
+            "screenout" => "ScreenOut",
+            "partial" => "Partial",
+            _ => null
+        };
     }
-
-    private static string Normalize(string text)
-    {
-        var buffer = new char[text.Length];
-        var count = 0;
-
-        for (var i = 0; i < text.Length; i++)
-        {
-            var ch = char.ToLowerInvariant(text[i]);
-            if (char.IsWhiteSpace(ch) || ch == '"' || ch == '\'' || ch == '\\')
-                continue;
-
-            buffer[count++] = ch;
-        }
-
-        return new string(buffer, 0, count);
-    }
-
-    private static string PrepareHtml(string rawHtml)
-    {
-        if (string.IsNullOrWhiteSpace(rawHtml))
-            return string.Empty;
-
-        var value = rawHtml.Trim();
-
-        if (value.Length >= 2 && value[0] == '"' && value[^1] == '"')
-        {
-            try
-            {
-                value = JsonSerializer.Deserialize<string>(value) ?? value;
-            }
-            catch
-            {
-                // Fall through to manual unescape.
-            }
-        }
-
-        return value
-            .Replace("\\\"", "\"", StringComparison.Ordinal)
-            .Replace("\\n", "\n", StringComparison.Ordinal)
-            .Replace("\\r", "\r", StringComparison.Ordinal)
-            .Replace("\\t", "\t", StringComparison.Ordinal);
-    }
-
-    private static string NormalizeStatus(string status) => status.Trim().ToLowerInvariant() switch
-    {
-        "completed" => "Completed",
-        "disqualify" or "disqualified" => "Disqualify",
-        "quotafull" => "QuotaFull",
-        "screenout" => "ScreenOut",
-        "partial" => "Partial",
-        "notstarted" => "NotStarted",
-        _ => "Unknown"
-    };
-
-    private static bool IsTerminalResult(string status)
-        => status is "Completed" or "Disqualify" or "QuotaFull" or "ScreenOut";
 }

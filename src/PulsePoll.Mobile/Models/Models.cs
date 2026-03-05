@@ -54,23 +54,16 @@ public record SurveyModel(
     string DisqualifyMessage = "",
     string QuotaFullMessage = "",
     string ScreenOutMessage = "",
-    string? AssignmentStatus = null,
-    List<SurveyResultPatternModel>? ResultPatterns = null)
+    string? AssignmentStatus = null)
 {
     public bool HasCategory => !string.IsNullOrWhiteSpace(Category);
     public bool HasDescription => !string.IsNullOrWhiteSpace(Description);
-    public bool HasResultPatterns => ResultPatterns is { Count: > 0 };
     public string RewardDisplay => $"{Reward:0.##} {RewardUnitLabel}";
     public string ConsolationRewardDisplay => $"{ConsolationReward:0.##} {RewardUnitLabel}";
     public string StartMessageDisplay => string.IsNullOrWhiteSpace(StartMessage)
         ? "Ankete başlamadan önce soruları dikkatle okuyunuz."
         : StartMessage;
 }
-
-public record SurveyResultPatternModel(
-    string Status,
-    string MatchPattern,
-    int Order);
 
 public record SurveyCriteria(string Label, bool IsMet);
 

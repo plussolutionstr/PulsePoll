@@ -43,6 +43,9 @@ public class Project : EntityBase
     [Required, MaxLength(100)]
     public string SubjectParameterName { get; set; } = string.Empty;
 
+    [Required, MaxLength(100)]
+    public string ProjectParameterName { get; set; } = "pid";
+
     public int EstimatedMinutes { get; set; }
 
     [MaxLength(2000)]
@@ -70,11 +73,9 @@ public class Project : EntityBase
     public DateOnly? EndDate => StartDate.HasValue ? StartDate.Value.AddDays(DurationDays) : null;
 
     public int? CoverMediaId { get; set; }
-    public int? SurveyResultScriptId { get; set; }
 
     // Navigation properties
     public Customer Customer { get; set; } = null!;
     public MediaAsset? CoverMedia { get; set; }
-    public SurveyResultScript? SurveyResultScript { get; set; }
     public ICollection<ProjectAssignment> Assignments { get; set; } = [];
 }

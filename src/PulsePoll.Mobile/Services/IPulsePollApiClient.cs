@@ -25,8 +25,6 @@ public interface IPulsePollApiClient
     Task<SurveyModel?> GetProjectByIdAsync(int projectId, CancellationToken ct = default);
     Task<List<HistoryItemModel>> GetHistoryAsync(CancellationToken ct = default);
     Task<string> StartProjectAsync(int projectId, CancellationToken ct = default);
-    Task SubmitProjectResultAsync(int projectId, string status, string? rawPayload = null, CancellationToken ct = default);
-
     // Wallet
     Task<WalletApiDto?> GetWalletAsync(CancellationToken ct = default);
     Task<List<WalletTransactionApiDto>> GetWalletTransactionsAsync(int page = 1, int pageSize = 20, CancellationToken ct = default);

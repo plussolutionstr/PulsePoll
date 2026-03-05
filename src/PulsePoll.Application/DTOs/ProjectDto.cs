@@ -20,6 +20,7 @@ public record ProjectDto(
     decimal ConsolationReward,
     string SurveyUrl,
     string SubjectParameterName,
+    string ProjectParameterName,
     int EstimatedMinutes,
     string? CustomerBriefing,
     string StartMessage,
@@ -29,9 +30,6 @@ public record ProjectDto(
     string ScreenOutMessage,
     ProjectStatus Status,
     AssignmentStatus? AssignmentStatus,
-    int? SurveyResultScriptId,
-    string? SurveyResultScriptName,
-    List<SurveyResultPatternDto>? SurveyResultPatterns,
     int? CoverMediaId,
     string? CoverImageUrl,
     string RewardUnitCode = "TRY",
@@ -53,6 +51,7 @@ public record CreateProjectDto(
     decimal ConsolationReward,
     string SurveyUrl,
     string SubjectParameterName,
+    string ProjectParameterName,
     int EstimatedMinutes,
     string? CustomerBriefing,
     string StartMessage,
@@ -60,7 +59,6 @@ public record CreateProjectDto(
     string DisqualifyMessage,
     string QuotaFullMessage,
     string ScreenOutMessage,
-    int? SurveyResultScriptId = null,
     int? CoverMediaId = null);
 
 public record UpdateProjectDto(
@@ -76,6 +74,7 @@ public record UpdateProjectDto(
     decimal ConsolationReward,
     string SurveyUrl,
     string SubjectParameterName,
+    string ProjectParameterName,
     int EstimatedMinutes,
     string? CustomerBriefing,
     string StartMessage,
@@ -84,5 +83,4 @@ public record UpdateProjectDto(
     string QuotaFullMessage,
     string ScreenOutMessage,
     ProjectStatus Status,
-    int? SurveyResultScriptId = null,
     int? CoverMediaId = null);

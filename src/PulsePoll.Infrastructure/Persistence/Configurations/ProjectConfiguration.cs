@@ -14,6 +14,7 @@ public class ProjectConfiguration : IEntityTypeConfiguration<Project>
         builder.Property(p => p.Category).HasMaxLength(100);
         builder.Property(p => p.SurveyUrl).IsRequired().HasMaxLength(2000);
         builder.Property(p => p.SubjectParameterName).IsRequired().HasMaxLength(100);
+        builder.Property(p => p.ProjectParameterName).IsRequired().HasMaxLength(100).HasDefaultValue("pid");
         builder.Property(p => p.CustomerBriefing).HasMaxLength(2000);
         builder.Property(p => p.StartMessage).IsRequired().HasMaxLength(500);
         builder.Property(p => p.CompletedMessage).IsRequired().HasMaxLength(500);
@@ -34,12 +35,6 @@ public class ProjectConfiguration : IEntityTypeConfiguration<Project>
                .WithMany(m => m.Projects)
                .HasForeignKey(p => p.CoverMediaId)
                .HasConstraintName("fk_projects_cover_media")
-               .OnDelete(DeleteBehavior.SetNull);
-
-        builder.HasOne(p => p.SurveyResultScript)
-               .WithMany(s => s.Projects)
-               .HasForeignKey(p => p.SurveyResultScriptId)
-               .HasConstraintName("fk_projects_survey_result_script")
                .OnDelete(DeleteBehavior.SetNull);
 
         builder.HasIndex(p => p.Code).IsUnique().HasDatabaseName("uq_projects_code");

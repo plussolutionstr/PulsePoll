@@ -7,6 +7,7 @@ public interface ISubjectRepository
     Task<Subject?> GetByIdAsync(int id);
     Task<Subject?> GetByEmailAsync(string email);
     Task<Subject?> GetByPhoneAsync(string phoneNumber);
+    Task<Subject?> GetByPublicIdAsync(Guid publicId);
     Task<Subject?> GetByReferralCodeAsync(string referralCode);
     Task<bool> ExistsByEmailAsync(string email);
     Task<bool> ExistsByPhoneAsync(string phoneNumber);

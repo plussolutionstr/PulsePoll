@@ -52,14 +52,7 @@ public static class ApiDtoMapper
             DisqualifyMessage: dto.DisqualifyMessage,
             QuotaFullMessage: dto.QuotaFullMessage,
             ScreenOutMessage: dto.ScreenOutMessage,
-            AssignmentStatus: dto.AssignmentStatus?.ToString(),
-            ResultPatterns: dto.SurveyResultPatterns?
-                .OrderBy(p => p.Order)
-                .Select(p => new SurveyResultPatternModel(
-                    p.Status.ToString(),
-                    p.MatchPattern,
-                    p.Order))
-                .ToList());
+            AssignmentStatus: dto.AssignmentStatus?.ToString());
 
     private static string ToHistoryStatus(AssignmentStatus status) => status switch
     {

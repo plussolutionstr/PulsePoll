@@ -16,11 +16,7 @@
             }
             @if (Has(PermissionCodes.Projects.View))
             {
-                <DxMenuItem NavigateUrl="/projects" Text="Projeler" CssClass="@MenuItemCssClass("/projects", "/projects/result-scripts")" IconCssClass="bi bi-kanban"/>
-                @if (Has(PermissionCodes.Projects.Edit))
-                {
-                    <DxMenuItem NavigateUrl="/projects/result-scripts" Text="Anket Scriptleri" CssClass="@MenuItemCssClass("/projects/result-scripts")" IconCssClass="bi bi-code-slash"/>
-                }
+                <DxMenuItem NavigateUrl="/projects" Text="Projeler" CssClass="@MenuItemCssClass("/projects")" IconCssClass="bi bi-kanban"/>
             }
             @if (Has(PermissionCodes.Subjects.View))
             {

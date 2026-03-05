@@ -4,7 +4,6 @@
 @using PulsePoll.Domain.Enums
 @using PulsePoll.Application.Extensions
 @inject IProjectService ProjectService
-@inject ISurveyResultScriptService SurveyResultScriptService
 @inject ICustomerService CustomerService
 @inject IAppToastService Toast
 @inject AuthenticationStateProvider AuthStateProvider
@@ -220,11 +219,15 @@
                     <label class="form-label">Anket URL *</label>
                     <DxTextBox @bind-Text="_form.SurveyUrl" />
                 </DxFormLayoutItem>
-                <DxFormLayoutItem ColSpanMd="6">
+                <DxFormLayoutItem ColSpanMd="4">
                     <label class="form-label">Katılımcı Parametre Adı *</label>
                     <DxTextBox @bind-Text="_form.SubjectParameterName" />
                 </DxFormLayoutItem>
-                <DxFormLayoutItem ColSpanMd="6" Visible="!_isNew">
+                <DxFormLayoutItem ColSpanMd="4">
+                    <label class="form-label">Proje Parametre Adı *</label>
+                    <DxTextBox @bind-Text="_form.ProjectParameterName" />
+                </DxFormLayoutItem>
+                <DxFormLayoutItem ColSpanMd="4" Visible="!_isNew">
                     <label class="form-label">Durum *</label>
                     <DxComboBox Data="@_statuses"
                                 @bind-Value="_form.Status"
@@ -236,15 +239,6 @@
                             @statusCtx.DataItem.GetDescription()
                         </EditBoxDisplayTemplate>
                     </DxComboBox>
-                </DxFormLayoutItem>
-                <DxFormLayoutItem ColSpanMd="12">
-                    <label class="form-label">Anket Scripti</label>
-                    <DxComboBox Data="@_resultScripts"
-                                ValueFieldName="Id"
-                                TextFieldName="Name"
-                                @bind-Value="_form.SurveyResultScriptId"
-                                ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto"
-                                NullText="Script seçiniz (opsiyonel)" />
                 </DxFormLayoutItem>
             </DxFormLayoutGroup>
 
@@ -329,8 +323,7 @@
 
     private IReadOnlyList<ProjectDto> _projects = [];
     private List<CustomerDto> _customers = [];
-    private List<SurveyResultScriptDto> _resultScripts = [];
-    private readonly List<ProjectStatus> _statuses = Enum.GetValues<ProjectStatus>().ToList();
+private readonly List<ProjectStatus> _statuses = Enum.GetValues<ProjectStatus>().ToList();
 
     private bool _isLoading = true;
     private bool _popupVisible;
@@ -354,7 +347,6 @@
     {
         await LoadPermissionsAsync();
         _customers = await CustomerService.GetAllAsync();
-        _resultScripts = await SurveyResultScriptService.GetAllAsync(includeInactive: true);
         await LoadDataAsync();
     }
 
@@ -412,7 +404,6 @@
             Name = dto.Name,
             Description = dto.Description,
             Category = dto.Category,
-            SurveyResultScriptId = dto.SurveyResultScriptId,
             ParticipantCount = dto.ParticipantCount,
             TotalTargetCount = dto.TotalTargetCount,
             DurationDays = dto.DurationDays,
@@ -422,6 +413,7 @@
             ConsolationReward = dto.ConsolationReward,
             SurveyUrl = dto.SurveyUrl,
             SubjectParameterName = dto.SubjectParameterName,
+            ProjectParameterName = dto.ProjectParameterName,
             EstimatedMinutes = dto.EstimatedMinutes,
             CustomerBriefing = dto.CustomerBriefing,
             StartMessage = dto.StartMessage,
@@ -454,7 +446,6 @@
             Name = $"{dto.Name} - Kopyası",
             Description = dto.Description,
             Category = dto.Category,
-            SurveyResultScriptId = dto.SurveyResultScriptId,
             ParticipantCount = dto.ParticipantCount,
             TotalTargetCount = dto.TotalTargetCount,
             DurationDays = dto.DurationDays,
@@ -464,6 +455,7 @@
             ConsolationReward = dto.ConsolationReward,
             SurveyUrl = dto.SurveyUrl,
             SubjectParameterName = dto.SubjectParameterName,
+            ProjectParameterName = dto.ProjectParameterName,
             EstimatedMinutes = dto.EstimatedMinutes,
             CustomerBriefing = dto.CustomerBriefing,
             StartMessage = dto.StartMessage,
@@ -525,6 +517,7 @@
                     _form.ConsolationReward,
                     _form.SurveyUrl.Trim(),
                     _form.SubjectParameterName.Trim(),
+                    _form.ProjectParameterName.Trim(),
                     _form.EstimatedMinutes,
                     _form.CustomerBriefing?.Trim(),
                     _form.StartMessage.Trim(),
@@ -532,7 +525,6 @@
                     _form.DisqualifyMessage.Trim(),
                     _form.QuotaFullMessage.Trim(),
                     _form.ScreenOutMessage.Trim(),
-                    _form.SurveyResultScriptId,
                     _form.CoverMediaId);
 
                 await ProjectService.CreateAsync(dto, adminId);
@@ -553,6 +545,7 @@
                     _form.ConsolationReward,
                     _form.SurveyUrl.Trim(),
                     _form.SubjectParameterName.Trim(),
+                    _form.ProjectParameterName.Trim(),
                     _form.EstimatedMinutes,
                     _form.CustomerBriefing?.Trim(),
                     _form.StartMessage.Trim(),
@@ -561,7 +554,6 @@
                     _form.QuotaFullMessage.Trim(),
                     _form.ScreenOutMessage.Trim(),
                     _form.Status,
-                    _form.SurveyResultScriptId,
                     _form.CoverMediaId);
 
                 await ProjectService.UpdateAsync(_form.Id, dto, adminId);
@@ -695,7 +687,6 @@
         public string Name { get; set; } = string.Empty;
         public string? Description { get; set; }
         public string? Category { get; set; }
-        public int? SurveyResultScriptId { get; set; }
         public int ParticipantCount { get; set; }
         public int TotalTargetCount { get; set; }
         public int DurationDays { get; set; }
@@ -705,6 +696,7 @@
         public decimal ConsolationReward { get; set; }
         public string SurveyUrl { get; set; } = string.Empty;
         public string SubjectParameterName { get; set; } = "uid";
+        public string ProjectParameterName { get; set; } = "pid";
         public int EstimatedMinutes { get; set; } = 10;
         public string? CustomerBriefing { get; set; }
         public string StartMessage { get; set; } = "Hoş geldiniz.";

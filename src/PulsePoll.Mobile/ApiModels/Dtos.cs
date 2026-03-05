@@ -70,20 +70,11 @@ public record ProjectApiDto(
     string ScreenOutMessage,
     ProjectStatus Status,
     AssignmentStatus? AssignmentStatus,
-    int? SurveyResultScriptId,
-    string? SurveyResultScriptName,
-    List<SurveyResultPatternApiDto>? SurveyResultPatterns,
     int? CoverMediaId,
     string? CoverImageUrl,
     string RewardUnitCode = "TRY",
     string RewardUnitLabel = "TL",
     decimal RewardUnitTryMultiplier = 1m);
-
-public record SurveyResultPatternApiDto(
-    int Id,
-    AssignmentStatus Status,
-    string MatchPattern,
-    int Order);
 
 public record StartProjectApiDto(string Url);
 

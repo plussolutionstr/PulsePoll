@@ -25,6 +25,9 @@ public class SubjectRepository(AppDbContext db) : ISubjectRepository
     public Task<Subject?> GetByPhoneAsync(string phoneNumber)
         => db.Subjects.FirstOrDefaultAsync(s => s.PhoneNumber == phoneNumber);
 
+    public Task<Subject?> GetByPublicIdAsync(Guid publicId)
+        => db.Subjects.FirstOrDefaultAsync(s => s.PublicId == publicId);
+
     public Task<Subject?> GetByReferralCodeAsync(string referralCode)
         => db.Subjects.FirstOrDefaultAsync(s => s.ReferralCode == referralCode);
 

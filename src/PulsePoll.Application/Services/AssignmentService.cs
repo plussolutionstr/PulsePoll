@@ -36,7 +36,7 @@ public class AssignmentService(
             ?? throw new NotFoundException("Denek");
 
         var separator = project.SurveyUrl.Contains('?') ? "&" : "?";
-        return $"{project.SurveyUrl}{separator}{project.SubjectParameterName}={subject.PublicId:D}";
+        return $"{project.SurveyUrl}{separator}{project.SubjectParameterName}={subject.PublicId:D}&{project.ProjectParameterName}={project.Id}";
     }
 
     public async Task MarkResultAsync(int projectId, int subjectId, AssignmentStatus status, string? webhookPayload = null)

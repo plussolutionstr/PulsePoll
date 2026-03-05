@@ -212,18 +212,6 @@ public sealed class PulsePollApiClient : IPulsePollApiClient
         return result.Data.Url;
     }
 
-    public async Task SubmitProjectResultAsync(int projectId, string status, string? rawPayload = null, CancellationToken ct = default)
-    {
-        var payload = new
-        {
-            status,
-            rawPayload
-        };
-
-        var response = await _http.PostAsJsonAsync($"api/projects/{projectId}/result", payload, JsonOptions, ct);
-        await EnsureSuccessOrThrowAsync(response, ct);
-    }
-
     public Task<ProfileApiDto?> GetProfileAsync(CancellationToken ct = default)
         => GetAsync<ProfileApiDto>("api/profile", ct);
 
