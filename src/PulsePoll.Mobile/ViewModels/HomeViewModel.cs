@@ -72,7 +72,11 @@ public partial class HomeViewModel : ObservableObject
 
         MainThread.BeginInvokeOnMainThread(() =>
         {
-            Stories = new ObservableCollection<StoryModel>(storiesTask.Result);
+            var orderedStories = storiesTask.Result
+                .OrderBy(s => s.IsSeen)
+                .ToList();
+
+            Stories = new ObservableCollection<StoryModel>(orderedStories);
             News = new ObservableCollection<NewsModel>(newsTask.Result);
             Surveys = new ObservableCollection<SurveyModel>(surveysTask.Result);
         });
@@ -92,8 +96,43 @@ public partial class HomeViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private async Task OpenStory(StoryModel story)
+    {
+        if (!story.IsSeen)
+            _ = MarkStorySeenAndReorderAsync(story);
+
+        await Shell.Current.GoToAsync($"storyviewer?id={story.Id}&session={Guid.NewGuid():N}");
+    }
+
+    [RelayCommand]
     private async Task NavigateToNotifications()
     {
         await Shell.Current.GoToAsync("notifications");
+    }
+
+    private async Task MarkStorySeenAndReorderAsync(StoryModel story)
+    {
+        try
+        {
+            await _apiClient.MarkStorySeenAsync(story.Id);
+
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                if (Stories.Count == 0)
+                    return;
+
+                var index = Stories.IndexOf(story);
+                if (index < 0)
+                    return;
+
+                var seenStory = story with { IsSeen = true };
+                Stories.RemoveAt(index);
+                Stories.Add(seenStory);
+            });
+        }
+        catch
+        {
+            // Story seen senkronizasyonu kritik bir akış değil.
+        }
     }
 }

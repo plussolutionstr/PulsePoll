@@ -10,13 +10,23 @@ namespace PulsePoll.Api.Controllers;
 [Route("api/stories")]
 public class StoryController(IStoryService storyService) : ControllerBase
 {
+    private int SubjectId => int.Parse(User.FindFirst("sub")!.Value);
+
     /// <summary>Mobil ana ekran — aktif hikayeleri döner.</summary>
     [Authorize]
     [HttpGet]
     public async Task<IActionResult> Get()
     {
-        var stories = await storyService.GetActiveStoriesAsync();
+        var stories = await storyService.GetActiveStoriesAsync(SubjectId);
         return this.OkResponse(stories);
+    }
+
+    [Authorize]
+    [HttpPost("{id:int}/seen")]
+    public async Task<IActionResult> MarkSeen(int id)
+    {
+        await storyService.MarkSeenAsync(SubjectId, id);
+        return this.NoContentResponse();
     }
 
     // TODO: Admin auth eklenince [Authorize(Roles = "Admin")] eklenmeli
@@ -25,13 +35,14 @@ public class StoryController(IStoryService storyService) : ControllerBase
     {
         var createDto = new CreateStoryDto(
             dto.Title,
-            dto.BrandName,
+            dto.Description,
             dto.LinkUrl,
             dto.StartsAt,
             dto.EndsAt,
             dto.Order,
             dto.IsActive,
             dto.MediaAssetId,
+            dto.StoryMediaAssetId,
             dto.Image?.OpenReadStream(),
             dto.Image?.FileName);
 
@@ -44,13 +55,14 @@ public class StoryController(IStoryService storyService) : ControllerBase
     {
         var updateDto = new CreateStoryDto(
             dto.Title,
-            dto.BrandName,
+            dto.Description,
             dto.LinkUrl,
             dto.StartsAt,
             dto.EndsAt,
             dto.Order,
             dto.IsActive,
             dto.MediaAssetId,
+            dto.StoryMediaAssetId,
             dto.Image?.OpenReadStream(),
             dto.Image?.FileName);
 
@@ -70,12 +82,13 @@ public class StoryController(IStoryService storyService) : ControllerBase
 public class CreateStoryFormDto
 {
     public string Title { get; set; } = string.Empty;
-    public string? BrandName { get; set; }
+    public string? Description { get; set; }
     public string? LinkUrl { get; set; }
     public DateTime StartsAt { get; set; }
     public DateTime EndsAt { get; set; }
     public int Order { get; set; }
     public bool IsActive { get; set; } = true;
     public int? MediaAssetId { get; set; }
+    public int? StoryMediaAssetId { get; set; }
     public IFormFile? Image { get; set; }
 }

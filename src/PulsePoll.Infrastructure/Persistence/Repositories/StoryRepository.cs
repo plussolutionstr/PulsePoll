@@ -9,6 +9,7 @@ public class StoryRepository(AppDbContext db) : IStoryRepository
     public Task<List<Story>> GetAllAsync()
         => db.Stories
             .Include(s => s.MediaAsset)
+            .Include(s => s.StoryMediaAsset)
             .Where(s => s.DeletedAt == null)
             .OrderBy(s => s.Order)
             .ThenByDescending(s => s.StartsAt)
@@ -19,14 +20,53 @@ public class StoryRepository(AppDbContext db) : IStoryRepository
         var now = DateTime.UtcNow;
         return db.Stories
             .Include(s => s.MediaAsset)
+            .Include(s => s.StoryMediaAsset)
             .Where(s => s.IsActive && s.StartsAt <= now && s.EndsAt >= now && s.DeletedAt == null)
             .OrderBy(s => s.Order)
             .ToListAsync();
     }
 
+    public async Task<HashSet<int>> GetSeenStoryIdsAsync(int subjectId, IReadOnlyCollection<int> storyIds)
+    {
+        if (storyIds.Count == 0)
+            return [];
+
+        var ids = storyIds.Distinct().ToList();
+        var seenStoryIds = await db.StoryViews
+            .Where(v => v.SubjectId == subjectId && ids.Contains(v.StoryId) && v.DeletedAt == null)
+            .Select(v => v.StoryId)
+            .ToListAsync();
+
+        return [.. seenStoryIds];
+    }
+
+    public async Task MarkSeenAsync(int subjectId, int storyId)
+    {
+        var alreadySeen = await db.StoryViews
+            .AnyAsync(v => v.SubjectId == subjectId && v.StoryId == storyId && v.DeletedAt == null);
+
+        if (alreadySeen)
+            return;
+
+        var storyView = new StoryView
+        {
+            SubjectId = subjectId,
+            StoryId = storyId,
+            SeenAt = DateTime.UtcNow
+        };
+        storyView.SetCreated(subjectId);
+
+        db.StoryViews.Add(storyView);
+        await db.SaveChangesAsync();
+    }
+
+    public Task<bool> ExistsAsync(int storyId)
+        => db.Stories.AnyAsync(s => s.Id == storyId && s.DeletedAt == null);
+
     public Task<Story?> GetByIdAsync(int id)
         => db.Stories
             .Include(s => s.MediaAsset)
+            .Include(s => s.StoryMediaAsset)
             .FirstOrDefaultAsync(s => s.Id == id && s.DeletedAt == null);
 
     public async Task AddAsync(Story story)

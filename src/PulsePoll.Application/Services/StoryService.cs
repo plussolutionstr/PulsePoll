@@ -21,25 +21,40 @@ public class StoryService(
 
         foreach (var s in stories)
         {
-            var imageUrl = await ResolveImageUrlAsync(s);
-            dtos.Add(ToDto(s, imageUrl));
+            var (previewImageUrl, storyImageUrl) = await ResolveImageUrlsAsync(s);
+            dtos.Add(ToDto(s, previewImageUrl, storyImageUrl));
         }
 
         return dtos;
     }
 
-    public async Task<IEnumerable<StoryDto>> GetActiveStoriesAsync()
+    public async Task<IEnumerable<StoryDto>> GetActiveStoriesAsync(int subjectId)
     {
         var stories = await repository.GetActiveAsync();
+        var seenStoryIds = await repository.GetSeenStoryIdsAsync(subjectId, stories.Select(s => s.Id).ToList());
+        var orderedStories = stories
+            .OrderBy(s => seenStoryIds.Contains(s.Id))
+            .ThenBy(s => s.Order)
+            .ToList();
+
         var dtos = new List<StoryDto>(stories.Count);
 
-        foreach (var s in stories)
+        foreach (var s in orderedStories)
         {
-            var imageUrl = await ResolveImageUrlAsync(s);
-            dtos.Add(ToDto(s, imageUrl));
+            var (previewImageUrl, storyImageUrl) = await ResolveImageUrlsAsync(s);
+            dtos.Add(ToDto(s, previewImageUrl, storyImageUrl, seenStoryIds.Contains(s.Id)));
         }
 
         return dtos;
+    }
+
+    public async Task MarkSeenAsync(int subjectId, int storyId)
+    {
+        var storyExists = await repository.ExistsAsync(storyId);
+        if (!storyExists)
+            throw new NotFoundException("Hikaye");
+
+        await repository.MarkSeenAsync(subjectId, storyId);
     }
 
     public async Task<StoryDto> CreateAsync(CreateStoryDto dto)
@@ -47,16 +62,28 @@ public class StoryService(
         if (!dto.MediaAssetId.HasValue)
             throw new BusinessException("STORY_IMAGE_REQUIRED", "Hikaye görseli zorunludur.");
 
-        var mediaAsset = await mediaAssetRepository.GetByIdAsync(dto.MediaAssetId.Value)
+        var previewMediaAsset = await mediaAssetRepository.GetByIdAsync(dto.MediaAssetId.Value)
             ?? throw new NotFoundException("Medya dosyası");
+
+        string? storyImageObjectKey = null;
+        int? storyMediaAssetId = null;
+        if (dto.StoryMediaAssetId.HasValue)
+        {
+            var storyMediaAsset = await mediaAssetRepository.GetByIdAsync(dto.StoryMediaAssetId.Value)
+                ?? throw new NotFoundException("Story detay görseli");
+            storyImageObjectKey = storyMediaAsset.ObjectKey;
+            storyMediaAssetId = storyMediaAsset.Id;
+        }
 
         var story = new Story
         {
             Title     = dto.Title,
-            ImageUrl  = mediaAsset.ObjectKey,
-            MediaAssetId = mediaAsset.Id,
+            ImageUrl  = previewMediaAsset.ObjectKey,
+            MediaAssetId = previewMediaAsset.Id,
+            StoryImageUrl = storyImageObjectKey,
+            StoryMediaAssetId = storyMediaAssetId,
             LinkUrl   = dto.LinkUrl,
-            BrandName = dto.BrandName,
+            Description = dto.Description,
             StartsAt  = NormalizeToUtc(dto.StartsAt),
             EndsAt    = NormalizeToUtc(dto.EndsAt),
             Order     = dto.Order,
@@ -66,14 +93,17 @@ public class StoryService(
 
         await repository.AddAsync(story);
 
-        var imageUrl = await ResolveImageUrlAsync(story);
-        return ToDto(story, imageUrl);
+        var (previewImageUrl, storyImageUrl) = await ResolveImageUrlsAsync(story);
+        return ToDto(story, previewImageUrl, storyImageUrl);
     }
 
     public async Task UpdateAsync(int id, CreateStoryDto dto)
     {
         var story = await repository.GetByIdAsync(id)
             ?? throw new NotFoundException("Hikaye");
+
+        if (!dto.MediaAssetId.HasValue)
+            throw new BusinessException("STORY_IMAGE_REQUIRED", "Hikaye görseli zorunludur.");
 
         if (dto.MediaAssetId.HasValue && dto.MediaAssetId.Value != story.MediaAssetId)
         {
@@ -83,9 +113,25 @@ public class StoryService(
             story.MediaAssetId = mediaAsset.Id;
         }
 
+        if (dto.StoryMediaAssetId != story.StoryMediaAssetId)
+        {
+            if (dto.StoryMediaAssetId.HasValue)
+            {
+                var storyMediaAsset = await mediaAssetRepository.GetByIdAsync(dto.StoryMediaAssetId.Value)
+                    ?? throw new NotFoundException("Story detay görseli");
+                story.StoryImageUrl = storyMediaAsset.ObjectKey;
+                story.StoryMediaAssetId = storyMediaAsset.Id;
+            }
+            else
+            {
+                story.StoryImageUrl = null;
+                story.StoryMediaAssetId = null;
+            }
+        }
+
         story.Title     = dto.Title;
         story.LinkUrl   = dto.LinkUrl;
-        story.BrandName = dto.BrandName;
+        story.Description = dto.Description;
         story.StartsAt  = NormalizeToUtc(dto.StartsAt);
         story.EndsAt    = NormalizeToUtc(dto.EndsAt);
         story.Order     = dto.Order;
@@ -127,10 +173,30 @@ public class StoryService(
         await repository.DeleteAsync(story);
     }
 
-    private static StoryDto ToDto(Story s, string imageUrl) =>
-        new(s.Id, s.Title, imageUrl, s.MediaAssetId, s.LinkUrl, s.BrandName, s.StartsAt, s.EndsAt, s.Order, s.IsActive);
+    private static StoryDto ToDto(Story s, string previewImageUrl, string storyImageUrl, bool isSeen = false) =>
+        new(
+            s.Id,
+            s.Title,
+            previewImageUrl,
+            s.MediaAssetId,
+            storyImageUrl,
+            s.StoryMediaAssetId,
+            s.LinkUrl,
+            s.Description,
+            s.StartsAt,
+            s.EndsAt,
+            s.Order,
+            s.IsActive,
+            isSeen);
 
-    private Task<string> ResolveImageUrlAsync(Story story)
+    private async Task<(string PreviewImageUrl, string StoryImageUrl)> ResolveImageUrlsAsync(Story story)
+    {
+        var previewImageUrl = await ResolvePreviewImageUrlAsync(story);
+        var storyImageUrl = await ResolveStoryImageUrlAsync(story, previewImageUrl);
+        return (previewImageUrl, storyImageUrl);
+    }
+
+    private Task<string> ResolvePreviewImageUrlAsync(Story story)
     {
         if (story.MediaAsset is not null)
         {
@@ -139,6 +205,19 @@ public class StoryService(
 
         var bucket = story.MediaAssetId.HasValue ? MediaLibraryBucketName : LegacyStoryBucketName;
         return storage.GetPresignedUrlAsync(bucket, story.ImageUrl, PresignedUrlExpirySeconds);
+    }
+
+    private async Task<string> ResolveStoryImageUrlAsync(Story story, string fallbackUrl)
+    {
+        if (story.StoryMediaAsset is not null)
+        {
+            return await storage.GetPresignedUrlAsync(MediaLibraryBucketName, story.StoryMediaAsset.ObjectKey, PresignedUrlExpirySeconds);
+        }
+
+        if (!story.StoryMediaAssetId.HasValue || string.IsNullOrWhiteSpace(story.StoryImageUrl))
+            return fallbackUrl;
+
+        return await storage.GetPresignedUrlAsync(MediaLibraryBucketName, story.StoryImageUrl, PresignedUrlExpirySeconds);
     }
 
     private static DateTime NormalizeToUtc(DateTime value) => value.Kind switch

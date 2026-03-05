@@ -45,6 +45,17 @@ public sealed class PulsePollApiClient : IPulsePollApiClient
         return response?.Select(s => s.ToModel()).ToList() ?? [];
     }
 
+    public async Task MarkStorySeenAsync(int storyId, CancellationToken ct = default)
+    {
+        await SetAuthHeaderAsync();
+        var response = await _http.PostAsync($"api/stories/{storyId}/seen", content: null, ct);
+        response.EnsureSuccessStatusCode();
+
+        var result = await response.Content.ReadFromJsonAsync<ApiResponse<object?>>(JsonOptions, ct);
+        if (result is not { Success: true })
+            throw new HttpRequestException("Story seen işareti API tarafından reddedildi.");
+    }
+
     public async Task<List<NewsModel>> GetNewsAsync(CancellationToken ct = default)
     {
         var response = await GetAsync<List<NewsApiDto>>("api/news", ct);

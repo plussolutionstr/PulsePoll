@@ -56,6 +56,7 @@ public static class MauiProgram
         builder.Services.AddTransient<HistoryViewModel>();
         builder.Services.AddTransient<WalletViewModel>();
         builder.Services.AddTransient<NotificationsViewModel>();
+        builder.Services.AddTransient<StoryViewerViewModel>();
 
         // Pages
         builder.Services.AddTransient<LoginPage>();
@@ -67,6 +68,7 @@ public static class MauiProgram
         builder.Services.AddTransient<HistoryPage>();
         builder.Services.AddTransient<WalletPage>();
         builder.Services.AddTransient<NotificationsPage>();
+        builder.Services.AddTransient<StoryViewerPage>();
 
 #if DEBUG
         builder.Logging.AddDebug();

@@ -7,12 +7,15 @@ public record StoryApiDto(
     string Title,
     string ImageUrl,
     int? MediaAssetId,
+    string? StoryImageUrl,
+    int? StoryMediaAssetId,
     string? LinkUrl,
-    string? BrandName,
+    string? Description,
     DateTime StartsAt,
     DateTime EndsAt,
     int Order,
-    bool IsActive);
+    bool IsActive,
+    bool IsSeen);
 
 public record NewsApiDto(
     int Id,

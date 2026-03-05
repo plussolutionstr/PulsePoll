@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using PulsePoll.Infrastructure.Persistence;
@@ -11,9 +12,11 @@ using PulsePoll.Infrastructure.Persistence;
 namespace PulsePoll.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260304191846_AddStoryDetailMedia")]
+    partial class AddStoryDetailMedia
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2241,6 +2244,11 @@ namespace PulsePoll.Infrastructure.Persistence.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("BrandName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("brand_name");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
@@ -2256,11 +2264,6 @@ namespace PulsePoll.Infrastructure.Persistence.Migrations
                     b.Property<int?>("DeletedBy")
                         .HasColumnType("integer")
                         .HasColumnName("deleted_by");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
-                        .HasColumnName("description");
 
                     b.Property<DateTime>("EndsAt")
                         .HasColumnType("timestamp with time zone")
@@ -2332,67 +2335,6 @@ namespace PulsePoll.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("idx_stories_is_active_starts_at_ends_at");
 
                     b.ToTable("stories", (string)null);
-                });
-
-            modelBuilder.Entity("PulsePoll.Domain.Entities.StoryView", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<int>("CreatedBy")
-                        .HasColumnType("integer")
-                        .HasColumnName("created_by");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("deleted_at");
-
-                    b.Property<int?>("DeletedBy")
-                        .HasColumnType("integer")
-                        .HasColumnName("deleted_by");
-
-                    b.Property<DateTime>("SeenAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("seen_at");
-
-                    b.Property<int>("StoryId")
-                        .HasColumnType("integer")
-                        .HasColumnName("story_id");
-
-                    b.Property<int>("SubjectId")
-                        .HasColumnType("integer")
-                        .HasColumnName("subject_id");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<int?>("UpdatedBy")
-                        .HasColumnType("integer")
-                        .HasColumnName("updated_by");
-
-                    b.HasKey("Id")
-                        .HasName("pk_story_views");
-
-                    b.HasIndex("StoryId")
-                        .HasDatabaseName("ix_story_views_story_id");
-
-                    b.HasIndex("SubjectId", "SeenAt")
-                        .HasDatabaseName("idx_story_views_subject_seen_at");
-
-                    b.HasIndex("SubjectId", "StoryId")
-                        .IsUnique()
-                        .HasDatabaseName("ux_story_views_subject_story");
-
-                    b.ToTable("story_views", (string)null);
                 });
 
             modelBuilder.Entity("PulsePoll.Domain.Entities.Subject", b =>
@@ -3557,27 +3499,6 @@ namespace PulsePoll.Infrastructure.Persistence.Migrations
                     b.Navigation("StoryMediaAsset");
                 });
 
-            modelBuilder.Entity("PulsePoll.Domain.Entities.StoryView", b =>
-                {
-                    b.HasOne("PulsePoll.Domain.Entities.Story", "Story")
-                        .WithMany("StoryViews")
-                        .HasForeignKey("StoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_story_views_stories");
-
-                    b.HasOne("PulsePoll.Domain.Entities.Subject", "Subject")
-                        .WithMany()
-                        .HasForeignKey("SubjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_story_views_subjects");
-
-                    b.Navigation("Story");
-
-                    b.Navigation("Subject");
-                });
-
             modelBuilder.Entity("PulsePoll.Domain.Entities.Subject", b =>
                 {
                     b.HasOne("PulsePoll.Domain.Entities.Bank", "Bank")
@@ -3808,11 +3729,6 @@ namespace PulsePoll.Infrastructure.Persistence.Migrations
                     b.Navigation("AdminUserRoles");
 
                     b.Navigation("RolePermissions");
-                });
-
-            modelBuilder.Entity("PulsePoll.Domain.Entities.Story", b =>
-                {
-                    b.Navigation("StoryViews");
                 });
 
             modelBuilder.Entity("PulsePoll.Domain.Entities.Subject", b =>

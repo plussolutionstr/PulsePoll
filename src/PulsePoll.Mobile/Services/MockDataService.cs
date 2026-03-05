@@ -6,12 +6,12 @@ public class MockDataService
 {
     public List<StoryModel> GetStories() =>
     [
-        new(1, "PulsePoll", "", BrandColor: "#7C5CFC", IsSeen: false),
-        new(2, "Arçelik", "", BrandColor: "#E04A2F"),
-        new(3, "Turkcell", "", BrandColor: "#0060AF"),
-        new(4, "Migros", "", BrandColor: "#007A33", IsSeen: true),
-        new(5, "BMW", "", BrandColor: "#1F4E79", IsSeen: true),
-        new(6, "Akbank", "", BrandColor: "#7C5CFC", IsSeen: true)
+        new(1, "PulsePoll'a Hoş Geldin", "icon_star.png", LinkUrl: "https://pulsepoll.com", Description: "Yeni görevler ve fırsatları kaçırma.", BrandColor: "#7C5CFC", IsSeen: false),
+        new(2, "Arçelik Kampanyası", "icon_star.png", Description: "Ev aletleri kullanıcı deneyimini paylaş.", BrandColor: "#E04A2F"),
+        new(3, "Turkcell Fırsatı", "icon_star.png", Description: "Hızlı anketle ekstra puan kazan.", BrandColor: "#0060AF"),
+        new(4, "Migros Alışveriş Günü", "icon_star.png", Description: "Market alışkanlıklarını anlat, ödül kazan.", BrandColor: "#007A33", IsSeen: true),
+        new(5, "BMW Deneyim Anketi", "icon_star.png", Description: "Sürüş alışkanlıklarını bizimle paylaş.", BrandColor: "#1F4E79", IsSeen: true),
+        new(6, "Akbank Fintech Story", "icon_star.png", Description: "Bankacılık uygulama deneyimini değerlendir.", BrandColor: "#7C5CFC", IsSeen: true)
     ];
 
     public List<NewsModel> GetNews() =>

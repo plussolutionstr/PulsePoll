@@ -1,8 +1,31 @@
+using Microsoft.Maui.Controls;
+using Microsoft.Maui.Graphics;
+
 namespace PulsePoll.Mobile.Models;
 
-public record StoryModel(int Id, string BrandName, string ImageUrl, string BrandColor = "#7C5CFC", bool IsSeen = false);
+public record StoryModel(
+    int Id,
+    string Title,
+    string ImageUrl,
+    string StoryImageUrl = "",
+    string? LinkUrl = null,
+    string Description = "",
+    string BrandColor = "#7C5CFC",
+    bool IsSeen = false)
+{
+    public string DisplayStoryImageUrl => string.IsNullOrWhiteSpace(StoryImageUrl) ? ImageUrl : StoryImageUrl;
+    public bool HasDescription => !string.IsNullOrWhiteSpace(Description);
+    public Brush RingStroke => new SolidColorBrush(Color.FromArgb(IsSeen ? "#B8BCC5" : BrandColor));
+}
 
-public record NewsModel(int Id, string Tag, string Title, string Subtitle, string GradientStart = "#2D1B6E", string GradientEnd = "#A78BFA");
+public record NewsModel(
+    int Id,
+    string Tag,
+    string Title,
+    string Subtitle,
+    string GradientStart = "#2D1B6E",
+    string GradientEnd = "#A78BFA",
+    string ImageUrl = "");
 
 public record SurveyModel(
     int Id,

@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:PulsePoll.Mobile.ViewModels"
+             x:Class="PulsePoll.Mobile.Views.StoryViewerPage"
+             x:DataType="vm:StoryViewerViewModel"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="Black">
+
+    <Grid RowDefinitions="Auto,*,Auto" Padding="12,16,12,20">
+
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="10">
+            <ScrollView Orientation="Horizontal"
+                        HorizontalScrollBarVisibility="Never">
+                <HorizontalStackLayout BindableLayout.ItemsSource="{Binding ProgressSegments}"
+                                       Spacing="4">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="vm:StoryProgressSegment">
+                            <ProgressBar Progress="{Binding Progress}"
+                                         WidthRequest="42"
+                                         HeightRequest="3"
+                                         ProgressColor="White"
+                                         BackgroundColor="#40FFFFFF"/>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </HorizontalStackLayout>
+            </ScrollView>
+
+            <HorizontalStackLayout Grid.Column="1" Spacing="10" VerticalOptions="Center">
+                <Label Text="{Binding ProgressText}"
+                       FontFamily="JakartaSemiBold"
+                       FontSize="12"
+                       TextColor="White"
+                       VerticalOptions="Center"/>
+                <Border StrokeThickness="0"
+                        StrokeShape="RoundRectangle 10"
+                        BackgroundColor="#2FFFFFFF"
+                        Padding="10,4">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding CloseCommand}"/>
+                    </Border.GestureRecognizers>
+                    <Label Text="Kapat"
+                           FontFamily="JakartaSemiBold"
+                           FontSize="12"
+                           TextColor="White"/>
+                </Border>
+            </HorizontalStackLayout>
+        </Grid>
+
+        <Grid Grid.Row="1" Margin="0,12,0,12">
+            <Border x:Name="StoryVisual"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 18"
+                    BackgroundColor="#121212">
+                <Grid>
+                    <Image Source="icon_star.png"
+                           HeightRequest="54"
+                           WidthRequest="54"
+                           Opacity="0.18"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center"/>
+                    <Image Source="{Binding CurrentStory.DisplayStoryImageUrl}"
+                           Aspect="AspectFill"/>
+                    <BoxView Opacity="0.55" VerticalOptions="Start" HeightRequest="140">
+                        <BoxView.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                <GradientStop Color="#B0000000" Offset="0"/>
+                                <GradientStop Color="#00000000" Offset="1"/>
+                            </LinearGradientBrush>
+                        </BoxView.Background>
+                    </BoxView>
+                    <BoxView Opacity="0.8" VerticalOptions="End" HeightRequest="170">
+                        <BoxView.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                <GradientStop Color="#00000000" Offset="0"/>
+                                <GradientStop Color="#BF000000" Offset="1"/>
+                            </LinearGradientBrush>
+                        </BoxView.Background>
+                    </BoxView>
+
+                    <VerticalStackLayout Padding="14,12"
+                                         Spacing="4"
+                                         VerticalOptions="Start">
+                        <Label Text="{Binding CurrentStory.Title}"
+                               FontFamily="JakartaBold"
+                               FontSize="16"
+                               TextColor="White"/>
+                        <Label Text="{Binding CurrentStory.Description}"
+                               FontFamily="JakartaRegular"
+                               FontSize="12"
+                               TextColor="#D6FFFFFF"
+                               IsVisible="{Binding CurrentStory.HasDescription}"
+                               MaxLines="2"
+                               LineBreakMode="TailTruncation"/>
+                    </VerticalStackLayout>
+                </Grid>
+            </Border>
+
+            <Grid ColumnDefinitions="*,*"
+                  BackgroundColor="Transparent">
+                <Button Grid.Column="0"
+                        BackgroundColor="Transparent"
+                        BorderWidth="0"
+                        CornerRadius="0"
+                        Padding="0"
+                        Text=""
+                        CommandParameter="prev"
+                        Pressed="OnNavigationZonePressed"
+                        Released="OnNavigationZoneReleased"/>
+                <Button Grid.Column="1"
+                        BackgroundColor="Transparent"
+                        BorderWidth="0"
+                        CornerRadius="0"
+                        Padding="0"
+                        Text=""
+                        CommandParameter="next"
+                        Pressed="OnNavigationZonePressed"
+                        Released="OnNavigationZoneReleased"/>
+            </Grid>
+
+            <ActivityIndicator IsVisible="{Binding IsLoading}"
+                               IsRunning="{Binding IsLoading}"
+                               Color="White"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center"/>
+        </Grid>
+
+        <Border Grid.Row="2"
+                IsVisible="{Binding HasLink}"
+                StrokeThickness="0"
+                StrokeShape="RoundRectangle 14"
+                BackgroundColor="#1FFFFFFF"
+                Padding="14,12">
+            <Border.GestureRecognizers>
+                <TapGestureRecognizer Command="{Binding OpenLinkCommand}"/>
+            </Border.GestureRecognizers>
+            <HorizontalStackLayout Spacing="8" HorizontalOptions="Center">
+                <Label Text="Siteye Git"
+                       FontFamily="JakartaBold"
+                       FontSize="14"
+                       TextColor="White"/>
+                <Label Text=">"
+                       FontFamily="JakartaBold"
+                       FontSize="14"
+                       TextColor="White"/>
+            </HorizontalStackLayout>
+        </Border>
+    </Grid>
+</ContentPage>
