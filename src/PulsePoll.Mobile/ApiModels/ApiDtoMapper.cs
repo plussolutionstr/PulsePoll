@@ -24,7 +24,7 @@ public static class ApiDtoMapper
             dto.CoverImageUrl ?? "",
             dto.Name,
             dto.Description ?? "",
-            "",
+            dto.Category ?? "",
             dto.Reward,
             dto.EstimatedMinutes,
             0,

@@ -134,19 +134,23 @@
                                             HorizontalOptions="Start" VerticalOptions="End"
                                             Margin="20,0,0,-30"/>
 
-                                    <!-- Dark band (about 1/5 of card height) -->
-                                    <Border StrokeThickness="0"
-                                            StrokeShape="RoundRectangle 0"
-                                            VerticalOptions="End"
-                                            HeightRequest="34"
-                                            BackgroundColor="#D311062C"/>
+                                    <!-- Soft bottom fade for title readability -->
+                                    <BoxView VerticalOptions="End"
+                                             HeightRequest="78">
+                                        <BoxView.Background>
+                                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                                <GradientStop Color="#00151235" Offset="0"/>
+                                                <GradientStop Color="#CC151235" Offset="1"/>
+                                            </LinearGradientBrush>
+                                        </BoxView.Background>
+                                    </BoxView>
 
                                     <!-- Text content -->
                                     <VerticalStackLayout Spacing="4"
                                                          VerticalOptions="End"
                                                          Padding="16,0,16,8">
                                         <Label Text="{Binding Title}"
-                                               FontFamily="JakartaExtraBold" FontSize="18"
+                                               FontFamily="JakartaExtraBold" FontSize="15"
                                                TextColor="White"
                                                LineHeight="1.35"/>
                                     </VerticalStackLayout>
@@ -273,6 +277,7 @@
                                                 StrokeShape="RoundRectangle 8"
                                                 BackgroundColor="{StaticResource PrimaryLight}"
                                                 Padding="10,4"
+                                                IsVisible="{Binding HasCategory}"
                                                 HorizontalOptions="End">
                                             <Label Text="{Binding Category}"
                                                    FontFamily="JakartaSemiBold" FontSize="11"

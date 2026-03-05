@@ -11,6 +11,7 @@ public class ProjectConfiguration : IEntityTypeConfiguration<Project>
         builder.Property(p => p.Code).IsRequired().HasMaxLength(50);
         builder.Property(p => p.Name).IsRequired().HasMaxLength(200);
         builder.Property(p => p.Description).HasMaxLength(1000);
+        builder.Property(p => p.Category).HasMaxLength(100);
         builder.Property(p => p.SurveyUrl).IsRequired().HasMaxLength(2000);
         builder.Property(p => p.SubjectParameterName).IsRequired().HasMaxLength(100);
         builder.Property(p => p.CustomerBriefing).HasMaxLength(2000);

@@ -22,7 +22,7 @@ public partial class HomePage : ContentPage
 
         if (_viewModel.Stories.Count == 0)
             await _viewModel.LoadDataCommand.ExecuteAsync(null);
-        else
+        else if (_viewModel.NeedsRefreshOnReturn)
             await _viewModel.RefreshCommand.ExecuteAsync(null);
     }
 

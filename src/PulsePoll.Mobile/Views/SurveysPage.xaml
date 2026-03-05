@@ -69,7 +69,8 @@
                                 </HorizontalStackLayout>
 
                                 <Border StrokeThickness="0" StrokeShape="RoundRectangle 8"
-                                        BackgroundColor="{StaticResource PrimaryLight}" Padding="10,4" HorizontalOptions="Start">
+                                        BackgroundColor="{StaticResource PrimaryLight}" Padding="10,4" HorizontalOptions="Start"
+                                        IsVisible="{Binding HasCategory}">
                                     <Label Text="{Binding Category}" FontFamily="JakartaMedium" FontSize="11"
                                            TextColor="{StaticResource PrimaryPurple}"/>
                                 </Border>

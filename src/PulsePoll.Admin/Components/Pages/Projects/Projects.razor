@@ -38,6 +38,7 @@
         <Columns>
             <DxGridDataColumn FieldName="Code" Caption="Kod" Width="90px" />
             <DxGridDataColumn FieldName="Name" Caption="Ad" />
+            <DxGridDataColumn FieldName="Category" Caption="Kategori" Width="130px" />
             <DxGridDataColumn FieldName="CustomerShortName" Caption="Müşteri" Width="130px" />
             <DxGridDataColumn FieldName="ParticipantCount" Caption="Katılımcı" Width="100px" />
             <DxGridDataColumn FieldName="TotalTargetCount" Caption="Hedef" Width="100px" />
@@ -165,6 +166,10 @@
             <DxFormLayoutItem ColSpanMd="7">
                 <label class="form-label">Ad *</label>
                 <DxTextBox @bind-Text="_form.Name" />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanMd="6">
+                <label class="form-label">Kategori</label>
+                <DxTextBox @bind-Text="_form.Category" NullText="Örn: Teknoloji" />
             </DxFormLayoutItem>
             <DxFormLayoutItem ColSpanMd="12">
                 <label class="form-label">Açıklama</label>
@@ -394,6 +399,7 @@
             Code = dto.Code,
             Name = dto.Name,
             Description = dto.Description,
+            Category = dto.Category,
             ParticipantCount = dto.ParticipantCount,
             TotalTargetCount = dto.TotalTargetCount,
             DurationDays = dto.DurationDays,
@@ -434,6 +440,7 @@
             Code = string.Empty,
             Name = $"{dto.Name} - Kopyası",
             Description = dto.Description,
+            Category = dto.Category,
             ParticipantCount = dto.ParticipantCount,
             TotalTargetCount = dto.TotalTargetCount,
             DurationDays = dto.DurationDays,
@@ -494,6 +501,7 @@
                     _form.Code.Trim(),
                     _form.Name.Trim(),
                     _form.Description?.Trim(),
+                    _form.Category?.Trim(),
                     _form.ParticipantCount,
                     _form.TotalTargetCount,
                     _form.DurationDays,
@@ -520,6 +528,7 @@
                 var dto = new UpdateProjectDto(
                     _form.Name.Trim(),
                     _form.Description?.Trim(),
+                    _form.Category?.Trim(),
                     _form.ParticipantCount,
                     _form.TotalTargetCount,
                     _form.DurationDays,
@@ -669,6 +678,7 @@
         public string Code { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
         public string? Description { get; set; }
+        public string? Category { get; set; }
         public int ParticipantCount { get; set; }
         public int TotalTargetCount { get; set; }
         public int DurationDays { get; set; }

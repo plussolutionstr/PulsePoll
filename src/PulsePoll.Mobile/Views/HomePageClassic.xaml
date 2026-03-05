@@ -176,6 +176,7 @@
                                         StrokeShape="RoundRectangle 8"
                                         BackgroundColor="{StaticResource PrimaryLight}"
                                         Padding="10,4"
+                                        IsVisible="{Binding HasCategory}"
                                         HorizontalOptions="Start">
                                     <Label Text="{Binding Category}"
                                            FontFamily="JakartaMedium" FontSize="11"
