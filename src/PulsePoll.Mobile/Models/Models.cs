@@ -138,6 +138,13 @@ public record TransactionModel(
     string UnitLabel = "Poll")
 {
     public string AmountDisplay => $"{Amount:+0.##;-0.##;0} {UnitLabel}";
+    public string IconGlyph => IsIncome ? "↓" : "↑";
+    public Color IconColor => IsIncome
+        ? (Application.Current!.Resources.TryGetValue("Success", out var s) ? (Color)s : Colors.Green)
+        : (Application.Current!.Resources.TryGetValue("PrimaryPurple", out var p) ? (Color)p : Colors.Purple);
+    public Color IconBgColor => IsIncome
+        ? (Application.Current!.Resources.TryGetValue("SuccessLight", out var s) ? (Color)s : Colors.LightGreen)
+        : (Application.Current!.Resources.TryGetValue("PrimaryLight", out var p) ? (Color)p : Colors.Lavender);
 }
 
 public record NotificationModel(

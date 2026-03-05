@@ -129,9 +129,10 @@
                                 <Border StrokeThickness="0"
                                         StrokeShape="RoundRectangle 20"
                                         HeightRequest="40" WidthRequest="40"
-                                        BackgroundColor="{StaticResource PrimaryLight}">
-                                    <Image Source="icon_money.png"
-                                           HeightRequest="18" WidthRequest="18"
+                                        BackgroundColor="{Binding IconBgColor}">
+                                    <Label Text="{Binding IconGlyph}"
+                                           FontFamily="JakartaBold" FontSize="20"
+                                           TextColor="{Binding IconColor}"
                                            HorizontalOptions="Center" VerticalOptions="Center"/>
                                 </Border>
                                 <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
