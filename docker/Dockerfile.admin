@@ -24,8 +24,15 @@ COPY src/PulsePoll.Application/ src/PulsePoll.Application/
 COPY src/PulsePoll.Infrastructure/ src/PulsePoll.Infrastructure/
 COPY src/PulsePoll.Admin/ src/PulsePoll.Admin/
 
-RUN dotnet publish src/PulsePoll.Admin/PulsePoll.Admin.csproj -c Release -o /app/publish --no-restore \
+RUN dotnet publish src/PulsePoll.Admin/PulsePoll.Admin.csproj -c Release -o /app/publish \
     /p:PublishStaticWebAssets=true
+
+# Debug: check publish output
+RUN echo "=== PUBLISH ROOT ===" && ls -la /app/publish/ && \
+    echo "=== WWWROOT ===" && ls -la /app/publish/wwwroot/ 2>/dev/null || echo "NO wwwroot" && \
+    echo "=== FRAMEWORK ===" && ls -la /app/publish/wwwroot/_framework/ 2>/dev/null || echo "NO _framework" && \
+    echo "=== ENDPOINTS JSON ===" && find /app/publish -name "*.endpoints.json" 2>/dev/null || echo "NO endpoints json" && \
+    echo "=== BLAZOR.WEB.JS ===" && find /app/publish -name "blazor.web.js" 2>/dev/null || echo "NO blazor.web.js"
 
 FROM base AS final
 WORKDIR /app
