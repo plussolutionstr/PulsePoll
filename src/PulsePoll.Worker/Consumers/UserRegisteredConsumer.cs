@@ -106,7 +106,7 @@ public class SubjectRegisteredConsumer(
         await mailService.SendAsync(
             msg.Email,
             "PulsePoll'a Hoşgeldiniz!",
-            $"<h1>Merhaba {msg.FirstName},</h1><p>Hesabınız incelemeye alındı. Onaylandığında size bildireceğiz.</p>");
+            $"<h1>Merhaba {msg.FirstName},</h1><p>Hesabınız oluşturuldu ve aktif edildi.</p>");
 
         logger.LogInformation("Denek kaydı tamamlandı: {SubjectId}", subject.Id);
     }
