@@ -155,6 +155,17 @@ public partial class StoryViewerViewModel : ObservableObject
         {
             await Browser.Default.OpenAsync(uri, BrowserLaunchMode.SystemPreferred);
         }
+        catch
+        {
+            try
+            {
+                await Launcher.Default.OpenAsync(uri);
+            }
+            catch
+            {
+                await Shell.Current.DisplayAlertAsync("Hata", "Bu bağlantı açılamıyor.", "Tamam");
+            }
+        }
         finally
         {
             ResumeProgress();
