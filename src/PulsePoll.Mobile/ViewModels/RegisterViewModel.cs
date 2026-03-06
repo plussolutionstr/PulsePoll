@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Text.RegularExpressions;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -272,8 +273,9 @@ public partial class RegisterViewModel : ObservableObject
             KvkkText = content?.KvkkText ?? "KVKK metni yüklenemedi.";
             CurrentStep = 3;
         }
-        catch
+        catch (Exception ex)
         {
+            Debug.WriteLine($"[Register] KVKK load failed: {ex.Message}");
             KvkkText = "KVKK metni yüklenemedi.";
             CurrentStep = 3;
         }

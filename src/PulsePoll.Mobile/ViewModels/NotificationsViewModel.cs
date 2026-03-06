@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PulsePoll.Mobile.Models;
@@ -112,8 +113,9 @@ public partial class NotificationsViewModel : ObservableObject
             {
                 await _notificationCenter.MarkOneReadAsync(notification.Id);
             }
-            catch
+            catch (Exception ex)
             {
+                Debug.WriteLine($"[Notifications] MarkRead failed: {ex.Message}");
                 failCount++;
             }
         }
@@ -153,8 +155,9 @@ public partial class NotificationsViewModel : ObservableObject
             {
                 await _notificationCenter.DeleteAsync(notification.Id);
             }
-            catch
+            catch (Exception ex)
             {
+                Debug.WriteLine($"[Notifications] Delete failed: {ex.Message}");
                 failCount++;
             }
         }
@@ -199,7 +202,7 @@ public partial class NotificationsViewModel : ObservableObject
         {
             await _notificationCenter.MarkOneReadAsync(notification.Id);
         }
-        catch { }
+        catch (Exception ex) { Debug.WriteLine($"[Notifications] MarkOneRead failed: {ex.Message}"); }
     }
 
     private void ApplyFilter()
