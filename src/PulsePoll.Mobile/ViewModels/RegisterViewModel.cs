@@ -306,7 +306,10 @@ public partial class RegisterViewModel : ObservableObject
                 http.Timeout = TimeSpan.FromSeconds(5);
                 ip = (await http.GetStringAsync("https://api.ipify.org")).Trim();
             }
-            catch { /* IP alınamazsa devam et */ }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[Register] Public IP fetch failed: {ex.Message}");
+            }
 
             var deviceInfo = $"{DeviceInfo.Manufacturer} {DeviceInfo.Model} - {DeviceInfo.Platform} {DeviceInfo.VersionString} | IP: {ip}";
 

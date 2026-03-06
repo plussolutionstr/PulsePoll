@@ -34,8 +34,8 @@ public class SubjectRegisteredConsumer(
         if (sesId is null)
             logger.LogWarning("SES hesaplanamadı: {Email}", msg.Email);
 
-        // TODO: LSM hesaplaması — formül gelince eklenecek
-        const int lsmId = 1;
+        // LSM anketi devrede olmadığı için şimdilik varsayılan seviye atanır.
+        const int defaultLsmId = 1;
 
         var subject = new Subject
         {
@@ -58,7 +58,7 @@ public class SubjectRegisteredConsumer(
             HeadOfFamilyProfessionId = msg.HeadOfFamilyProfessionId,
             HeadOfFamilyEducationLevelId = msg.HeadOfFamilyEducationLevelId,
             SocioeconomicStatusId = sesId ?? 1,
-            LSMSocioeconomicStatusId = lsmId,
+            LSMSocioeconomicStatusId = defaultLsmId,
             ReferenceCode = msg.ReferenceCode,
             ReferralCode = ReferralCodeGenerator.Generate(),
             SpecialCodeId = msg.SpecialCodeId,

@@ -2,7 +2,7 @@
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
-  <!-- EF Core (10.0.1 — EFCore.NamingConventions 10.0.1 ile uyumlu) -->
+  <!-- EF Core -->
   <ItemGroup>
     <PackageVersion Include="EFCore.NamingConventions" Version="10.0.1" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.1" />
@@ -20,11 +20,11 @@
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.3" />
     <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.3" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.3" />
-    <PackageVersion Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Debug" Version="10.0.3" />
   </ItemGroup>
   <!-- MassTransit -->
   <ItemGroup>
-    <PackageVersion Include="MassTransit.RabbitMQ" Version="8.5.8" />
+    <PackageVersion Include="MassTransit.RabbitMQ" Version="9.0.1" />
   </ItemGroup>
   <!-- Hangfire -->
   <ItemGroup>
@@ -33,9 +33,9 @@
   </ItemGroup>
   <!-- Serilog -->
   <ItemGroup>
-    <PackageVersion Include="Serilog.AspNetCore" Version="9.0.0" />
-    <PackageVersion Include="Serilog.Extensions.Hosting" Version="9.0.0" />
-    <PackageVersion Include="Serilog.Settings.Configuration" Version="9.0.0" />
+    <PackageVersion Include="Serilog.AspNetCore" Version="10.0.0" />
+    <PackageVersion Include="Serilog.Extensions.Hosting" Version="10.0.0" />
+    <PackageVersion Include="Serilog.Settings.Configuration" Version="10.0.0" />
     <PackageVersion Include="Serilog.Sinks.Console" Version="6.1.1" />
     <PackageVersion Include="Serilog.Sinks.Seq" Version="9.0.0" />
   </ItemGroup>
@@ -45,7 +45,7 @@
   </ItemGroup>
   <!-- Storage & Cache -->
   <ItemGroup>
-    <PackageVersion Include="Minio" Version="6.0.5" />
+    <PackageVersion Include="Minio" Version="7.0.0" />
     <PackageVersion Include="StackExchange.Redis" Version="2.11.8" />
   </ItemGroup>
   <!-- Firebase -->
@@ -54,16 +54,15 @@
   </ItemGroup>
   <!-- Validation -->
   <ItemGroup>
-    <PackageVersion Include="FluentValidation" Version="11.12.0" />
-    <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="11.12.0" />
+    <PackageVersion Include="FluentValidation" Version="12.1.1" />
   </ItemGroup>
   <!-- API -->
   <ItemGroup>
-    <PackageVersion Include="Swashbuckle.AspNetCore" Version="7.3.2" />
+    <PackageVersion Include="Swashbuckle.AspNetCore" Version="10.1.4" />
   </ItemGroup>
   <!-- Admin -->
   <ItemGroup>
-    <PackageVersion Include="DevExpress.Blazor" Version="25.2.4" />
+    <PackageVersion Include="DevExpress.Blazor" Version="25.2.5" />
   </ItemGroup>
   <!-- MAUI — Firebase (Android) -->
   <ItemGroup>
@@ -79,10 +78,10 @@
   </ItemGroup>
   <!-- Test -->
   <ItemGroup>
-    <PackageVersion Include="FluentAssertions" Version="6.12.1" />
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
+    <PackageVersion Include="FluentAssertions" Version="8.8.0" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
     <PackageVersion Include="Moq" Version="4.20.72" />
     <PackageVersion Include="xunit" Version="2.9.3" />
-    <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
   </ItemGroup>
 </Project>

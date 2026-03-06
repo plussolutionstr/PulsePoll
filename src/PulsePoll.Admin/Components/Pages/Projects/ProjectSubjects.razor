@@ -3,7 +3,7 @@
 @using System.Security.Claims
 @using PulsePoll.Application.Extensions
 @implements IDisposable
-@inject IDbContextFactory<AppDbContext> ContextFactory
+@inject IAdminGridDataService AdminGridDataService
 @inject IAdminAssignmentService AssignmentService
 @inject IProjectService ProjectService
 @inject IAppToastService Toast
@@ -59,7 +59,6 @@
                     <DxFilterBuilderField FieldName="HeadOfFamilyProfession.Name" Caption="A.R. Meslek" Type="@typeof(string)"/>
                     <DxFilterBuilderField FieldName="HeadOfFamilyEducationLevel.Name" Caption="A.R. Eğitim" Type="@typeof(string)"/>
                     <DxFilterBuilderField FieldName="SocioeconomicStatus.Code" Caption="SES" Type="@typeof(string)"/>
-                    <DxFilterBuilderField FieldName="LSMSocioeconomicStatus.Code" Caption="LSM SES" Type="@typeof(string)"/>
                     <DxFilterBuilderField FieldName="ReferenceCode" Caption="Referans Kodu" Type="@typeof(string)"/>
                     <DxFilterBuilderField FieldName="ReferralCode" Caption="Davet Kodu" Type="@typeof(string)"/>
 
@@ -215,8 +214,6 @@
                             <DxGridDataColumn FieldName="HeadOfFamilyProfession.Name" Caption="A.R. Meslek" Width="140px"/>
                             <DxGridDataColumn FieldName="HeadOfFamilyEducationLevel.Name" Caption="A.R. Eğitim" Width="140px"/>
                             <DxGridDataColumn FieldName="SocioeconomicStatus.Code" Caption="SES" Width="65px"
-                                              TextAlignment="GridTextAlignment.Center"/>
-                            <DxGridDataColumn FieldName="LSMSocioeconomicStatus.Code" Caption="LSM SES" Width="80px"
                                               TextAlignment="GridTextAlignment.Center"/>
                             <DxGridDataColumn Caption="Banka Hesapları" Width="220px">
                                 <CellDisplayTemplate>
@@ -517,7 +514,6 @@
     private DxGrid? _grid;
     private DxGrid? _assignmentsGrid;
 
-    private AppDbContext? _context;
     private GridDevExtremeDataSource<Subject>? _dataSource;
 
     private string _projectName = string.Empty;
@@ -585,30 +581,9 @@
         _rewardUnitLabel = string.IsNullOrWhiteSpace(project.RewardUnitLabel) ? "TL" : project.RewardUnitLabel;
         _projectStatus = project.Status;
 
-        await using (var bankContext = await ContextFactory.CreateDbContextAsync())
-        {
-            var bankAccounts = await bankContext.BankAccounts
-                .Where(b => b.DeletedAt == null)
-                .OrderByDescending(b => b.IsDefault)
-                .ThenBy(b => b.CreatedAt)
-                .AsNoTracking()
-                .ToListAsync();
-            _bankAccountMap = bankAccounts
-                .GroupBy(b => b.SubjectId)
-                .ToDictionary(g => g.Key, g => g.ToList());
-        }
+        _bankAccountMap = await AdminGridDataService.GetBankAccountsBySubjectAsync();
 
-        _context = await ContextFactory.CreateDbContextAsync();
-        var query = _context.Subjects
-            .Include(s => s.City)
-            .Include(s => s.District)
-            .Include(s => s.Profession)
-            .Include(s => s.EducationLevel)
-            .Include(s => s.HeadOfFamilyProfession)
-            .Include(s => s.HeadOfFamilyEducationLevel)
-            .Include(s => s.SocioeconomicStatus)
-            .Include(s => s.LSMSocioeconomicStatus)
-            .AsNoTracking();
+        var query = AdminGridDataService.GetSubjectsQuery(includeScoreSnapshot: false);
         _dataSource = new GridDevExtremeDataSource<Subject>(query);
 
         await LoadAssignmentsAsync();
@@ -1122,6 +1097,5 @@
     {
         _pollCts?.Cancel();
         _pollCts?.Dispose();
-        _context?.Dispose();
     }
 }

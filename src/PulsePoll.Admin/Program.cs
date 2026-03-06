@@ -1,6 +1,5 @@
 using System.Security.Claims;
 using System.Net;
-using System.Net.Sockets;
 using System.Threading.RateLimiting;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
@@ -228,52 +227,7 @@ public record LoginRequest(string Email, string Password, bool RememberMe = fals
 static class IpResolver
 {
     public static string ResolveClientIp(HttpContext ctx)
-    {
-        var remoteIp = ctx.Connection.RemoteIpAddress;
-
-        // Trust X-Forwarded-For only when request comes from a private/loopback proxy.
-        if (IsPrivateOrLoopback(remoteIp))
-        {
-            var xff = ctx.Request.Headers["X-Forwarded-For"].ToString();
-            if (!string.IsNullOrWhiteSpace(xff))
-            {
-                var first = xff
-                    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                    .FirstOrDefault();
-
-                if (!string.IsNullOrWhiteSpace(first) && IPAddress.TryParse(first, out var forwardedIp))
-                    return forwardedIp.ToString();
-            }
-        }
-
-        return remoteIp?.ToString() ?? "unknown";
-    }
-
-    private static bool IsPrivateOrLoopback(IPAddress? ip)
-    {
-        if (ip is null)
-            return false;
-
-        if (IPAddress.IsLoopback(ip))
-            return true;
-
-        if (ip.IsIPv4MappedToIPv6)
-            ip = ip.MapToIPv4();
-
-        if (ip.AddressFamily == AddressFamily.InterNetwork)
-        {
-            var bytes = ip.GetAddressBytes();
-            return bytes[0] == 10
-                   || (bytes[0] == 172 && bytes[1] is >= 16 and <= 31)
-                   || (bytes[0] == 192 && bytes[1] == 168)
-                   || bytes[0] == 127;
-        }
-
-        if (ip.AddressFamily == AddressFamily.InterNetworkV6)
-            return ip.IsIPv6LinkLocal || ip.IsIPv6SiteLocal || ip.IsIPv6UniqueLocal;
-
-        return false;
-    }
+        => ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown";
 }
 
 static class ReturnUrlSafety
