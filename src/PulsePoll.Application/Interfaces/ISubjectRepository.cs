@@ -14,6 +14,7 @@ public interface ISubjectRepository
     Task AddAsync(Subject subject);
     Task UpdateAsync(Subject subject);
     Task<List<Subject>> GetAllAsync();
+    Task<List<Subject>> GetByIdsAsync(List<int> ids);
     Task<List<int>> GetAllIdsAsync();
     Task<Dictionary<int, string>> GetFcmTokensByIdsAsync(IEnumerable<int> subjectIds);
     Task<List<Referral>> GetReferralsAsync(int referrerId);

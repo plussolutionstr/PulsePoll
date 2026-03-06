@@ -151,8 +151,7 @@ public class SubjectService(
     public async Task SendBulkSmsAsync(IEnumerable<int> subjectIds, string message, int sentByAdminId)
     {
         var ids = subjectIds.ToList();
-        var subjects = await repository.GetAllAsync();
-        var targets = subjects.Where(s => ids.Contains(s.Id)).ToList();
+        var targets = await repository.GetByIdsAsync(ids);
 
         foreach (var s in targets)
             await publisher.PublishAsync(

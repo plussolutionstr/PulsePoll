@@ -492,35 +492,19 @@ public class WalletService(
         var rewardUnit = await rewardUnitConfigService.GetAsync();
 
         var skip = (page - 1) * pageSize;
-        var transactions = await walletRepository.GetTransactionsAsync(wallet.Id, skip, pageSize);
+        var ledgerRows = await walletRepository.GetLedgerWithBalanceAsync(wallet.Id, skip, pageSize);
 
-        // Calculate cumulative balance from oldest to newest
-        var allTransactions = await walletRepository.GetTransactionsAsync(wallet.Id, 0, int.MaxValue);
-        var orderedAll = allTransactions.OrderBy(t => t.CreatedAt).ToList();
-
-        decimal runningBalance = wallet.Balance;
-        var balanceMap = new Dictionary<int, decimal>();
-
-        foreach (var txn in orderedAll.AsEnumerable().Reverse())
-        {
-            balanceMap[txn.Id] = runningBalance;
-            var amount = txn.Type == WalletTransactionType.Credit ? txn.Amount : -txn.Amount;
-            runningBalance -= amount;
-        }
-
-        // Return page results with cumulative balance
-        return transactions
-            .Select(t => new WalletLedgerDto(
-                t.Id,
-                t.Amount,
-                t.Type,
-                NormalizeDescription(t.Description),
-                t.CreatedAt,
-                balanceMap.GetValueOrDefault(t.Id, wallet.Balance),
-                IsManualReference(t.ReferenceId),
+        return ledgerRows
+            .Select(r => new WalletLedgerDto(
+                r.Transaction.Id,
+                r.Transaction.Amount,
+                r.Transaction.Type,
+                NormalizeDescription(r.Transaction.Description),
+                r.Transaction.CreatedAt,
+                r.RunningBalance,
+                IsManualReference(r.Transaction.ReferenceId),
                 rewardUnit.UnitLabel
             ))
-            .OrderByDescending(t => t.CreatedAt)
             .ToList();
     }
 
