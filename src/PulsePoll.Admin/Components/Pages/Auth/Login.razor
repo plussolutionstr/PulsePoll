@@ -29,6 +29,7 @@
             }
 
             <EditForm Model="_model" OnValidSubmit="HandleLogin">
+                <AntiforgeryToken />
                 <DataAnnotationsValidator />
 
                 <div class="login-field">

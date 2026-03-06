@@ -111,8 +111,6 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
     options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-    options.KnownIPNetworks.Clear();
-    options.KnownProxies.Clear();
 });
 
 var app = builder.Build();
@@ -190,7 +188,7 @@ app.MapPost("/api/auth/login", async (
         success = true,
         redirectUrl = ReturnUrlSafety.Normalize(request.ReturnUrl)
     });
-}).AllowAnonymous().DisableAntiforgery().RequireRateLimiting("admin-login");
+}).AllowAnonymous().RequireRateLimiting("admin-login");
 
 // Logout endpoint
 app.MapGet("/logout", async (HttpContext httpContext) =>
