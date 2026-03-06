@@ -23,7 +23,6 @@ public class AuthService(
     IValidator<RegisterSubjectDto> registerValidator,
     ILogger<AuthService> logger) : IAuthService
 {
-    private static string OtpKey(string phone)           => $"otp:{phone}";
     private static string RegTokenKey(string token)       => $"reg:{token}";
     private static string SessionKey(int subjectId)       => $"session:{subjectId}";
     private static string BlacklistKey(string phone)      => $"otp:blacklist:{phone}";
@@ -56,8 +55,7 @@ public class AuthService(
             throw new BusinessException("BLACKLISTED", "Çok fazla OTP isteği gönderildi. Numara kara listeye alındı.");
         }
 
-        var otp = await smsService.SendOtpAsync(phone);
-        await cache.SetAsync(otp, OtpKey(phone), TimeSpan.FromMinutes(5));
+        await smsService.SendOtpAsync(phone);
 
         logger.LogInformation("OTP gönderildi: {PhoneNumber} (deneme: {Attempt}/{Max})", phone, attempts, MaxOtpRequestsPerHour);
     }
@@ -69,16 +67,15 @@ public class AuthService(
         if (await cache.ExistsAsync(BlacklistKey(phone)))
             throw new BusinessException("BLACKLISTED", "Bu numara kara listeye alınmıştır. Lütfen destek ile iletişime geçin.");
 
-        var stored = await cache.GetAsync<string>(OtpKey(phone));
+        var verified = await smsService.VerifyOtpAsync(phone, otp);
 
-        if (stored is null || stored != otp)
+        if (!verified)
         {
             var fails = await cache.IncrementAsync(VerifyFailKey(phone), TimeSpan.FromMinutes(15));
 
             if (fails >= MaxVerifyFailsPerWindow)
             {
                 await cache.SetAsync(true, BlacklistKey(phone));
-                await cache.RemoveAsync(OtpKey(phone));
                 logger.LogWarning("OTP doğrulama limiti aşıldı, kara listeye alındı: {PhoneNumber}", phone);
                 throw new BusinessException("BLACKLISTED", "Çok fazla hatalı OTP denemesi. Numara kara listeye alındı.");
             }
@@ -86,7 +83,6 @@ public class AuthService(
             throw new BusinessException("INVALID_OTP", "Geçersiz veya süresi dolmuş OTP.");
         }
 
-        await cache.RemoveAsync(OtpKey(phone));
         await cache.RemoveAsync(VerifyFailKey(phone));
 
         var token = Guid.NewGuid().ToString("N");
@@ -255,8 +251,7 @@ public class AuthService(
         if (attempts > MaxOtpRequestsPerHour)
             throw new BusinessException("TOO_MANY_REQUESTS", "Çok fazla istek gönderildi. Lütfen daha sonra tekrar deneyin.");
 
-        var otpCode = await smsService.SendOtpAsync(phone);
-        await cache.SetAsync(otpCode, OtpKey(phone), TimeSpan.FromMinutes(5));
+        await smsService.SendOtpAsync(phone);
 
         logger.LogInformation("Şifre sıfırlama OTP gönderildi: {PhoneNumber}", phone);
     }

@@ -11,7 +11,7 @@ public class MockSmsService(
 {
     private const string FixedOtp = "123456";
 
-    public async Task<string> SendOtpAsync(string phoneNumber)
+    public async Task SendOtpAsync(string phoneNumber)
     {
         logger.LogInformation("[MOCK SMS] {PhoneNumber} → OTP: {Otp}", phoneNumber, FixedOtp);
 
@@ -24,8 +24,14 @@ public class MockSmsService(
         };
         log.SetCreated(0);
         await smsLogRepository.AddAsync(log);
+    }
 
-        return FixedOtp;
+    public Task<bool> VerifyOtpAsync(string phoneNumber, string code)
+    {
+        var result = code == FixedOtp;
+        logger.LogInformation("[MOCK SMS] {PhoneNumber} → OTP doğrulama: {Code} = {Result}",
+            phoneNumber, code, result);
+        return Task.FromResult(result);
     }
 
     public Task SendAsync(string phoneNumber, string message,

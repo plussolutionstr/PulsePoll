@@ -133,7 +133,17 @@ public static class DependencyInjection
         // Notifications
         services.AddSingleton<FcmPushService>();
         services.AddSingleton<SmtpMailService>();
-        services.AddScoped<ISmsService, MockSmsService>();
+
+        var twilioSection = config.GetSection(TwilioSettings.SectionName);
+        if (twilioSection.Exists() && !string.IsNullOrEmpty(twilioSection["AccountSid"]))
+        {
+            services.Configure<TwilioSettings>(twilioSection);
+            services.AddScoped<ISmsService, TwilioSmsService>();
+        }
+        else
+        {
+            services.AddScoped<ISmsService, MockSmsService>();
+        }
 
         return services;
     }

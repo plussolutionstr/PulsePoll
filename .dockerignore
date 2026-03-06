@@ -1,0 +1,14 @@
+**/bin/
+**/obj/
+**/.vs/
+**/.idea/
+**/node_modules/
+**/.git/
+**/.gitignore
+**/Thumbs.db
+**/.DS_Store
+src/PulsePoll.Mobile/
+src/PulsePoll.Tests/
+tests/
+*.md
+*.sln.DotSettings*

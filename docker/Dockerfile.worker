@@ -1,0 +1,27 @@
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-preview AS base
+WORKDIR /app
+
+FROM mcr.microsoft.com/dotnet/sdk:10.0-preview AS build
+WORKDIR /src
+
+COPY docker/nuget.config /src/nuget.config
+COPY Directory.Packages.props .
+COPY PulsePoll.sln .
+COPY src/PulsePoll.Domain/PulsePoll.Domain.csproj src/PulsePoll.Domain/
+COPY src/PulsePoll.Application/PulsePoll.Application.csproj src/PulsePoll.Application/
+COPY src/PulsePoll.Infrastructure/PulsePoll.Infrastructure.csproj src/PulsePoll.Infrastructure/
+COPY src/PulsePoll.Worker/PulsePoll.Worker.csproj src/PulsePoll.Worker/
+
+RUN dotnet restore src/PulsePoll.Worker/PulsePoll.Worker.csproj --configfile nuget.config
+
+COPY src/PulsePoll.Domain/ src/PulsePoll.Domain/
+COPY src/PulsePoll.Application/ src/PulsePoll.Application/
+COPY src/PulsePoll.Infrastructure/ src/PulsePoll.Infrastructure/
+COPY src/PulsePoll.Worker/ src/PulsePoll.Worker/
+
+RUN dotnet publish src/PulsePoll.Worker/PulsePoll.Worker.csproj -c Release -o /app/publish --no-restore
+
+FROM base AS final
+WORKDIR /app
+COPY --from=build /app/publish .
+ENTRYPOINT ["dotnet", "PulsePoll.Worker.dll"]

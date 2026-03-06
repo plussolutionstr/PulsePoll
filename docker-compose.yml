@@ -1,0 +1,218 @@
+services:
+  # ── Infrastructure ──
+  postgres:
+    image: postgres:16-alpine
+    container_name: pulsepoll-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-pulsepoll}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD required}
+      POSTGRES_DB: ${POSTGRES_DB:-pulsepoll_db}
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pulsepoll}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - pulsepoll-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: pulsepoll-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:?REDIS_PASSWORD required}
+    ports:
+      - "127.0.0.1:6380:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - pulsepoll-net
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: pulsepoll-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-pulsepoll}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?RABBITMQ_PASSWORD required}
+    ports:
+      - "127.0.0.1:5673:5672"
+      - "127.0.0.1:15673:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - pulsepoll-net
+
+  minio:
+    image: minio/minio:latest
+    container_name: pulsepoll-minio
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: ${MINIO_USER:-pulsepoll}
+      MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD:?MINIO_PASSWORD required}
+    command: server /data --console-address ":9001"
+    ports:
+      - "127.0.0.1:9002:9000"
+      - "127.0.0.1:9003:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - pulsepoll-net
+
+  seq:
+    image: datalust/seq:latest
+    container_name: pulsepoll-seq
+    restart: unless-stopped
+    environment:
+      ACCEPT_EULA: "Y"
+    ports:
+      - "127.0.0.1:5342:80"
+    volumes:
+      - seq_data:/data
+    networks:
+      - pulsepoll-net
+
+  # ── Application ──
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+    container_name: pulsepoll-api
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__Postgres: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-pulsepoll_db};Username=${POSTGRES_USER:-pulsepoll};Password=${POSTGRES_PASSWORD}"
+      ConnectionStrings__Redis: "redis:6379,password=${REDIS_PASSWORD}"
+      RabbitMQ__Host: rabbitmq
+      RabbitMQ__VirtualHost: /
+      RabbitMQ__Username: ${RABBITMQ_USER:-pulsepoll}
+      RabbitMQ__Password: ${RABBITMQ_PASSWORD}
+      MinIO__Endpoint: minio:9000
+      MinIO__AccessKey: ${MINIO_USER:-pulsepoll}
+      MinIO__SecretKey: ${MINIO_PASSWORD}
+      MinIO__UseSSL: "false"
+      Jwt__SecretKey: ${JWT_SECRET:?JWT_SECRET required}
+      Jwt__Issuer: ${JWT_ISSUER:-https://api.pulsepoll.com}
+      Jwt__Audience: ${JWT_AUDIENCE:-https://pulsepoll.com}
+      Seq__ServerUrl: http://seq:80
+      Twilio__AccountSid: ${TWILIO_ACCOUNT_SID}
+      Twilio__AuthToken: ${TWILIO_AUTH_TOKEN}
+      Twilio__VerifyServiceSid: ${TWILIO_VERIFY_SERVICE_SID}
+      Twilio__FromNumber: ${TWILIO_FROM_NUMBER:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - pulsepoll-net
+
+  admin:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.admin
+    container_name: pulsepoll-admin
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__Postgres: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-pulsepoll_db};Username=${POSTGRES_USER:-pulsepoll};Password=${POSTGRES_PASSWORD}"
+      ConnectionStrings__Redis: "redis:6379,password=${REDIS_PASSWORD}"
+      RabbitMQ__Host: rabbitmq
+      RabbitMQ__VirtualHost: /
+      RabbitMQ__Username: ${RABBITMQ_USER:-pulsepoll}
+      RabbitMQ__Password: ${RABBITMQ_PASSWORD}
+      MinIO__Endpoint: minio:9000
+      MinIO__AccessKey: ${MINIO_USER:-pulsepoll}
+      MinIO__SecretKey: ${MINIO_PASSWORD}
+      MinIO__UseSSL: "false"
+      Jwt__SecretKey: ${JWT_SECRET}
+      Jwt__Issuer: ${JWT_ISSUER:-https://api.pulsepoll.com}
+      Jwt__Audience: ${JWT_AUDIENCE:-https://pulsepoll.com}
+      Seq__ServerUrl: http://seq:80
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - pulsepoll-net
+
+  worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.worker
+    container_name: pulsepoll-worker
+    restart: unless-stopped
+    environment:
+      ConnectionStrings__Postgres: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-pulsepoll_db};Username=${POSTGRES_USER:-pulsepoll};Password=${POSTGRES_PASSWORD}"
+      ConnectionStrings__Redis: "redis:6379,password=${REDIS_PASSWORD}"
+      RabbitMQ__Host: rabbitmq
+      RabbitMQ__VirtualHost: /
+      RabbitMQ__Username: ${RABBITMQ_USER:-pulsepoll}
+      RabbitMQ__Password: ${RABBITMQ_PASSWORD}
+      MinIO__Endpoint: minio:9000
+      MinIO__AccessKey: ${MINIO_USER:-pulsepoll}
+      MinIO__SecretKey: ${MINIO_PASSWORD}
+      MinIO__UseSSL: "false"
+      Seq__ServerUrl: http://seq:80
+      Twilio__AccountSid: ${TWILIO_ACCOUNT_SID}
+      Twilio__AuthToken: ${TWILIO_AUTH_TOKEN}
+      Twilio__VerifyServiceSid: ${TWILIO_VERIFY_SERVICE_SID}
+      Twilio__FromNumber: ${TWILIO_FROM_NUMBER:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - pulsepoll-net
+
+  nginx:
+    image: nginx:alpine
+    container_name: pulsepoll-nginx
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8090:80"
+    volumes:
+      - ./docker/nginx/pulsepoll.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - api
+      - admin
+    networks:
+      - pulsepoll-net
+
+volumes:
+  postgres_data:
+  redis_data:
+  rabbitmq_data:
+  minio_data:
+  seq_data:
+
+networks:
+  pulsepoll-net:
+    driver: bridge

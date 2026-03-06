@@ -3,10 +3,14 @@ namespace PulsePoll.Application.Interfaces;
 public interface ISmsService
 {
     /// <summary>
-    /// OTP gönderir ve gönderilen kodu döner.
-    /// Mock implementasyonu her zaman "123456" döner.
+    /// OTP gönderir (Twilio Verify veya Mock).
     /// </summary>
-    Task<string> SendOtpAsync(string phoneNumber);
+    Task SendOtpAsync(string phoneNumber);
+
+    /// <summary>
+    /// OTP doğrular. Başarısızsa false döner.
+    /// </summary>
+    Task<bool> VerifyOtpAsync(string phoneNumber, string code);
 
     /// <summary>
     /// Belirtilen numaraya serbest metin SMS gönderir ve kaydeder.
