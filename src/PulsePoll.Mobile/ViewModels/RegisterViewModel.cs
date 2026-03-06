@@ -98,8 +98,8 @@ public partial class RegisterViewModel : ObservableObject
     // Referans kodu
     [ObservableProperty] private string _referenceCode = string.Empty;
 
-    // District loading race condition guard
-    private int _lastRequestedCityId;
+    // District loading cancellation
+    private CancellationTokenSource? _districtCts;
 
     // Lookup collections
     [ObservableProperty] private ObservableCollection<LookupItemDto> _cities = [];
@@ -123,30 +123,31 @@ public partial class RegisterViewModel : ObservableObject
 
     public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
 
-    async partial void OnSelectedCityChanged(LookupItemDto? value)
+    partial void OnSelectedCityChanged(LookupItemDto? value)
     {
-        if (value is null) return;
-        var cityId = value.Id;
-        _lastRequestedCityId = cityId;
+        _ = LoadDistrictsAsync(value);
+    }
 
-        // Immediately clear district on UI thread before async call
-        MainThread.BeginInvokeOnMainThread(() =>
-        {
-            SelectedDistrict = null;
-            Districts.Clear();
-        });
+    private async Task LoadDistrictsAsync(LookupItemDto? city)
+    {
+        _districtCts?.Cancel();
+        _districtCts?.Dispose();
+        _districtCts = new CancellationTokenSource();
+        var token = _districtCts.Token;
+
+        SelectedDistrict = null;
+        Districts.Clear();
+
+        if (city is null) return;
 
         try
         {
-            var list = await _api.GetRegisterDistrictsAsync(cityId);
-            if (_lastRequestedCityId != cityId) return; // stale response
-            MainThread.BeginInvokeOnMainThread(() =>
-            {
-                Districts.Clear();
-                foreach (var item in list)
-                    Districts.Add(item);
-            });
+            var list = await _api.GetRegisterDistrictsAsync(city.Id, token);
+            if (token.IsCancellationRequested) return;
+            foreach (var item in list)
+                Districts.Add(item);
         }
+        catch (OperationCanceledException) { }
         catch (Exception ex)
         {
             ErrorMessage = ex.Message;

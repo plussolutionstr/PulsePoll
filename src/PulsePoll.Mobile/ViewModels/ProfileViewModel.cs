@@ -73,6 +73,7 @@ public partial class ProfileViewModel : ObservableObject
     public List<string> GsmOperatorOptions { get; } = ["Turkcell", "Vodafone", "Türk Telekom", "Diğer"];
 
     private ProfileApiDto? _currentProfile;
+    private CancellationTokenSource? _districtCts;
     private bool _isInitialLoad;
 
     partial void OnStatusMessageChanged(string value)
@@ -114,9 +115,12 @@ public partial class ProfileViewModel : ObservableObject
 
             _isInitialLoad = true;
 
-            Cities = new ObservableCollection<LookupItemDto>(cities);
-            Professions = new ObservableCollection<LookupItemDto>(professions);
-            EducationLevels = new ObservableCollection<LookupItemDto>(educationLevels);
+            Cities.Clear();
+            foreach (var c in cities) Cities.Add(c);
+            Professions.Clear();
+            foreach (var p in professions) Professions.Add(p);
+            EducationLevels.Clear();
+            foreach (var e in educationLevels) EducationLevels.Add(e);
 
             SelectedCity = cities.FirstOrDefault(c => c.Name == _currentProfile.CityName);
             SelectedProfession = professions.FirstOrDefault(p => p.Name == _currentProfile.ProfessionName);
@@ -125,7 +129,8 @@ public partial class ProfileViewModel : ObservableObject
             if (SelectedCity is not null)
             {
                 var districts = await _api.GetDistrictsAsync(SelectedCity.Id);
-                Districts = new ObservableCollection<LookupItemDto>(districts);
+                Districts.Clear();
+                foreach (var d in districts) Districts.Add(d);
                 SelectedDistrict = districts.FirstOrDefault(d => d.Name == _currentProfile.DistrictName);
             }
 
@@ -151,7 +156,12 @@ public partial class ProfileViewModel : ObservableObject
     {
         FullName = p.FullName;
         Initials = GetInitials(p.FirstName, p.LastName);
-        ProfilePhotoUrl = p.ProfilePhotoUrl;
+        var photoUrl = p.ProfilePhotoUrl;
+        if (!string.IsNullOrEmpty(photoUrl))
+            photoUrl = photoUrl.Contains('?')
+                ? $"{photoUrl}&v={DateTime.UtcNow.Ticks}"
+                : $"{photoUrl}?v={DateTime.UtcNow.Ticks}";
+        ProfilePhotoUrl = photoUrl;
         HasProfilePhoto = !string.IsNullOrEmpty(p.ProfilePhotoUrl);
         ReferralCode = p.ReferralCode;
         Star = p.Star ?? 0;
@@ -176,8 +186,8 @@ public partial class ProfileViewModel : ObservableObject
 
     partial void OnSelectedCityChanged(LookupItemDto? value)
     {
-        if (value is null || _isInitialLoad) return;
-        _ = LoadDistrictsAsync(value.Id);
+        if (_isInitialLoad) return;
+        _ = LoadDistrictsAsync(value);
     }
 
     partial void OnIsHeadOfFamilyChanged(bool value)
@@ -191,11 +201,30 @@ public partial class ProfileViewModel : ObservableObject
         }
     }
 
-    private async Task LoadDistrictsAsync(int cityId)
+    private async Task LoadDistrictsAsync(LookupItemDto? city)
     {
-        var districts = await _api.GetDistrictsAsync(cityId);
-        Districts = new ObservableCollection<LookupItemDto>(districts);
+        _districtCts?.Cancel();
+        _districtCts?.Dispose();
+        _districtCts = new CancellationTokenSource();
+        var token = _districtCts.Token;
+
         SelectedDistrict = null;
+        Districts.Clear();
+
+        if (city is null) return;
+
+        try
+        {
+            var list = await _api.GetDistrictsAsync(city.Id, token);
+            if (token.IsCancellationRequested) return;
+            foreach (var item in list)
+                Districts.Add(item);
+        }
+        catch (OperationCanceledException) { }
+        catch (Exception ex)
+        {
+            StatusMessage = $"İlçeler yüklenemedi: {ex.Message}";
+        }
     }
 
     [RelayCommand]
@@ -315,12 +344,22 @@ public partial class ProfileViewModel : ObservableObject
             IsLoading = true;
             StatusMessage = "Fotoğraf yükleniyor...";
 
-            var resizedStream = await ImageResizer.ResizeAsync(photo.FullPath, 512, 512, 75);
+            // photo.FullPath on iOS camera capture may return only a filename;
+            // copy to a temp file with a known full path to ensure ImageResizer can load it
+            var tempPath = Path.Combine(FileSystem.CacheDirectory, $"{Guid.NewGuid()}.jpg");
+            await using (var sourceStream = await photo.OpenReadAsync())
+            await using (var fs = File.Create(tempPath))
+                await sourceStream.CopyToAsync(fs);
+
+            var resizedStream = await ImageResizer.ResizeAsync(tempPath, 512, 512, 75);
             var url = await _api.UploadProfilePhotoAsync(resizedStream, "profile.jpg", "image/jpeg", default);
 
             if (!string.IsNullOrEmpty(url))
             {
-                ProfilePhotoUrl = url;
+                // Same URL path returns for the same user (e.g. /1.jpg) — bust MAUI image cache
+                ProfilePhotoUrl = null;
+                await Task.Delay(50);
+                ProfilePhotoUrl = $"{url}?v={DateTime.UtcNow.Ticks}";
                 HasProfilePhoto = true;
                 StatusMessage = "Fotoğraf yüklendi.";
             }

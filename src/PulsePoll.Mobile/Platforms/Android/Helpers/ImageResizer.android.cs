@@ -16,7 +16,8 @@ public static partial class ImageResizer
                 ExifInterface.TagOrientation, (int)Orientation.Normal);
 
             // Decode bitmap
-            var bitmap = BitmapFactory.DecodeFile(filePath)!;
+            var bitmap = BitmapFactory.DecodeFile(filePath)
+                         ?? throw new InvalidOperationException($"Fotoğraf yüklenemedi: {filePath}");
 
             // Apply EXIF rotation
             var matrix = new Matrix();
