@@ -4,6 +4,10 @@ namespace PulsePoll.Application.Interfaces;
 
 public interface IWalletRepository
 {
+    Task BeginTransactionAsync();
+    Task CommitTransactionAsync();
+    Task RollbackTransactionAsync();
+
     Task<Wallet?> GetBySubjectIdAsync(int subjectId);
     Task AddAsync(Wallet wallet);
     Task UpdateAsync(Wallet wallet);

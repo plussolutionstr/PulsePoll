@@ -9,6 +9,33 @@ namespace PulsePoll.Infrastructure.Persistence.Repositories;
 
 public class WalletRepository(AppDbContext db) : IWalletRepository
 {
+    private Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction? _transaction;
+
+    public async Task BeginTransactionAsync()
+    {
+        _transaction = await db.Database.BeginTransactionAsync();
+    }
+
+    public async Task CommitTransactionAsync()
+    {
+        if (_transaction is not null)
+        {
+            await _transaction.CommitAsync();
+            await _transaction.DisposeAsync();
+            _transaction = null;
+        }
+    }
+
+    public async Task RollbackTransactionAsync()
+    {
+        if (_transaction is not null)
+        {
+            await _transaction.RollbackAsync();
+            await _transaction.DisposeAsync();
+            _transaction = null;
+        }
+    }
+
     public Task<Wallet?> GetBySubjectIdAsync(int subjectId)
         => db.Wallets.FirstOrDefaultAsync(w => w.SubjectId == subjectId);
 
