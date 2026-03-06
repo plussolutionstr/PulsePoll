@@ -118,6 +118,7 @@ services:
       Twilio__AuthToken: ${TWILIO_AUTH_TOKEN}
       Twilio__VerifyServiceSid: ${TWILIO_VERIFY_SERVICE_SID}
       Twilio__FromNumber: ${TWILIO_FROM_NUMBER:-}
+      Media__ProxyBaseUrl: "https://api.poll.pulsify.tr"
     depends_on:
       postgres:
         condition: service_healthy

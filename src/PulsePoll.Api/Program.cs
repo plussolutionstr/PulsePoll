@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.HttpOverrides;
 using PulsePoll.Api.Extensions;
 using PulsePoll.Api.Logging;
 using PulsePoll.Api.Middleware;
@@ -27,6 +28,11 @@ using (var scope = app.Services.CreateScope())
     await db.Database.MigrateAsync();
     await DbSeeder.SeedAsync(db);
 }
+
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
 
 app.UseSwagger();
 app.UseSwaggerUI();

@@ -300,8 +300,9 @@ public partial class ProfileViewModel : ObservableObject
             IsLoading = true;
             StatusMessage = "Fotoğraf yükleniyor...";
 
-            await using var stream = await photo.OpenReadAsync();
-            var url = await _api.UploadProfilePhotoAsync(stream, photo.FileName, photo.ContentType, default);
+            await using var originalStream = await photo.OpenReadAsync();
+            var resizedStream = await ResizeImageAsync(originalStream, 512, 512);
+            var url = await _api.UploadProfilePhotoAsync(resizedStream, photo.FileName, "image/jpeg", default);
 
             if (!string.IsNullOrEmpty(url))
             {
@@ -347,6 +348,30 @@ public partial class ProfileViewModel : ObservableObject
             BarBackgroundColor = Color.FromArgb("#F7F5FF"),
             BarTextColor = Color.FromArgb("#1A1535")
         };
+    }
+
+    private static async Task<Stream> ResizeImageAsync(Stream sourceStream, int maxWidth, int maxHeight)
+    {
+        var image = Microsoft.Maui.Graphics.Platform.PlatformImage.FromStream(sourceStream);
+
+        if (image.Width <= maxWidth && image.Height <= maxHeight)
+        {
+            sourceStream.Position = 0;
+            return sourceStream;
+        }
+
+        var ratioX = (double)maxWidth / image.Width;
+        var ratioY = (double)maxHeight / image.Height;
+        var ratio = Math.Min(ratioX, ratioY);
+        var newWidth = (int)(image.Width * ratio);
+        var newHeight = (int)(image.Height * ratio);
+
+        var resized = image.Resize(newWidth, newHeight, ResizeMode.Stretch);
+
+        var ms = new MemoryStream();
+        await Task.Run(() => resized.Save(ms, Microsoft.Maui.Graphics.ImageFormat.Jpeg, 0.75f));
+        ms.Position = 0;
+        return ms;
     }
 
     private static string GetInitials(string firstName, string lastName)
