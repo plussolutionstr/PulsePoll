@@ -31,7 +31,7 @@ public class TwilioSmsService : ISmsService
     public async Task SendOtpAsync(string phoneNumber)
     {
         var verification = await VerificationResource.CreateAsync(
-            to: phoneNumber,
+            to: ToE164(phoneNumber),
             channel: "sms",
             locale: "tr",
             pathServiceSid: _settings.VerifyServiceSid);
@@ -53,7 +53,7 @@ public class TwilioSmsService : ISmsService
     public async Task<bool> VerifyOtpAsync(string phoneNumber, string code)
     {
         var check = await VerificationCheckResource.CreateAsync(
-            to: phoneNumber,
+            to: ToE164(phoneNumber),
             code: code,
             pathServiceSid: _settings.VerifyServiceSid);
 
@@ -67,7 +67,7 @@ public class TwilioSmsService : ISmsService
         int? subjectId = null, int? sentByAdminId = null)
     {
         var msg = await MessageResource.CreateAsync(
-            to: new PhoneNumber(phoneNumber),
+            to: new PhoneNumber(ToE164(phoneNumber)),
             from: new PhoneNumber(_settings.FromNumber),
             body: message);
 
@@ -84,5 +84,17 @@ public class TwilioSmsService : ISmsService
         };
         log.SetCreated(sentByAdminId ?? 0);
         await _smsLogRepository.AddAsync(log);
+    }
+
+    private static string ToE164(string phone)
+    {
+        var digits = new string(phone.Where(char.IsDigit).ToArray());
+        if (digits.StartsWith("90") && digits.Length == 12)
+            return "+" + digits;
+        if (digits.StartsWith('0') && digits.Length == 11)
+            return "+9" + digits;
+        if (digits.Length == 10 && digits.StartsWith('5'))
+            return "+90" + digits;
+        return "+" + digits;
     }
 }

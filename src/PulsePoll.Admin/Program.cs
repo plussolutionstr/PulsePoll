@@ -51,8 +51,8 @@ builder.Services.AddMassTransit(x =>
     });
 });
 
-// Media URL: Admin presigned URL kullanır
-builder.Services.AddScoped<IMediaUrlService, PresignedMediaUrlService>();
+// Media URL: Admin proxy endpoint üzerinden serve eder (presigned URL Docker ağında kalır)
+builder.Services.AddScoped<IMediaUrlService, ProxyMediaUrlService>();
 
 // Application services
 builder.Services.AddScoped<IAdminAuthService, AdminAuthService>();
@@ -197,6 +197,23 @@ app.MapGet("/logout", async (HttpContext httpContext) =>
 {
     await httpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
     return Results.Redirect("/login");
+}).AllowAnonymous();
+
+// Media proxy — serves MinIO objects through the admin app
+app.MapGet("/api/media/{bucket}/{objectKey}", async (
+    string bucket,
+    string objectKey,
+    IStorageService storageService) =>
+{
+    try
+    {
+        var (stream, contentType) = await storageService.GetObjectStreamAsync(bucket, objectKey);
+        return Results.File(stream, contentType, enableRangeProcessing: true);
+    }
+    catch
+    {
+        return Results.NotFound();
+    }
 }).AllowAnonymous();
 
 app.MapRazorComponents<App>()

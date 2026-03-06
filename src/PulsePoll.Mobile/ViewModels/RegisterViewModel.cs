@@ -113,6 +113,7 @@ public partial class RegisterViewModel : ObservableObject
 
     // Step 3 — KVKK
     [ObservableProperty] private bool _kvkkAccepted;
+    [ObservableProperty] private string _kvkkText = string.Empty;
 
     // Common
     [ObservableProperty]
@@ -227,7 +228,7 @@ public partial class RegisterViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void GoToKvkk()
+    private async Task GoToKvkkAsync()
     {
         ErrorMessage = string.Empty;
 
@@ -263,7 +264,22 @@ public partial class RegisterViewModel : ObservableObject
             return;
         }
 
-        CurrentStep = 3;
+        IsBusy = true;
+        try
+        {
+            var content = await _api.GetAppContentAsync();
+            KvkkText = content?.KvkkText ?? "KVKK metni yüklenemedi.";
+            CurrentStep = 3;
+        }
+        catch
+        {
+            KvkkText = "KVKK metni yüklenemedi.";
+            CurrentStep = 3;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
     }
 
     [RelayCommand]

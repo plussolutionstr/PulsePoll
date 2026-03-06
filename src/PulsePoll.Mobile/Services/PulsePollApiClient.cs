@@ -296,6 +296,14 @@ public sealed class PulsePollApiClient : IPulsePollApiClient
         throw new HttpRequestException(message, null, response.StatusCode);
     }
 
+    public async Task<AppContentApiDto?> GetAppContentAsync(CancellationToken ct = default)
+    {
+        var response = await _http.GetAsync("api/app-content", ct);
+        await EnsureSuccessOrThrowAsync(response, ct);
+        var envelope = await response.Content.ReadFromJsonAsync<ApiResponse<AppContentApiDto>>(JsonOptions, ct);
+        return envelope?.Data;
+    }
+
     public async Task UpdateFcmTokenAsync(string fcmToken, CancellationToken ct = default)
     {
         var response = await _http.PutAsJsonAsync("api/profile/fcm-token", fcmToken, JsonOptions, ct);

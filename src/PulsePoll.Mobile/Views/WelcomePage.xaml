@@ -126,17 +126,6 @@
                 </Border>
             </Grid>
 
-            <!-- Dots -->
-            <HorizontalStackLayout Spacing="5" HorizontalOptions="Center" Margin="0,0,0,28">
-                <Border BackgroundColor="{StaticResource PrimaryPurple}"
-                        StrokeShape="RoundRectangle 3" Stroke="Transparent"
-                        WidthRequest="20" HeightRequest="6"/>
-                <Ellipse Fill="{StaticResource PrimaryMid}"
-                         WidthRequest="6" HeightRequest="6"/>
-                <Ellipse Fill="{StaticResource PrimaryMid}"
-                         WidthRequest="6" HeightRequest="6"/>
-            </HorizontalStackLayout>
-
             <!-- Buttons -->
             <Button Text="Hemen Başla"
                     Command="{Binding GoToRegisterCommand}"

@@ -162,6 +162,14 @@ public record ProfileApiDto(
     int DisqualifiedCount,
     int SuccessRate);
 
+public record AppContentApiDto(
+    string KvkkText,
+    string ContactTitle,
+    string ContactBody,
+    string? ContactEmail,
+    string? ContactPhone,
+    string? ContactWhatsapp);
+
 public record LookupItemDto(int Id, string Name);
 
 public record PhotoUploadResultDto(string Url);
