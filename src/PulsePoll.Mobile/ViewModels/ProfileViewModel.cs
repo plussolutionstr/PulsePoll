@@ -156,7 +156,12 @@ public partial class ProfileViewModel : ObservableObject
     {
         FullName = p.FullName;
         Initials = GetInitials(p.FirstName, p.LastName);
-        ProfilePhotoUrl = p.ProfilePhotoUrl;
+        var photoUrl = p.ProfilePhotoUrl;
+        if (!string.IsNullOrEmpty(photoUrl))
+            photoUrl = photoUrl.Contains('?')
+                ? $"{photoUrl}&v={DateTime.UtcNow.Ticks}"
+                : $"{photoUrl}?v={DateTime.UtcNow.Ticks}";
+        ProfilePhotoUrl = photoUrl;
         HasProfilePhoto = !string.IsNullOrEmpty(p.ProfilePhotoUrl);
         ReferralCode = p.ReferralCode;
         Star = p.Star ?? 0;
@@ -339,12 +344,22 @@ public partial class ProfileViewModel : ObservableObject
             IsLoading = true;
             StatusMessage = "Fotoğraf yükleniyor...";
 
-            var resizedStream = await ImageResizer.ResizeAsync(photo.FullPath, 512, 512, 75);
+            // photo.FullPath on iOS camera capture may return only a filename;
+            // copy to a temp file with a known full path to ensure ImageResizer can load it
+            var tempPath = Path.Combine(FileSystem.CacheDirectory, $"{Guid.NewGuid()}.jpg");
+            await using (var sourceStream = await photo.OpenReadAsync())
+            await using (var fs = File.Create(tempPath))
+                await sourceStream.CopyToAsync(fs);
+
+            var resizedStream = await ImageResizer.ResizeAsync(tempPath, 512, 512, 75);
             var url = await _api.UploadProfilePhotoAsync(resizedStream, "profile.jpg", "image/jpeg", default);
 
             if (!string.IsNullOrEmpty(url))
             {
-                ProfilePhotoUrl = url;
+                // Same URL path returns for the same user (e.g. /1.jpg) — bust MAUI image cache
+                ProfilePhotoUrl = null;
+                await Task.Delay(50);
+                ProfilePhotoUrl = $"{url}?v={DateTime.UtcNow.Ticks}";
                 HasProfilePhoto = true;
                 StatusMessage = "Fotoğraf yüklendi.";
             }
