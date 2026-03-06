@@ -24,7 +24,8 @@ COPY src/PulsePoll.Application/ src/PulsePoll.Application/
 COPY src/PulsePoll.Infrastructure/ src/PulsePoll.Infrastructure/
 COPY src/PulsePoll.Admin/ src/PulsePoll.Admin/
 
-RUN dotnet publish src/PulsePoll.Admin/PulsePoll.Admin.csproj -c Release -o /app/publish --no-restore
+RUN dotnet publish src/PulsePoll.Admin/PulsePoll.Admin.csproj -c Release -o /app/publish --no-restore \
+    /p:PublishStaticWebAssets=true
 
 FROM base AS final
 WORKDIR /app
