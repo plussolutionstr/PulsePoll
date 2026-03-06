@@ -199,12 +199,16 @@ app.MapGet("/logout", async (HttpContext httpContext) =>
     return Results.Redirect("/login");
 }).AllowAnonymous();
 
-// Media proxy — serves MinIO objects through the admin app
-app.MapGet("/api/media/{bucket}/{objectKey}", async (
+// Media proxy — serves MinIO objects through the admin app (authenticated, bucket-restricted)
+app.MapGet("/api/media/{bucket}/{**objectKey}", async (
     string bucket,
     string objectKey,
     IStorageService storageService) =>
 {
+    HashSet<string> allowedBuckets = ["media-library", "stories", "profile-photos", "customers"];
+    if (!allowedBuckets.Contains(bucket))
+        return Results.NotFound();
+
     try
     {
         var (stream, contentType) = await storageService.GetObjectStreamAsync(bucket, objectKey);
@@ -214,7 +218,7 @@ app.MapGet("/api/media/{bucket}/{objectKey}", async (
     {
         return Results.NotFound();
     }
-}).AllowAnonymous();
+}).RequireAuthorization();
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
