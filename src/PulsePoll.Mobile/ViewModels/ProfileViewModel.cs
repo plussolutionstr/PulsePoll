@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PulsePoll.Mobile.ApiModels;
+using PulsePoll.Mobile.Helpers;
 using PulsePoll.Mobile.Services;
 
 namespace PulsePoll.Mobile.ViewModels;
@@ -282,27 +283,40 @@ public partial class ProfileViewModel : ObservableObject
             string action = await Shell.Current.DisplayActionSheetAsync(
                 "Profil Fotoğrafı", "İptal", null, "Galeriden Seç", "Kamera ile Çek");
 
-            FileResult? photo = action switch
+            FileResult? photo = null;
+
+            if (action == "Galeriden Seç")
             {
-                "Galeriden Seç" => (await MediaPicker.Default.PickPhotosAsync(new MediaPickerOptions
+                photo = (await MediaPicker.Default.PickPhotosAsync(new MediaPickerOptions
                 {
                     Title = "Profil fotoğrafı seçin"
-                })).FirstOrDefault(),
-                "Kamera ile Çek" => await MediaPicker.Default.CapturePhotoAsync(new MediaPickerOptions
+                })).FirstOrDefault();
+            }
+            else if (action == "Kamera ile Çek")
+            {
+                var status = await Permissions.CheckStatusAsync<Permissions.Camera>();
+                if (status != PermissionStatus.Granted)
+                    status = await Permissions.RequestAsync<Permissions.Camera>();
+
+                if (status != PermissionStatus.Granted)
+                {
+                    StatusMessage = "Kamera izni gerekiyor.";
+                    return;
+                }
+
+                photo = await MediaPicker.Default.CapturePhotoAsync(new MediaPickerOptions
                 {
                     Title = "Profil fotoğrafı çekin"
-                }),
-                _ => null
-            };
+                });
+            }
 
             if (photo is null) return;
 
             IsLoading = true;
             StatusMessage = "Fotoğraf yükleniyor...";
 
-            await using var originalStream = await photo.OpenReadAsync();
-            var resizedStream = await ResizeImageAsync(originalStream, 512, 512);
-            var url = await _api.UploadProfilePhotoAsync(resizedStream, photo.FileName, "image/jpeg", default);
+            var resizedStream = await ImageResizer.ResizeAsync(photo.FullPath, 512, 512, 75);
+            var url = await _api.UploadProfilePhotoAsync(resizedStream, "profile.jpg", "image/jpeg", default);
 
             if (!string.IsNullOrEmpty(url))
             {
@@ -311,9 +325,9 @@ public partial class ProfileViewModel : ObservableObject
                 StatusMessage = "Fotoğraf yüklendi.";
             }
         }
-        catch (PermissionException)
+        catch (PermissionException pex)
         {
-            StatusMessage = "Kamera/galeri izni gerekiyor.";
+            StatusMessage = $"İzin gerekli: {pex.Message}";
         }
         catch (Exception ex)
         {
@@ -348,30 +362,6 @@ public partial class ProfileViewModel : ObservableObject
             BarBackgroundColor = Color.FromArgb("#F7F5FF"),
             BarTextColor = Color.FromArgb("#1A1535")
         };
-    }
-
-    private static async Task<Stream> ResizeImageAsync(Stream sourceStream, int maxWidth, int maxHeight)
-    {
-        var image = Microsoft.Maui.Graphics.Platform.PlatformImage.FromStream(sourceStream);
-
-        if (image.Width <= maxWidth && image.Height <= maxHeight)
-        {
-            sourceStream.Position = 0;
-            return sourceStream;
-        }
-
-        var ratioX = (double)maxWidth / image.Width;
-        var ratioY = (double)maxHeight / image.Height;
-        var ratio = Math.Min(ratioX, ratioY);
-        var newWidth = (int)(image.Width * ratio);
-        var newHeight = (int)(image.Height * ratio);
-
-        var resized = image.Resize(newWidth, newHeight, ResizeMode.Stretch);
-
-        var ms = new MemoryStream();
-        await Task.Run(() => resized.Save(ms, Microsoft.Maui.Graphics.ImageFormat.Jpeg, 0.75f));
-        ms.Position = 0;
-        return ms;
     }
 
     private static string GetInitials(string firstName, string lastName)

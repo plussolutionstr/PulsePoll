@@ -7,7 +7,7 @@ PROJECT_FILE="$PROJECT_DIR/PulsePoll.Mobile.csproj"
 TFM="${TFM:-net10.0-android}"
 CONFIGURATION="${CONFIGURATION:-Debug}"
 RID="${RID:-android-arm64}"
-APP_ID="${APP_ID:-com.companyname.pulsepoll.mobile}"
+APP_ID="${APP_ID:-com.pulsepoll.mobile}"
 ADB_SERIAL="${ADB_SERIAL:-}"
 
 if ! command -v dotnet >/dev/null 2>&1; then
