@@ -42,6 +42,12 @@ jobs:
           docker compose up -d --remove-orphans
           docker image prune -f
 
+      - name: Configure nginx proxy
+        run: |
+          docker cp docker/nginx/pulsepoll.conf pulsify-nginx:/etc/nginx/conf.d/pulsepoll.conf
+          docker exec pulsify-nginx nginx -t
+          docker exec pulsify-nginx nginx -s reload
+
       - name: Health check
         run: |
           sleep 15
