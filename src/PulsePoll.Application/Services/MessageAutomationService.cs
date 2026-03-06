@@ -133,8 +133,12 @@ public class MessageAutomationService(
                         (s.BirthDate.Month == occurrenceDate.Month && s.BirthDate.Day == occurrenceDate.Day))
             .ToList();
 
+        var existingLogs = await repository.GetExistingDispatchLogsAsync(
+            campaignId, targets.Select(t => t.Id), occurrenceDate);
+
         var queued = 0;
         var skipped = 0;
+        var pendingLogs = new List<MessageDispatchLog>();
 
         foreach (var subject in targets)
         {
@@ -144,16 +148,18 @@ public class MessageAutomationService(
 
             if (ShouldSendSms(campaign.Template.ChannelType))
             {
-                var result = await TryQueueSmsAsync(campaign, subject, occurrenceDate, smsText, adminId);
+                var result = await TryQueueSmsAsync(campaign, subject, occurrenceDate, smsText, adminId, existingLogs, pendingLogs);
                 if (result) queued++; else skipped++;
             }
 
             if (ShouldSendPush(campaign.Template.ChannelType))
             {
-                var result = await TryQueuePushAsync(campaign, subject, occurrenceDate, pushTitle, pushBody, adminId);
+                var result = await TryQueuePushAsync(campaign, subject, occurrenceDate, pushTitle, pushBody, adminId, existingLogs, pendingLogs);
                 if (result) queued++; else skipped++;
             }
         }
+
+        await repository.AddDispatchLogsAsync(pendingLogs);
 
         return new MessageDispatchRunResultDto(campaignId, occurrenceDate, targets.Count, queued, skipped);
     }
@@ -184,18 +190,14 @@ public class MessageAutomationService(
         Subject subject,
         DateOnly occurrenceDate,
         string? smsText,
-        int adminId)
+        int adminId,
+        HashSet<(int SubjectId, MessageChannelType ChannelType)> existingLogs,
+        List<MessageDispatchLog> pendingLogs)
     {
         if (string.IsNullOrWhiteSpace(smsText))
             return false;
 
-        var exists = await repository.DispatchLogExistsAsync(
-            campaign.Id,
-            subject.Id,
-            occurrenceDate,
-            MessageChannelType.Sms);
-
-        if (exists)
+        if (existingLogs.Contains((subject.Id, MessageChannelType.Sms)))
             return false;
 
         try
@@ -213,7 +215,7 @@ public class MessageAutomationService(
                 Status = MessageDispatchStatus.Queued
             };
             log.SetCreated(adminId);
-            await repository.AddDispatchLogAsync(log);
+            pendingLogs.Add(log);
             return true;
         }
         catch (Exception ex)
@@ -228,7 +230,7 @@ public class MessageAutomationService(
                 ErrorMessage = ex.Message[..Math.Min(ex.Message.Length, 500)]
             };
             log.SetCreated(adminId);
-            await repository.AddDispatchLogAsync(log);
+            pendingLogs.Add(log);
             return false;
         }
     }
@@ -239,18 +241,14 @@ public class MessageAutomationService(
         DateOnly occurrenceDate,
         string? pushTitle,
         string? pushBody,
-        int adminId)
+        int adminId,
+        HashSet<(int SubjectId, MessageChannelType ChannelType)> existingLogs,
+        List<MessageDispatchLog> pendingLogs)
     {
         if (string.IsNullOrWhiteSpace(pushTitle) || string.IsNullOrWhiteSpace(pushBody))
             return false;
 
-        var exists = await repository.DispatchLogExistsAsync(
-            campaign.Id,
-            subject.Id,
-            occurrenceDate,
-            MessageChannelType.Push);
-
-        if (exists)
+        if (existingLogs.Contains((subject.Id, MessageChannelType.Push)))
             return false;
 
         try
@@ -266,7 +264,7 @@ public class MessageAutomationService(
                 Status = MessageDispatchStatus.Queued
             };
             log.SetCreated(adminId);
-            await repository.AddDispatchLogAsync(log);
+            pendingLogs.Add(log);
             return true;
         }
         catch (Exception ex)
@@ -281,7 +279,7 @@ public class MessageAutomationService(
                 ErrorMessage = ex.Message[..Math.Min(ex.Message.Length, 500)]
             };
             log.SetCreated(adminId);
-            await repository.AddDispatchLogAsync(log);
+            pendingLogs.Add(log);
             return false;
         }
     }
