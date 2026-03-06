@@ -366,16 +366,29 @@
 
                         <!-- Kaydet / İptal -->
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="12" Margin="0,8,0,0">
-                            <Button Text="Kaydet"
-                                    Command="{Binding SaveProfileCommand}"
-                                    IsEnabled="{Binding IsSaving, Converter={StaticResource InvertedBoolConverter}}"
-                                    FontFamily="JakartaSemiBold" FontSize="14"
-                                    BackgroundColor="{StaticResource PrimaryPurple}"
-                                    TextColor="{StaticResource White}"
-                                    CornerRadius="12"
-                                    HeightRequest="44"/>
+                            <Grid HeightRequest="44">
+                                <Button Text="Kaydet"
+                                        Command="{Binding SaveProfileCommand}"
+                                        IsVisible="{Binding IsSaving, Converter={StaticResource InvertedBoolConverter}}"
+                                        FontFamily="JakartaSemiBold" FontSize="14"
+                                        BackgroundColor="{StaticResource PrimaryPurple}"
+                                        TextColor="{StaticResource White}"
+                                        CornerRadius="12"
+                                        HeightRequest="44"/>
+                                <Border StrokeThickness="0"
+                                        StrokeShape="RoundRectangle 12"
+                                        BackgroundColor="{StaticResource PrimaryPurple}"
+                                        HeightRequest="44"
+                                        IsVisible="{Binding IsSaving}">
+                                    <ActivityIndicator IsRunning="True"
+                                                       Color="{StaticResource White}"
+                                                       HeightRequest="22" WidthRequest="22"
+                                                       HorizontalOptions="Center" VerticalOptions="Center"/>
+                                </Border>
+                            </Grid>
                             <Button Grid.Column="1" Text="İptal"
                                     Command="{Binding CancelEditCommand}"
+                                    IsEnabled="{Binding IsSaving, Converter={StaticResource InvertedBoolConverter}}"
                                     FontFamily="JakartaSemiBold" FontSize="14"
                                     BackgroundColor="{StaticResource PrimaryLight}"
                                     TextColor="{StaticResource PrimaryPurple}"

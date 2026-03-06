@@ -3,9 +3,14 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:viewModels="clr-namespace:PulsePoll.Mobile.ViewModels"
              xmlns:behaviors="clr-namespace:PulsePoll.Mobile.Behaviors"
+             xmlns:converters="clr-namespace:PulsePoll.Mobile.Converters"
              x:Class="PulsePoll.Mobile.Views.WalletWithdrawPage"
              x:DataType="viewModels:WalletWithdrawViewModel"
              Title="Para Çek">
+
+    <ContentPage.Resources>
+        <converters:InvertedBoolConverter x:Key="InvertedBoolConverter"/>
+    </ContentPage.Resources>
 
     <ScrollView>
         <VerticalStackLayout Padding="20,16" Spacing="16">
@@ -113,16 +118,30 @@
             </Border>
 
             <!-- Buttons -->
-            <Button Text="Talep Gönder"
-                    Style="{StaticResource PrimaryButtonStyle}"
-                    HorizontalOptions="Fill"
-                    Clicked="OnSubmitClicked" />
+            <Grid HeightRequest="52">
+                <Button Text="Talep Gönder"
+                        Style="{StaticResource PrimaryButtonStyle}"
+                        HorizontalOptions="Fill"
+                        IsVisible="{Binding IsSaving, Converter={StaticResource InvertedBoolConverter}}"
+                        Clicked="OnSubmitClicked" />
+                <Border StrokeThickness="0"
+                        StrokeShape="RoundRectangle 26"
+                        BackgroundColor="{StaticResource PrimaryPurple}"
+                        HeightRequest="52"
+                        IsVisible="{Binding IsSaving}">
+                    <ActivityIndicator IsRunning="True"
+                                       Color="{StaticResource White}"
+                                       HeightRequest="24" WidthRequest="24"
+                                       HorizontalOptions="Center" VerticalOptions="Center"/>
+                </Border>
+            </Grid>
 
             <Button Text="İptal"
                     Style="{StaticResource SecondaryButtonStyle}"
                     HeightRequest="52"
                     CornerRadius="26"
                     HorizontalOptions="Fill"
+                    IsEnabled="{Binding IsSaving, Converter={StaticResource InvertedBoolConverter}}"
                     Clicked="OnCancelClicked" />
 
             <BoxView HeightRequest="20" Color="Transparent"/>

@@ -52,9 +52,22 @@
                             </Grid>
                         </Border>
 
-                        <Button Text="Kod Gönder"
-                                Command="{Binding SendOtpCommand}"
-                                Style="{StaticResource AuthPrimaryButtonStyle}"/>
+                        <Grid HeightRequest="52">
+                            <Button Text="Kod Gönder"
+                                    Command="{Binding SendOtpCommand}"
+                                    IsVisible="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}"
+                                    Style="{StaticResource AuthPrimaryButtonStyle}"/>
+                            <Border StrokeThickness="0"
+                                    StrokeShape="RoundRectangle 26"
+                                    BackgroundColor="{StaticResource PrimaryPurple}"
+                                    HeightRequest="52"
+                                    IsVisible="{Binding IsBusy}">
+                                <ActivityIndicator IsRunning="True"
+                                                   Color="{StaticResource White}"
+                                                   HeightRequest="24" WidthRequest="24"
+                                                   HorizontalOptions="Center" VerticalOptions="Center"/>
+                            </Border>
+                        </Grid>
                     </VerticalStackLayout>
 
                     <!-- STEP 1: OTP -->
@@ -73,11 +86,25 @@
                         </Border>
 
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
-                            <Button Text="Doğrula"
-                                    Command="{Binding VerifyOtpCommand}"
-                                    Style="{StaticResource AuthPrimaryButtonStyle}"/>
+                            <Grid HeightRequest="52">
+                                <Button Text="Doğrula"
+                                        Command="{Binding VerifyOtpCommand}"
+                                        IsVisible="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}"
+                                        Style="{StaticResource AuthPrimaryButtonStyle}"/>
+                                <Border StrokeThickness="0"
+                                        StrokeShape="RoundRectangle 26"
+                                        BackgroundColor="{StaticResource PrimaryPurple}"
+                                        HeightRequest="52"
+                                        IsVisible="{Binding IsBusy}">
+                                    <ActivityIndicator IsRunning="True"
+                                                       Color="{StaticResource White}"
+                                                       HeightRequest="24" WidthRequest="24"
+                                                       HorizontalOptions="Center" VerticalOptions="Center"/>
+                                </Border>
+                            </Grid>
                             <Button Grid.Column="1" Text="Geri"
                                     Command="{Binding GoBackCommand}"
+                                    IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}"
                                     Style="{StaticResource AuthOutlineButtonStyle}"/>
                         </Grid>
                     </VerticalStackLayout>
@@ -316,19 +343,29 @@
 
                         <!-- Buttons -->
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="12" Margin="0,0,0,40">
-                            <Button Text="Devam"
-                                    Command="{Binding GoToKvkkCommand}"
-                                    Style="{StaticResource AuthPrimaryButtonStyle}"/>
+                            <Grid HeightRequest="52">
+                                <Button Text="Devam"
+                                        Command="{Binding GoToKvkkCommand}"
+                                        IsVisible="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}"
+                                        Style="{StaticResource AuthPrimaryButtonStyle}"/>
+                                <Border StrokeThickness="0"
+                                        StrokeShape="RoundRectangle 26"
+                                        BackgroundColor="{StaticResource PrimaryPurple}"
+                                        HeightRequest="52"
+                                        IsVisible="{Binding IsBusy}">
+                                    <ActivityIndicator IsRunning="True"
+                                                       Color="{StaticResource White}"
+                                                       HeightRequest="24" WidthRequest="24"
+                                                       HorizontalOptions="Center" VerticalOptions="Center"/>
+                                </Border>
+                            </Grid>
                             <Button Grid.Column="1" Text="Geri"
                                     Command="{Binding GoBackCommand}"
+                                    IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}"
                                     Style="{StaticResource AuthOutlineButtonStyle}"/>
                         </Grid>
                     </VerticalStackLayout>
 
-                    <ActivityIndicator IsRunning="{Binding IsBusy}"
-                                       IsVisible="{Binding IsBusy}"
-                                       Color="{StaticResource PrimaryPurple}"
-                                       HeightRequest="30"/>
                 </VerticalStackLayout>
             </ScrollView>
 
@@ -383,18 +420,27 @@
             </VerticalStackLayout>
 
             <Grid Grid.Row="3" ColumnDefinitions="*,*" ColumnSpacing="12" Margin="0,12,0,16">
-                <Button Text="Kaydol"
-                        Command="{Binding RegisterCommand}"
-                        Style="{StaticResource AuthPrimaryButtonStyle}"/>
+                <Grid HeightRequest="52">
+                    <Button Text="Kaydol"
+                            Command="{Binding RegisterCommand}"
+                            IsVisible="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}"
+                            Style="{StaticResource AuthPrimaryButtonStyle}"/>
+                    <Border StrokeThickness="0"
+                            StrokeShape="RoundRectangle 26"
+                            BackgroundColor="{StaticResource PrimaryPurple}"
+                            HeightRequest="52"
+                            IsVisible="{Binding IsBusy}">
+                        <ActivityIndicator IsRunning="True"
+                                           Color="{StaticResource White}"
+                                           HeightRequest="24" WidthRequest="24"
+                                           HorizontalOptions="Center" VerticalOptions="Center"/>
+                    </Border>
+                </Grid>
                 <Button Grid.Column="1" Text="Geri"
                         Command="{Binding GoBackCommand}"
+                        IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}"
                         Style="{StaticResource AuthOutlineButtonStyle}"/>
             </Grid>
-
-            <ActivityIndicator Grid.Row="2" IsRunning="{Binding IsBusy}"
-                               IsVisible="{Binding IsBusy}"
-                               Color="{StaticResource PrimaryPurple}"
-                               HeightRequest="30"/>
         </Grid>
 
     </Grid>

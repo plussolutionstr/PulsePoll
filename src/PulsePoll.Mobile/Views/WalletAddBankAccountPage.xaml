@@ -2,9 +2,14 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:viewModels="clr-namespace:PulsePoll.Mobile.ViewModels"
+             xmlns:converters="clr-namespace:PulsePoll.Mobile.Converters"
              x:Class="PulsePoll.Mobile.Views.WalletAddBankAccountPage"
              x:DataType="viewModels:WalletAddBankAccountViewModel"
              Title="{Binding PageTitle}">
+
+    <ContentPage.Resources>
+        <converters:InvertedBoolConverter x:Key="InvertedBoolConverter"/>
+    </ContentPage.Resources>
 
     <ScrollView>
         <VerticalStackLayout Padding="20,16" Spacing="16">
@@ -74,10 +79,23 @@
             </Border>
 
             <!-- Buttons -->
-            <Button Text="{Binding SaveButtonText}"
-                    Style="{StaticResource PrimaryButtonStyle}"
-                    HorizontalOptions="Fill"
-                    Clicked="OnSaveClicked" />
+            <Grid HeightRequest="52">
+                <Button Text="{Binding SaveButtonText}"
+                        Style="{StaticResource PrimaryButtonStyle}"
+                        HorizontalOptions="Fill"
+                        IsVisible="{Binding IsSaving, Converter={StaticResource InvertedBoolConverter}}"
+                        Clicked="OnSaveClicked" />
+                <Border StrokeThickness="0"
+                        StrokeShape="RoundRectangle 26"
+                        BackgroundColor="{StaticResource PrimaryPurple}"
+                        HeightRequest="52"
+                        IsVisible="{Binding IsSaving}">
+                    <ActivityIndicator IsRunning="True"
+                                       Color="{StaticResource White}"
+                                       HeightRequest="24" WidthRequest="24"
+                                       HorizontalOptions="Center" VerticalOptions="Center"/>
+                </Border>
+            </Grid>
 
             <Button Text="Sil"
                     HeightRequest="52"
@@ -86,6 +104,7 @@
                     FontSize="14"
                     Clicked="OnDeleteClicked"
                     IsVisible="{Binding IsEditMode}"
+                    IsEnabled="{Binding IsSaving, Converter={StaticResource InvertedBoolConverter}}"
                     BackgroundColor="{StaticResource DangerLight}"
                     TextColor="{StaticResource Danger}" />
 
@@ -94,6 +113,7 @@
                     HeightRequest="52"
                     CornerRadius="26"
                     HorizontalOptions="Fill"
+                    IsEnabled="{Binding IsSaving, Converter={StaticResource InvertedBoolConverter}}"
                     Clicked="OnCancelClicked" />
 
             <BoxView HeightRequest="20" Color="Transparent"/>

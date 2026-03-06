@@ -2,10 +2,15 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:PulsePoll.Mobile.ViewModels"
+             xmlns:converters="clr-namespace:PulsePoll.Mobile.Converters"
              x:Class="PulsePoll.Mobile.Views.LoginPage"
              x:DataType="vm:LoginViewModel"
              Title="Giriş Yap"
              BackgroundColor="{StaticResource PageBackground}">
+
+    <ContentPage.Resources>
+        <converters:InvertedBoolConverter x:Key="InvertedBoolConverter"/>
+    </ContentPage.Resources>
 
     <Grid RowDefinitions="*,Auto">
         <ScrollView>
@@ -73,16 +78,22 @@
                 </Border>
 
                 <!-- Login Button -->
-                <Button Text="Giriş Yap"
-                        Command="{Binding LoginCommand}"
-                        Style="{StaticResource AuthPrimaryButtonStyle}"
-                        Margin="0,0,0,4"/>
-
-                <ActivityIndicator IsRunning="{Binding IsBusy}"
-                                   IsVisible="{Binding IsBusy}"
-                                   Color="{StaticResource PrimaryPurple}"
-                                   HeightRequest="30"
-                                   Margin="0,8,0,0"/>
+                <Grid HeightRequest="52" Margin="0,0,0,4">
+                    <Button Text="Giriş Yap"
+                            Command="{Binding LoginCommand}"
+                            IsVisible="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}"
+                            Style="{StaticResource AuthPrimaryButtonStyle}"/>
+                    <Border StrokeThickness="0"
+                            StrokeShape="RoundRectangle 26"
+                            BackgroundColor="{StaticResource PrimaryPurple}"
+                            HeightRequest="52"
+                            IsVisible="{Binding IsBusy}">
+                        <ActivityIndicator IsRunning="True"
+                                           Color="{StaticResource White}"
+                                           HeightRequest="24" WidthRequest="24"
+                                           HorizontalOptions="Center" VerticalOptions="Center"/>
+                    </Border>
+                </Grid>
             </VerticalStackLayout>
         </ScrollView>
 
