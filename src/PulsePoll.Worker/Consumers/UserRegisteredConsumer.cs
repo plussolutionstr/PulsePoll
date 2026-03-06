@@ -65,7 +65,7 @@ public class SubjectRegisteredConsumer(
             KVKKApproval = msg.KVKKApproval,
             KVKKDetail = msg.KVKKDetail,
             KVKKApprovalDate = msg.KVKKApproval ? msg.RegisteredAt : null,
-            Status = ApprovalStatus.Pending
+            Status = ApprovalStatus.Approved
         };
 
         subject.SetCreated(0, msg.RegisteredAt);
