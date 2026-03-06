@@ -36,6 +36,8 @@ public partial class App : Application
 
             if (refreshed)
             {
+                var pushService = _serviceProvider.GetRequiredService<IPushNotificationService>();
+                _ = pushService.RegisterAsync();
                 window.Page = _serviceProvider.GetRequiredService<AppShell>();
             }
             else

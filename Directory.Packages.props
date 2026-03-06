@@ -77,6 +77,11 @@
     <PackageVersion Include="DevExpress.Blazor"                                      Version="25.2.4" />
   </ItemGroup>
 
+  <!-- MAUI — Firebase (Android) -->
+  <ItemGroup>
+    <PackageVersion Include="Xamarin.Firebase.Messaging"                              Version="124.1.0.1" />
+  </ItemGroup>
+
   <!-- MAUI -->
   <ItemGroup>
     <PackageVersion Include="CommunityToolkit.Maui"                                  Version="12.3.0" />

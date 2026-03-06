@@ -53,5 +53,8 @@ public interface IPulsePollApiClient
     Task<List<LookupItemDto>> GetRegisterEducationLevelsAsync(CancellationToken ct = default);
     Task<List<BankOptionApiDto>> GetRegisterBankOptionsAsync(CancellationToken ct = default);
 
+    // FCM
+    Task UpdateFcmTokenAsync(string fcmToken, CancellationToken ct = default);
+
     Task PingAsync(CancellationToken ct = default);
 }

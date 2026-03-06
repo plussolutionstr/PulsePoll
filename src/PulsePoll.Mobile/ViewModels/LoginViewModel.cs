@@ -8,11 +8,13 @@ public partial class LoginViewModel : ObservableObject
 {
     private readonly IPulsePollApiClient _apiClient;
     private readonly IServiceProvider _serviceProvider;
+    private readonly IPushNotificationService _pushService;
 
-    public LoginViewModel(IPulsePollApiClient apiClient, IServiceProvider serviceProvider)
+    public LoginViewModel(IPulsePollApiClient apiClient, IServiceProvider serviceProvider, IPushNotificationService pushService)
     {
         _apiClient = apiClient;
         _serviceProvider = serviceProvider;
+        _pushService = pushService;
     }
 
     [ObservableProperty] private string _phoneNumber = string.Empty;
@@ -41,6 +43,7 @@ public partial class LoginViewModel : ObservableObject
             var success = await _apiClient.LoginAsync(PhoneNumber.Trim(), Password);
             if (success)
             {
+                _ = _pushService.RegisterAsync();
                 Application.Current!.Windows[0].Page = _serviceProvider.GetRequiredService<AppShell>();
             }
             else

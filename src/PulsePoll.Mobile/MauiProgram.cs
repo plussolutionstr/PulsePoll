@@ -76,6 +76,11 @@ public static class MauiProgram
         builder.Services.AddTransient<AppShell>();
 
         // Services
+#if ANDROID
+        builder.Services.AddSingleton<IPushNotificationService, Platforms.Android.PushNotificationService>();
+#elif IOS
+        builder.Services.AddSingleton<IPushNotificationService, Platforms.iOS.PushNotificationService>();
+#endif
         builder.Services.AddSingleton<NotificationCenterService>();
         builder.Services.AddSingleton<ITokenProvider, DevTokenProvider>();
         builder.Services.AddTransient<AuthDelegatingHandler>();

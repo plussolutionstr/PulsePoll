@@ -28,10 +28,10 @@
         <MauiXamlInflator>SourceGen</MauiXamlInflator>
 
         <!-- Display name -->
-        <ApplicationTitle>PulsePoll.Mobile</ApplicationTitle>
+        <ApplicationTitle>PulsePoll</ApplicationTitle>
 
         <!-- App Identifier -->
-        <ApplicationId>com.companyname.pulsepoll.mobile</ApplicationId>
+        <ApplicationId>com.pulsepoll.mobile</ApplicationId>
 
         <!-- Versions -->
         <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
@@ -45,6 +45,11 @@
         <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">21.0</SupportedOSPlatformVersion>
         <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
         <TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="$(TargetFramework.Contains('-ios'))">
+        <CodesignKey>Apple Development</CodesignKey>
+        <CodesignProvision>pulsepoll-provisioning</CodesignProvision>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net10.0-android|AnyCPU'">
@@ -80,6 +85,12 @@
         <PackageReference Include="Microsoft.Extensions.Logging.Debug"/>
         <PackageReference Include="CommunityToolkit.Maui"/>
         <PackageReference Include="CommunityToolkit.Mvvm"/>
+    </ItemGroup>
+
+    <!-- Android: Firebase Cloud Messaging -->
+    <ItemGroup Condition="$(TargetFramework.Contains('-android'))">
+        <PackageReference Include="Xamarin.Firebase.Messaging"/>
+        <GoogleServicesJson Include="Platforms\Android\google-services.json" Condition="Exists('Platforms\Android\google-services.json')"/>
     </ItemGroup>
 
 </Project>

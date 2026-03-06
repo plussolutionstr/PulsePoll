@@ -24,8 +24,14 @@ public partial class HistoryViewModel : ObservableObject
     [ObservableProperty] private int _disqualifiedCount;
     [ObservableProperty] private decimal _totalEarned;
     [ObservableProperty] private string _rewardUnitLabel = "Poll";
-    [ObservableProperty] private ObservableCollection<HistoryItemModel> _flatItems = [];
-    [ObservableProperty] private bool _isLoading;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsListEmpty))]
+    private ObservableCollection<HistoryItemModel> _flatItems = [];
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsListEmpty))]
+    private bool _isLoading;
+
+    public bool IsListEmpty => !IsLoading && FlatItems.Count == 0;
     public string TotalEarnedDisplay => $"{TotalEarned:0.##} {RewardUnitLabel}";
 
     public List<string> Filters => ["Tümü", "Tamamlandı", "Elendi", "Devam Ediyor"];

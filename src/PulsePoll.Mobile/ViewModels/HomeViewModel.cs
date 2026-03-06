@@ -24,8 +24,12 @@ public partial class HomeViewModel : ObservableObject
 
     [ObservableProperty] private ObservableCollection<StoryModel> _stories = [];
     [ObservableProperty] private ObservableCollection<NewsModel> _news = [];
-    [ObservableProperty] private ObservableCollection<SurveyModel> _surveys = [];
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasNoSurveys))]
+    private ObservableCollection<SurveyModel> _surveys = [];
     [ObservableProperty] private bool _isLoading;
+
+    public bool HasNoSurveys => Surveys.Count == 0 && _isLoaded;
     [ObservableProperty] private bool _isRefreshing;
     [ObservableProperty] private bool _needsRefreshOnReturn;
     [ObservableProperty] private bool _hasUnreadNotifications;
@@ -43,6 +47,7 @@ public partial class HomeViewModel : ObservableObject
         {
             await FetchDataAsync();
             _isLoaded = true;
+            OnPropertyChanged(nameof(HasNoSurveys));
         }
         catch
         {
@@ -61,6 +66,7 @@ public partial class HomeViewModel : ObservableObject
         {
             await FetchDataAsync();
             _isLoaded = true;
+            OnPropertyChanged(nameof(HasNoSurveys));
             NeedsRefreshOnReturn = false;
         }
         catch
@@ -108,6 +114,7 @@ public partial class HomeViewModel : ObservableObject
             Stories = new ObservableCollection<StoryModel>(orderedStories);
             News = new ObservableCollection<NewsModel>(news);
             Surveys = new ObservableCollection<SurveyModel>(surveys.Take(3));
+            OnPropertyChanged(nameof(HasNoSurveys));
         });
     }
 

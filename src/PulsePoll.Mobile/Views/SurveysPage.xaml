@@ -78,6 +78,35 @@
             </VerticalStackLayout>
         </ScrollView>
 
+        <!-- Empty State -->
+        <VerticalStackLayout IsVisible="{Binding IsEmpty}"
+                             VerticalOptions="Center"
+                             HorizontalOptions="Center"
+                             Spacing="16"
+                             Padding="40,0">
+            <Border StrokeThickness="0"
+                    StrokeShape="RoundRectangle 40"
+                    BackgroundColor="{StaticResource PrimaryLight}"
+                    HeightRequest="80" WidthRequest="80"
+                    HorizontalOptions="Center">
+                <Label Text="&#x1F4CB;"
+                       FontSize="36"
+                       HorizontalOptions="Center"
+                       VerticalOptions="Center"/>
+            </Border>
+            <Label Text="Henüz aktif anket yok"
+                   FontFamily="JakartaSemiBold"
+                   FontSize="18"
+                   TextColor="{StaticResource TextPrimary}"
+                   HorizontalTextAlignment="Center"/>
+            <Label Text="Yeni anketler eklendiğinde burada görünecek. Takipte kal!"
+                   FontFamily="JakartaRegular"
+                   FontSize="14"
+                   TextColor="{StaticResource TextSecondary}"
+                   HorizontalTextAlignment="Center"
+                   LineBreakMode="WordWrap"/>
+        </VerticalStackLayout>
+
         <ActivityIndicator IsVisible="{Binding IsLoading}"
                            IsRunning="{Binding IsLoading}"
                            Color="{StaticResource PrimaryPurple}"

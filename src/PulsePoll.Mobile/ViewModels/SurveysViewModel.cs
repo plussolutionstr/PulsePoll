@@ -15,8 +15,14 @@ public partial class SurveysViewModel : ObservableObject
         _apiClient = apiClient;
     }
 
-    [ObservableProperty] private ObservableCollection<SurveyModel> _surveys = [];
-    [ObservableProperty] private bool _isLoading;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsEmpty))]
+    private ObservableCollection<SurveyModel> _surveys = [];
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsEmpty))]
+    private bool _isLoading;
+
+    public bool IsEmpty => !IsLoading && Surveys.Count == 0;
 
     private bool _isLoaded;
 
