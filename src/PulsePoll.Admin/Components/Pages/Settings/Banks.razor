@@ -2,7 +2,7 @@
 @attribute [HasPermission(PermissionCodes.Settings.View)]
 @using PulsePoll.Application.DTOs
 @using PulsePoll.Domain.Entities
-@inject IDbContextFactory<AppDbContext> ContextFactory
+@inject IBankService BankSvc
 @inject IAppToastService Toast
 @inject IPermissionAuthorizationService PermissionService
 @inject IMediaAssetService MediaAssetService
@@ -206,10 +206,7 @@
 
     private async Task LoadAsync()
     {
-        await using var db = await ContextFactory.CreateDbContextAsync();
-        _items = await db.Banks
-            .OrderBy(b => b.Name)
-            .ToListAsync();
+        _items = await BankSvc.GetAllAsync();
 
         _allMedia = await MediaAssetService.GetAllAsync();
         _mediaUrlMap = _allMedia.ToDictionary(m => m.Id, m => m.Url);
@@ -315,18 +312,16 @@
 
     private async Task ToggleActiveAsync(Bank item)
     {
-        await using var db = await ContextFactory.CreateDbContextAsync();
-        var bank = await db.Banks.FirstOrDefaultAsync(b => b.Id == item.Id);
-        if (bank is null)
+        try
         {
-            Toast.Error("Banka kaydı bulunamadı.");
-            return;
+            await BankSvc.ToggleActiveAsync(item.Id);
+            await LoadAsync();
+            Toast.Success("Banka durumu güncellendi.");
         }
-
-        bank.IsActive = !bank.IsActive;
-        await db.SaveChangesAsync();
-        await LoadAsync();
-        Toast.Success("Banka durumu güncellendi.");
+        catch (Exception ex)
+        {
+            Toast.Error(ex.Message);
+        }
     }
 
     private async Task SaveAsync()
@@ -344,36 +339,13 @@
         _formError = null;
         try
         {
-            await using var db = await ContextFactory.CreateDbContextAsync();
-            var normalizedName = _form.Name.Trim();
-
-            var duplicateExists = await db.Banks
-                .AnyAsync(b => b.Name == normalizedName && b.Id != _form.Id);
-            if (duplicateExists)
-            {
-                _formError = "Aynı isimde bir banka zaten mevcut.";
-                return;
-            }
-
-            Bank entity;
-            if (_form.Id > 0)
-            {
-                entity = await db.Banks.FirstOrDefaultAsync(b => b.Id == _form.Id)
-                    ?? throw new InvalidOperationException("Banka kaydı bulunamadı.");
-            }
-            else
-            {
-                entity = new Bank();
-                db.Banks.Add(entity);
-            }
-
-            entity.Name = normalizedName;
-            entity.Code = string.IsNullOrWhiteSpace(_form.Code) ? null : _form.Code.Trim().ToUpperInvariant();
-            entity.IsActive = _form.IsActive;
-            entity.ThumbnailMediaAssetId = _form.ThumbnailMediaAssetId;
-            entity.LogoMediaAssetId = _form.LogoMediaAssetId;
-
-            await db.SaveChangesAsync();
+            await BankSvc.CreateOrUpdateAsync(
+                _form.Id,
+                _form.Name,
+                _form.Code,
+                _form.IsActive,
+                _form.ThumbnailMediaAssetId,
+                _form.LogoMediaAssetId);
 
             _popupVisible = false;
             await LoadAsync();
