@@ -53,6 +53,7 @@ public static class MauiProgram
                 Microsoft.Maui.Handlers.EntryHandler.Mapper.AppendToMapping("NoBorder", (handler, view) =>
                 {
                     handler.PlatformView.BorderStyle = UIKit.UITextBorderStyle.None;
+                    handler.PlatformView.InputAccessoryView = null;
                 });
 
                 handlers.AddHandler<Picker, Microsoft.Maui.Handlers.PickerHandler>();
