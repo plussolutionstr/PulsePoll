@@ -59,7 +59,7 @@
                                 HeightRequest="88" WidthRequest="88"
                                 IsVisible="{Binding HasProfilePhoto}"
                                 HorizontalOptions="Center">
-                            <Image Source="{Binding ProfilePhotoUrl}"
+                            <Image Source="{Binding ProfilePhotoSource}"
                                    Aspect="AspectFill"/>
                         </Border>
                         <!-- Camera icon -->

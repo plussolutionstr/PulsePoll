@@ -60,4 +60,7 @@ public interface IPulsePollApiClient
     Task UpdateFcmTokenAsync(string fcmToken, CancellationToken ct = default);
 
     Task PingAsync(CancellationToken ct = default);
+
+    // Media (auth-required)
+    Task<byte[]?> GetImageBytesAsync(string url, CancellationToken ct = default);
 }

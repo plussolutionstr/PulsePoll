@@ -22,7 +22,7 @@ public partial class ProfileViewModel : ObservableObject
     // Header
     [ObservableProperty] private string _fullName = "";
     [ObservableProperty] private string _initials = "";
-    [ObservableProperty] private string? _profilePhotoUrl;
+    [ObservableProperty] private ImageSource? _profilePhotoSource;
     [ObservableProperty] private bool _hasProfilePhoto;
     [ObservableProperty] private string _referralCode = "";
     [ObservableProperty] private int _star;
@@ -156,13 +156,9 @@ public partial class ProfileViewModel : ObservableObject
     {
         FullName = p.FullName;
         Initials = GetInitials(p.FirstName, p.LastName);
-        var photoUrl = p.ProfilePhotoUrl;
-        if (!string.IsNullOrEmpty(photoUrl))
-            photoUrl = photoUrl.Contains('?')
-                ? $"{photoUrl}&v={DateTime.UtcNow.Ticks}"
-                : $"{photoUrl}?v={DateTime.UtcNow.Ticks}";
-        ProfilePhotoUrl = photoUrl;
         HasProfilePhoto = !string.IsNullOrEmpty(p.ProfilePhotoUrl);
+        if (HasProfilePhoto)
+            _ = LoadProfilePhotoAsync(p.ProfilePhotoUrl!);
         ReferralCode = p.ReferralCode;
         Star = p.Star ?? 0;
 
@@ -356,11 +352,8 @@ public partial class ProfileViewModel : ObservableObject
 
             if (!string.IsNullOrEmpty(url))
             {
-                // Same URL path returns for the same user (e.g. /1.jpg) — bust MAUI image cache
-                ProfilePhotoUrl = null;
-                await Task.Delay(50);
-                ProfilePhotoUrl = $"{url}?v={DateTime.UtcNow.Ticks}";
                 HasProfilePhoto = true;
+                await LoadProfilePhotoAsync(url);
                 StatusMessage = "Fotoğraf yüklendi.";
             }
         }
@@ -401,6 +394,20 @@ public partial class ProfileViewModel : ObservableObject
             BarBackgroundColor = Color.FromArgb("#F7F5FF"),
             BarTextColor = Color.FromArgb("#1A1535")
         };
+    }
+
+    private async Task LoadProfilePhotoAsync(string url)
+    {
+        try
+        {
+            var bytes = await _api.GetImageBytesAsync(url);
+            if (bytes is { Length: > 0 })
+                ProfilePhotoSource = ImageSource.FromStream(() => new MemoryStream(bytes));
+        }
+        catch
+        {
+            // ignore — initials will show instead
+        }
     }
 
     private static string GetInitials(string firstName, string lastName)

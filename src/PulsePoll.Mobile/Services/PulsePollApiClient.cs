@@ -315,4 +315,12 @@ public sealed class PulsePollApiClient : IPulsePollApiClient
         var response = await _http.GetAsync("api/projects", ct);
         response.EnsureSuccessStatusCode();
     }
+
+    public async Task<byte[]?> GetImageBytesAsync(string url, CancellationToken ct = default)
+    {
+        var response = await _http.GetAsync(url, ct);
+        if (!response.IsSuccessStatusCode)
+            return null;
+        return await response.Content.ReadAsByteArrayAsync(ct);
+    }
 }
