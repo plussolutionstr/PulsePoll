@@ -10,6 +10,7 @@ public class MediaAssetRepository(AppDbContext db) : IMediaAssetRepository
         => db.MediaAssets
              .Include(a => a.Projects.Where(p => p.DeletedAt == null))
              .Include(a => a.Stories.Where(s => s.DeletedAt == null))
+             .Include(a => a.StoryImages.Where(s => s.DeletedAt == null))
              .Include(a => a.News.Where(n => n.DeletedAt == null))
              .Include(a => a.BankThumbnails)
              .Include(a => a.BankLogos)
@@ -21,6 +22,7 @@ public class MediaAssetRepository(AppDbContext db) : IMediaAssetRepository
         => db.MediaAssets
              .Include(a => a.Projects.Where(p => p.DeletedAt == null))
              .Include(a => a.Stories.Where(s => s.DeletedAt == null))
+             .Include(a => a.StoryImages.Where(s => s.DeletedAt == null))
              .Include(a => a.News.Where(n => n.DeletedAt == null))
              .Include(a => a.BankThumbnails)
              .Include(a => a.BankLogos)

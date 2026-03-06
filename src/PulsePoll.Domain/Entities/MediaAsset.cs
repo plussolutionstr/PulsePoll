@@ -17,6 +17,7 @@ public class MediaAsset : EntityBase
 
     public ICollection<Project> Projects { get; set; } = [];
     public ICollection<Story> Stories { get; set; } = [];
+    public ICollection<Story> StoryImages { get; set; } = [];
     public ICollection<News> News { get; set; } = [];
     public ICollection<Bank> BankThumbnails { get; set; } = [];
     public ICollection<Bank> BankLogos { get; set; } = [];

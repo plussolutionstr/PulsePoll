@@ -15,6 +15,8 @@ public class SubjectService(
     IStorageService storageService,
     IMediaUrlService mediaUrlService,
     IMessagePublisher publisher,
+    ICacheService cache,
+    IRefreshTokenRepository refreshTokenRepository,
     ILogger<SubjectService> logger) : ISubjectService
 {
     public async Task<SubjectDto?> GetByIdAsync(int id)
@@ -139,6 +141,9 @@ public class SubjectService(
 
         subject.Status = ApprovalStatus.Rejected;
         await repository.UpdateAsync(subject);
+
+        await cache.RemoveAsync($"session:{id}");
+        await refreshTokenRepository.RevokeAllForSubjectAsync(id, "Account rejected by admin");
 
         logger.LogInformation("Denek reddedildi: {SubjectId} by Admin {AdminId}", id, adminId);
     }

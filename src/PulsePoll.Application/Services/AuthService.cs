@@ -196,6 +196,13 @@ public class AuthService(
         var subject = await subjectRepository.GetByIdAsync(stored.SubjectId)
             ?? throw new NotFoundException("Denek");
 
+        if (subject.Status != ApprovalStatus.Approved)
+        {
+            await refreshTokenRepository.RevokeAllForSubjectAsync(subject.Id, "Account not approved");
+            await cache.RemoveAsync(SessionKey(subject.Id));
+            throw new BusinessException("ACCOUNT_NOT_APPROVED", "Hesabınız askıya alınmış veya onaylanmamış.");
+        }
+
         stored.RevokedAt = TurkeyTime.Now;
         stored.RevokedReason = "Replaced by new token";
 

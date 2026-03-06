@@ -32,7 +32,7 @@ public class StoryConfiguration : IEntityTypeConfiguration<Story>
                .OnDelete(DeleteBehavior.SetNull);
 
         builder.HasOne(s => s.StoryMediaAsset)
-               .WithMany()
+               .WithMany(a => a.StoryImages)
                .HasForeignKey(s => s.StoryMediaAssetId)
                .HasConstraintName("fk_stories_story_media_assets")
                .OnDelete(DeleteBehavior.SetNull);

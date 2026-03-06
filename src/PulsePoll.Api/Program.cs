@@ -55,6 +55,7 @@ app.UseSerilogRequestLogging(opts =>
 app.UseCors("Default");
 app.UseMiddleware<ExceptionMiddleware>();
 app.UseAuthentication();
+app.UseMiddleware<SessionValidationMiddleware>();
 app.UseRateLimiter();
 app.UseAuthorization();
 app.MapControllers();
