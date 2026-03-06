@@ -33,6 +33,7 @@ jobs:
           TWILIO_AUTH_TOKEN=${{ secrets.TWILIO_AUTH_TOKEN }}
           TWILIO_VERIFY_SERVICE_SID=${{ secrets.TWILIO_VERIFY_SERVICE_SID }}
           TWILIO_FROM_NUMBER=${{ secrets.TWILIO_FROM_NUMBER }}
+          DEVEXPRESS_LICENSE=${{ secrets.DEVEXPRESS_LICENSE }}
           EOF
           sed -i 's/^          //' .env
 

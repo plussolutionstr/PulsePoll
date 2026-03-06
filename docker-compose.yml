@@ -133,6 +133,8 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile.admin
+      args:
+        DEVEXPRESS_LICENSE: ${DEVEXPRESS_LICENSE:-}
     container_name: pulsepoll-admin
     restart: unless-stopped
     environment:

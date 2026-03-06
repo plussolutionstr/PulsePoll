@@ -5,6 +5,10 @@ EXPOSE 8080
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
+ARG DEVEXPRESS_LICENSE
+RUN mkdir -p /root/.config/DevExpress && \
+    echo "$DEVEXPRESS_LICENSE" > /root/.config/DevExpress/DevExpress_License.txt
+
 COPY docker/nuget.config /src/nuget.config
 COPY Directory.Packages.props .
 COPY PulsePoll.sln .
