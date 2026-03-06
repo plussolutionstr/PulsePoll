@@ -46,7 +46,7 @@ jobs:
         run: |
           docker cp docker/nginx/pulsepoll.conf pulsify-nginx:/etc/nginx/conf.d/pulsepoll.conf
           docker exec pulsify-nginx nginx -t
-          docker exec pulsify-nginx nginx -s reload
+          docker restart pulsify-nginx
 
       - name: Health check
         run: |
