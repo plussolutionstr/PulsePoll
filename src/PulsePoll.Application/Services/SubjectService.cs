@@ -96,7 +96,12 @@ public class SubjectService(
                     : subject.ProfilePhotoUrl;
                 await storageService.DeleteAsync("profile-photos", oldKey);
             }
-            catch { /* ignore if old photo doesn't exist */ }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex,
+                    "Önceki profil fotoğrafı silinemedi, yeni yükleme ile devam ediliyor: SubjectId={SubjectId}",
+                    subjectId);
+            }
         }
 
         await storageService.UploadAsync("profile-photos", objectName, stream, contentType);
@@ -151,8 +156,7 @@ public class SubjectService(
     public async Task SendBulkSmsAsync(IEnumerable<int> subjectIds, string message, int sentByAdminId)
     {
         var ids = subjectIds.ToList();
-        var subjects = await repository.GetAllAsync();
-        var targets = subjects.Where(s => ids.Contains(s.Id)).ToList();
+        var targets = await repository.GetByIdsAsync(ids);
 
         foreach (var s in targets)
             await publisher.PublishAsync(
@@ -174,7 +178,12 @@ public class SubjectService(
                     : s.ProfilePhotoUrl;
                 photoUrl = await mediaUrlService.GetMediaUrlAsync("profile-photos", key);
             }
-            catch { /* presigned URL üretilemezse null bırak */ }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex,
+                    "Profil fotoğrafı URL'i üretilemedi: SubjectId={SubjectId}",
+                    s.Id);
+            }
         }
 
         return BuildDto(s, score, photoUrl);

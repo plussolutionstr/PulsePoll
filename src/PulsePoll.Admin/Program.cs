@@ -1,6 +1,5 @@
 using System.Security.Claims;
 using System.Net;
-using System.Net.Sockets;
 using System.Threading.RateLimiting;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
@@ -111,8 +110,6 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
     options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-    options.KnownIPNetworks.Clear();
-    options.KnownProxies.Clear();
 });
 
 var app = builder.Build();
@@ -190,7 +187,7 @@ app.MapPost("/api/auth/login", async (
         success = true,
         redirectUrl = ReturnUrlSafety.Normalize(request.ReturnUrl)
     });
-}).AllowAnonymous().DisableAntiforgery().RequireRateLimiting("admin-login");
+}).AllowAnonymous().RequireRateLimiting("admin-login");
 
 // Logout endpoint
 app.MapGet("/logout", async (HttpContext httpContext) =>
@@ -199,12 +196,16 @@ app.MapGet("/logout", async (HttpContext httpContext) =>
     return Results.Redirect("/login");
 }).AllowAnonymous();
 
-// Media proxy — serves MinIO objects through the admin app
-app.MapGet("/api/media/{bucket}/{objectKey}", async (
+// Media proxy — serves MinIO objects through the admin app (authenticated, bucket-restricted)
+app.MapGet("/api/media/{bucket}/{**objectKey}", async (
     string bucket,
     string objectKey,
     IStorageService storageService) =>
 {
+    HashSet<string> allowedBuckets = ["media-library", "stories", "profile-photos", "customers"];
+    if (!allowedBuckets.Contains(bucket))
+        return Results.NotFound();
+
     try
     {
         var (stream, contentType) = await storageService.GetObjectStreamAsync(bucket, objectKey);
@@ -214,7 +215,7 @@ app.MapGet("/api/media/{bucket}/{objectKey}", async (
     {
         return Results.NotFound();
     }
-}).AllowAnonymous();
+}).RequireAuthorization();
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
@@ -226,52 +227,7 @@ public record LoginRequest(string Email, string Password, bool RememberMe = fals
 static class IpResolver
 {
     public static string ResolveClientIp(HttpContext ctx)
-    {
-        var remoteIp = ctx.Connection.RemoteIpAddress;
-
-        // Trust X-Forwarded-For only when request comes from a private/loopback proxy.
-        if (IsPrivateOrLoopback(remoteIp))
-        {
-            var xff = ctx.Request.Headers["X-Forwarded-For"].ToString();
-            if (!string.IsNullOrWhiteSpace(xff))
-            {
-                var first = xff
-                    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                    .FirstOrDefault();
-
-                if (!string.IsNullOrWhiteSpace(first) && IPAddress.TryParse(first, out var forwardedIp))
-                    return forwardedIp.ToString();
-            }
-        }
-
-        return remoteIp?.ToString() ?? "unknown";
-    }
-
-    private static bool IsPrivateOrLoopback(IPAddress? ip)
-    {
-        if (ip is null)
-            return false;
-
-        if (IPAddress.IsLoopback(ip))
-            return true;
-
-        if (ip.IsIPv4MappedToIPv6)
-            ip = ip.MapToIPv4();
-
-        if (ip.AddressFamily == AddressFamily.InterNetwork)
-        {
-            var bytes = ip.GetAddressBytes();
-            return bytes[0] == 10
-                   || (bytes[0] == 172 && bytes[1] is >= 16 and <= 31)
-                   || (bytes[0] == 192 && bytes[1] == 168)
-                   || bytes[0] == 127;
-        }
-
-        if (ip.AddressFamily == AddressFamily.InterNetworkV6)
-            return ip.IsIPv6LinkLocal || ip.IsIPv6SiteLocal || ip.IsIPv6UniqueLocal;
-
-        return false;
-    }
+        => ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown";
 }
 
 static class ReturnUrlSafety

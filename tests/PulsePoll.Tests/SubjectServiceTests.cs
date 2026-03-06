@@ -5,6 +5,7 @@ using PulsePoll.Application.Interfaces;
 using PulsePoll.Application.Messaging;
 using PulsePoll.Application.Services;
 using PulsePoll.Domain.Entities;
+using PulsePoll.Domain.Enums;
 using Xunit;
 
 namespace PulsePoll.Tests;
@@ -17,6 +18,8 @@ public class SubjectServiceTests
     private readonly Mock<IStorageService> _storageServiceMock = new();
     private readonly Mock<IMediaUrlService> _mediaUrlServiceMock = new();
     private readonly Mock<IMessagePublisher> _publisherMock = new();
+    private readonly Mock<ICacheService> _cacheMock = new();
+    private readonly Mock<IRefreshTokenRepository> _refreshTokenRepoMock = new();
     private readonly Mock<ILogger<SubjectService>> _loggerMock = new();
     private readonly SubjectService _sut;
 
@@ -29,14 +32,37 @@ public class SubjectServiceTests
             _storageServiceMock.Object,
             _mediaUrlServiceMock.Object,
             _publisherMock.Object,
+            _cacheMock.Object,
+            _refreshTokenRepoMock.Object,
             _loggerMock.Object);
     }
 
     [Fact]
     public async Task GetByIdAsync_WhenSubjectExists_ReturnsDto()
     {
-        // TODO: implement
-        await Task.CompletedTask;
+        var subject = new Subject
+        {
+            Id = 1,
+            PublicId = Guid.NewGuid(),
+            Email = "test@example.com",
+            FirstName = "Ali",
+            LastName = "Yılmaz",
+            PhoneNumber = "5551234567",
+            Gender = Gender.Male,
+            BirthDate = new DateOnly(1990, 1, 1),
+            MaritalStatus = MaritalStatus.Single,
+            GsmOperator = GsmOperator.Turkcell,
+            ReferralCode = "ABC123",
+            Status = ApprovalStatus.Approved
+        };
+        _repoMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(subject);
+        _scoreServiceMock.Setup(s => s.GetCurrentAsync(1)).ReturnsAsync((Application.DTOs.SubjectScoreDto?)null);
+
+        var result = await _sut.GetByIdAsync(1);
+
+        result.Should().NotBeNull();
+        result!.Id.Should().Be(1);
+        result.FirstName.Should().Be("Ali");
     }
 
     [Fact]

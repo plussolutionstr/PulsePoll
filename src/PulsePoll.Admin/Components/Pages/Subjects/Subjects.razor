@@ -1,10 +1,9 @@
 @page "/subjects"
 @attribute [HasPermission(PermissionCodes.Subjects.View)]
-@implements IDisposable
 @using System.Security.Claims
 @using PulsePoll.Application.Extensions
 @inject ISubjectService SubjectService
-@inject IDbContextFactory<AppDbContext> ContextFactory
+@inject IAdminGridDataService AdminGridDataService
 @inject INotificationService NotificationService
 @inject IAppToastService Toast
 @inject AuthenticationStateProvider AuthStateProvider
@@ -85,8 +84,6 @@
                     <DxFilterBuilderField FieldName="HeadOfFamilyEducationLevel.Name" Caption="A.R. Eğitim"
                                           Type="@typeof(string)"/>
                     <DxFilterBuilderField FieldName="SocioeconomicStatus.Code" Caption="SES" Type="@typeof(string)"/>
-                    <DxFilterBuilderField FieldName="LSMSocioeconomicStatus.Code" Caption="LSM SES"
-                                          Type="@typeof(string)"/>
                     <DxFilterBuilderField FieldName="PublicId" Caption="Public ID" Type="@typeof(Guid)"/>
                     <DxFilterBuilderField FieldName="ReferenceCode" Caption="Referans Kodu" Type="@typeof(string)"/>
                     <DxFilterBuilderField FieldName="ReferralCode" Caption="Davet Kodu" Type="@typeof(string)"/>
@@ -222,8 +219,6 @@
             <DxGridDataColumn FieldName="HeadOfFamilyProfession.Name" Caption="A.R. Meslek" Width="140px"/>
             <DxGridDataColumn FieldName="HeadOfFamilyEducationLevel.Name" Caption="A.R. Eğitim" Width="140px"/>
             <DxGridDataColumn FieldName="SocioeconomicStatus.Code" Caption="SES" Width="65px"
-                              TextAlignment="GridTextAlignment.Center"/>
-            <DxGridDataColumn FieldName="LSMSocioeconomicStatus.Code" Caption="LSM SES" Width="80px"
                               TextAlignment="GridTextAlignment.Center"/>
             <DxGridDataColumn Caption="Banka Hesapları" Width="220px">
                 <CellDisplayTemplate>
@@ -377,10 +372,6 @@
                         <label class="form-label">SES</label>
                         <DxTextBox Text="@(_selectedItem.SocioeconomicStatus?.Name)" ReadOnly="true"/>
                     </DxFormLayoutItem>
-                    <DxFormLayoutItem ColSpanMd="4">
-                        <label class="form-label">LSM SES</label>
-                        <DxTextBox Text="@(_selectedItem.LSMSocioeconomicStatus?.Name)" ReadOnly="true"/>
-                    </DxFormLayoutItem>
                 </DxFormLayoutGroup>
                 <DxFormLayoutGroup Caption="Finansal Bilgiler" ColSpanMd="12">
                     <DxFormLayoutItem ColSpanMd="12">
@@ -515,7 +506,6 @@
     private DxContextMenu? _contextMenu;
     private Subject? _selectedItem;
 
-    private AppDbContext? _context;
     private GridDevExtremeDataSource<Subject>? _dataSource;
     private IReadOnlyList<object> _selectedSubjects = [];
     private bool _isLoading = true;
@@ -563,31 +553,9 @@
     {
         await LoadPermissionsAsync();
 
-        await using (var bankContext = await ContextFactory.CreateDbContextAsync())
-        {
-            var bankAccounts = await bankContext.BankAccounts
-                .Where(b => b.DeletedAt == null)
-                .OrderByDescending(b => b.IsDefault)
-                .ThenBy(b => b.CreatedAt)
-                .AsNoTracking()
-                .ToListAsync();
-            _bankAccountMap = bankAccounts
-                .GroupBy(b => b.SubjectId)
-                .ToDictionary(g => g.Key, g => g.ToList());
-        }
+        _bankAccountMap = await AdminGridDataService.GetBankAccountsBySubjectAsync();
 
-        _context = await ContextFactory.CreateDbContextAsync();
-        var query = _context.Subjects
-            .Include(s => s.City)
-            .Include(s => s.District)
-            .Include(s => s.Profession)
-            .Include(s => s.EducationLevel)
-            .Include(s => s.HeadOfFamilyProfession)
-            .Include(s => s.HeadOfFamilyEducationLevel)
-            .Include(s => s.SocioeconomicStatus)
-            .Include(s => s.LSMSocioeconomicStatus)
-            .Include(s => s.ScoreSnapshot)
-            .AsNoTracking();
+        var query = AdminGridDataService.GetSubjectsQuery(includeScoreSnapshot: true);
         _dataSource = new GridDevExtremeDataSource<Subject>(query);
         _isLoading = false;
     }
@@ -899,11 +867,6 @@
         return claim is not null && int.TryParse(claim.Value, out var adminId)
             ? adminId
             : 0;
-    }
-
-    public void Dispose()
-    {
-        _context?.Dispose();
     }
 
 }

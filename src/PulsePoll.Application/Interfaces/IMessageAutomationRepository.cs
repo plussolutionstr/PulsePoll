@@ -19,5 +19,8 @@ public interface IMessageAutomationRepository
     Task UpdateCampaignAsync(MessageCampaign campaign);
 
     Task<bool> DispatchLogExistsAsync(int campaignId, int subjectId, DateOnly occurrenceDate, MessageChannelType channelType);
+    Task<HashSet<(int SubjectId, MessageChannelType ChannelType)>> GetExistingDispatchLogsAsync(
+        int campaignId, IEnumerable<int> subjectIds, DateOnly occurrenceDate);
     Task AddDispatchLogAsync(MessageDispatchLog log);
+    Task AddDispatchLogsAsync(List<MessageDispatchLog> logs);
 }

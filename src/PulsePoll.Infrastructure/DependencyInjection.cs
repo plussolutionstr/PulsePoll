@@ -85,6 +85,8 @@ public static class DependencyInjection
         services.AddScoped<ISmsLogRepository, SmsLogRepository>();
         services.AddScoped<IPaymentBatchRepository, PaymentBatchRepository>();
         services.AddScoped<IPaymentSettingRepository, PaymentSettingRepository>();
+        services.AddScoped<IBankRepository, BankRepository>();
+        services.AddScoped<IAdminGridDataService, AdminGridDataService>();
 
         // Auth
         services.Configure<JwtSettings>(config.GetSection(JwtSettings.SectionName));

@@ -63,6 +63,11 @@ public class SubjectRepository(AppDbContext db) : ISubjectRepository
              .OrderByDescending(s => s.CreatedAt)
              .ToListAsync();
 
+    public Task<List<Subject>> GetByIdsAsync(List<int> ids)
+        => db.Subjects
+             .Where(s => ids.Contains(s.Id))
+             .ToListAsync();
+
     public Task<List<int>> GetAllIdsAsync()
         => db.Subjects
              .AsNoTracking()

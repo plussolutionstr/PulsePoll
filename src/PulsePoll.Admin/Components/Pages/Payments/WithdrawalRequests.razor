@@ -1,9 +1,9 @@
 @page "/payments/withdrawals"
 @attribute [HasPermission(PermissionCodes.Payments.WithdrawalsView)]
-@implements IDisposable
 @using System.Security.Claims
-@inject IDbContextFactory<AppDbContext> ContextFactory
+@inject IAdminGridDataService AdminGridDataService
 @inject IPaymentBatchService PaymentBatchService
+@inject ILogger<WithdrawalRequests> Logger
 @inject IAppToastService Toast
 @inject AuthenticationStateProvider AuthStateProvider
 @inject IPermissionAuthorizationService PermissionService
@@ -195,7 +195,6 @@
     bool _canExport;
     bool _isActionRunning;
 
-    AppDbContext? _context;
     GridDevExtremeDataSource<WithdrawalRequest>? _dataSource;
 
     WithdrawalRequest? _selectedItem;
@@ -215,20 +214,9 @@
 
     private void RecreateDataSource()
     {
-        _context?.Dispose();
-        _context = ContextFactory.CreateDbContext();
-
-        IQueryable<WithdrawalRequest> query = _context.WithdrawalRequests
-            .Include(w => w.Subject)
-            .Include(w => w.BankAccount)
-            .OrderByDescending(w => w.CreatedAt)
-            .AsNoTracking();
-
-        if (_activeTab == "pending")
-            query = query.Where(w => w.Status == ApprovalStatus.Pending);
-        else
-            query = query.Where(w => w.Status == ApprovalStatus.Approved
-                                     && !_context.Set<PaymentBatchItem>().Any(i => i.WithdrawalRequestId == w.Id && i.DeletedAt == null));
+        var query = _activeTab == "pending"
+            ? AdminGridDataService.GetPendingWithdrawalsQuery()
+            : AdminGridDataService.GetApprovedWithoutBatchWithdrawalsQuery();
 
         _dataSource = new GridDevExtremeDataSource<WithdrawalRequest>(query);
     }
@@ -312,6 +300,7 @@
         var adminId = await GetAdminIdAsync();
         _isActionRunning = true;
         var approvedCount = 0;
+        var failedCount = 0;
         try
         {
             foreach (var id in selectedIds)
@@ -321,9 +310,10 @@
                     await PaymentBatchService.ApproveWithdrawalAsync(id, adminId);
                     approvedCount++;
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // tek bir kaydın hatası toplu işlemi tamamen durdurmasın
+                    Logger.LogWarning(ex, "Toplu çekim onayında kayıt işlenemedi: RequestId={RequestId}", id);
+                    failedCount++;
                 }
             }
 
@@ -331,6 +321,9 @@
                 Toast.Success($"{approvedCount} talep onaylandı.");
             else
                 Toast.Error("Seçili talepler onaylanamadı.");
+
+            if (failedCount > 0)
+                Toast.Warning($"{failedCount} talep hata nedeniyle atlandı.");
         }
         finally
         {
@@ -389,6 +382,7 @@
         _rejectPopupVisible = false;
         _isActionRunning = true;
         var rejectedCount = 0;
+        var failedCount = 0;
         try
         {
             foreach (var id in _rejectIds.Distinct())
@@ -398,9 +392,10 @@
                     await PaymentBatchService.RejectWithdrawalAsync(id, _rejectReason, adminId);
                     rejectedCount++;
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // tekil hata toplu süreci komple bozmasın
+                    Logger.LogWarning(ex, "Toplu çekim reddinde kayıt işlenemedi: RequestId={RequestId}", id);
+                    failedCount++;
                 }
             }
 
@@ -408,6 +403,9 @@
                 Toast.Success($"{rejectedCount} talep reddedildi, tutar iade edildi.");
             else
                 Toast.Error("Seçili talepler reddedilemedi.");
+
+            if (failedCount > 0)
+                Toast.Warning($"{failedCount} talep hata nedeniyle atlandı.");
         }
         catch (Exception ex) { ErrorHandler.HandleOperation(ex, Toast); }
         finally
@@ -467,23 +465,9 @@
         }
     }
 
-    public void Dispose()
-    {
-        _context?.Dispose();
-    }
-
     private async Task SelectAllPendingAsync()
     {
-        if (_context is null)
-            return;
-
-        var allPendingRows = await _context.WithdrawalRequests
-            .Include(w => w.Subject)
-            .Include(w => w.BankAccount)
-            .AsNoTracking()
-            .Where(w => w.Status == ApprovalStatus.Pending)
-            .OrderByDescending(w => w.CreatedAt)
-            .ToListAsync();
+        var allPendingRows = await AdminGridDataService.GetAllPendingWithdrawalsAsync();
 
         _selectedRows = allPendingRows.Cast<object>().ToList();
     }
@@ -503,13 +487,9 @@
     private async Task<List<int>> GetSelectedPendingIdsAsync()
     {
         var selectedIds = GetSelectedPendingIds();
-        if (_context is null || selectedIds.Count == 0)
+        if (selectedIds.Count == 0)
             return [];
 
-        return await _context.WithdrawalRequests
-            .AsNoTracking()
-            .Where(w => w.Status == ApprovalStatus.Pending && selectedIds.Contains(w.Id))
-            .Select(w => w.Id)
-            .ToListAsync();
+        return await AdminGridDataService.GetPendingWithdrawalIdsAsync(selectedIds);
     }
 }

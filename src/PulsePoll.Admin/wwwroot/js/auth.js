@@ -1,9 +1,14 @@
 window.adminAuth = {
     login: async (data) => {
         try {
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+            const headers = { 'Content-Type': 'application/json' };
+            if (token) {
+                headers['RequestVerificationToken'] = token;
+            }
             const response = await fetch('/api/auth/login', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: headers,
                 body: JSON.stringify(data)
             });
             if (!response.ok) {

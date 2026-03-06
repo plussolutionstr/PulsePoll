@@ -75,9 +75,30 @@ public class MessageAutomationRepository(AppDbContext db) : IMessageAutomationRe
             x.OccurrenceDate == occurrenceDate &&
             x.ChannelType == channelType);
 
+    public async Task<HashSet<(int SubjectId, MessageChannelType ChannelType)>> GetExistingDispatchLogsAsync(
+        int campaignId, IEnumerable<int> subjectIds, DateOnly occurrenceDate)
+    {
+        var ids = subjectIds.ToList();
+        var existing = await db.MessageDispatchLogs
+            .Where(x => x.CampaignId == campaignId &&
+                        ids.Contains(x.SubjectId) &&
+                        x.OccurrenceDate == occurrenceDate)
+            .Select(x => new { x.SubjectId, x.ChannelType })
+            .ToListAsync();
+
+        return existing.Select(x => (x.SubjectId, x.ChannelType)).ToHashSet();
+    }
+
     public async Task AddDispatchLogAsync(MessageDispatchLog log)
     {
         db.MessageDispatchLogs.Add(log);
+        await db.SaveChangesAsync();
+    }
+
+    public async Task AddDispatchLogsAsync(List<MessageDispatchLog> logs)
+    {
+        if (logs.Count == 0) return;
+        db.MessageDispatchLogs.AddRange(logs);
         await db.SaveChangesAsync();
     }
 }

@@ -134,60 +134,71 @@ public class WalletService(
         var wallet = await walletRepository.GetBySubjectIdAsync(subjectId)
             ?? throw new NotFoundException("Cüzdan");
 
-        wallet.Balance    += amount;
-        wallet.TotalEarned += amount;
-        wallet.SetUpdated(subjectId);
-
-        await walletRepository.UpdateAsync(wallet);
-
-        var transaction = new WalletTransaction
+        await walletRepository.BeginTransactionAsync();
+        try
         {
-            WalletId    = wallet.Id,
-            Amount      = amount,
-            Type        = WalletTransactionType.Credit,
-            ReferenceId = referenceId,
-            Description = description
-        };
-        transaction.SetCreated(subjectId);
-        await walletRepository.AddTransactionAsync(transaction);
+            wallet.Balance    += amount;
+            wallet.TotalEarned += amount;
+            wallet.SetUpdated(subjectId);
 
-        logger.LogInformation("Cüzdan kredilendirildi: SubjectId={SubjectId} Amount={Amount} Ref={ReferenceId}",
-            subjectId, amount, referenceId);
+            await walletRepository.UpdateAsync(wallet);
 
-        var creditTitle = "Kazanç!";
-        var rewardUnit = await rewardUnitConfigService.GetAsync();
-        var creditBody = $"{amount:F2} {rewardUnit.UnitLabel} hesabınıza eklendi.";
-        const string creditType = "wallet_credit";
+            var transaction = new WalletTransaction
+            {
+                WalletId    = wallet.Id,
+                Amount      = amount,
+                Type        = WalletTransactionType.Credit,
+                ReferenceId = referenceId,
+                Description = description
+            };
+            transaction.SetCreated(subjectId);
+            await walletRepository.AddTransactionAsync(transaction);
 
-        var creditNotification = new Notification
-        {
-            SubjectId = subjectId,
-            Title = creditTitle,
-            Body = creditBody,
-            Type = creditType
-        };
-        creditNotification.SetCreated(0);
-        await notificationRepository.AddAsync(creditNotification);
+            var creditTitle = "Kazanç!";
+            var rewardUnit = await rewardUnitConfigService.GetAsync();
+            var creditBody = $"{amount:F2} {rewardUnit.UnitLabel} hesabınıza eklendi.";
+            const string creditType = "wallet_credit";
 
-        var subject = await subjectRepository.GetByIdAsync(subjectId);
-        if (subject?.FcmToken is not null)
-        {
-            await publisher.PublishAsync(
-                new NotificationSendMessage(
+            var creditNotification = new Notification
+            {
+                SubjectId = subjectId,
+                Title = creditTitle,
+                Body = creditBody,
+                Type = creditType
+            };
+            creditNotification.SetCreated(0);
+            await notificationRepository.AddAsync(creditNotification);
+
+            await walletRepository.CommitTransactionAsync();
+
+            logger.LogInformation("Cüzdan kredilendirildi: SubjectId={SubjectId} Amount={Amount} Ref={ReferenceId}",
+                subjectId, amount, referenceId);
+
+            var subject = await subjectRepository.GetByIdAsync(subjectId);
+            if (subject?.FcmToken is not null)
+            {
+                await publisher.PublishAsync(
+                    new NotificationSendMessage(
+                        creditNotification.Id,
+                        subjectId,
+                        subject.FcmToken,
+                        creditTitle,
+                        creditBody,
+                        creditType),
+                    Queues.NotificationSend);
+            }
+            else
+            {
+                await notificationRepository.UpdateDeliveryStatusAsync(
                     creditNotification.Id,
-                    subjectId,
-                    subject.FcmToken,
-                    creditTitle,
-                    creditBody,
-                    creditType),
-                Queues.NotificationSend);
+                    DeliveryStatus.Skipped,
+                    null);
+            }
         }
-        else
+        catch
         {
-            await notificationRepository.UpdateDeliveryStatusAsync(
-                creditNotification.Id,
-                DeliveryStatus.Skipped,
-                null);
+            await walletRepository.RollbackTransactionAsync();
+            throw;
         }
     }
 
@@ -236,11 +247,22 @@ public class WalletService(
         if (request.Status != ApprovalStatus.Pending)
             throw new BusinessException("ALREADY_PROCESSED", "Bu talep zaten işlenmiş.");
 
-        request.Status      = ApprovalStatus.Approved;
-        request.ProcessedAt = TurkeyTime.Now;
-        request.ProcessedBy = adminId;
-        request.SetUpdated(adminId);
-        await withdrawalRequestRepository.UpdateAsync(request);
+        await walletRepository.BeginTransactionAsync();
+        try
+        {
+            request.Status      = ApprovalStatus.Approved;
+            request.ProcessedAt = TurkeyTime.Now;
+            request.ProcessedBy = adminId;
+            request.SetUpdated(adminId);
+            await withdrawalRequestRepository.UpdateAsync(request);
+
+            await walletRepository.CommitTransactionAsync();
+        }
+        catch
+        {
+            await walletRepository.RollbackTransactionAsync();
+            throw;
+        }
 
         logger.LogInformation("Para çekimi onaylandı: RequestId={RequestId} SubjectId={SubjectId} Amount={Amount}",
             requestId, request.SubjectId, request.Amount);
@@ -254,66 +276,77 @@ public class WalletService(
         if (request.Status != ApprovalStatus.Pending)
             throw new BusinessException("ALREADY_PROCESSED", "Bu talep zaten işlenmiş.");
 
-        request.Status          = ApprovalStatus.Rejected;
-        request.RejectionReason = reason;
-        request.ProcessedAt     = TurkeyTime.Now;
-        request.ProcessedBy     = adminId;
-        request.SetUpdated(adminId);
-
-        var wallet = await walletRepository.GetBySubjectIdAsync(request.SubjectId)
-            ?? throw new NotFoundException("Cüzdan");
-
-        wallet.Balance += request.Amount;
-        wallet.SetUpdated(0);
-        await walletRepository.UpdateAsync(wallet);
-
-        var refundTransaction = new WalletTransaction
+        await walletRepository.BeginTransactionAsync();
+        try
         {
-            WalletId    = wallet.Id,
-            Amount      = request.Amount,
-            Type        = WalletTransactionType.Credit,
-            ReferenceId = $"refund:{request.WalletTransactionId}",
-            Description = "Para çekimi iadesi"
-        };
-        refundTransaction.SetCreated(0);
-        await walletRepository.AddTransactionAsync(refundTransaction);
+            request.Status          = ApprovalStatus.Rejected;
+            request.RejectionReason = reason;
+            request.ProcessedAt     = TurkeyTime.Now;
+            request.ProcessedBy     = adminId;
+            request.SetUpdated(adminId);
 
-        await withdrawalRequestRepository.UpdateAsync(request);
+            var wallet = await walletRepository.GetBySubjectIdAsync(request.SubjectId)
+                ?? throw new NotFoundException("Cüzdan");
 
-        var rejectedTitle = "Para Çekimi Reddedildi";
-        var rewardUnit = await rewardUnitConfigService.GetAsync();
-        var rejectedBody = $"{request.Amount:F2} {rewardUnit.UnitLabel} tutarındaki çekim talebiniz reddedildi. Neden: {reason}";
-        const string rejectedType = "withdrawal_rejected";
+            wallet.Balance += request.Amount;
+            wallet.SetUpdated(0);
+            await walletRepository.UpdateAsync(wallet);
 
-        var rejectedNotification = new Notification
-        {
-            SubjectId = request.SubjectId,
-            Title = rejectedTitle,
-            Body = rejectedBody,
-            Type = rejectedType
-        };
-        rejectedNotification.SetCreated(adminId);
-        await notificationRepository.AddAsync(rejectedNotification);
+            var refundTransaction = new WalletTransaction
+            {
+                WalletId    = wallet.Id,
+                Amount      = request.Amount,
+                Type        = WalletTransactionType.Credit,
+                ReferenceId = $"refund:{request.WalletTransactionId}",
+                Description = "Para çekimi iadesi"
+            };
+            refundTransaction.SetCreated(0);
+            await walletRepository.AddTransactionAsync(refundTransaction);
 
-        var subject = await subjectRepository.GetByIdAsync(request.SubjectId);
-        if (subject?.FcmToken is not null)
-        {
-            await publisher.PublishAsync(
-                new NotificationSendMessage(
+            await withdrawalRequestRepository.UpdateAsync(request);
+
+            var rejectedTitle = "Para Çekimi Reddedildi";
+            var rewardUnit = await rewardUnitConfigService.GetAsync();
+            var rejectedBody = $"{request.Amount:F2} {rewardUnit.UnitLabel} tutarındaki çekim talebiniz reddedildi. Neden: {reason}";
+            const string rejectedType = "withdrawal_rejected";
+
+            var rejectedNotification = new Notification
+            {
+                SubjectId = request.SubjectId,
+                Title = rejectedTitle,
+                Body = rejectedBody,
+                Type = rejectedType
+            };
+            rejectedNotification.SetCreated(adminId);
+            await notificationRepository.AddAsync(rejectedNotification);
+
+            await walletRepository.CommitTransactionAsync();
+
+            var subject = await subjectRepository.GetByIdAsync(request.SubjectId);
+            if (subject?.FcmToken is not null)
+            {
+                await publisher.PublishAsync(
+                    new NotificationSendMessage(
+                        rejectedNotification.Id,
+                        request.SubjectId,
+                        subject.FcmToken,
+                        rejectedTitle,
+                        rejectedBody,
+                        rejectedType),
+                    Queues.NotificationSend);
+            }
+            else
+            {
+                await notificationRepository.UpdateDeliveryStatusAsync(
                     rejectedNotification.Id,
-                    request.SubjectId,
-                    subject.FcmToken,
-                    rejectedTitle,
-                    rejectedBody,
-                    rejectedType),
-                Queues.NotificationSend);
+                    DeliveryStatus.Skipped,
+                    null);
+            }
         }
-        else
+        catch
         {
-            await notificationRepository.UpdateDeliveryStatusAsync(
-                rejectedNotification.Id,
-                DeliveryStatus.Skipped,
-                null);
+            await walletRepository.RollbackTransactionAsync();
+            throw;
         }
 
         logger.LogInformation("Para çekimi reddedildi: RequestId={RequestId} SubjectId={SubjectId} Amount={Amount} Reason={Reason}",
@@ -459,35 +492,19 @@ public class WalletService(
         var rewardUnit = await rewardUnitConfigService.GetAsync();
 
         var skip = (page - 1) * pageSize;
-        var transactions = await walletRepository.GetTransactionsAsync(wallet.Id, skip, pageSize);
+        var ledgerRows = await walletRepository.GetLedgerWithBalanceAsync(wallet.Id, skip, pageSize);
 
-        // Calculate cumulative balance from oldest to newest
-        var allTransactions = await walletRepository.GetTransactionsAsync(wallet.Id, 0, int.MaxValue);
-        var orderedAll = allTransactions.OrderBy(t => t.CreatedAt).ToList();
-
-        decimal runningBalance = wallet.Balance;
-        var balanceMap = new Dictionary<int, decimal>();
-
-        foreach (var txn in orderedAll.AsEnumerable().Reverse())
-        {
-            balanceMap[txn.Id] = runningBalance;
-            var amount = txn.Type == WalletTransactionType.Credit ? txn.Amount : -txn.Amount;
-            runningBalance -= amount;
-        }
-
-        // Return page results with cumulative balance
-        return transactions
-            .Select(t => new WalletLedgerDto(
-                t.Id,
-                t.Amount,
-                t.Type,
-                NormalizeDescription(t.Description),
-                t.CreatedAt,
-                balanceMap.GetValueOrDefault(t.Id, wallet.Balance),
-                IsManualReference(t.ReferenceId),
+        return ledgerRows
+            .Select(r => new WalletLedgerDto(
+                r.Transaction.Id,
+                r.Transaction.Amount,
+                r.Transaction.Type,
+                NormalizeDescription(r.Transaction.Description),
+                r.Transaction.CreatedAt,
+                r.RunningBalance,
+                IsManualReference(r.Transaction.ReferenceId),
                 rewardUnit.UnitLabel
             ))
-            .OrderByDescending(t => t.CreatedAt)
             .ToList();
     }
 

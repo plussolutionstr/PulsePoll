@@ -2,9 +2,8 @@
 @attribute [HasPermission(PermissionCodes.Notifications.View)]
 @using PulsePoll.Application.Attributes
 @using PulsePoll.Application.Extensions
-@inject IDbContextFactory<AppDbContext> ContextFactory
+@inject IAdminGridDataService AdminGridDataService
 @inject IAppToastService Toast
-@implements IDisposable
 
 <PageTitle>Bildirim Geçmişi - PulsePoll Admin</PageTitle>
 
@@ -185,8 +184,6 @@ else
 @code {
     private string _activeTab = "sms";
 
-    private AppDbContext? _smsContext;
-    private AppDbContext? _pushContext;
     private GridDevExtremeDataSource<SmsLog>? _smsDataSource;
     private GridDevExtremeDataSource<Notification>? _pushDataSource;
 
@@ -198,21 +195,15 @@ else
     private string _detailMessageTitle = string.Empty;
     private string _detailMessageBody = string.Empty;
 
-    protected override async Task OnInitializedAsync()
+    protected override Task OnInitializedAsync()
     {
-        _smsContext = await ContextFactory.CreateDbContextAsync();
         _smsDataSource = new GridDevExtremeDataSource<SmsLog>(
-            _smsContext.SmsLogs
-                .Include(s => s.Subject)
-                .OrderByDescending(s => s.CreatedAt)
-                .AsNoTracking());
+            AdminGridDataService.GetSmsLogsQuery());
 
-        _pushContext = await ContextFactory.CreateDbContextAsync();
         _pushDataSource = new GridDevExtremeDataSource<Notification>(
-            _pushContext.Notifications
-                .Include(n => n.Subject)
-                .OrderByDescending(n => n.CreatedAt)
-                .AsNoTracking());
+            AdminGridDataService.GetPushNotificationsQuery());
+
+        return Task.CompletedTask;
     }
 
     private static string StatusBadge(DeliveryStatus status) => status switch
@@ -246,9 +237,4 @@ else
         _detailPopupVisible = true;
     }
 
-    public void Dispose()
-    {
-        _smsContext?.Dispose();
-        _pushContext?.Dispose();
-    }
 }

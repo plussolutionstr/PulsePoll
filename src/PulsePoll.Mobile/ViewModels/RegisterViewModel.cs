@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Text.RegularExpressions;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -272,8 +273,9 @@ public partial class RegisterViewModel : ObservableObject
             KvkkText = content?.KvkkText ?? "KVKK metni yüklenemedi.";
             CurrentStep = 3;
         }
-        catch
+        catch (Exception ex)
         {
+            Debug.WriteLine($"[Register] KVKK load failed: {ex.Message}");
             KvkkText = "KVKK metni yüklenemedi.";
             CurrentStep = 3;
         }
@@ -304,7 +306,10 @@ public partial class RegisterViewModel : ObservableObject
                 http.Timeout = TimeSpan.FromSeconds(5);
                 ip = (await http.GetStringAsync("https://api.ipify.org")).Trim();
             }
-            catch { /* IP alınamazsa devam et */ }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[Register] Public IP fetch failed: {ex.Message}");
+            }
 
             var deviceInfo = $"{DeviceInfo.Manufacturer} {DeviceInfo.Model} - {DeviceInfo.Platform} {DeviceInfo.VersionString} | IP: {ip}";
 
