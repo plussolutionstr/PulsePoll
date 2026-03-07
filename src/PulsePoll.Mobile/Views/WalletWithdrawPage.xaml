@@ -52,14 +52,14 @@
                             Stroke="{StaticResource CardBorder}"
                             StrokeThickness="1"
                             BackgroundColor="{StaticResource PageBackground}"
-                            Padding="12,4"
-                            HeightRequest="48">
+                            Padding="12,0">
                         <Picker Title="Hesap seçin"
                                 ItemsSource="{Binding BankAccounts}"
                                 ItemDisplayBinding="{Binding DisplayTitle}"
                                 SelectedItem="{Binding SelectedBankAccount}"
                                 FontFamily="JakartaSemiBold"
                                 FontSize="15"
+                                HeightRequest="48"
                                 VerticalOptions="Center" />
                     </Border>
                 </VerticalStackLayout>

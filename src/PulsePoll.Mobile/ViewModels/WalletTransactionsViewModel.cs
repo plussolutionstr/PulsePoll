@@ -26,7 +26,7 @@ public partial class WalletTransactionsViewModel : ObservableObject
 
     public async Task InitializeAsync()
     {
-        if (Transactions.Count > 0 || IsLoading)
+        if (Transactions.Count > 0)
             return;
 
         await ReloadAsync();
