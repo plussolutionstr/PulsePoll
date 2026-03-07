@@ -17,7 +17,7 @@ public partial class NewsDetailViewModel : ObservableObject
 
     [ObservableProperty] private int _newsId;
     [ObservableProperty] private NewsModel? _newsItem;
-    [ObservableProperty] private bool _isLoading;
+    [ObservableProperty] private bool _isLoading = true;
 
     public bool HasLink => NewsItem?.HasLink ?? false;
 

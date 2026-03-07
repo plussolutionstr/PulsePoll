@@ -29,7 +29,7 @@ public partial class HistoryViewModel : ObservableObject
     private ObservableCollection<HistoryItemModel> _flatItems = [];
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsListEmpty))]
-    private bool _isLoading;
+    private bool _isLoading = true;
 
     public bool IsListEmpty => !IsLoading && FlatItems.Count == 0;
     public string TotalEarnedDisplay => $"{TotalEarned:0.##} {RewardUnitLabel}";

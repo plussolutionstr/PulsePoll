@@ -62,7 +62,7 @@ public partial class ProfileViewModel : ObservableObject
     [ObservableProperty] private ObservableCollection<LookupItemDto> _educationLevels = [];
 
     // UI State
-    [ObservableProperty] private bool _isLoading;
+    [ObservableProperty] private bool _isLoading = true;
     [ObservableProperty] private bool _isSaving;
     [ObservableProperty] private bool _isEditing;
     [ObservableProperty] private string _statusMessage = "";

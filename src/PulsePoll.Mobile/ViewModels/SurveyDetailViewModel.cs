@@ -20,7 +20,7 @@ public partial class SurveyDetailViewModel : ObservableObject
 
     [ObservableProperty] private int _surveyId;
     [ObservableProperty] private SurveyModel? _survey;
-    [ObservableProperty] private bool _isLoading;
+    [ObservableProperty] private bool _isLoading = true;
     [ObservableProperty] private bool _isStarting;
 
     partial void OnSurveyIdChanged(int value)

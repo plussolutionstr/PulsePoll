@@ -118,9 +118,10 @@ public partial class CoachMarkOverlay : ContentView
         var tooltipMaxW = Math.Min(300, pageW - tooltipMarginH * 2);
         TooltipBubble.MaximumWidthRequest = tooltipMaxW;
 
-        var spaceBelow = pageH - (spotY + spotH);
+        var safeBottomInset = 80.0; // tab bar + safe area
+        var spaceBelow = pageH - (spotY + spotH) - safeBottomInset;
         var spaceAbove = spotY;
-        var tooltipEstimatedH = 140.0;
+        var tooltipEstimatedH = 160.0;
 
         if (spaceBelow > tooltipEstimatedH + 16)
         {

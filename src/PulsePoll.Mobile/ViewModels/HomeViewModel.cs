@@ -27,7 +27,7 @@ public partial class HomeViewModel : ObservableObject
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasNoSurveys))]
     private ObservableCollection<SurveyModel> _surveys = [];
-    [ObservableProperty] private bool _isLoading;
+    [ObservableProperty] private bool _isLoading = true;
 
     public bool HasNoSurveys => Surveys.Count == 0 && _isLoaded;
     [ObservableProperty] private bool _isRefreshing;

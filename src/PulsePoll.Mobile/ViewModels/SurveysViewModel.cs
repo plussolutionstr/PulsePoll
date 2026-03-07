@@ -20,7 +20,7 @@ public partial class SurveysViewModel : ObservableObject
     private ObservableCollection<SurveyModel> _surveys = [];
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsEmpty))]
-    private bool _isLoading;
+    private bool _isLoading = true;
 
     public bool IsEmpty => !IsLoading && Surveys.Count == 0;
 

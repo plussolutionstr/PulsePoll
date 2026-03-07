@@ -19,7 +19,7 @@ public partial class WalletTransactionsViewModel : ObservableObject
         _apiClient = apiClient;
     }
 
-    [ObservableProperty] private bool _isLoading;
+    [ObservableProperty] private bool _isLoading = true;
     [ObservableProperty] private bool _isLoadingMore;
     [ObservableProperty] private bool _hasMore = true;
     [ObservableProperty] private ObservableCollection<TransactionModel> _transactions = [];

@@ -17,7 +17,7 @@ public partial class WalletViewModel : ObservableObject
         _apiClient = apiClient;
     }
 
-    [ObservableProperty] private bool _isLoading;
+    [ObservableProperty] private bool _isLoading = true;
     [ObservableProperty] private bool _isBusy;
     [ObservableProperty] private decimal _withdrawableBalance;
     [ObservableProperty] private decimal _pendingBalance;
