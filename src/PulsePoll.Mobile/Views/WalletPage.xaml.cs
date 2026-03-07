@@ -1,3 +1,4 @@
+using PulsePoll.Mobile.Controls;
 using PulsePoll.Mobile.ViewModels;
 using System.ComponentModel;
 
@@ -45,6 +46,45 @@ public partial class WalletPage : ContentPage
         }
 
         StopShimmer();
+        TryShowCoachMarks();
+    }
+
+    private bool _coachMarksTriggered;
+
+    private async void TryShowCoachMarks()
+    {
+        if (_coachMarksTriggered || CoachMark.HasBeenShown)
+            return;
+
+        _coachMarksTriggered = true;
+        await Task.Delay(600);
+
+        var steps = new List<CoachMarkStep>
+        {
+            new()
+            {
+                Target = CoachBalanceCard,
+                Title = "Bakiyen",
+                Description = "Çekilebilir bakiyen, puanın ve toplam kazancın burada görünür.",
+                CornerRadius = 24
+            },
+            new()
+            {
+                Target = CoachActionButtons,
+                Title = "Para Çek & Geçmiş",
+                Description = "Bakiyeni banka hesabına aktarmak veya işlem geçmişini görmek için bu butonları kullan.",
+                CornerRadius = 22
+            },
+            new()
+            {
+                Target = CoachAddBankAccount,
+                Title = "Banka Hesabı",
+                Description = "Para çekebilmek için önce bir banka hesabı eklemelisin.",
+                CornerRadius = 14
+            }
+        };
+
+        await CoachMark.ShowAsync(steps);
     }
 
     private void StartShimmer()

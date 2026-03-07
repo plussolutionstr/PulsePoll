@@ -4,6 +4,7 @@
              xmlns:vm="clr-namespace:PulsePoll.Mobile.ViewModels"
              xmlns:models="clr-namespace:PulsePoll.Mobile.Models"
              xmlns:converters="clr-namespace:PulsePoll.Mobile.Converters"
+             xmlns:controls="clr-namespace:PulsePoll.Mobile.Controls"
              x:Class="PulsePoll.Mobile.Views.WalletPage"
              x:DataType="vm:WalletViewModel"
              Shell.NavBarIsVisible="False">
@@ -27,7 +28,8 @@
                 <Label Text="Cüzdan" Style="{StaticResource PageTitleStyle}"/>
 
                 <!-- Balance Card -->
-                <Border StrokeThickness="0"
+                <Border x:Name="CoachBalanceCard"
+                        StrokeThickness="0"
                         StrokeShape="RoundRectangle 24"
                         Padding="24">
                     <Border.Background>
@@ -59,7 +61,7 @@
                             </VerticalStackLayout>
                         </Grid>
 
-                        <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                        <Grid x:Name="CoachActionButtons" ColumnDefinitions="*,*" ColumnSpacing="10">
                             <Button Text="Para Çek"
                                     FontFamily="JakartaSemiBold" FontSize="14"
                                     BackgroundColor="White"
@@ -120,7 +122,7 @@
                     </BindableLayout.ItemTemplate>
                 </VerticalStackLayout>
 
-                <Button Text="+ Yeni Hesap Ekle"
+                <Button x:Name="CoachAddBankAccount" Text="+ Yeni Hesap Ekle"
                         Style="{StaticResource SecondaryButtonStyle}"
                         HorizontalOptions="Fill"
                         Command="{Binding NavigateToAddBankAccountCommand}"/>
@@ -246,5 +248,6 @@
                 </Border>
             </Grid>
         </Grid>
+        <controls:CoachMarkOverlay x:Name="CoachMark" Key="wallet"/>
     </Grid>
 </ContentPage>

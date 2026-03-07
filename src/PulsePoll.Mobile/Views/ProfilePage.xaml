@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:PulsePoll.Mobile.ViewModels"
              xmlns:converters="clr-namespace:PulsePoll.Mobile.Converters"
+             xmlns:controls="clr-namespace:PulsePoll.Mobile.Controls"
              x:Class="PulsePoll.Mobile.Views.ProfilePage"
              x:DataType="vm:ProfileViewModel"
              Shell.NavBarIsVisible="False">
@@ -91,7 +92,8 @@
                            HorizontalTextAlignment="Center"/>
 
                     <!-- Referral Code (tappable to copy) -->
-                    <Border StrokeThickness="0"
+                    <Border x:Name="CoachReferral"
+                            StrokeThickness="0"
                             StrokeShape="RoundRectangle 12"
                             BackgroundColor="{StaticResource PrimaryLight}"
                             Padding="14,8"
@@ -110,7 +112,7 @@
                     </Border>
 
                     <!-- Stars -->
-                    <Label FontFamily="JakartaBold" FontSize="22"
+                    <Label x:Name="CoachStars" FontFamily="JakartaBold" FontSize="22"
                            TextColor="{StaticResource Amber}"
                            HorizontalTextAlignment="Center"
                            Text="{Binding Star, Converter={StaticResource StarConverter}}"/>
@@ -118,7 +120,7 @@
             </Border>
 
             <!-- Stats Row -->
-            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10">
+            <Grid x:Name="CoachStats" ColumnDefinitions="*,*,*" ColumnSpacing="10">
                 <Border StrokeShape="RoundRectangle 16" Stroke="{StaticResource CardBorder}"
                         BackgroundColor="{StaticResource White}" Padding="12,16">
                     <VerticalStackLayout HorizontalOptions="Center" Spacing="4">
@@ -517,5 +519,6 @@
                 </Border>
             </Grid>
         </Grid>
+        <controls:CoachMarkOverlay x:Name="CoachMark" Key="profile"/>
     </Grid>
 </ContentPage>

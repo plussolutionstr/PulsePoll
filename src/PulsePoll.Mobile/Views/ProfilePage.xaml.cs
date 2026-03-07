@@ -1,3 +1,4 @@
+using PulsePoll.Mobile.Controls;
 using PulsePoll.Mobile.ViewModels;
 using System.ComponentModel;
 
@@ -44,6 +45,45 @@ public partial class ProfilePage : ContentPage
         }
 
         StopShimmer();
+        TryShowCoachMarks();
+    }
+
+    private bool _coachMarksTriggered;
+
+    private async void TryShowCoachMarks()
+    {
+        if (_coachMarksTriggered || CoachMark.HasBeenShown)
+            return;
+
+        _coachMarksTriggered = true;
+        await Task.Delay(600);
+
+        var steps = new List<CoachMarkStep>
+        {
+            new()
+            {
+                Target = CoachStars,
+                Title = "Yıldızların",
+                Description = "Anketleri tamamladıkça yıldızın artar ve daha fazla anket alırsın.",
+                CornerRadius = 8
+            },
+            new()
+            {
+                Target = CoachReferral,
+                Title = "Referans Kodun",
+                Description = "Bu kodu arkadaşlarınla paylaş, birlikte kazanın! Kopyalamak için dokun.",
+                CornerRadius = 12
+            },
+            new()
+            {
+                Target = CoachStats,
+                Title = "İstatistiklerin",
+                Description = "Tamamladığın, elendiğin anketleri ve başarı oranını buradan takip et.",
+                CornerRadius = 16
+            }
+        };
+
+        await CoachMark.ShowAsync(steps);
     }
 
     private void StartShimmer()

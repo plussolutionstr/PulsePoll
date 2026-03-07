@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="PulsePoll.Mobile.Controls.CoachMarkOverlay"
+             IsVisible="False"
+             InputTransparent="False">
+
+    <Grid x:Name="RootGrid">
+        <!-- Single overlay with rounded cutout + ring -->
+        <GraphicsView x:Name="SpotlightView"
+                      InputTransparent="False"/>
+
+        <!-- Tooltip bubble -->
+        <Border x:Name="TooltipBubble"
+                StrokeThickness="0"
+                StrokeShape="RoundRectangle 16"
+                BackgroundColor="White"
+                Padding="20,16"
+                Opacity="0"
+                InputTransparent="False"
+                MaximumWidthRequest="300">
+            <VerticalStackLayout Spacing="10">
+                <Label x:Name="TooltipTitle"
+                       FontFamily="JakartaBold" FontSize="16"
+                       TextColor="#1A1535"/>
+                <Label x:Name="TooltipDescription"
+                       FontFamily="JakartaRegular" FontSize="13"
+                       TextColor="#6B6589"
+                       LineHeight="1.4"/>
+
+                <!-- Step indicator + buttons -->
+                <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,4,0,0">
+                    <Label x:Name="StepIndicator"
+                           FontFamily="JakartaMedium" FontSize="12"
+                           TextColor="#B0AABE"
+                           VerticalOptions="Center"/>
+                    <Button x:Name="SkipButton"
+                            Grid.Column="1"
+                            Text="Atla"
+                            FontFamily="JakartaSemiBold" FontSize="13"
+                            TextColor="#6B6589"
+                            BackgroundColor="Transparent"
+                            Padding="8,4"
+                            HorizontalOptions="End"
+                            Clicked="OnSkipClicked"/>
+                    <Button x:Name="NextButton"
+                            Grid.Column="2"
+                            Text="İleri"
+                            FontFamily="JakartaSemiBold" FontSize="13"
+                            TextColor="White"
+                            BackgroundColor="#7C5CFC"
+                            CornerRadius="12"
+                            Padding="16,6"
+                            HeightRequest="36"
+                            Clicked="OnNextClicked"/>
+                </Grid>
+            </VerticalStackLayout>
+        </Border>
+    </Grid>
+</ContentView>

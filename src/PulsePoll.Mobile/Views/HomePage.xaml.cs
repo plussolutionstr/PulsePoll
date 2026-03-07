@@ -1,3 +1,4 @@
+using PulsePoll.Mobile.Controls;
 using PulsePoll.Mobile.ViewModels;
 using System.ComponentModel;
 using Microsoft.Maui.Storage;
@@ -55,6 +56,47 @@ public partial class HomePage : ContentPage
         }
 
         StopShimmer();
+        TryShowCoachMarks();
+    }
+
+    private bool _coachMarksTriggered;
+
+    private async void TryShowCoachMarks()
+    {
+        if (_coachMarksTriggered || CoachMark.HasBeenShown)
+            return;
+
+        _coachMarksTriggered = true;
+
+        // Wait for layout to settle
+        await Task.Delay(600);
+
+        var steps = new List<CoachMarkStep>
+        {
+            new()
+            {
+                Target = CoachStories,
+                Title = "Hikayeler",
+                Description = "Kampanya ve duyuruları buradan takip edebilirsin.",
+                CornerRadius = 12
+            },
+            new()
+            {
+                Target = CoachNewsSlider,
+                Title = "Haberler",
+                Description = "En güncel haberleri ve duyuruları kaydırarak keşfet.",
+                CornerRadius = 16
+            },
+            new()
+            {
+                Target = CoachSurveyHeader,
+                Title = "Anketler",
+                Description = "Sana özel anketleri tamamla, para kazan! Tümünü görmek için \"Tümü\"ne dokun.",
+                CornerRadius = 8
+            }
+        };
+
+        await CoachMark.ShowAsync(steps);
     }
 
     private void StartShimmer()
