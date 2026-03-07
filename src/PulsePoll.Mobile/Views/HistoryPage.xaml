@@ -16,6 +16,13 @@
 
     <Grid>
     <ScrollView>
+        <ScrollView.Triggers>
+            <DataTrigger TargetType="ScrollView"
+                         Binding="{Binding IsLoading}"
+                         Value="True">
+                <Setter Property="IsVisible" Value="False"/>
+            </DataTrigger>
+        </ScrollView.Triggers>
         <VerticalStackLayout Spacing="16" Padding="20,16">
 
             <Label Text="Geçmiş" Style="{StaticResource PageTitleStyle}"/>
@@ -209,10 +216,81 @@
             <BoxView HeightRequest="20" Color="Transparent"/>
         </VerticalStackLayout>
     </ScrollView>
-        <ActivityIndicator IsVisible="{Binding IsLoading}"
-                           IsRunning="{Binding IsLoading}"
-                           Color="{StaticResource PrimaryPurple}"
-                           HorizontalOptions="Center"
-                           VerticalOptions="Center"/>
+        <!-- SHIMMER OVERLAY -->
+        <Grid x:Name="ShimmerOverlay"
+              IsVisible="{Binding IsLoading}"
+              BackgroundColor="{StaticResource PageBackground}"
+              InputTransparent="True">
+            <Grid x:Name="ShimmerContainer">
+                <VerticalStackLayout Spacing="16" Padding="20,16">
+                    <!-- Title skeleton -->
+                    <Border StrokeThickness="0" BackgroundColor="#E4DDF2"
+                            StrokeShape="RoundRectangle 8"
+                            HeightRequest="28" WidthRequest="120"
+                            HorizontalOptions="Start"/>
+
+                    <!-- Summary boxes skeleton -->
+                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10">
+                        <Border StrokeThickness="0" BackgroundColor="#E8E1F6"
+                                StrokeShape="RoundRectangle 18"
+                                HeightRequest="100"/>
+                        <Border Grid.Column="1" StrokeThickness="0" BackgroundColor="#E8E1F6"
+                                StrokeShape="RoundRectangle 18"
+                                HeightRequest="100"/>
+                        <Border Grid.Column="2" StrokeThickness="0" BackgroundColor="#E8E1F6"
+                                StrokeShape="RoundRectangle 18"
+                                HeightRequest="100"/>
+                    </Grid>
+
+                    <!-- Filter tabs skeleton -->
+                    <HorizontalStackLayout Spacing="8">
+                        <Border StrokeThickness="0" BackgroundColor="#ECE6F7"
+                                StrokeShape="RoundRectangle 16"
+                                HeightRequest="34" WidthRequest="60"/>
+                        <Border StrokeThickness="0" BackgroundColor="#ECE6F7"
+                                StrokeShape="RoundRectangle 16"
+                                HeightRequest="34" WidthRequest="90"/>
+                        <Border StrokeThickness="0" BackgroundColor="#ECE6F7"
+                                StrokeShape="RoundRectangle 16"
+                                HeightRequest="34" WidthRequest="70"/>
+                        <Border StrokeThickness="0" BackgroundColor="#ECE6F7"
+                                StrokeShape="RoundRectangle 16"
+                                HeightRequest="34" WidthRequest="80"/>
+                    </HorizontalStackLayout>
+
+                    <!-- History item skeletons -->
+                    <VerticalStackLayout Spacing="8">
+                        <Border StrokeThickness="0" BackgroundColor="#E8E1F6"
+                                StrokeShape="RoundRectangle 16" HeightRequest="76"/>
+                        <Border StrokeThickness="0" BackgroundColor="#E8E1F6"
+                                StrokeShape="RoundRectangle 16" HeightRequest="76"/>
+                        <Border StrokeThickness="0" BackgroundColor="#E8E1F6"
+                                StrokeShape="RoundRectangle 16" HeightRequest="76"/>
+                        <Border StrokeThickness="0" BackgroundColor="#E8E1F6"
+                                StrokeShape="RoundRectangle 16" HeightRequest="76"/>
+                        <Border StrokeThickness="0" BackgroundColor="#E8E1F6"
+                                StrokeShape="RoundRectangle 16" HeightRequest="76"/>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+
+                <!-- Shimmer Sweep -->
+                <Border x:Name="ShimmerSweep"
+                        StrokeThickness="0"
+                        WidthRequest="180"
+                        Opacity="0"
+                        Rotation="-18"
+                        HorizontalOptions="Start"
+                        VerticalOptions="Fill"
+                        InputTransparent="True">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                            <GradientStop Color="#00FFFFFF" Offset="0"/>
+                            <GradientStop Color="#66FFFFFF" Offset="0.5"/>
+                            <GradientStop Color="#00FFFFFF" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                </Border>
+            </Grid>
+        </Grid>
     </Grid>
 </ContentPage>
