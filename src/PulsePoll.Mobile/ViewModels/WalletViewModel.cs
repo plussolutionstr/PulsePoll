@@ -34,9 +34,10 @@ public partial class WalletViewModel : ObservableObject
     [RelayCommand]
     private async Task LoadAsync()
     {
-        if (IsLoading)
+        if (IsBusy)
             return;
 
+        IsBusy = true;
         IsLoading = true;
         try
         {
@@ -49,6 +50,7 @@ public partial class WalletViewModel : ObservableObject
         finally
         {
             IsLoading = false;
+            IsBusy = false;
         }
     }
 

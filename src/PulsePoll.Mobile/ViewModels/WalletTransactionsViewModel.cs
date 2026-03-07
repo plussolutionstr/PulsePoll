@@ -35,9 +35,6 @@ public partial class WalletTransactionsViewModel : ObservableObject
     [RelayCommand]
     private async Task ReloadAsync()
     {
-        if (IsLoading)
-            return;
-
         IsLoading = true;
         try
         {
