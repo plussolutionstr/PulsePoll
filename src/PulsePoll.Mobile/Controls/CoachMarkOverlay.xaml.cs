@@ -146,14 +146,45 @@ public partial class CoachMarkOverlay : ContentView
 
     private Rect GetTargetBounds(View target)
     {
-        var x = 0.0;
-        var y = 0.0;
+#if ANDROID
+        var targetNative = target.Handler?.PlatformView as Android.Views.View;
+        var overlayNative = SpotlightView.Handler?.PlatformView as Android.Views.View;
+
+        if (targetNative is not null && overlayNative is not null)
+        {
+            var targetLocation = new int[2];
+            var overlayLocation = new int[2];
+            targetNative.GetLocationOnScreen(targetLocation);
+            overlayNative.GetLocationOnScreen(overlayLocation);
+
+            var density = DeviceDisplay.MainDisplayInfo.Density;
+            var x = (targetLocation[0] - overlayLocation[0]) / density;
+            var y = (targetLocation[1] - overlayLocation[1]) / density;
+
+            return new Rect(x, y, target.Width, target.Height);
+        }
+#endif
+
+#if IOS || MACCATALYST
+        var targetNativeView = target.Handler?.PlatformView as UIKit.UIView;
+        var overlayNativeView = SpotlightView.Handler?.PlatformView as UIKit.UIView;
+
+        if (targetNativeView is not null && overlayNativeView is not null)
+        {
+            var targetFrame = targetNativeView.ConvertRectToView(targetNativeView.Bounds, overlayNativeView);
+            return new Rect(targetFrame.X, targetFrame.Y, targetFrame.Width, targetFrame.Height);
+        }
+#endif
+
+        // Fallback: view tree traversal
+        var fx = 0.0;
+        var fy = 0.0;
 
         View? current = target;
         while (current is not null && current != RootGrid.Parent)
         {
-            x += current.X;
-            y += current.Y;
+            fx += current.X;
+            fy += current.Y;
 
             if (current.Parent is View parentView)
                 current = parentView;
@@ -174,10 +205,10 @@ public partial class CoachMarkOverlay : ContentView
                 break;
         }
 
-        x -= ox;
-        y -= oy;
+        fx -= ox;
+        fy -= oy;
 
-        return new Rect(x, y, target.Width, target.Height);
+        return new Rect(fx, fy, target.Width, target.Height);
     }
 
     private void OnNextClicked(object? sender, EventArgs e)
