@@ -83,13 +83,18 @@ public partial class CoachMarkOverlay : ContentView
         _drawable.Opacity = 0;
         SpotlightView.Invalidate();
 
-        if (RootGrid.Width <= 0)
+        // Wait for layout to be ready (especially important on Android for the first step)
+        for (var i = 0; i < 10; i++)
+        {
+            if (RootGrid.Width > 0 && step.Target.Width > 0 && step.Target.Height > 0)
+                break;
             await Task.Delay(50);
+        }
 
         var targetBounds = GetTargetBounds(step.Target);
-        if (targetBounds == Rect.Zero)
+        if (targetBounds == Rect.Zero || targetBounds.Width <= 0 || targetBounds.Height <= 0)
         {
-            await Task.Delay(100);
+            await Task.Delay(150);
             targetBounds = GetTargetBounds(step.Target);
         }
 
