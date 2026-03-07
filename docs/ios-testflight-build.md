@@ -5,7 +5,7 @@
 `src/PulsePoll.Mobile/PulsePoll.Mobile.csproj` dosyasında `ApplicationVersion` değerini 1 artır:
 
 ```xml
-<ApplicationVersion>3</ApplicationVersion>  <!-- her seferinde 1 artır -->
+<ApplicationVersion>5</ApplicationVersion>  <!-- her seferinde 1 artır -->
 ```
 
 ## 2. IPA oluştur
