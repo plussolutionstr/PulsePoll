@@ -8,6 +8,13 @@
 
     <Grid>
         <ScrollView>
+            <ScrollView.Triggers>
+                <DataTrigger TargetType="ScrollView"
+                             Binding="{Binding IsLoading}"
+                             Value="True">
+                    <Setter Property="IsVisible" Value="False"/>
+                </DataTrigger>
+            </ScrollView.Triggers>
             <VerticalStackLayout Spacing="16" Padding="20,16,20,22">
                 <HorizontalStackLayout Spacing="8">
                     <ImageButton Source="icon_arrow_left.png"
@@ -22,19 +29,14 @@
                 <Border StrokeThickness="0"
                         StrokeShape="RoundRectangle 20"
                         MinimumHeightRequest="168"
+                        BackgroundColor="{StaticResource PrimaryLight}"
                         Padding="18,16">
-                    <Border.Background>
-                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                            <GradientStop Color="{StaticResource PrimaryPurple}" Offset="0"/>
-                            <GradientStop Color="{StaticResource PrimaryDark}" Offset="1"/>
-                        </LinearGradientBrush>
-                    </Border.Background>
                     <Grid>
                         <Border StrokeThickness="0"
                                 StrokeShape="RoundRectangle 60"
                                 HeightRequest="120"
                                 WidthRequest="120"
-                                BackgroundColor="#14FFFFFF"
+                                BackgroundColor="#147C5CFC"
                                 HorizontalOptions="End"
                                 VerticalOptions="Start"
                                 Margin="0,-26,-22,0"/>
@@ -42,7 +44,7 @@
                                 StrokeShape="RoundRectangle 48"
                                 HeightRequest="92"
                                 WidthRequest="92"
-                                BackgroundColor="#0EFFFFFF"
+                                BackgroundColor="#0E7C5CFC"
                                 HorizontalOptions="Start"
                                 VerticalOptions="End"
                                 Margin="0,0,0,-26"/>
@@ -50,13 +52,13 @@
                             <Label Text="{Binding Survey.Title}"
                                    FontFamily="JakartaExtraBold"
                                    FontSize="22"
-                                   TextColor="White"/>
+                                   TextColor="{StaticResource TextPrimary}"/>
                             <Label Text="{Binding Survey.Description}"
                                    FontFamily="JakartaRegular"
                                    FontSize="14"
                                    LineHeight="1.4"
                                    IsVisible="{Binding Survey.HasDescription}"
-                                   TextColor="#D9FFFFFF"/>
+                                   TextColor="{StaticResource TextSecondary}"/>
                         </VerticalStackLayout>
                     </Grid>
                 </Border>
@@ -145,10 +147,98 @@
             </VerticalStackLayout>
         </ScrollView>
 
-        <ActivityIndicator IsVisible="{Binding IsLoading}"
-                           IsRunning="{Binding IsLoading}"
-                           Color="{StaticResource PrimaryPurple}"
-                           HorizontalOptions="Center"
-                           VerticalOptions="Center"/>
+        <!-- SHIMMER OVERLAY -->
+        <Grid x:Name="ShimmerOverlay"
+              IsVisible="{Binding IsLoading}"
+              BackgroundColor="{StaticResource PageBackground}"
+              InputTransparent="True">
+            <Grid x:Name="ShimmerContainer">
+                <VerticalStackLayout Spacing="16" Padding="20,16,20,22">
+                    <!-- Header skeleton -->
+                    <HorizontalStackLayout Spacing="8">
+                        <Border StrokeThickness="0" BackgroundColor="#E4DDF2"
+                                StrokeShape="RoundRectangle 6"
+                                HeightRequest="24" WidthRequest="24"/>
+                        <Border StrokeThickness="0" BackgroundColor="#E4DDF2"
+                                StrokeShape="RoundRectangle 6"
+                                HeightRequest="22" WidthRequest="100"
+                                VerticalOptions="Center"/>
+                    </HorizontalStackLayout>
+
+                    <!-- Hero card skeleton -->
+                    <Border StrokeThickness="0"
+                            StrokeShape="RoundRectangle 20"
+                            BackgroundColor="{StaticResource PrimaryLight}"
+                            MinimumHeightRequest="168"
+                            Padding="18,16">
+                        <VerticalStackLayout Spacing="8">
+                            <Border StrokeThickness="0" BackgroundColor="#D5CBF5"
+                                    StrokeShape="RoundRectangle 8"
+                                    HeightRequest="24" WidthRequest="220"
+                                    HorizontalOptions="Start"/>
+                            <Border StrokeThickness="0" BackgroundColor="#D5CBF5"
+                                    StrokeShape="RoundRectangle 8"
+                                    HeightRequest="24" WidthRequest="160"
+                                    HorizontalOptions="Start"/>
+                            <Border StrokeThickness="0" BackgroundColor="#DDD5F7"
+                                    StrokeShape="RoundRectangle 6"
+                                    HeightRequest="16" HorizontalOptions="Fill"
+                                    Margin="0,4,0,0"/>
+                            <Border StrokeThickness="0" BackgroundColor="#DDD5F7"
+                                    StrokeShape="RoundRectangle 6"
+                                    HeightRequest="16" WidthRequest="200"
+                                    HorizontalOptions="Start"/>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- Info cards skeleton -->
+                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10">
+                        <Border StrokeThickness="0" BackgroundColor="#E8E1F6"
+                                StrokeShape="RoundRectangle 16"
+                                HeightRequest="90"/>
+                        <Border Grid.Column="1" StrokeThickness="0" BackgroundColor="#E8E1F6"
+                                StrokeShape="RoundRectangle 16"
+                                HeightRequest="90"/>
+                        <Border Grid.Column="2" StrokeThickness="0" BackgroundColor="#E8E1F6"
+                                StrokeShape="RoundRectangle 16"
+                                HeightRequest="90"/>
+                    </Grid>
+
+                    <!-- "Baslamadan Once" card skeleton -->
+                    <Border StrokeThickness="0" BackgroundColor="#E8E1F6"
+                            StrokeShape="RoundRectangle 16"
+                            HeightRequest="100" HorizontalOptions="Fill"/>
+
+                    <!-- Button skeleton -->
+                    <Border StrokeThickness="0" BackgroundColor="#E4DDF2"
+                            StrokeShape="RoundRectangle 14"
+                            HeightRequest="50" HorizontalOptions="Fill"/>
+
+                    <!-- Caption skeleton -->
+                    <Border StrokeThickness="0" BackgroundColor="#ECE6F7"
+                            StrokeShape="RoundRectangle 6"
+                            HeightRequest="14" WidthRequest="280"
+                            HorizontalOptions="Center"/>
+                </VerticalStackLayout>
+
+                <!-- Shimmer Sweep -->
+                <Border x:Name="ShimmerSweep"
+                        StrokeThickness="0"
+                        WidthRequest="180"
+                        Opacity="0"
+                        Rotation="-18"
+                        HorizontalOptions="Start"
+                        VerticalOptions="Fill"
+                        InputTransparent="True">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                            <GradientStop Color="#00FFFFFF" Offset="0"/>
+                            <GradientStop Color="#66FFFFFF" Offset="0.5"/>
+                            <GradientStop Color="#00FFFFFF" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                </Border>
+            </Grid>
+        </Grid>
     </Grid>
 </ContentPage>

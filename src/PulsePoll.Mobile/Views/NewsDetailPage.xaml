@@ -8,6 +8,13 @@
 
     <Grid>
         <ScrollView>
+            <ScrollView.Triggers>
+                <DataTrigger TargetType="ScrollView"
+                             Binding="{Binding IsLoading}"
+                             Value="True">
+                    <Setter Property="IsVisible" Value="False"/>
+                </DataTrigger>
+            </ScrollView.Triggers>
             <VerticalStackLayout Spacing="14" Padding="20,16,20,22">
                 <HorizontalStackLayout Spacing="8">
                     <ImageButton Source="icon_arrow_left.png"
@@ -69,10 +76,85 @@
             </VerticalStackLayout>
         </ScrollView>
 
-        <ActivityIndicator IsVisible="{Binding IsLoading}"
-                           IsRunning="{Binding IsLoading}"
-                           Color="{StaticResource PrimaryPurple}"
-                           HorizontalOptions="Center"
-                           VerticalOptions="Center"/>
+        <!-- SHIMMER OVERLAY -->
+        <Grid x:Name="ShimmerOverlay"
+              IsVisible="{Binding IsLoading}"
+              BackgroundColor="{StaticResource PageBackground}"
+              InputTransparent="True">
+            <Grid x:Name="ShimmerContainer">
+                <VerticalStackLayout Spacing="14" Padding="20,16,20,22">
+                    <!-- Header skeleton -->
+                    <HorizontalStackLayout Spacing="8">
+                        <Border StrokeThickness="0" BackgroundColor="#E4DDF2"
+                                StrokeShape="RoundRectangle 6"
+                                HeightRequest="24" WidthRequest="24"/>
+                        <Border StrokeThickness="0" BackgroundColor="#E4DDF2"
+                                StrokeShape="RoundRectangle 6"
+                                HeightRequest="22" WidthRequest="60"
+                                VerticalOptions="Center"/>
+                    </HorizontalStackLayout>
+
+                    <!-- Title skeleton -->
+                    <VerticalStackLayout Spacing="6">
+                        <Border StrokeThickness="0" BackgroundColor="#E4DDF2"
+                                StrokeShape="RoundRectangle 8"
+                                HeightRequest="26" HorizontalOptions="Fill"/>
+                        <Border StrokeThickness="0" BackgroundColor="#ECE6F7"
+                                StrokeShape="RoundRectangle 8"
+                                HeightRequest="26" WidthRequest="200"
+                                HorizontalOptions="Start"/>
+                    </VerticalStackLayout>
+
+                    <!-- Image skeleton -->
+                    <Border StrokeThickness="0" BackgroundColor="#E8E1F6"
+                            StrokeShape="RoundRectangle 18"
+                            HeightRequest="220"/>
+
+                    <!-- Body text skeletons -->
+                    <VerticalStackLayout Spacing="8">
+                        <Border StrokeThickness="0" BackgroundColor="#ECE6F7"
+                                StrokeShape="RoundRectangle 6"
+                                HeightRequest="16" HorizontalOptions="Fill"/>
+                        <Border StrokeThickness="0" BackgroundColor="#ECE6F7"
+                                StrokeShape="RoundRectangle 6"
+                                HeightRequest="16" HorizontalOptions="Fill"/>
+                        <Border StrokeThickness="0" BackgroundColor="#ECE6F7"
+                                StrokeShape="RoundRectangle 6"
+                                HeightRequest="16" WidthRequest="240"
+                                HorizontalOptions="Start"/>
+                        <Border StrokeThickness="0" BackgroundColor="#ECE6F7"
+                                StrokeShape="RoundRectangle 6"
+                                HeightRequest="16" HorizontalOptions="Fill"/>
+                        <Border StrokeThickness="0" BackgroundColor="#ECE6F7"
+                                StrokeShape="RoundRectangle 6"
+                                HeightRequest="16" WidthRequest="180"
+                                HorizontalOptions="Start"/>
+                    </VerticalStackLayout>
+
+                    <!-- Button skeleton -->
+                    <Border StrokeThickness="0" BackgroundColor="#E4DDF2"
+                            StrokeShape="RoundRectangle 14"
+                            HeightRequest="48" HorizontalOptions="Fill"/>
+                </VerticalStackLayout>
+
+                <!-- Shimmer Sweep -->
+                <Border x:Name="ShimmerSweep"
+                        StrokeThickness="0"
+                        WidthRequest="180"
+                        Opacity="0"
+                        Rotation="-18"
+                        HorizontalOptions="Start"
+                        VerticalOptions="Fill"
+                        InputTransparent="True">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                            <GradientStop Color="#00FFFFFF" Offset="0"/>
+                            <GradientStop Color="#66FFFFFF" Offset="0.5"/>
+                            <GradientStop Color="#00FFFFFF" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                </Border>
+            </Grid>
+        </Grid>
     </Grid>
 </ContentPage>

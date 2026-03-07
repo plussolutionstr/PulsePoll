@@ -62,7 +62,7 @@ public partial class NotificationsViewModel : ObservableObject
     [RelayCommand]
     private async Task GoBackAsync()
     {
-        await Shell.Current.GoToAsync("..");
+        await Shell.Current.GoToAsync("..", true);
     }
 
     [RelayCommand]

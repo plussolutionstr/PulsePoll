@@ -64,7 +64,7 @@ public partial class SurveyDetailViewModel : ObservableObject
     [RelayCommand]
     private async Task GoBack()
     {
-        await Shell.Current.GoToAsync("..");
+        await Shell.Current.GoToAsync("..", true);
     }
 
     private async Task LoadSurveyAsync(int surveyId)

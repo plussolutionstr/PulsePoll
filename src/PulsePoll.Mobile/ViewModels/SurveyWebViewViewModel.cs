@@ -26,7 +26,7 @@ public partial class SurveyWebViewViewModel : ObservableObject
     [RelayCommand]
     private async Task Close()
     {
-        await Shell.Current.GoToAsync("..");
+        await Shell.Current.GoToAsync("..", true);
     }
 
     /// <summary>

@@ -42,7 +42,7 @@ public partial class WalletAddBankAccountPage : ContentPage, IQueryAttributable
             return;
         }
 
-        await Shell.Current.GoToAsync("..");
+        await Shell.Current.GoToAsync("..", true);
     }
 
     private async void OnDeleteClicked(object? sender, EventArgs e)
@@ -64,11 +64,11 @@ public partial class WalletAddBankAccountPage : ContentPage, IQueryAttributable
             return;
         }
 
-        await Shell.Current.GoToAsync("..");
+        await Shell.Current.GoToAsync("..", true);
     }
 
     private async void OnCancelClicked(object? sender, EventArgs e)
     {
-        await Shell.Current.GoToAsync("..");
+        await Shell.Current.GoToAsync("..", true);
     }
 }

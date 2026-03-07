@@ -38,11 +38,11 @@ public partial class WalletWithdrawPage : ContentPage
         }
 
         await DisplayAlertAsync("Başarılı", "Para çekme talebiniz alındı.", "Tamam");
-        await Shell.Current.GoToAsync("..");
+        await Shell.Current.GoToAsync("..", true);
     }
 
     private async void OnCancelClicked(object? sender, EventArgs e)
     {
-        await Shell.Current.GoToAsync("..");
+        await Shell.Current.GoToAsync("..", true);
     }
 }

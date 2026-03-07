@@ -39,7 +39,7 @@ public partial class ActiveQuestionViewModel : ObservableObject
         }
         else
         {
-            Shell.Current.GoToAsync("../..");
+            Shell.Current.GoToAsync("../..", true);
         }
     }
 
@@ -56,7 +56,7 @@ public partial class ActiveQuestionViewModel : ObservableObject
     [RelayCommand]
     private async Task CloseSurvey()
     {
-        await Shell.Current.GoToAsync("../..");
+        await Shell.Current.GoToAsync("../..", true);
     }
 
     private void LoadQuestion()

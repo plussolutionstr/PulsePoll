@@ -267,7 +267,7 @@ public partial class StoryViewerViewModel : ObservableObject
     {
         try
         {
-            await Shell.Current.GoToAsync("..");
+            await Shell.Current.GoToAsync("..", true);
         }
         catch
         {
