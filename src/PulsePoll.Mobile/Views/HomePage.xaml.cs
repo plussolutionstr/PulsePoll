@@ -68,8 +68,13 @@ public partial class HomePage : ContentPage
 
         _coachMarksTriggered = true;
 
-        // Wait for layout to settle
-        await Task.Delay(600);
+        // Wait for layout to settle — target must have non-zero size
+        for (var i = 0; i < 20; i++)
+        {
+            await Task.Delay(100);
+            if (CoachStories.Width > 0 && CoachStories.Height > 0)
+                break;
+        }
 
         var steps = new List<CoachMarkStep>
         {

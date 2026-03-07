@@ -57,7 +57,14 @@ public partial class WalletPage : ContentPage
             return;
 
         _coachMarksTriggered = true;
-        await Task.Delay(600);
+
+        // Wait for layout to settle — target must have non-zero size
+        for (var i = 0; i < 20; i++)
+        {
+            await Task.Delay(100);
+            if (CoachBalanceCard.Width > 0 && CoachBalanceCard.Height > 0)
+                break;
+        }
 
         var steps = new List<CoachMarkStep>
         {
