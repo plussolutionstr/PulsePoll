@@ -8,7 +8,15 @@
              Shell.NavBarIsVisible="False">
 
     <Grid>
-        <ScrollView>
+        <!-- ══════ MAIN CONTENT ══════ -->
+        <ScrollView x:Name="MainContent">
+            <ScrollView.Triggers>
+                <DataTrigger TargetType="ScrollView"
+                             Binding="{Binding IsLoading}"
+                             Value="True">
+                    <Setter Property="IsVisible" Value="False"/>
+                </DataTrigger>
+            </ScrollView.Triggers>
             <VerticalStackLayout Spacing="12" Padding="20,16">
                 <Label Text="Anketler" Style="{StaticResource PageTitleStyle}" Margin="0,0,0,4"/>
 
@@ -107,10 +115,139 @@
                    LineBreakMode="WordWrap"/>
         </VerticalStackLayout>
 
-        <ActivityIndicator IsVisible="{Binding IsLoading}"
-                           IsRunning="{Binding IsLoading}"
-                           Color="{StaticResource PrimaryPurple}"
-                           HorizontalOptions="Center"
-                           VerticalOptions="Center"/>
+        <!-- ══════ SHIMMER OVERLAY ══════ -->
+        <Grid x:Name="ShimmerOverlay"
+              IsVisible="{Binding IsLoading}"
+              BackgroundColor="{StaticResource PageBackground}"
+              InputTransparent="True">
+            <Grid x:Name="ShimmerContainer">
+                <ScrollView>
+                    <VerticalStackLayout Spacing="12" Padding="20,16">
+                        <!-- Title -->
+                        <Border StrokeThickness="0" BackgroundColor="#E4DDF2"
+                                StrokeShape="RoundRectangle 8"
+                                HeightRequest="26" WidthRequest="110"
+                                HorizontalOptions="Start" Margin="0,0,0,4"/>
+
+                        <!-- Survey Card Skeletons -->
+                        <VerticalStackLayout Spacing="12">
+                            <Border StrokeThickness="0" BackgroundColor="#E8E1F6"
+                                    StrokeShape="RoundRectangle 20"
+                                    Padding="16">
+                                <VerticalStackLayout Spacing="10">
+                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                                        <Border StrokeThickness="0" BackgroundColor="#DDD4F0"
+                                                StrokeShape="RoundRectangle 6"
+                                                HeightRequest="18" WidthRequest="180"
+                                                HorizontalOptions="Start"/>
+                                        <Border Grid.Column="1" StrokeThickness="0" BackgroundColor="#F5E8C8"
+                                                StrokeShape="RoundRectangle 10"
+                                                HeightRequest="24" WidthRequest="60"/>
+                                    </Grid>
+                                    <Border StrokeThickness="0" BackgroundColor="#DDD4F0"
+                                            StrokeShape="RoundRectangle 4"
+                                            HeightRequest="14" HorizontalOptions="Fill"/>
+                                    <Border StrokeThickness="0" BackgroundColor="#DDD4F0"
+                                            StrokeShape="RoundRectangle 4"
+                                            HeightRequest="14" WidthRequest="220"
+                                            HorizontalOptions="Start"/>
+                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                                        <Border StrokeThickness="0" BackgroundColor="#DDD4F0"
+                                                StrokeShape="RoundRectangle 8"
+                                                HeightRequest="26" WidthRequest="80"/>
+                                        <Border Grid.Column="1" StrokeThickness="0" BackgroundColor="#E4DDF2"
+                                                StrokeShape="RoundRectangle 8"
+                                                HeightRequest="26" WidthRequest="70"
+                                                HorizontalOptions="End"/>
+                                    </Grid>
+                                </VerticalStackLayout>
+                            </Border>
+
+                            <Border StrokeThickness="0" BackgroundColor="#E8E1F6"
+                                    StrokeShape="RoundRectangle 20"
+                                    Padding="16">
+                                <VerticalStackLayout Spacing="10">
+                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                                        <Border StrokeThickness="0" BackgroundColor="#DDD4F0"
+                                                StrokeShape="RoundRectangle 6"
+                                                HeightRequest="18" WidthRequest="200"
+                                                HorizontalOptions="Start"/>
+                                        <Border Grid.Column="1" StrokeThickness="0" BackgroundColor="#F5E8C8"
+                                                StrokeShape="RoundRectangle 10"
+                                                HeightRequest="24" WidthRequest="55"/>
+                                    </Grid>
+                                    <Border StrokeThickness="0" BackgroundColor="#DDD4F0"
+                                            StrokeShape="RoundRectangle 4"
+                                            HeightRequest="14" HorizontalOptions="Fill"/>
+                                    <Border StrokeThickness="0" BackgroundColor="#DDD4F0"
+                                            StrokeShape="RoundRectangle 4"
+                                            HeightRequest="14" WidthRequest="190"
+                                            HorizontalOptions="Start"/>
+                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                                        <Border StrokeThickness="0" BackgroundColor="#DDD4F0"
+                                                StrokeShape="RoundRectangle 8"
+                                                HeightRequest="26" WidthRequest="80"/>
+                                        <Border Grid.Column="1" StrokeThickness="0" BackgroundColor="#E4DDF2"
+                                                StrokeShape="RoundRectangle 8"
+                                                HeightRequest="26" WidthRequest="65"
+                                                HorizontalOptions="End"/>
+                                    </Grid>
+                                </VerticalStackLayout>
+                            </Border>
+
+                            <Border StrokeThickness="0" BackgroundColor="#E8E1F6"
+                                    StrokeShape="RoundRectangle 20"
+                                    Padding="16">
+                                <VerticalStackLayout Spacing="10">
+                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                                        <Border StrokeThickness="0" BackgroundColor="#DDD4F0"
+                                                StrokeShape="RoundRectangle 6"
+                                                HeightRequest="18" WidthRequest="160"
+                                                HorizontalOptions="Start"/>
+                                        <Border Grid.Column="1" StrokeThickness="0" BackgroundColor="#F5E8C8"
+                                                StrokeShape="RoundRectangle 10"
+                                                HeightRequest="24" WidthRequest="50"/>
+                                    </Grid>
+                                    <Border StrokeThickness="0" BackgroundColor="#DDD4F0"
+                                            StrokeShape="RoundRectangle 4"
+                                            HeightRequest="14" HorizontalOptions="Fill"/>
+                                    <Border StrokeThickness="0" BackgroundColor="#DDD4F0"
+                                            StrokeShape="RoundRectangle 4"
+                                            HeightRequest="14" WidthRequest="170"
+                                            HorizontalOptions="Start"/>
+                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                                        <Border StrokeThickness="0" BackgroundColor="#DDD4F0"
+                                                StrokeShape="RoundRectangle 8"
+                                                HeightRequest="26" WidthRequest="80"/>
+                                        <Border Grid.Column="1" StrokeThickness="0" BackgroundColor="#E4DDF2"
+                                                StrokeShape="RoundRectangle 8"
+                                                HeightRequest="26" WidthRequest="75"
+                                                HorizontalOptions="End"/>
+                                    </Grid>
+                                </VerticalStackLayout>
+                            </Border>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+                </ScrollView>
+
+                <!-- Shimmer Sweep -->
+                <Border x:Name="ShimmerSweep"
+                        StrokeThickness="0"
+                        WidthRequest="180"
+                        Opacity="0"
+                        Rotation="-18"
+                        HorizontalOptions="Start"
+                        VerticalOptions="Fill"
+                        InputTransparent="True">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                            <GradientStop Color="#00FFFFFF" Offset="0"/>
+                            <GradientStop Color="#66FFFFFF" Offset="0.5"/>
+                            <GradientStop Color="#00FFFFFF" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                </Border>
+            </Grid>
+        </Grid>
     </Grid>
 </ContentPage>

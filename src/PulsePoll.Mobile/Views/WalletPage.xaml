@@ -12,148 +12,239 @@
         <converters:AmountToColorConverter x:Key="AmountToColor"/>
     </ContentPage.Resources>
 
-    <ScrollView>
-        <VerticalStackLayout Spacing="16" Padding="20,16">
+    <Grid>
+        <!-- ══════ MAIN CONTENT ══════ -->
+        <ScrollView x:Name="MainContent">
+            <ScrollView.Triggers>
+                <DataTrigger TargetType="ScrollView"
+                             Binding="{Binding IsLoading}"
+                             Value="True">
+                    <Setter Property="IsVisible" Value="False"/>
+                </DataTrigger>
+            </ScrollView.Triggers>
+            <VerticalStackLayout Spacing="16" Padding="20,16">
 
-            <Label Text="Cüzdan" Style="{StaticResource PageTitleStyle}"/>
+                <Label Text="Cüzdan" Style="{StaticResource PageTitleStyle}"/>
 
-            <!-- Balance Card -->
-            <Border StrokeThickness="0"
-                    StrokeShape="RoundRectangle 24"
-                    Padding="24">
-                <Border.Background>
-                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                        <GradientStop Color="{StaticResource PrimaryPurple}" Offset="0"/>
-                        <GradientStop Color="{StaticResource PrimaryDark}" Offset="1"/>
-                    </LinearGradientBrush>
-                </Border.Background>
-                <VerticalStackLayout Spacing="16">
-                    <VerticalStackLayout Spacing="4">
-                        <Label Text="Çekilebilir Bakiye"
-                               FontFamily="JakartaRegular" FontSize="13"
-                               TextColor="#AAFFFFFF"/>
-                        <Label Text="{Binding WithdrawableBalanceDisplay}"
-                               FontFamily="JakartaExtraBold" FontSize="32"
-                               TextColor="White"/>
+                <!-- Balance Card -->
+                <Border StrokeThickness="0"
+                        StrokeShape="RoundRectangle 24"
+                        Padding="24">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                            <GradientStop Color="{StaticResource PrimaryPurple}" Offset="0"/>
+                            <GradientStop Color="{StaticResource PrimaryDark}" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <VerticalStackLayout Spacing="16">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Çekilebilir Bakiye"
+                                   FontFamily="JakartaRegular" FontSize="13"
+                                   TextColor="#AAFFFFFF"/>
+                            <Label Text="{Binding WithdrawableBalanceDisplay}"
+                                   FontFamily="JakartaExtraBold" FontSize="32"
+                                   TextColor="White"/>
+                        </VerticalStackLayout>
+
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="16">
+                            <VerticalStackLayout Spacing="2">
+                                <Label Text="Puan" FontFamily="JakartaRegular" FontSize="12" TextColor="#AAFFFFFF"/>
+                                <Label Text="{Binding PointsDisplay}"
+                                       FontFamily="JakartaBold" FontSize="16" TextColor="White"/>
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                <Label Text="Toplam Kazanç" FontFamily="JakartaRegular" FontSize="12" TextColor="#AAFFFFFF"/>
+                                <Label Text="{Binding TotalEarnedDisplay}"
+                                       FontFamily="JakartaBold" FontSize="16" TextColor="White"/>
+                            </VerticalStackLayout>
+                        </Grid>
+
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                            <Button Text="Para Çek"
+                                    FontFamily="JakartaSemiBold" FontSize="14"
+                                    BackgroundColor="White"
+                                    TextColor="{StaticResource PrimaryPurple}"
+                                    CornerRadius="22" HeightRequest="44"
+                                    Command="{Binding NavigateToWithdrawCommand}"/>
+                            <Button Grid.Column="1" Text="Geçmiş"
+                                    FontFamily="JakartaSemiBold" FontSize="14"
+                                    BackgroundColor="#30FFFFFF"
+                                    TextColor="White"
+                                    CornerRadius="22" HeightRequest="44"
+                                    BorderWidth="0"
+                                    Command="{Binding NavigateToHistoryCommand}"/>
+                        </Grid>
                     </VerticalStackLayout>
+                </Border>
 
-                    <Grid ColumnDefinitions="*,*" ColumnSpacing="16">
-                        <VerticalStackLayout Spacing="2">
-                            <Label Text="Puan" FontFamily="JakartaRegular" FontSize="12" TextColor="#AAFFFFFF"/>
-                            <Label Text="{Binding PointsDisplay}"
-                                   FontFamily="JakartaBold" FontSize="16" TextColor="White"/>
-                        </VerticalStackLayout>
-                        <VerticalStackLayout Grid.Column="1" Spacing="2">
-                            <Label Text="Toplam Kazanç" FontFamily="JakartaRegular" FontSize="12" TextColor="#AAFFFFFF"/>
-                            <Label Text="{Binding TotalEarnedDisplay}"
-                                   FontFamily="JakartaBold" FontSize="16" TextColor="White"/>
-                        </VerticalStackLayout>
-                    </Grid>
+                <!-- Bank Accounts -->
+                <Label Text="Banka Hesapları"
+                       Style="{StaticResource TitleStyle}" Margin="0,8,0,0"/>
 
-                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
-                        <Button Text="Para Çek"
-                                FontFamily="JakartaSemiBold" FontSize="14"
-                                BackgroundColor="White"
-                                TextColor="{StaticResource PrimaryPurple}"
-                                CornerRadius="22" HeightRequest="44"
-                                Command="{Binding NavigateToWithdrawCommand}"/>
-                        <Button Grid.Column="1" Text="Geçmiş"
-                                FontFamily="JakartaSemiBold" FontSize="14"
-                                BackgroundColor="#30FFFFFF"
-                                TextColor="White"
-                                CornerRadius="22" HeightRequest="44"
-                                BorderWidth="0"
-                                Command="{Binding NavigateToHistoryCommand}"/>
-                    </Grid>
+                <VerticalStackLayout Spacing="8"
+                                     BindableLayout.ItemsSource="{Binding BankAccounts}">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="models:BankAccountModel">
+                            <Border Style="{StaticResource CardBorderStyle}" Padding="14">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.NavigateToEditBankAccountCommand}"
+                                        CommandParameter="{Binding .}" />
+                                </Border.GestureRecognizers>
+                                <HorizontalStackLayout Spacing="12">
+                                    <Border StrokeThickness="0"
+                                            StrokeShape="RoundRectangle 20"
+                                            HeightRequest="40" WidthRequest="40"
+                                            BackgroundColor="{StaticResource PrimaryLight}">
+                                        <Image Source="{Binding DisplayImageUrl}"
+                                               HeightRequest="40"
+                                               WidthRequest="40"
+                                               Aspect="AspectFill"
+                                               HorizontalOptions="Center"
+                                               VerticalOptions="Center">
+                                            <Image.Clip>
+                                                <EllipseGeometry Center="20,20" RadiusX="20" RadiusY="20"/>
+                                            </Image.Clip>
+                                        </Image>
+                                    </Border>
+                                    <VerticalStackLayout Spacing="2" VerticalOptions="Center">
+                                        <Label Text="{Binding BankName}"
+                                               FontFamily="JakartaSemiBold" FontSize="14"
+                                               TextColor="{StaticResource TextPrimary}"/>
+                                        <Label Text="{Binding MaskedIban}"
+                                               Style="{StaticResource CaptionStyle}"/>
+                                    </VerticalStackLayout>
+                                </HorizontalStackLayout>
+                            </Border>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
                 </VerticalStackLayout>
-            </Border>
 
-            <!-- Bank Accounts -->
-            <Label Text="Banka Hesapları"
-                   Style="{StaticResource TitleStyle}" Margin="0,8,0,0"/>
+                <Button Text="+ Yeni Hesap Ekle"
+                        Style="{StaticResource SecondaryButtonStyle}"
+                        HorizontalOptions="Fill"
+                        Command="{Binding NavigateToAddBankAccountCommand}"/>
 
-            <VerticalStackLayout Spacing="8"
-                                 BindableLayout.ItemsSource="{Binding BankAccounts}">
-                <BindableLayout.ItemTemplate>
-                    <DataTemplate x:DataType="models:BankAccountModel">
-                        <Border Style="{StaticResource CardBorderStyle}" Padding="14">
-                            <Border.GestureRecognizers>
-                                <TapGestureRecognizer
-                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.NavigateToEditBankAccountCommand}"
-                                    CommandParameter="{Binding .}" />
-                            </Border.GestureRecognizers>
-                            <HorizontalStackLayout Spacing="12">
-                                <Border StrokeThickness="0"
-                                        StrokeShape="RoundRectangle 20"
-                                        HeightRequest="40" WidthRequest="40"
-                                        BackgroundColor="{StaticResource PrimaryLight}">
-                                    <Image Source="{Binding DisplayImageUrl}"
-                                           HeightRequest="40"
-                                           WidthRequest="40"
-                                           Aspect="AspectFill"
-                                           HorizontalOptions="Center"
-                                           VerticalOptions="Center">
-                                        <Image.Clip>
-                                            <EllipseGeometry Center="20,20" RadiusX="20" RadiusY="20"/>
-                                        </Image.Clip>
-                                    </Image>
-                                </Border>
-                                <VerticalStackLayout Spacing="2" VerticalOptions="Center">
-                                    <Label Text="{Binding BankName}"
+                <!-- Recent Transactions -->
+                <Label Text="Son İşlemler"
+                       Style="{StaticResource TitleStyle}" Margin="0,8,0,0"/>
+
+                <VerticalStackLayout Spacing="8"
+                                     BindableLayout.ItemsSource="{Binding RecentTransactions}">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="models:TransactionModel">
+                            <Border Style="{StaticResource CardBorderStyle}" Padding="14">
+                                <Grid ColumnDefinitions="40,*,Auto" ColumnSpacing="12">
+                                    <Border StrokeThickness="0"
+                                            StrokeShape="RoundRectangle 20"
+                                            HeightRequest="40" WidthRequest="40"
+                                            BackgroundColor="{Binding IconBgColor}">
+                                        <Label Text="{Binding IconGlyph}"
+                                               FontFamily="JakartaBold" FontSize="20"
+                                               TextColor="{Binding IconColor}"
+                                               HorizontalOptions="Center" VerticalOptions="Center"/>
+                                    </Border>
+                                    <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                                        <Label Text="{Binding Title}"
+                                               FontFamily="JakartaSemiBold" FontSize="14"
+                                               TextColor="{StaticResource TextPrimary}"/>
+                                        <Label Text="{Binding Description}"
+                                               Style="{StaticResource CaptionStyle}"/>
+                                    </VerticalStackLayout>
+                                    <Label Grid.Column="2"
+                                           Text="{Binding AmountDisplay}"
                                            FontFamily="JakartaSemiBold" FontSize="14"
-                                           TextColor="{StaticResource TextPrimary}"/>
-                                    <Label Text="{Binding MaskedIban}"
-                                           Style="{StaticResource CaptionStyle}"/>
-                                </VerticalStackLayout>
-                            </HorizontalStackLayout>
-                        </Border>
-                    </DataTemplate>
-                </BindableLayout.ItemTemplate>
+                                           TextColor="{Binding Amount, Converter={StaticResource AmountToColor}}"
+                                           VerticalOptions="Center"/>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+
+                <BoxView HeightRequest="20" Color="Transparent"/>
             </VerticalStackLayout>
+        </ScrollView>
 
-            <Button Text="+ Yeni Hesap Ekle"
-                    Style="{StaticResource SecondaryButtonStyle}"
-                    HorizontalOptions="Fill"
-                    Command="{Binding NavigateToAddBankAccountCommand}"/>
+        <!-- ══════ SHIMMER OVERLAY ══════ -->
+        <Grid x:Name="ShimmerOverlay"
+              IsVisible="{Binding IsLoading}"
+              BackgroundColor="{StaticResource PageBackground}"
+              InputTransparent="True">
+            <Grid x:Name="ShimmerContainer">
+                <ScrollView>
+                    <VerticalStackLayout Spacing="16" Padding="20,16">
+                        <!-- Title -->
+                        <Border StrokeThickness="0" BackgroundColor="#E4DDF2"
+                                StrokeShape="RoundRectangle 8"
+                                HeightRequest="26" WidthRequest="100"
+                                HorizontalOptions="Start"/>
 
-            <!-- Recent Transactions -->
-            <Label Text="Son İşlemler"
-                   Style="{StaticResource TitleStyle}" Margin="0,8,0,0"/>
+                        <!-- Balance Card -->
+                        <Border StrokeThickness="0" BackgroundColor="#C4B5E0"
+                                StrokeShape="RoundRectangle 24"
+                                HeightRequest="210"/>
 
-            <VerticalStackLayout Spacing="8"
-                                 BindableLayout.ItemsSource="{Binding RecentTransactions}">
-                <BindableLayout.ItemTemplate>
-                    <DataTemplate x:DataType="models:TransactionModel">
-                        <Border Style="{StaticResource CardBorderStyle}" Padding="14">
-                            <Grid ColumnDefinitions="40,*,Auto" ColumnSpacing="12">
-                                <Border StrokeThickness="0"
-                                        StrokeShape="RoundRectangle 20"
-                                        HeightRequest="40" WidthRequest="40"
-                                        BackgroundColor="{Binding IconBgColor}">
-                                    <Label Text="{Binding IconGlyph}"
-                                           FontFamily="JakartaBold" FontSize="20"
-                                           TextColor="{Binding IconColor}"
-                                           HorizontalOptions="Center" VerticalOptions="Center"/>
-                                </Border>
-                                <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
-                                    <Label Text="{Binding Title}"
-                                           FontFamily="JakartaSemiBold" FontSize="14"
-                                           TextColor="{StaticResource TextPrimary}"/>
-                                    <Label Text="{Binding Description}"
-                                           Style="{StaticResource CaptionStyle}"/>
-                                </VerticalStackLayout>
-                                <Label Grid.Column="2"
-                                       Text="{Binding AmountDisplay}"
-                                       FontFamily="JakartaSemiBold" FontSize="14"
-                                       TextColor="{Binding Amount, Converter={StaticResource AmountToColor}}"
-                                       VerticalOptions="Center"/>
-                            </Grid>
-                        </Border>
-                    </DataTemplate>
-                </BindableLayout.ItemTemplate>
-            </VerticalStackLayout>
+                        <!-- Bank Accounts Title -->
+                        <Border StrokeThickness="0" BackgroundColor="#E4DDF2"
+                                StrokeShape="RoundRectangle 8"
+                                HeightRequest="22" WidthRequest="140"
+                                HorizontalOptions="Start" Margin="0,8,0,0"/>
 
-            <BoxView HeightRequest="20" Color="Transparent"/>
-        </VerticalStackLayout>
-    </ScrollView>
+                        <!-- Bank Account Rows -->
+                        <VerticalStackLayout Spacing="8">
+                            <Border StrokeThickness="0" BackgroundColor="#E8E1F6"
+                                    StrokeShape="RoundRectangle 16"
+                                    HeightRequest="68"/>
+                            <Border StrokeThickness="0" BackgroundColor="#E8E1F6"
+                                    StrokeShape="RoundRectangle 16"
+                                    HeightRequest="68"/>
+                        </VerticalStackLayout>
+
+                        <!-- Add Button -->
+                        <Border StrokeThickness="0" BackgroundColor="#ECE6F7"
+                                StrokeShape="RoundRectangle 14"
+                                HeightRequest="44"/>
+
+                        <!-- Transactions Title -->
+                        <Border StrokeThickness="0" BackgroundColor="#E4DDF2"
+                                StrokeShape="RoundRectangle 8"
+                                HeightRequest="22" WidthRequest="120"
+                                HorizontalOptions="Start" Margin="0,8,0,0"/>
+
+                        <!-- Transaction Rows -->
+                        <VerticalStackLayout Spacing="8">
+                            <Border StrokeThickness="0" BackgroundColor="#E8E1F6"
+                                    StrokeShape="RoundRectangle 16"
+                                    HeightRequest="68"/>
+                            <Border StrokeThickness="0" BackgroundColor="#E8E1F6"
+                                    StrokeShape="RoundRectangle 16"
+                                    HeightRequest="68"/>
+                            <Border StrokeThickness="0" BackgroundColor="#E8E1F6"
+                                    StrokeShape="RoundRectangle 16"
+                                    HeightRequest="68"/>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+                </ScrollView>
+
+                <!-- Shimmer Sweep -->
+                <Border x:Name="ShimmerSweep"
+                        StrokeThickness="0"
+                        WidthRequest="180"
+                        Opacity="0"
+                        Rotation="-18"
+                        HorizontalOptions="Start"
+                        VerticalOptions="Fill"
+                        InputTransparent="True">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                            <GradientStop Color="#00FFFFFF" Offset="0"/>
+                            <GradientStop Color="#66FFFFFF" Offset="0.5"/>
+                            <GradientStop Color="#00FFFFFF" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
 </ContentPage>

@@ -18,24 +18,29 @@
         <converters:GsmOperatorDisplayConverter x:Key="GsmOperatorDisplayConverter"/>
     </ContentPage.Resources>
 
-    <ScrollView>
-        <VerticalStackLayout Spacing="16" Padding="20,16">
+    <Grid>
+        <!-- ══════ MAIN CONTENT ══════ -->
+        <ScrollView x:Name="MainContent">
+            <ScrollView.Triggers>
+                <DataTrigger TargetType="ScrollView"
+                             Binding="{Binding IsLoading}"
+                             Value="True">
+                    <Setter Property="IsVisible" Value="False"/>
+                </DataTrigger>
+            </ScrollView.Triggers>
+            <VerticalStackLayout Spacing="16" Padding="20,16">
 
-            <Label Text="Profil" Style="{StaticResource PageTitleStyle}"/>
+                <Label Text="Profil" Style="{StaticResource PageTitleStyle}"/>
 
-            <!-- Loading -->
-            <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}"
-                               Color="{StaticResource PrimaryPurple}" HeightRequest="40"/>
+                <!-- Status Message -->
+                <Label Text="{Binding StatusMessage}"
+                       IsVisible="{Binding StatusMessage, Converter={StaticResource StringToBoolConverter}}"
+                       FontFamily="JakartaMedium" FontSize="13"
+                       TextColor="{StaticResource PrimaryPurple}"
+                       HorizontalTextAlignment="Center"/>
 
-            <!-- Status Message -->
-            <Label Text="{Binding StatusMessage}"
-                   IsVisible="{Binding StatusMessage, Converter={StaticResource StringToBoolConverter}}"
-                   FontFamily="JakartaMedium" FontSize="13"
-                   TextColor="{StaticResource PrimaryPurple}"
-                   HorizontalTextAlignment="Center"/>
-
-            <!-- Avatar Card -->
-            <Border Style="{StaticResource CardBorderStyle}" Padding="20">
+                <!-- Avatar Card -->
+                <Border Style="{StaticResource CardBorderStyle}" Padding="20">
                 <VerticalStackLayout Spacing="12" HorizontalOptions="Center">
                     <!-- Avatar with camera overlay -->
                     <Grid HeightRequest="88" WidthRequest="88" HorizontalOptions="Center">
@@ -417,7 +422,100 @@
                     HeightRequest="48" CornerRadius="14"
                     Margin="0,4,0,0"/>
 
-            <BoxView HeightRequest="20" Color="Transparent"/>
-        </VerticalStackLayout>
-    </ScrollView>
+                <BoxView HeightRequest="20" Color="Transparent"/>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- ══════ SHIMMER OVERLAY ══════ -->
+        <Grid x:Name="ShimmerOverlay"
+              IsVisible="{Binding IsLoading}"
+              BackgroundColor="{StaticResource PageBackground}"
+              InputTransparent="True">
+            <Grid x:Name="ShimmerContainer">
+                <ScrollView>
+                    <VerticalStackLayout Spacing="16" Padding="20,16">
+                        <!-- Title -->
+                        <Border StrokeThickness="0" BackgroundColor="#E4DDF2"
+                                StrokeShape="RoundRectangle 8"
+                                HeightRequest="26" WidthRequest="70"
+                                HorizontalOptions="Start"/>
+
+                        <!-- Avatar Card -->
+                        <Border StrokeThickness="0" BackgroundColor="#E8E1F6"
+                                StrokeShape="RoundRectangle 20"
+                                Padding="20">
+                            <VerticalStackLayout Spacing="12" HorizontalOptions="Center">
+                                <!-- Avatar circle -->
+                                <Border StrokeThickness="0" BackgroundColor="#DDD4F0"
+                                        StrokeShape="RoundRectangle 44"
+                                        HeightRequest="88" WidthRequest="88"
+                                        HorizontalOptions="Center"/>
+                                <!-- Name -->
+                                <Border StrokeThickness="0" BackgroundColor="#D8CEE9"
+                                        StrokeShape="RoundRectangle 8"
+                                        HeightRequest="22" WidthRequest="160"
+                                        HorizontalOptions="Center"/>
+                                <!-- Referral code -->
+                                <Border StrokeThickness="0" BackgroundColor="#DDD4F0"
+                                        StrokeShape="RoundRectangle 12"
+                                        HeightRequest="32" WidthRequest="130"
+                                        HorizontalOptions="Center"/>
+                                <!-- Stars -->
+                                <Border StrokeThickness="0" BackgroundColor="#E4DDF2"
+                                        StrokeShape="RoundRectangle 6"
+                                        HeightRequest="22" WidthRequest="100"
+                                        HorizontalOptions="Center"/>
+                            </VerticalStackLayout>
+                        </Border>
+
+                        <!-- Stats Row -->
+                        <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10">
+                            <Border StrokeThickness="0" BackgroundColor="#E8E1F6"
+                                    StrokeShape="RoundRectangle 16"
+                                    HeightRequest="76"/>
+                            <Border Grid.Column="1" StrokeThickness="0" BackgroundColor="#E8E1F6"
+                                    StrokeShape="RoundRectangle 16"
+                                    HeightRequest="76"/>
+                            <Border Grid.Column="2" StrokeThickness="0" BackgroundColor="#E8E1F6"
+                                    StrokeShape="RoundRectangle 16"
+                                    HeightRequest="76"/>
+                        </Grid>
+
+                        <!-- Profile Info Card -->
+                        <Border StrokeThickness="0" BackgroundColor="#E8E1F6"
+                                StrokeShape="RoundRectangle 20"
+                                HeightRequest="280"/>
+
+                        <!-- Contact Button -->
+                        <Border StrokeThickness="0" BackgroundColor="#ECE6F7"
+                                StrokeShape="RoundRectangle 14"
+                                HeightRequest="48" Margin="0,8,0,0"/>
+
+                        <!-- Logout Button -->
+                        <Border StrokeThickness="0" BackgroundColor="#F5E0E0"
+                                StrokeShape="RoundRectangle 14"
+                                HeightRequest="48" Margin="0,4,0,0"/>
+                    </VerticalStackLayout>
+                </ScrollView>
+
+                <!-- Shimmer Sweep -->
+                <Border x:Name="ShimmerSweep"
+                        StrokeThickness="0"
+                        WidthRequest="180"
+                        Opacity="0"
+                        Rotation="-18"
+                        HorizontalOptions="Start"
+                        VerticalOptions="Fill"
+                        InputTransparent="True">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                            <GradientStop Color="#00FFFFFF" Offset="0"/>
+                            <GradientStop Color="#66FFFFFF" Offset="0.5"/>
+                            <GradientStop Color="#00FFFFFF" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
 </ContentPage>
