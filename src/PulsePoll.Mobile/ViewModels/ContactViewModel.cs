@@ -75,6 +75,11 @@ public partial class ContactViewModel : ObservableObject
                 await ShowStatusAsync("E-posta adresi kopyalandı!");
             }
         }
+        catch (FeatureNotSupportedException)
+        {
+            await Clipboard.Default.SetTextAsync(ContactEmail);
+            await ShowStatusAsync("Mail uygulaması bulunamadı, adres kopyalandı.");
+        }
         catch
         {
             await Clipboard.Default.SetTextAsync(ContactEmail);
@@ -95,8 +100,13 @@ public partial class ContactViewModel : ObservableObject
             else
             {
                 await Clipboard.Default.SetTextAsync(ContactPhone);
-                await ShowStatusAsync("Telefon numarası kopyalandı!");
+                await ShowStatusAsync("Arama desteklenmiyor, numara kopyalandı.");
             }
+        }
+        catch (FeatureNotSupportedException)
+        {
+            await Clipboard.Default.SetTextAsync(ContactPhone);
+            await ShowStatusAsync("Arama desteklenmiyor, numara kopyalandı.");
         }
         catch
         {
