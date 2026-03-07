@@ -399,6 +399,15 @@
                 </VerticalStackLayout>
             </Border>
 
+            <!-- Contact -->
+            <Button Text="İletişim"
+                    Command="{Binding GoToContactCommand}"
+                    BackgroundColor="{StaticResource PrimaryLight}"
+                    TextColor="{StaticResource PrimaryPurple}"
+                    FontFamily="JakartaSemiBold" FontSize="14"
+                    HeightRequest="48" CornerRadius="14"
+                    Margin="0,8,0,0"/>
+
             <!-- Logout -->
             <Button Text="Çıkış Yap"
                     Command="{Binding LogoutCommand}"
@@ -406,7 +415,7 @@
                     TextColor="{StaticResource Danger}"
                     FontFamily="JakartaSemiBold" FontSize="14"
                     HeightRequest="48" CornerRadius="14"
-                    Margin="0,8,0,0"/>
+                    Margin="0,4,0,0"/>
 
             <BoxView HeightRequest="20" Color="Transparent"/>
         </VerticalStackLayout>

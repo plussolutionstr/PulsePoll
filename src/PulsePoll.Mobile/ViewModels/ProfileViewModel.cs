@@ -372,6 +372,12 @@ public partial class ProfileViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private async Task GoToContactAsync()
+    {
+        await Shell.Current.GoToAsync("contact");
+    }
+
+    [RelayCommand]
     private async Task LogoutAsync()
     {
         var confirm = await Shell.Current.DisplayAlertAsync(

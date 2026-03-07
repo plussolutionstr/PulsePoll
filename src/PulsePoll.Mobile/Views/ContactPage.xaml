@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:PulsePoll.Mobile.ViewModels"
+             x:Class="PulsePoll.Mobile.Views.ContactPage"
+             x:DataType="vm:ContactViewModel"
+             Title="İletişim"
+             BackgroundColor="{StaticResource PageBackground}">
+
+    <ScrollView>
+        <VerticalStackLayout Spacing="0" Padding="28,28,28,0">
+
+            <!-- Logo Mark -->
+            <Border BackgroundColor="{StaticResource PrimaryPurple}"
+                    StrokeShape="RoundRectangle 22" Stroke="Transparent"
+                    WidthRequest="72" HeightRequest="72"
+                    HorizontalOptions="Start"
+                    Margin="0,0,0,20">
+                <Image Source="icon_pulse.png" WidthRequest="32" HeightRequest="32"
+                       HorizontalOptions="Center" VerticalOptions="Center"/>
+            </Border>
+
+            <!-- Loading -->
+            <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}"
+                               Color="{StaticResource PrimaryPurple}" HeightRequest="40"/>
+
+            <!-- Title -->
+            <Label Text="{Binding ContactTitle}"
+                   FontFamily="JakartaExtraBold" FontSize="22"
+                   TextColor="{StaticResource TextPrimary}"
+                   Margin="0,0,0,8"/>
+
+            <!-- Body -->
+            <Label Text="{Binding ContactBody}"
+                   FontFamily="JakartaRegular" FontSize="14"
+                   TextColor="{StaticResource TextSecondary}"
+                   LineBreakMode="WordWrap"
+                   Margin="0,0,0,28"/>
+
+            <!-- Email -->
+            <Border StrokeShape="RoundRectangle 16" Stroke="{StaticResource CardBorder}"
+                    BackgroundColor="{StaticResource White}" Padding="16"
+                    Margin="0,0,0,12"
+                    IsVisible="{Binding HasEmail}">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding OpenEmailCommand}"/>
+                </Border.GestureRecognizers>
+                <Grid ColumnDefinitions="40,*,Auto" ColumnSpacing="14">
+                    <Border BackgroundColor="{StaticResource PrimaryLight}"
+                            StrokeShape="RoundRectangle 12" Stroke="Transparent"
+                            WidthRequest="40" HeightRequest="40">
+                        <Image Source="icon_mail.png" WidthRequest="20" HeightRequest="20"
+                               HorizontalOptions="Center" VerticalOptions="Center"/>
+                    </Border>
+                    <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                        <Label Text="E-posta" FontFamily="JakartaMedium" FontSize="12"
+                               TextColor="{StaticResource TextSecondary}"/>
+                        <Label Text="{Binding ContactEmail}" FontFamily="JakartaSemiBold" FontSize="14"
+                               TextColor="{StaticResource TextPrimary}"/>
+                    </VerticalStackLayout>
+                    <Image Grid.Column="2" Source="icon_arrow_right.png"
+                           WidthRequest="16" HeightRequest="16"
+                           VerticalOptions="Center"/>
+                </Grid>
+            </Border>
+
+            <!-- Phone -->
+            <Border StrokeShape="RoundRectangle 16" Stroke="{StaticResource CardBorder}"
+                    BackgroundColor="{StaticResource White}" Padding="16"
+                    Margin="0,0,0,12"
+                    IsVisible="{Binding HasPhone}">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding OpenPhoneCommand}"/>
+                </Border.GestureRecognizers>
+                <Grid ColumnDefinitions="40,*,Auto" ColumnSpacing="14">
+                    <Border BackgroundColor="{StaticResource PrimaryLight}"
+                            StrokeShape="RoundRectangle 12" Stroke="Transparent"
+                            WidthRequest="40" HeightRequest="40">
+                        <Image Source="icon_phone.png" WidthRequest="20" HeightRequest="20"
+                               HorizontalOptions="Center" VerticalOptions="Center"/>
+                    </Border>
+                    <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                        <Label Text="Telefon" FontFamily="JakartaMedium" FontSize="12"
+                               TextColor="{StaticResource TextSecondary}"/>
+                        <Label Text="{Binding ContactPhone}" FontFamily="JakartaSemiBold" FontSize="14"
+                               TextColor="{StaticResource TextPrimary}"/>
+                    </VerticalStackLayout>
+                    <Image Grid.Column="2" Source="icon_arrow_right.png"
+                           WidthRequest="16" HeightRequest="16"
+                           VerticalOptions="Center"/>
+                </Grid>
+            </Border>
+
+            <!-- WhatsApp -->
+            <Border StrokeShape="RoundRectangle 16" Stroke="{StaticResource CardBorder}"
+                    BackgroundColor="{StaticResource White}" Padding="16"
+                    Margin="0,0,0,12"
+                    IsVisible="{Binding HasWhatsapp}">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding OpenWhatsappCommand}"/>
+                </Border.GestureRecognizers>
+                <Grid ColumnDefinitions="40,*,Auto" ColumnSpacing="14">
+                    <Border BackgroundColor="{StaticResource PrimaryLight}"
+                            StrokeShape="RoundRectangle 12" Stroke="Transparent"
+                            WidthRequest="40" HeightRequest="40">
+                        <Image Source="icon_whatsapp.png" WidthRequest="20" HeightRequest="20"
+                               HorizontalOptions="Center" VerticalOptions="Center"/>
+                    </Border>
+                    <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                        <Label Text="WhatsApp" FontFamily="JakartaMedium" FontSize="12"
+                               TextColor="{StaticResource TextSecondary}"/>
+                        <Label Text="{Binding ContactWhatsapp}" FontFamily="JakartaSemiBold" FontSize="14"
+                               TextColor="{StaticResource TextPrimary}"/>
+                    </VerticalStackLayout>
+                    <Image Grid.Column="2" Source="icon_arrow_right.png"
+                           WidthRequest="16" HeightRequest="16"
+                           VerticalOptions="Center"/>
+                </Grid>
+            </Border>
+
+            <!-- Status Message -->
+            <Label Text="{Binding StatusMessage}"
+                   FontFamily="JakartaMedium" FontSize="13"
+                   TextColor="{StaticResource PrimaryPurple}"
+                   HorizontalTextAlignment="Center"
+                   Margin="0,16,0,0"/>
+
+            <BoxView HeightRequest="40" Color="Transparent"/>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

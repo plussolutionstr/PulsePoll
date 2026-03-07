@@ -74,4 +74,11 @@ public partial class LoginViewModel : ObservableObject
         var page = _serviceProvider.GetRequiredService<Views.RegisterPage>();
         await Application.Current!.Windows[0].Page!.Navigation.PushAsync(page);
     }
+
+    [RelayCommand]
+    private async Task GoToContactAsync()
+    {
+        var page = _serviceProvider.GetRequiredService<Views.ContactPage>();
+        await Application.Current!.Windows[0].Page!.Navigation.PushAsync(page);
+    }
 }

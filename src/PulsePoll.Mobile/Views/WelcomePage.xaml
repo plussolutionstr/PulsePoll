@@ -137,6 +137,17 @@
                     Style="{StaticResource AuthOutlineButtonStyle}"
                     Margin="0,0,0,40"/>
 
+            <HorizontalStackLayout Spacing="4" HorizontalOptions="Center" Margin="0,0,0,32">
+                <Label Text="Sorun mu yaşıyorsun?"
+                       Style="{StaticResource AuthBottomLinkStyle}"/>
+                <Label Text="İletişim"
+                       Style="{StaticResource AuthLinkStyle}">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding GoToContactCommand}"/>
+                    </Label.GestureRecognizers>
+                </Label>
+            </HorizontalStackLayout>
+
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>

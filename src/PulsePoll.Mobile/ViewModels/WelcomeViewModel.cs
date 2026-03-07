@@ -18,4 +18,11 @@ public partial class WelcomeViewModel(IServiceProvider serviceProvider) : Observ
         var page = serviceProvider.GetRequiredService<Views.RegisterPage>();
         await Application.Current!.Windows[0].Page!.Navigation.PushAsync(page);
     }
+
+    [RelayCommand]
+    private async Task GoToContactAsync()
+    {
+        var page = serviceProvider.GetRequiredService<Views.ContactPage>();
+        await Application.Current!.Windows[0].Page!.Navigation.PushAsync(page);
+    }
 }

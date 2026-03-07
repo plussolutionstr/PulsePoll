@@ -133,6 +133,7 @@ public static class MauiProgram
         builder.Services.AddTransient<SurveyWebViewViewModel>();
         builder.Services.AddTransient<SurveyResultViewModel>();
         builder.Services.AddTransient<ConnectionErrorViewModel>();
+        builder.Services.AddTransient<ContactViewModel>();
 
         // Pages
         builder.Services.AddTransient<WelcomePage>();
@@ -155,6 +156,7 @@ public static class MauiProgram
         builder.Services.AddTransient<SurveyWebViewPage>();
         builder.Services.AddTransient<SurveyResultPage>();
         builder.Services.AddTransient<ConnectionErrorPage>();
+        builder.Services.AddTransient<ContactPage>();
 
 #if DEBUG
         builder.Logging.AddDebug();
