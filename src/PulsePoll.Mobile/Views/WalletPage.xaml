@@ -95,19 +95,15 @@
                                 </Border.GestureRecognizers>
                                 <HorizontalStackLayout Spacing="12">
                                     <Border StrokeThickness="0"
-                                            StrokeShape="RoundRectangle 20"
-                                            HeightRequest="40" WidthRequest="40"
-                                            BackgroundColor="{StaticResource PrimaryLight}">
+                                            StrokeShape="RoundRectangle 10"
+                                            HeightRequest="40" WidthRequest="56"
+                                            BackgroundColor="White">
                                         <Image Source="{Binding DisplayImageUrl}"
-                                               HeightRequest="40"
-                                               WidthRequest="40"
-                                               Aspect="AspectFill"
+                                               HeightRequest="28"
+                                               WidthRequest="48"
+                                               Aspect="AspectFit"
                                                HorizontalOptions="Center"
-                                               VerticalOptions="Center">
-                                            <Image.Clip>
-                                                <EllipseGeometry Center="20,20" RadiusX="20" RadiusY="20"/>
-                                            </Image.Clip>
-                                        </Image>
+                                               VerticalOptions="Center"/>
                                     </Border>
                                     <VerticalStackLayout Spacing="2" VerticalOptions="Center">
                                         <Label Text="{Binding BankName}"
