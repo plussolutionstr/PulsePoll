@@ -29,13 +29,13 @@
                 <Label Text="{Binding NewsItem.Title}"
                        FontFamily="JakartaExtraBold"
                        FontSize="24"
-                       TextColor="{StaticResource TextPrimary}"
+                       TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"
                        LineHeight="1.2"/>
 
                 <Border StrokeThickness="0"
                         StrokeShape="RoundRectangle 18"
                         HeightRequest="220"
-                        BackgroundColor="{StaticResource SurfaceColor}">
+                        BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceColor}, Dark={StaticResource SurfaceColorDark}}">
                     <Grid>
                         <Image Source="icon_star.png"
                                HeightRequest="56"
@@ -51,13 +51,13 @@
                 <Label Text="{Binding NewsItem.Subtitle}"
                        FontFamily="JakartaRegular"
                        FontSize="15"
-                       TextColor="{StaticResource TextPrimary}"
+                       TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"
                        LineHeight="1.45"/>
 
                 <Border IsVisible="{Binding HasLink}"
                         StrokeThickness="0"
                         StrokeShape="RoundRectangle 14"
-                        BackgroundColor="{StaticResource PrimaryPurple}"
+                        BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"
                         Padding="14,12">
                     <Border.GestureRecognizers>
                         <TapGestureRecognizer Command="{Binding OpenLinkCommand}"/>
@@ -79,16 +79,16 @@
         <!-- SHIMMER OVERLAY -->
         <Grid x:Name="ShimmerOverlay"
               IsVisible="{Binding IsLoading}"
-              BackgroundColor="{StaticResource PageBackground}"
+              BackgroundColor="{AppThemeBinding Light={StaticResource PageBackground}, Dark={StaticResource PageBackgroundDark}}"
               InputTransparent="True">
             <Grid x:Name="ShimmerContainer">
                 <VerticalStackLayout Spacing="14" Padding="20,16,20,22">
                     <!-- Header skeleton -->
                     <HorizontalStackLayout Spacing="8">
-                        <Border StrokeThickness="0" BackgroundColor="#E4DDF2"
+                        <Border StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerMid}, Dark={StaticResource ShimmerMidDark}}"
                                 StrokeShape="RoundRectangle 6"
                                 HeightRequest="24" WidthRequest="24"/>
-                        <Border StrokeThickness="0" BackgroundColor="#E4DDF2"
+                        <Border StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerMid}, Dark={StaticResource ShimmerMidDark}}"
                                 StrokeShape="RoundRectangle 6"
                                 HeightRequest="22" WidthRequest="60"
                                 VerticalOptions="Center"/>
@@ -96,43 +96,43 @@
 
                     <!-- Title skeleton -->
                     <VerticalStackLayout Spacing="6">
-                        <Border StrokeThickness="0" BackgroundColor="#E4DDF2"
+                        <Border StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerMid}, Dark={StaticResource ShimmerMidDark}}"
                                 StrokeShape="RoundRectangle 8"
                                 HeightRequest="26" HorizontalOptions="Fill"/>
-                        <Border StrokeThickness="0" BackgroundColor="#ECE6F7"
+                        <Border StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerLight}, Dark={StaticResource ShimmerLightDark}}"
                                 StrokeShape="RoundRectangle 8"
                                 HeightRequest="26" WidthRequest="200"
                                 HorizontalOptions="Start"/>
                     </VerticalStackLayout>
 
                     <!-- Image skeleton -->
-                    <Border StrokeThickness="0" BackgroundColor="#E8E1F6"
+                    <Border StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerBase}, Dark={StaticResource ShimmerBaseDark}}"
                             StrokeShape="RoundRectangle 18"
                             HeightRequest="220"/>
 
                     <!-- Body text skeletons -->
                     <VerticalStackLayout Spacing="8">
-                        <Border StrokeThickness="0" BackgroundColor="#ECE6F7"
+                        <Border StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerLight}, Dark={StaticResource ShimmerLightDark}}"
                                 StrokeShape="RoundRectangle 6"
                                 HeightRequest="16" HorizontalOptions="Fill"/>
-                        <Border StrokeThickness="0" BackgroundColor="#ECE6F7"
+                        <Border StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerLight}, Dark={StaticResource ShimmerLightDark}}"
                                 StrokeShape="RoundRectangle 6"
                                 HeightRequest="16" HorizontalOptions="Fill"/>
-                        <Border StrokeThickness="0" BackgroundColor="#ECE6F7"
+                        <Border StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerLight}, Dark={StaticResource ShimmerLightDark}}"
                                 StrokeShape="RoundRectangle 6"
                                 HeightRequest="16" WidthRequest="240"
                                 HorizontalOptions="Start"/>
-                        <Border StrokeThickness="0" BackgroundColor="#ECE6F7"
+                        <Border StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerLight}, Dark={StaticResource ShimmerLightDark}}"
                                 StrokeShape="RoundRectangle 6"
                                 HeightRequest="16" HorizontalOptions="Fill"/>
-                        <Border StrokeThickness="0" BackgroundColor="#ECE6F7"
+                        <Border StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerLight}, Dark={StaticResource ShimmerLightDark}}"
                                 StrokeShape="RoundRectangle 6"
                                 HeightRequest="16" WidthRequest="180"
                                 HorizontalOptions="Start"/>
                     </VerticalStackLayout>
 
                     <!-- Button skeleton -->
-                    <Border StrokeThickness="0" BackgroundColor="#E4DDF2"
+                    <Border StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerMid}, Dark={StaticResource ShimmerMidDark}}"
                             StrokeShape="RoundRectangle 14"
                             HeightRequest="48" HorizontalOptions="Fill"/>
                 </VerticalStackLayout>
@@ -149,7 +149,7 @@
                     <Border.Background>
                         <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
                             <GradientStop Color="#00FFFFFF" Offset="0"/>
-                            <GradientStop Color="#66FFFFFF" Offset="0.5"/>
+                            <GradientStop Color="{AppThemeBinding Light={StaticResource ShimmerSweepHighlight}, Dark={StaticResource ShimmerSweepHighlightDark}}" Offset="0.5"/>
                             <GradientStop Color="#00FFFFFF" Offset="1"/>
                         </LinearGradientBrush>
                     </Border.Background>

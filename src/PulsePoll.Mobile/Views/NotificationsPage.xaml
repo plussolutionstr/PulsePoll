@@ -33,7 +33,7 @@
                 <Label Grid.Column="2"
                        Text="{Binding EditButtonText}"
                        FontFamily="JakartaSemiBold" FontSize="12"
-                       TextColor="{StaticResource PrimaryPurple}"
+                       TextColor="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"
                        VerticalOptions="Center"
                        IsVisible="{Binding HasNotifications}">
                     <Label.GestureRecognizers>
@@ -50,7 +50,7 @@
                         <DataTemplate x:DataType="x:String">
                             <Border StrokeThickness="0"
                                     StrokeShape="RoundRectangle 16"
-                                    BackgroundColor="{StaticResource SurfaceColor}"
+                                    BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceColor}, Dark={StaticResource SurfaceColorDark}}"
                                     Padding="16,8">
                                 <Border.GestureRecognizers>
                                     <TapGestureRecognizer
@@ -59,7 +59,7 @@
                                 </Border.GestureRecognizers>
                                 <Label Text="{Binding .}"
                                        FontFamily="JakartaSemiBold" FontSize="13"
-                                       TextColor="{StaticResource TextSecondary}"/>
+                                       TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}"/>
                             </Border>
                         </DataTemplate>
                     </BindableLayout.ItemTemplate>
@@ -78,7 +78,7 @@
             <Label Text="Bildirim bulunamadı"
                    FontFamily="JakartaSemiBold"
                    FontSize="16"
-                   TextColor="{StaticResource TextPrimary}"
+                   TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"
                    HorizontalTextAlignment="Center"/>
             <Label Text="Yeni bildirimler geldiğinde burada listelenecek."
                    Style="{StaticResource CaptionStyle}"
@@ -95,7 +95,7 @@
                 <DataTemplate x:DataType="vm:SelectableNotification">
                     <!-- Notification Card -->
                     <Border StrokeShape="RoundRectangle 16"
-                            Stroke="{StaticResource CardBorder}"
+                            Stroke="{AppThemeBinding Light={StaticResource CardBorder}, Dark={StaticResource CardBorderDark}}"
                             BackgroundColor="{Binding Model.IsRead, Converter={StaticResource BoolToReadBg}}"
                             Padding="13"
                             Margin="0,4">
@@ -103,7 +103,7 @@
                             <DataTrigger TargetType="Border"
                                          Binding="{Binding IsSelected}"
                                          Value="True">
-                                <Setter Property="Stroke" Value="{StaticResource PrimaryPurple}"/>
+                                <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"/>
                                 <Setter Property="StrokeThickness" Value="1.5"/>
                             </DataTrigger>
                         </Border.Triggers>
@@ -116,7 +116,7 @@
                             <!-- Checkbox (edit mode only) -->
                             <Border StrokeShape="RoundRectangle 4"
                                     StrokeThickness="1.5"
-                                    Stroke="{StaticResource TextSecondary}"
+                                    Stroke="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}"
                                     HeightRequest="22" WidthRequest="22"
                                     BackgroundColor="Transparent"
                                     VerticalOptions="Center"
@@ -125,8 +125,8 @@
                                     <DataTrigger TargetType="Border"
                                                  Binding="{Binding IsSelected}"
                                                  Value="True">
-                                        <Setter Property="BackgroundColor" Value="{StaticResource PrimaryPurple}"/>
-                                        <Setter Property="Stroke" Value="{StaticResource PrimaryPurple}"/>
+                                        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"/>
+                                        <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"/>
                                     </DataTrigger>
                                 </Border.Triggers>
                                 <Label Text="&#x2713;"
@@ -154,17 +154,17 @@
                                     <Border StrokeThickness="0"
                                             StrokeShape="RoundRectangle 3"
                                             HeightRequest="6" WidthRequest="6"
-                                            BackgroundColor="{StaticResource PrimaryPurple}"
+                                            BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"
                                             IsVisible="{Binding Model.IsRead, Converter={StaticResource InvertedBool}}"
                                             VerticalOptions="Center"/>
                                     <Label Grid.Column="1"
                                            Text="{Binding Model.Title}"
                                            FontFamily="JakartaSemiBold" FontSize="13"
-                                           TextColor="{StaticResource TextPrimary}"/>
+                                           TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
                                 </Grid>
                                 <Label Text="{Binding Model.Message}"
                                        Style="{StaticResource CaptionStyle}"
-                                       TextColor="{StaticResource TextSecondary}"
+                                       TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}"
                                        MaxLines="2" LineBreakMode="TailTruncation"/>
                             </VerticalStackLayout>
 
@@ -182,7 +182,7 @@
         <ActivityIndicator Grid.RowSpan="2"
                            IsVisible="{Binding IsLoading}"
                            IsRunning="{Binding IsLoading}"
-                           Color="{StaticResource PrimaryPurple}"
+                           Color="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"
                            HorizontalOptions="Center"
                            VerticalOptions="Center"/>
 
@@ -191,12 +191,12 @@
                 IsVisible="{Binding IsEditMode}"
                 StrokeThickness="0"
                 StrokeShape="RoundRectangle 0"
-                BackgroundColor="{StaticResource PageBackground}"
+                BackgroundColor="{AppThemeBinding Light={StaticResource PageBackground}, Dark={StaticResource PageBackgroundDark}}"
                 Padding="20,12">
             <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="10">
                 <Label Text="{Binding SelectAllButtonText}"
                        FontFamily="JakartaSemiBold" FontSize="13"
-                       TextColor="{StaticResource PrimaryPurple}"
+                       TextColor="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"
                        VerticalOptions="Center">
                     <Label.GestureRecognizers>
                         <TapGestureRecognizer Command="{Binding ToggleSelectAllCommand}"/>
@@ -206,7 +206,7 @@
                         Text="Okundu"
                         FontFamily="JakartaSemiBold" FontSize="13"
                         TextColor="White"
-                        BackgroundColor="{StaticResource Success}"
+                        BackgroundColor="{AppThemeBinding Light={StaticResource Success}, Dark={StaticResource SuccessDark}}"
                         CornerRadius="20"
                         HeightRequest="40"
                         Padding="16,0"
@@ -225,7 +225,7 @@
                         Text="Sil"
                         FontFamily="JakartaSemiBold" FontSize="13"
                         TextColor="White"
-                        BackgroundColor="{StaticResource Danger}"
+                        BackgroundColor="{AppThemeBinding Light={StaticResource Danger}, Dark={StaticResource DangerDark}}"
                         CornerRadius="20"
                         HeightRequest="40"
                         Padding="16,0"
@@ -254,7 +254,7 @@
 
             <Border StrokeShape="RoundRectangle 24"
                     StrokeThickness="0"
-                    BackgroundColor="White"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource WhiteDark}}"
                     Padding="24"
                     Margin="24"
                     VerticalOptions="Center"
@@ -269,18 +269,18 @@
                           x:DataType="models:NotificationModel">
                         <Label Text="{Binding Title}"
                                FontFamily="JakartaBold" FontSize="18"
-                               TextColor="{StaticResource TextPrimary}"
+                               TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"
                                VerticalOptions="Center"/>
                         <Label Grid.Column="1"
                                Text="{Binding Date, StringFormat='{0:dd.MM.yyyy HH:mm}'}"
                                Style="{StaticResource CaptionStyle}"
                                VerticalOptions="Center"/>
                     </Grid>
-                    <BoxView HeightRequest="1" Color="{StaticResource CardBorder}"/>
+                    <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource CardBorder}, Dark={StaticResource CardBorderDark}}"/>
                     <Label x:DataType="models:NotificationModel"
                            Text="{Binding Message}"
                            FontFamily="JakartaRegular" FontSize="14"
-                           TextColor="{StaticResource TextSecondary}"
+                           TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}"
                            LineBreakMode="WordWrap"/>
                     <Button Text="Kapat"
                             Style="{StaticResource SecondaryButtonStyle}"

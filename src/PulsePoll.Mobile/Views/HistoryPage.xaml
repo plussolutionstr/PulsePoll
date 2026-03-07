@@ -33,63 +33,63 @@
                 <Border StrokeShape="RoundRectangle 18" StrokeThickness="0" Padding="0">
                     <Border.Background>
                         <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                            <GradientStop Color="#E6FBF4" Offset="0"/>
-                            <GradientStop Color="#C6F7E2" Offset="1"/>
+                            <GradientStop Color="{AppThemeBinding Light={StaticResource HistorySuccessStart}, Dark={StaticResource HistorySuccessStartDark}}" Offset="0"/>
+                            <GradientStop Color="{AppThemeBinding Light={StaticResource HistorySuccessEnd}, Dark={StaticResource HistorySuccessEndDark}}" Offset="1"/>
                         </LinearGradientBrush>
                     </Border.Background>
                     <VerticalStackLayout HorizontalOptions="Center" Spacing="2" Padding="12,14">
                         <Label Text="&#x2713;"
                                FontSize="16"
-                               TextColor="{StaticResource Success}"
+                               TextColor="{AppThemeBinding Light={StaticResource Success}, Dark={StaticResource SuccessDark}}"
                                HorizontalTextAlignment="Center"/>
                         <Label Text="{Binding CompletedCount}"
                                FontFamily="JakartaBold" FontSize="24"
-                               TextColor="#0D9668"
+                               TextColor="{AppThemeBinding Light={StaticResource SuccessText}, Dark={StaticResource SuccessTextDark}}"
                                HorizontalTextAlignment="Center"/>
                         <Label Text="Tamamlanan" FontFamily="JakartaMedium" FontSize="11"
-                               TextColor="#0D9668" HorizontalTextAlignment="Center"/>
+                               TextColor="{AppThemeBinding Light={StaticResource SuccessText}, Dark={StaticResource SuccessTextDark}}" HorizontalTextAlignment="Center"/>
                     </VerticalStackLayout>
                 </Border>
                 <!-- Elenen -->
                 <Border Grid.Column="1" StrokeShape="RoundRectangle 18" StrokeThickness="0" Padding="0">
                     <Border.Background>
                         <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                            <GradientStop Color="#FFF0F3" Offset="0"/>
-                            <GradientStop Color="#FDDDE4" Offset="1"/>
+                            <GradientStop Color="{AppThemeBinding Light={StaticResource HistoryDangerStart}, Dark={StaticResource HistoryDangerStartDark}}" Offset="0"/>
+                            <GradientStop Color="{AppThemeBinding Light={StaticResource HistoryDangerEnd}, Dark={StaticResource HistoryDangerEndDark}}" Offset="1"/>
                         </LinearGradientBrush>
                     </Border.Background>
                     <VerticalStackLayout HorizontalOptions="Center" Spacing="2" Padding="12,14">
                         <Label Text="&#x2717;"
                                FontSize="16"
-                               TextColor="{StaticResource Danger}"
+                               TextColor="{AppThemeBinding Light={StaticResource Danger}, Dark={StaticResource DangerDark}}"
                                HorizontalTextAlignment="Center"/>
                         <Label Text="{Binding DisqualifiedCount}"
                                FontFamily="JakartaBold" FontSize="24"
-                               TextColor="#D6336C"
+                               TextColor="{AppThemeBinding Light={StaticResource DangerText}, Dark={StaticResource DangerTextDark}}"
                                HorizontalTextAlignment="Center"/>
                         <Label Text="Elenen" FontFamily="JakartaMedium" FontSize="11"
-                               TextColor="#D6336C" HorizontalTextAlignment="Center"/>
+                               TextColor="{AppThemeBinding Light={StaticResource DangerText}, Dark={StaticResource DangerTextDark}}" HorizontalTextAlignment="Center"/>
                     </VerticalStackLayout>
                 </Border>
                 <!-- Toplam Kazanç -->
                 <Border Grid.Column="2" StrokeShape="RoundRectangle 18" StrokeThickness="0" Padding="0">
                     <Border.Background>
                         <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                            <GradientStop Color="#EDE8FF" Offset="0"/>
-                            <GradientStop Color="#D4CBFF" Offset="1"/>
+                            <GradientStop Color="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryLightDark}}" Offset="0"/>
+                            <GradientStop Color="{AppThemeBinding Light={StaticResource HistoryPurpleEnd}, Dark={StaticResource HistoryPurpleEndDark}}" Offset="1"/>
                         </LinearGradientBrush>
                     </Border.Background>
                     <VerticalStackLayout HorizontalOptions="Center" Spacing="2" Padding="12,14">
                         <Label Text="&#x2605;"
                                FontSize="16"
-                               TextColor="{StaticResource PrimaryPurple}"
+                               TextColor="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"
                                HorizontalTextAlignment="Center"/>
                         <Label Text="{Binding TotalEarnedDisplay}"
                                FontFamily="JakartaBold" FontSize="24"
-                               TextColor="{StaticResource PrimaryDark}"
+                               TextColor="{AppThemeBinding Light={StaticResource PrimaryDark}, Dark={StaticResource PrimaryDarkDark}}"
                                HorizontalTextAlignment="Center"/>
                         <Label Text="Toplam" FontFamily="JakartaMedium" FontSize="11"
-                               TextColor="{StaticResource PrimaryDark}" HorizontalTextAlignment="Center"/>
+                               TextColor="{AppThemeBinding Light={StaticResource PrimaryDark}, Dark={StaticResource PrimaryDarkDark}}" HorizontalTextAlignment="Center"/>
                     </VerticalStackLayout>
                 </Border>
             </Grid>
@@ -102,7 +102,7 @@
                         <DataTemplate x:DataType="x:String">
                             <Border StrokeThickness="0"
                                     StrokeShape="RoundRectangle 16"
-                                    BackgroundColor="{StaticResource SurfaceColor}"
+                                    BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceColor}, Dark={StaticResource SurfaceColorDark}}"
                                     Padding="16,8">
                                 <Border.GestureRecognizers>
                                     <TapGestureRecognizer
@@ -111,7 +111,7 @@
                                 </Border.GestureRecognizers>
                                 <Label Text="{Binding .}"
                                        FontFamily="JakartaSemiBold" FontSize="13"
-                                       TextColor="{StaticResource TextSecondary}"/>
+                                       TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}"/>
                             </Border>
                         </DataTemplate>
                     </BindableLayout.ItemTemplate>
@@ -125,7 +125,7 @@
                                  HorizontalOptions="Center">
                 <Border StrokeThickness="0"
                         StrokeShape="RoundRectangle 32"
-                        BackgroundColor="{StaticResource PrimaryLight}"
+                        BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryLightDark}}"
                         HeightRequest="64" WidthRequest="64"
                         HorizontalOptions="Center">
                     <Label Text="&#x1F50D;"
@@ -136,12 +136,12 @@
                 <Label Text="Burada henüz bir şey yok"
                        FontFamily="JakartaSemiBold"
                        FontSize="16"
-                       TextColor="{StaticResource TextPrimary}"
+                       TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"
                        HorizontalTextAlignment="Center"/>
                 <Label Text="Anketlere katıldıkça geçmişin burada görünecek."
                        FontFamily="JakartaRegular"
                        FontSize="13"
-                       TextColor="{StaticResource TextSecondary}"
+                       TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}"
                        HorizontalTextAlignment="Center"/>
             </VerticalStackLayout>
 
@@ -156,37 +156,37 @@
                                 <VerticalStackLayout Spacing="3" VerticalOptions="Center">
                                     <Label Text="{Binding SurveyTitle}"
                                            FontFamily="JakartaSemiBold" FontSize="14"
-                                           TextColor="{StaticResource TextPrimary}"
+                                           TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"
                                            MaxLines="1" LineBreakMode="TailTruncation"/>
                                     <HorizontalStackLayout Spacing="6">
                                         <Border StrokeThickness="0"
                                                 StrokeShape="RoundRectangle 6"
-                                                BackgroundColor="{StaticResource SurfaceColor}"
+                                                BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceColor}, Dark={StaticResource SurfaceColorDark}}"
                                                 Padding="6,2">
                                             <Label Text="{Binding DurationMinutes, StringFormat='~{0} dk'}"
                                                    FontFamily="JakartaMedium" FontSize="11"
-                                                   TextColor="{StaticResource TextSecondary}"/>
+                                                   TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}"/>
                                         </Border>
                                         <Border StrokeThickness="0"
                                                 StrokeShape="RoundRectangle 6"
-                                                BackgroundColor="{StaticResource SuccessLight}"
+                                                BackgroundColor="{AppThemeBinding Light={StaticResource SuccessLight}, Dark={StaticResource SuccessLightDark}}"
                                                 Padding="6,2">
                                             <Label Text="{Binding RewardAmountDisplay}"
                                                    FontFamily="JakartaMedium" FontSize="11"
-                                                   TextColor="{StaticResource Success}"/>
+                                                   TextColor="{AppThemeBinding Light={StaticResource Success}, Dark={StaticResource SuccessDark}}"/>
                                         </Border>
                                         <Border StrokeThickness="0"
                                                 StrokeShape="RoundRectangle 6"
-                                                BackgroundColor="{StaticResource AmberLight}"
+                                                BackgroundColor="{AppThemeBinding Light={StaticResource AmberLight}, Dark={StaticResource AmberLightDark}}"
                                                 Padding="6,2">
                                             <Label Text="{Binding ConsolationAmountDisplay}"
                                                    FontFamily="JakartaMedium" FontSize="11"
-                                                   TextColor="{StaticResource Amber}"/>
+                                                   TextColor="{AppThemeBinding Light={StaticResource Amber}, Dark={StaticResource AmberDark}}"/>
                                         </Border>
                                     </HorizontalStackLayout>
                                     <Label Text="{Binding Date, StringFormat='{0:dd MMM yyyy}'}"
                                            FontFamily="JakartaRegular" FontSize="11"
-                                           TextColor="{StaticResource TextTertiary}"/>
+                                           TextColor="{AppThemeBinding Light={StaticResource TextTertiary}, Dark={StaticResource TextTertiaryDark}}"/>
                                 </VerticalStackLayout>
 
                                 <!-- Status Badge -->
@@ -219,56 +219,56 @@
         <!-- SHIMMER OVERLAY -->
         <Grid x:Name="ShimmerOverlay"
               IsVisible="{Binding IsLoading}"
-              BackgroundColor="{StaticResource PageBackground}"
+              BackgroundColor="{AppThemeBinding Light={StaticResource PageBackground}, Dark={StaticResource PageBackgroundDark}}"
               InputTransparent="True">
             <Grid x:Name="ShimmerContainer">
                 <VerticalStackLayout Spacing="16" Padding="20,16">
                     <!-- Title skeleton -->
-                    <Border StrokeThickness="0" BackgroundColor="#E4DDF2"
+                    <Border StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerMid}, Dark={StaticResource ShimmerMidDark}}"
                             StrokeShape="RoundRectangle 8"
                             HeightRequest="28" WidthRequest="120"
                             HorizontalOptions="Start"/>
 
                     <!-- Summary boxes skeleton -->
                     <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10">
-                        <Border StrokeThickness="0" BackgroundColor="#E8E1F6"
+                        <Border StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerBase}, Dark={StaticResource ShimmerBaseDark}}"
                                 StrokeShape="RoundRectangle 18"
                                 HeightRequest="100"/>
-                        <Border Grid.Column="1" StrokeThickness="0" BackgroundColor="#E8E1F6"
+                        <Border Grid.Column="1" StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerBase}, Dark={StaticResource ShimmerBaseDark}}"
                                 StrokeShape="RoundRectangle 18"
                                 HeightRequest="100"/>
-                        <Border Grid.Column="2" StrokeThickness="0" BackgroundColor="#E8E1F6"
+                        <Border Grid.Column="2" StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerBase}, Dark={StaticResource ShimmerBaseDark}}"
                                 StrokeShape="RoundRectangle 18"
                                 HeightRequest="100"/>
                     </Grid>
 
                     <!-- Filter tabs skeleton -->
                     <HorizontalStackLayout Spacing="8">
-                        <Border StrokeThickness="0" BackgroundColor="#ECE6F7"
+                        <Border StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerLight}, Dark={StaticResource ShimmerLightDark}}"
                                 StrokeShape="RoundRectangle 16"
                                 HeightRequest="34" WidthRequest="60"/>
-                        <Border StrokeThickness="0" BackgroundColor="#ECE6F7"
+                        <Border StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerLight}, Dark={StaticResource ShimmerLightDark}}"
                                 StrokeShape="RoundRectangle 16"
                                 HeightRequest="34" WidthRequest="90"/>
-                        <Border StrokeThickness="0" BackgroundColor="#ECE6F7"
+                        <Border StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerLight}, Dark={StaticResource ShimmerLightDark}}"
                                 StrokeShape="RoundRectangle 16"
                                 HeightRequest="34" WidthRequest="70"/>
-                        <Border StrokeThickness="0" BackgroundColor="#ECE6F7"
+                        <Border StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerLight}, Dark={StaticResource ShimmerLightDark}}"
                                 StrokeShape="RoundRectangle 16"
                                 HeightRequest="34" WidthRequest="80"/>
                     </HorizontalStackLayout>
 
                     <!-- History item skeletons -->
                     <VerticalStackLayout Spacing="8">
-                        <Border StrokeThickness="0" BackgroundColor="#E8E1F6"
+                        <Border StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerBase}, Dark={StaticResource ShimmerBaseDark}}"
                                 StrokeShape="RoundRectangle 16" HeightRequest="76"/>
-                        <Border StrokeThickness="0" BackgroundColor="#E8E1F6"
+                        <Border StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerBase}, Dark={StaticResource ShimmerBaseDark}}"
                                 StrokeShape="RoundRectangle 16" HeightRequest="76"/>
-                        <Border StrokeThickness="0" BackgroundColor="#E8E1F6"
+                        <Border StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerBase}, Dark={StaticResource ShimmerBaseDark}}"
                                 StrokeShape="RoundRectangle 16" HeightRequest="76"/>
-                        <Border StrokeThickness="0" BackgroundColor="#E8E1F6"
+                        <Border StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerBase}, Dark={StaticResource ShimmerBaseDark}}"
                                 StrokeShape="RoundRectangle 16" HeightRequest="76"/>
-                        <Border StrokeThickness="0" BackgroundColor="#E8E1F6"
+                        <Border StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerBase}, Dark={StaticResource ShimmerBaseDark}}"
                                 StrokeShape="RoundRectangle 16" HeightRequest="76"/>
                     </VerticalStackLayout>
                 </VerticalStackLayout>
@@ -285,7 +285,7 @@
                     <Border.Background>
                         <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
                             <GradientStop Color="#00FFFFFF" Offset="0"/>
-                            <GradientStop Color="#66FFFFFF" Offset="0.5"/>
+                            <GradientStop Color="{AppThemeBinding Light={StaticResource ShimmerSweepHighlight}, Dark={StaticResource ShimmerSweepHighlightDark}}" Offset="0.5"/>
                             <GradientStop Color="#00FFFFFF" Offset="1"/>
                         </LinearGradientBrush>
                     </Border.Background>

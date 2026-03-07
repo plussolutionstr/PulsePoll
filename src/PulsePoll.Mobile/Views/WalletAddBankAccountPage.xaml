@@ -20,11 +20,11 @@
                     <Label Text="Banka"
                            FontFamily="JakartaSemiBold"
                            FontSize="13"
-                           TextColor="{StaticResource TextSecondary}" />
+                           TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}" />
                     <Border StrokeShape="RoundRectangle 12"
-                            Stroke="{StaticResource CardBorder}"
+                            Stroke="{AppThemeBinding Light={StaticResource CardBorder}, Dark={StaticResource CardBorderDark}}"
                             StrokeThickness="1"
-                            BackgroundColor="{StaticResource PageBackground}"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource PageBackground}, Dark={StaticResource PageBackgroundDark}}"
                             Padding="12,4"
                             HeightRequest="48">
                         <Picker Title="Banka seçin"
@@ -44,16 +44,16 @@
                     <Label Text="IBAN"
                            FontFamily="JakartaSemiBold"
                            FontSize="13"
-                           TextColor="{StaticResource TextSecondary}" />
+                           TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}" />
                     <Border StrokeShape="RoundRectangle 12"
-                            Stroke="{StaticResource CardBorder}"
+                            Stroke="{AppThemeBinding Light={StaticResource CardBorder}, Dark={StaticResource CardBorderDark}}"
                             StrokeThickness="1"
-                            BackgroundColor="{StaticResource PageBackground}"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource PageBackground}, Dark={StaticResource PageBackgroundDark}}"
                             Padding="0">
                         <Grid ColumnDefinitions="48,*">
                             <Label Text="TR"
                                    FontFamily="JakartaBold" FontSize="16"
-                                   TextColor="{StaticResource PrimaryPurple}"
+                                   TextColor="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"
                                    HorizontalOptions="Center" VerticalOptions="Center"/>
                             <Entry Grid.Column="1"
                                    Placeholder="00 0000 0000 0000 0000 0000 00"
@@ -68,12 +68,12 @@
                     <!-- IBAN Hint -->
                     <Border StrokeThickness="0"
                             StrokeShape="RoundRectangle 10"
-                            BackgroundColor="{StaticResource PrimaryLight}"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryLightDark}}"
                             Padding="12,10">
                         <Label Text="26 karakter uzunluğunda, TR ile başlayan IBAN numaranızı girin."
                                FontFamily="JakartaRegular"
                                FontSize="12"
-                               TextColor="{StaticResource PrimaryDark}" />
+                               TextColor="{AppThemeBinding Light={StaticResource PrimaryDark}, Dark={StaticResource PrimaryDarkDark}}" />
                     </Border>
                 </VerticalStackLayout>
             </Border>
@@ -87,11 +87,11 @@
                         Clicked="OnSaveClicked" />
                 <Border StrokeThickness="0"
                         StrokeShape="RoundRectangle 26"
-                        BackgroundColor="{StaticResource PrimaryPurple}"
+                        BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"
                         HeightRequest="52"
                         IsVisible="{Binding IsSaving}">
                     <ActivityIndicator IsRunning="True"
-                                       Color="{StaticResource White}"
+                                       Color="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource WhiteDark}}"
                                        HeightRequest="24" WidthRequest="24"
                                        HorizontalOptions="Center" VerticalOptions="Center"/>
                 </Border>
@@ -105,8 +105,8 @@
                     Clicked="OnDeleteClicked"
                     IsVisible="{Binding IsEditMode}"
                     IsEnabled="{Binding IsSaving, Converter={StaticResource InvertedBoolConverter}}"
-                    BackgroundColor="{StaticResource DangerLight}"
-                    TextColor="{StaticResource Danger}" />
+                    BackgroundColor="{AppThemeBinding Light={StaticResource DangerLight}, Dark={StaticResource DangerLightDark}}"
+                    TextColor="{AppThemeBinding Light={StaticResource Danger}, Dark={StaticResource DangerDark}}" />
 
             <Button Text="İptal"
                     Style="{StaticResource SecondaryButtonStyle}"

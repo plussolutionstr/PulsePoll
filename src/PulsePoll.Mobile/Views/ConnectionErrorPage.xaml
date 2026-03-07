@@ -5,7 +5,7 @@
              x:Class="PulsePoll.Mobile.Views.ConnectionErrorPage"
              x:DataType="vm:ConnectionErrorViewModel"
              Shell.NavBarIsVisible="False"
-             BackgroundColor="{StaticResource PageBackground}">
+             BackgroundColor="{AppThemeBinding Light={StaticResource PageBackground}, Dark={StaticResource PageBackgroundDark}}">
 
     <VerticalStackLayout Spacing="16"
                          VerticalOptions="Center"
@@ -15,7 +15,7 @@
         <Border StrokeThickness="0"
                 StrokeShape="RoundRectangle 32"
                 HeightRequest="64" WidthRequest="64"
-                BackgroundColor="{StaticResource DangerLight}"
+                BackgroundColor="{AppThemeBinding Light={StaticResource DangerLight}, Dark={StaticResource DangerLightDark}}"
                 HorizontalOptions="Center">
             <Image Source="icon_info.png"
                    HeightRequest="28" WidthRequest="28"
@@ -24,12 +24,12 @@
 
         <Label Text="Bağlantı Hatası"
                FontFamily="JakartaBold" FontSize="20"
-               TextColor="{StaticResource TextPrimary}"
+               TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"
                HorizontalTextAlignment="Center"/>
 
         <Label Text="Sunucuya ulaşılamıyor. Lütfen internet bağlantınızı kontrol edip tekrar deneyin."
                FontFamily="JakartaRegular" FontSize="14"
-               TextColor="{StaticResource TextSecondary}"
+               TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}"
                HorizontalTextAlignment="Center"
                Margin="0,0,0,8"/>
 
@@ -40,7 +40,7 @@
 
         <ActivityIndicator IsVisible="{Binding IsRetrying}"
                            IsRunning="{Binding IsRetrying}"
-                           Color="{StaticResource PrimaryPurple}"
+                           Color="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"
                            HorizontalOptions="Center"
                            Margin="0,8,0,0"/>
     </VerticalStackLayout>

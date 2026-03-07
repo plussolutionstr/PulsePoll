@@ -26,7 +26,7 @@
                 <Label Text="PulsePoll"
                        Style="{StaticResource PageTitleStyle}"
                        FontSize="24"
-                       TextColor="{StaticResource PrimaryPurple}"
+                       TextColor="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"
                        VerticalOptions="Center"/>
                 <!-- Bell with red notification dot -->
                 <Grid Grid.Column="1" VerticalOptions="Center">
@@ -36,7 +36,7 @@
                     <Border StrokeThickness="0"
                             StrokeShape="RoundRectangle 5"
                             HeightRequest="10" WidthRequest="10"
-                            BackgroundColor="{StaticResource Danger}"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource Danger}, Dark={StaticResource DangerDark}}"
                             IsVisible="{Binding HasUnreadNotifications}"
                             HorizontalOptions="End" VerticalOptions="Start"
                             Margin="0,-2,-2,0"/>
@@ -65,7 +65,7 @@
                                     <!-- Inner circle — image placeholder -->
                                     <Border StrokeThickness="0"
                                             StrokeShape="RoundRectangle 25"
-                                            BackgroundColor="{StaticResource SurfaceColor}">
+                                            BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceColor}, Dark={StaticResource SurfaceColorDark}}">
                                         <Grid>
                                             <Image Source="icon_star.png"
                                                    HeightRequest="24" WidthRequest="24"
@@ -79,7 +79,7 @@
                                 </Border>
                                 <Label Text="{Binding Title}"
                                        FontFamily="JakartaMedium" FontSize="11"
-                                       TextColor="{StaticResource TextSecondary}"
+                                       TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}"
                                        HorizontalTextAlignment="Center"
                                        MaxLines="1" LineBreakMode="TailTruncation"/>
                             </VerticalStackLayout>
@@ -180,7 +180,7 @@
                 <Label Grid.Column="1"
                        Text="Tümü"
                        FontFamily="JakartaSemiBold" FontSize="14"
-                       TextColor="{StaticResource PrimaryPurple}"
+                       TextColor="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"
                        VerticalOptions="Center">
                     <Label.GestureRecognizers>
                         <TapGestureRecognizer Command="{Binding NavigateToSurveysCommand}"/>
@@ -192,12 +192,12 @@
             <Border IsVisible="{Binding HasNoSurveys}"
                     StrokeThickness="0"
                     StrokeShape="RoundRectangle 20"
-                    BackgroundColor="{StaticResource White}"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource WhiteDark}}"
                     Padding="20,28">
                 <VerticalStackLayout Spacing="12" HorizontalOptions="Center">
                     <Border StrokeThickness="0"
                             StrokeShape="RoundRectangle 32"
-                            BackgroundColor="{StaticResource PrimaryLight}"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryLightDark}}"
                             HeightRequest="64" WidthRequest="64"
                             HorizontalOptions="Center">
                         <Label Text="&#x1F4CB;"
@@ -208,12 +208,12 @@
                     <Label Text="Şu an aktif anket yok"
                            FontFamily="JakartaSemiBold"
                            FontSize="15"
-                           TextColor="{StaticResource TextPrimary}"
+                           TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"
                            HorizontalTextAlignment="Center"/>
                     <Label Text="Yeni anketler yayınlandığında burada görünecek."
                            FontFamily="JakartaRegular"
                            FontSize="13"
-                           TextColor="{StaticResource TextSecondary}"
+                           TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}"
                            HorizontalTextAlignment="Center"/>
                 </VerticalStackLayout>
             </Border>
@@ -224,9 +224,9 @@
                 <BindableLayout.ItemTemplate>
                     <DataTemplate x:DataType="models:SurveyModel">
                         <Border StrokeShape="RoundRectangle 20"
-                                Stroke="{StaticResource CardBorder}"
+                                Stroke="{AppThemeBinding Light={StaticResource CardBorder}, Dark={StaticResource CardBorderDark}}"
                                 StrokeThickness="1"
-                                BackgroundColor="{StaticResource White}"
+                                BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource WhiteDark}}"
                                 Padding="0">
                             <Border.GestureRecognizers>
                                 <TapGestureRecognizer
@@ -241,8 +241,8 @@
                                     <BoxView>
                                         <BoxView.Background>
                                             <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                                <GradientStop Color="{StaticResource PrimaryLight}" Offset="0"/>
-                                                <GradientStop Color="{StaticResource PrimaryMid}" Offset="1"/>
+                                                <GradientStop Color="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryLightDark}}" Offset="0"/>
+                                                <GradientStop Color="{AppThemeBinding Light={StaticResource PrimaryMid}, Dark={StaticResource PrimaryMidDark}}" Offset="1"/>
                                             </LinearGradientBrush>
                                         </BoxView.Background>
                                     </BoxView>
@@ -273,16 +273,16 @@
 
                                     <!-- Earn Badge (top-right) -->
                                     <Border StrokeThickness="1"
-                                            Stroke="#FDE68A"
+                                            Stroke="{AppThemeBinding Light={StaticResource AmberBorder}, Dark={StaticResource AmberBorderDark}}"
                                             StrokeShape="RoundRectangle 10"
-                                            BackgroundColor="{StaticResource AmberLight}"
+                                            BackgroundColor="{AppThemeBinding Light={StaticResource AmberLight}, Dark={StaticResource AmberLightDark}}"
                                             Padding="10,4"
                                             Margin="0,12,12,0"
                                             VerticalOptions="Start"
                                             HorizontalOptions="End">
                                         <Label Text="{Binding RewardDisplay}"
                                                FontFamily="JakartaBold" FontSize="13"
-                                               TextColor="#111111"/>
+                                               TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
                                     </Border>
                                 </Grid>
 
@@ -290,13 +290,13 @@
                                 <VerticalStackLayout Spacing="10" Padding="16,12,16,14">
                                     <Label Text="{Binding Title}"
                                            FontFamily="JakartaExtraBold" FontSize="15"
-                                           TextColor="{StaticResource TextPrimary}"/>
+                                           TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
 
                                     <!-- Duration + Category -->
                                     <Grid ColumnDefinitions="Auto,*">
                                         <Border StrokeThickness="0"
                                                 StrokeShape="RoundRectangle 8"
-                                                BackgroundColor="{StaticResource SurfaceColor}"
+                                                BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceColor}, Dark={StaticResource SurfaceColorDark}}"
                                                 Padding="10,4">
                                             <HorizontalStackLayout Spacing="4">
                                                 <Image Source="icon_clock.png"
@@ -304,7 +304,7 @@
                                                        VerticalOptions="Center"/>
                                                 <Label Text="{Binding DurationMinutes, StringFormat='~{0} dk'}"
                                                        FontFamily="JakartaMedium" FontSize="12"
-                                                       TextColor="{StaticResource TextSecondary}"
+                                                       TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}"
                                                        VerticalOptions="Center"/>
                                             </HorizontalStackLayout>
                                         </Border>
@@ -312,13 +312,13 @@
                                         <Border Grid.Column="1"
                                                 StrokeThickness="0"
                                                 StrokeShape="RoundRectangle 8"
-                                                BackgroundColor="{StaticResource PrimaryLight}"
+                                                BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryLightDark}}"
                                                 Padding="10,4"
                                                 IsVisible="{Binding HasCategory}"
                                                 HorizontalOptions="End">
                                             <Label Text="{Binding Category}"
                                                    FontFamily="JakartaSemiBold" FontSize="11"
-                                                   TextColor="{StaticResource PrimaryPurple}"/>
+                                                   TextColor="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"/>
                                         </Border>
                                     </Grid>
                                 </VerticalStackLayout>
@@ -337,21 +337,21 @@
     </RefreshView>
         <Grid x:Name="ShimmerOverlay"
               IsVisible="{Binding IsLoading}"
-              BackgroundColor="{StaticResource PageBackground}"
+              BackgroundColor="{AppThemeBinding Light={StaticResource PageBackground}, Dark={StaticResource PageBackgroundDark}}"
               InputTransparent="True">
             <Grid x:Name="ShimmerContainer">
                 <ScrollView>
                     <VerticalStackLayout Spacing="16" Padding="20,16">
                         <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,4">
                             <Border StrokeThickness="0"
-                                    BackgroundColor="#E4DDF2"
+                                    BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerMid}, Dark={StaticResource ShimmerMidDark}}"
                                     StrokeShape="RoundRectangle 8"
                                     HeightRequest="26"
                                     WidthRequest="130"
                                     HorizontalOptions="Start"/>
                             <Border Grid.Column="1"
                                     StrokeThickness="0"
-                                    BackgroundColor="#E4DDF2"
+                                    BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerMid}, Dark={StaticResource ShimmerMidDark}}"
                                     StrokeShape="RoundRectangle 12"
                                     HeightRequest="24"
                                     WidthRequest="24"
@@ -362,13 +362,13 @@
                             <HorizontalStackLayout Spacing="14">
                                 <VerticalStackLayout Spacing="6" WidthRequest="68">
                                     <Border StrokeThickness="0"
-                                            BackgroundColor="#DDD4F0"
+                                            BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerMuted}, Dark={StaticResource ShimmerMutedDark}}"
                                             StrokeShape="RoundRectangle 30"
                                             HeightRequest="60"
                                             WidthRequest="60"
                                             HorizontalOptions="Center"/>
                                     <Border StrokeThickness="0"
-                                            BackgroundColor="#E7E1F5"
+                                            BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerBase}, Dark={StaticResource ShimmerBaseDark}}"
                                             StrokeShape="RoundRectangle 6"
                                             HeightRequest="11"
                                             WidthRequest="52"
@@ -376,13 +376,13 @@
                                 </VerticalStackLayout>
                                 <VerticalStackLayout Spacing="6" WidthRequest="68">
                                     <Border StrokeThickness="0"
-                                            BackgroundColor="#DDD4F0"
+                                            BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerMuted}, Dark={StaticResource ShimmerMutedDark}}"
                                             StrokeShape="RoundRectangle 30"
                                             HeightRequest="60"
                                             WidthRequest="60"
                                             HorizontalOptions="Center"/>
                                     <Border StrokeThickness="0"
-                                            BackgroundColor="#E7E1F5"
+                                            BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerBase}, Dark={StaticResource ShimmerBaseDark}}"
                                             StrokeShape="RoundRectangle 6"
                                             HeightRequest="11"
                                             WidthRequest="52"
@@ -390,13 +390,13 @@
                                 </VerticalStackLayout>
                                 <VerticalStackLayout Spacing="6" WidthRequest="68">
                                     <Border StrokeThickness="0"
-                                            BackgroundColor="#DDD4F0"
+                                            BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerMuted}, Dark={StaticResource ShimmerMutedDark}}"
                                             StrokeShape="RoundRectangle 30"
                                             HeightRequest="60"
                                             WidthRequest="60"
                                             HorizontalOptions="Center"/>
                                     <Border StrokeThickness="0"
-                                            BackgroundColor="#E7E1F5"
+                                            BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerBase}, Dark={StaticResource ShimmerBaseDark}}"
                                             StrokeShape="RoundRectangle 6"
                                             HeightRequest="11"
                                             WidthRequest="52"
@@ -404,13 +404,13 @@
                                 </VerticalStackLayout>
                                 <VerticalStackLayout Spacing="6" WidthRequest="68">
                                     <Border StrokeThickness="0"
-                                            BackgroundColor="#DDD4F0"
+                                            BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerMuted}, Dark={StaticResource ShimmerMutedDark}}"
                                             StrokeShape="RoundRectangle 30"
                                             HeightRequest="60"
                                             WidthRequest="60"
                                             HorizontalOptions="Center"/>
                                     <Border StrokeThickness="0"
-                                            BackgroundColor="#E7E1F5"
+                                            BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerBase}, Dark={StaticResource ShimmerBaseDark}}"
                                             StrokeShape="RoundRectangle 6"
                                             HeightRequest="11"
                                             WidthRequest="52"
@@ -418,13 +418,13 @@
                                 </VerticalStackLayout>
                                 <VerticalStackLayout Spacing="6" WidthRequest="68">
                                     <Border StrokeThickness="0"
-                                            BackgroundColor="#DDD4F0"
+                                            BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerMuted}, Dark={StaticResource ShimmerMutedDark}}"
                                             StrokeShape="RoundRectangle 30"
                                             HeightRequest="60"
                                             WidthRequest="60"
                                             HorizontalOptions="Center"/>
                                     <Border StrokeThickness="0"
-                                            BackgroundColor="#E7E1F5"
+                                            BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerBase}, Dark={StaticResource ShimmerBaseDark}}"
                                             StrokeShape="RoundRectangle 6"
                                             HeightRequest="11"
                                             WidthRequest="52"
@@ -434,20 +434,20 @@
                         </ScrollView>
 
                         <Border StrokeThickness="0"
-                                BackgroundColor="#DED5F1"
+                                BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerMuted}, Dark={StaticResource ShimmerMutedDark}}"
                                 StrokeShape="RoundRectangle 16"
                                 HeightRequest="160"/>
 
                         <Grid ColumnDefinitions="*,Auto">
                             <Border StrokeThickness="0"
-                                    BackgroundColor="#E4DDF2"
+                                    BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerMid}, Dark={StaticResource ShimmerMidDark}}"
                                     StrokeShape="RoundRectangle 8"
                                     HeightRequest="24"
                                     WidthRequest="120"
                                     HorizontalOptions="Start"/>
                             <Border Grid.Column="1"
                                     StrokeThickness="0"
-                                    BackgroundColor="#ECE6F7"
+                                    BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerLight}, Dark={StaticResource ShimmerLightDark}}"
                                     StrokeShape="RoundRectangle 6"
                                     HeightRequest="18"
                                     WidthRequest="48"
@@ -457,11 +457,11 @@
 
                         <VerticalStackLayout Spacing="12">
                             <Border StrokeThickness="0"
-                                    BackgroundColor="#E8E1F6"
+                                    BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerBase}, Dark={StaticResource ShimmerBaseDark}}"
                                     StrokeShape="RoundRectangle 20"
                                     HeightRequest="222"/>
                             <Border StrokeThickness="0"
-                                    BackgroundColor="#E8E1F6"
+                                    BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerBase}, Dark={StaticResource ShimmerBaseDark}}"
                                     StrokeShape="RoundRectangle 20"
                                     HeightRequest="222"/>
                         </VerticalStackLayout>
@@ -479,7 +479,7 @@
                     <Border.Background>
                         <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
                             <GradientStop Color="#00FFFFFF" Offset="0"/>
-                            <GradientStop Color="#66FFFFFF" Offset="0.5"/>
+                            <GradientStop Color="{AppThemeBinding Light={StaticResource ShimmerSweepHighlight}, Dark={StaticResource ShimmerSweepHighlightDark}}" Offset="0.5"/>
                             <GradientStop Color="#00FFFFFF" Offset="1"/>
                         </LinearGradientBrush>
                     </Border.Background>

@@ -4,6 +4,7 @@ using System.Text.RegularExpressions;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PulsePoll.Mobile.ApiModels;
+using PulsePoll.Mobile.Helpers;
 using PulsePoll.Mobile.Services;
 
 namespace PulsePoll.Mobile.ViewModels;
@@ -387,13 +388,13 @@ public partial class RegisterViewModel : ObservableObject
     }
 
     private static Color GetBorderColor() =>
-        Application.Current!.Resources.TryGetValue("CardBorder", out var c) ? (Color)c : Colors.LightGray;
+        ThemeHelper.Resolve("CardBorder", "CardBorderDark", Colors.LightGray);
     private static Color GetDangerColor() =>
-        Application.Current!.Resources.TryGetValue("Danger", out var c) ? (Color)c : Colors.Red;
+        ThemeHelper.Resolve("Danger", "DangerDark", Colors.Red);
     private static Color GetAmberColor() =>
-        Application.Current!.Resources.TryGetValue("Amber", out var c) ? (Color)c : Colors.Orange;
+        ThemeHelper.Resolve("Amber", "AmberDark", Colors.Orange);
     private static Color GetSuccessColor() =>
-        Application.Current!.Resources.TryGetValue("Success", out var c) ? (Color)c : Colors.Green;
+        ThemeHelper.Resolve("Success", "SuccessDark", Colors.Green);
 
     private Color GetStrengthSegColor(int segment)
     {

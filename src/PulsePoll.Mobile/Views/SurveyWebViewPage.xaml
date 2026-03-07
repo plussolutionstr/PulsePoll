@@ -10,7 +10,7 @@
         <Grid RowDefinitions="Auto"
               ColumnDefinitions="Auto,*,Auto"
               Padding="16,14,16,10"
-              BackgroundColor="{StaticResource White}">
+              BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource WhiteDark}}">
             <ImageButton Source="icon_arrow_left.png"
                          HeightRequest="24"
                          WidthRequest="24"
@@ -21,13 +21,13 @@
                    FontSize="16"
                    VerticalOptions="Center"
                    HorizontalOptions="Center"
-                   TextColor="{StaticResource TextPrimary}"
+                   TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"
                    MaxLines="1"
                    LineBreakMode="TailTruncation"/>
             <ActivityIndicator Grid.Column="2"
                                IsVisible="{Binding IsLoading}"
                                IsRunning="{Binding IsLoading}"
-                               Color="{StaticResource PrimaryPurple}"
+                               Color="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"
                                HeightRequest="20"
                                WidthRequest="20"
                                VerticalOptions="Center"/>

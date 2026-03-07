@@ -29,7 +29,7 @@
                 <Border StrokeThickness="0"
                         StrokeShape="RoundRectangle 20"
                         MinimumHeightRequest="168"
-                        BackgroundColor="{StaticResource PrimaryLight}"
+                        BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryLightDark}}"
                         Padding="18,16">
                     <Grid>
                         <Border StrokeThickness="0"
@@ -52,27 +52,27 @@
                             <Label Text="{Binding Survey.Title}"
                                    FontFamily="JakartaExtraBold"
                                    FontSize="22"
-                                   TextColor="{StaticResource TextPrimary}"/>
+                                   TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
                             <Label Text="{Binding Survey.Description}"
                                    FontFamily="JakartaRegular"
                                    FontSize="14"
                                    LineHeight="1.4"
                                    IsVisible="{Binding Survey.HasDescription}"
-                                   TextColor="{StaticResource TextSecondary}"/>
+                                   TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}"/>
                         </VerticalStackLayout>
                     </Grid>
                 </Border>
 
                 <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10">
                     <Border StrokeShape="RoundRectangle 16"
-                            Stroke="{StaticResource CardBorder}"
-                            BackgroundColor="{StaticResource White}"
+                            Stroke="{AppThemeBinding Light={StaticResource CardBorder}, Dark={StaticResource CardBorderDark}}"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource WhiteDark}}"
                             Padding="12,14">
                         <VerticalStackLayout Spacing="6" HorizontalOptions="Center">
                             <Image Source="icon_clock.png" HeightRequest="20" WidthRequest="20" HorizontalOptions="Center"/>
                             <Label Text="{Binding Survey.DurationMinutes, StringFormat='~{0} dk'}"
                                    FontFamily="JakartaBold" FontSize="14"
-                                   HorizontalTextAlignment="Center" TextColor="{StaticResource TextPrimary}"/>
+                                   HorizontalTextAlignment="Center" TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
                             <Label Text="Süre"
                                    Style="{StaticResource CaptionStyle}"
                                    HorizontalTextAlignment="Center"/>
@@ -81,14 +81,14 @@
 
                     <Border Grid.Column="1"
                             StrokeShape="RoundRectangle 16"
-                            Stroke="{StaticResource CardBorder}"
-                            BackgroundColor="{StaticResource White}"
+                            Stroke="{AppThemeBinding Light={StaticResource CardBorder}, Dark={StaticResource CardBorderDark}}"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource WhiteDark}}"
                             Padding="12,14">
                         <VerticalStackLayout Spacing="6" HorizontalOptions="Center">
                             <Image Source="icon_money.png" HeightRequest="20" WidthRequest="20" HorizontalOptions="Center"/>
                             <Label Text="{Binding Survey.ConsolationRewardDisplay}"
                                    FontFamily="JakartaBold" FontSize="14"
-                                   HorizontalTextAlignment="Center" TextColor="{StaticResource TextPrimary}"/>
+                                   HorizontalTextAlignment="Center" TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
                             <Label Text="Teselli Ödülü"
                                    Style="{StaticResource CaptionStyle}"
                                    HorizontalTextAlignment="Center"/>
@@ -97,14 +97,14 @@
 
                     <Border Grid.Column="2"
                             StrokeShape="RoundRectangle 16"
-                            Stroke="{StaticResource CardBorder}"
-                            BackgroundColor="{StaticResource White}"
+                            Stroke="{AppThemeBinding Light={StaticResource CardBorder}, Dark={StaticResource CardBorderDark}}"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource WhiteDark}}"
                             Padding="12,14">
                         <VerticalStackLayout Spacing="6" HorizontalOptions="Center">
                             <Image Source="icon_check.png" HeightRequest="20" WidthRequest="20" HorizontalOptions="Center"/>
                             <Label Text="{Binding Survey.RewardDisplay}"
                                    FontFamily="JakartaBold" FontSize="14"
-                                   HorizontalTextAlignment="Center" TextColor="{StaticResource TextPrimary}"/>
+                                   HorizontalTextAlignment="Center" TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
                             <Label Text="Ödül"
                                    Style="{StaticResource CaptionStyle}"
                                    HorizontalTextAlignment="Center"/>
@@ -117,12 +117,12 @@
                         <Label Text="Başlamadan Önce"
                                FontFamily="JakartaSemiBold"
                                FontSize="16"
-                               TextColor="{StaticResource TextPrimary}"/>
+                               TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
                         <Label Text="{Binding Survey.StartMessageDisplay}"
                                FontFamily="JakartaRegular"
                                FontSize="14"
                                LineHeight="1.45"
-                               TextColor="{StaticResource TextSecondary}"/>
+                               TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}"/>
                     </VerticalStackLayout>
                 </Border>
 
@@ -150,16 +150,16 @@
         <!-- SHIMMER OVERLAY -->
         <Grid x:Name="ShimmerOverlay"
               IsVisible="{Binding IsLoading}"
-              BackgroundColor="{StaticResource PageBackground}"
+              BackgroundColor="{AppThemeBinding Light={StaticResource PageBackground}, Dark={StaticResource PageBackgroundDark}}"
               InputTransparent="True">
             <Grid x:Name="ShimmerContainer">
                 <VerticalStackLayout Spacing="16" Padding="20,16,20,22">
                     <!-- Header skeleton -->
                     <HorizontalStackLayout Spacing="8">
-                        <Border StrokeThickness="0" BackgroundColor="#E4DDF2"
+                        <Border StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerMid}, Dark={StaticResource ShimmerMidDark}}"
                                 StrokeShape="RoundRectangle 6"
                                 HeightRequest="24" WidthRequest="24"/>
-                        <Border StrokeThickness="0" BackgroundColor="#E4DDF2"
+                        <Border StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerMid}, Dark={StaticResource ShimmerMidDark}}"
                                 StrokeShape="RoundRectangle 6"
                                 HeightRequest="22" WidthRequest="100"
                                 VerticalOptions="Center"/>
@@ -168,23 +168,23 @@
                     <!-- Hero card skeleton -->
                     <Border StrokeThickness="0"
                             StrokeShape="RoundRectangle 20"
-                            BackgroundColor="{StaticResource PrimaryLight}"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryLightDark}}"
                             MinimumHeightRequest="168"
                             Padding="18,16">
                         <VerticalStackLayout Spacing="8">
-                            <Border StrokeThickness="0" BackgroundColor="#D5CBF5"
+                            <Border StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerDeep}, Dark={StaticResource ShimmerDeepDark}}"
                                     StrokeShape="RoundRectangle 8"
                                     HeightRequest="24" WidthRequest="220"
                                     HorizontalOptions="Start"/>
-                            <Border StrokeThickness="0" BackgroundColor="#D5CBF5"
+                            <Border StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerDeep}, Dark={StaticResource ShimmerDeepDark}}"
                                     StrokeShape="RoundRectangle 8"
                                     HeightRequest="24" WidthRequest="160"
                                     HorizontalOptions="Start"/>
-                            <Border StrokeThickness="0" BackgroundColor="#DDD5F7"
+                            <Border StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerMuted}, Dark={StaticResource ShimmerMutedDark}}"
                                     StrokeShape="RoundRectangle 6"
                                     HeightRequest="16" HorizontalOptions="Fill"
                                     Margin="0,4,0,0"/>
-                            <Border StrokeThickness="0" BackgroundColor="#DDD5F7"
+                            <Border StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerMuted}, Dark={StaticResource ShimmerMutedDark}}"
                                     StrokeShape="RoundRectangle 6"
                                     HeightRequest="16" WidthRequest="200"
                                     HorizontalOptions="Start"/>
@@ -193,29 +193,29 @@
 
                     <!-- Info cards skeleton -->
                     <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10">
-                        <Border StrokeThickness="0" BackgroundColor="#E8E1F6"
+                        <Border StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerBase}, Dark={StaticResource ShimmerBaseDark}}"
                                 StrokeShape="RoundRectangle 16"
                                 HeightRequest="90"/>
-                        <Border Grid.Column="1" StrokeThickness="0" BackgroundColor="#E8E1F6"
+                        <Border Grid.Column="1" StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerBase}, Dark={StaticResource ShimmerBaseDark}}"
                                 StrokeShape="RoundRectangle 16"
                                 HeightRequest="90"/>
-                        <Border Grid.Column="2" StrokeThickness="0" BackgroundColor="#E8E1F6"
+                        <Border Grid.Column="2" StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerBase}, Dark={StaticResource ShimmerBaseDark}}"
                                 StrokeShape="RoundRectangle 16"
                                 HeightRequest="90"/>
                     </Grid>
 
                     <!-- "Baslamadan Once" card skeleton -->
-                    <Border StrokeThickness="0" BackgroundColor="#E8E1F6"
+                    <Border StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerBase}, Dark={StaticResource ShimmerBaseDark}}"
                             StrokeShape="RoundRectangle 16"
                             HeightRequest="100" HorizontalOptions="Fill"/>
 
                     <!-- Button skeleton -->
-                    <Border StrokeThickness="0" BackgroundColor="#E4DDF2"
+                    <Border StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerMid}, Dark={StaticResource ShimmerMidDark}}"
                             StrokeShape="RoundRectangle 14"
                             HeightRequest="50" HorizontalOptions="Fill"/>
 
                     <!-- Caption skeleton -->
-                    <Border StrokeThickness="0" BackgroundColor="#ECE6F7"
+                    <Border StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerLight}, Dark={StaticResource ShimmerLightDark}}"
                             StrokeShape="RoundRectangle 6"
                             HeightRequest="14" WidthRequest="280"
                             HorizontalOptions="Center"/>
@@ -233,7 +233,7 @@
                     <Border.Background>
                         <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
                             <GradientStop Color="#00FFFFFF" Offset="0"/>
-                            <GradientStop Color="#66FFFFFF" Offset="0.5"/>
+                            <GradientStop Color="{AppThemeBinding Light={StaticResource ShimmerSweepHighlight}, Dark={StaticResource ShimmerSweepHighlightDark}}" Offset="0.5"/>
                             <GradientStop Color="#00FFFFFF" Offset="1"/>
                         </LinearGradientBrush>
                     </Border.Background>

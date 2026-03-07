@@ -6,7 +6,7 @@
              x:Class="PulsePoll.Mobile.Views.RegisterPage"
              x:DataType="vm:RegisterViewModel"
              Title="Kaydol"
-             BackgroundColor="{StaticResource PageBackground}">
+             BackgroundColor="{AppThemeBinding Light={StaticResource PageBackground}, Dark={StaticResource PageBackgroundDark}}">
 
     <ContentPage.Resources>
         <converters:InvertedBoolConverter x:Key="InvertedBoolConverter"/>
@@ -31,7 +31,7 @@
 
                     <!-- Error -->
                     <Label Text="{Binding ErrorMessage}"
-                           TextColor="{StaticResource Danger}"
+                           TextColor="{AppThemeBinding Light={StaticResource Danger}, Dark={StaticResource DangerDark}}"
                            FontFamily="JakartaMedium" FontSize="13"
                            HorizontalTextAlignment="Start"
                            IsVisible="{Binding HasError}"
@@ -59,11 +59,11 @@
                                     Style="{StaticResource AuthPrimaryButtonStyle}"/>
                             <Border StrokeThickness="0"
                                     StrokeShape="RoundRectangle 26"
-                                    BackgroundColor="{StaticResource PrimaryPurple}"
+                                    BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"
                                     HeightRequest="52"
                                     IsVisible="{Binding IsBusy}">
                                 <ActivityIndicator IsRunning="True"
-                                                   Color="{StaticResource White}"
+                                                   Color="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource WhiteDark}}"
                                                    HeightRequest="24" WidthRequest="24"
                                                    HorizontalOptions="Center" VerticalOptions="Center"/>
                             </Border>
@@ -93,11 +93,11 @@
                                         Style="{StaticResource AuthPrimaryButtonStyle}"/>
                                 <Border StrokeThickness="0"
                                         StrokeShape="RoundRectangle 26"
-                                        BackgroundColor="{StaticResource PrimaryPurple}"
+                                        BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"
                                         HeightRequest="52"
                                         IsVisible="{Binding IsBusy}">
                                     <ActivityIndicator IsRunning="True"
-                                                       Color="{StaticResource White}"
+                                                       Color="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource WhiteDark}}"
                                                        HeightRequest="24" WidthRequest="24"
                                                        HorizontalOptions="Center" VerticalOptions="Center"/>
                                 </Border>
@@ -197,7 +197,7 @@
                         </Border>
 
                         <!-- Divider -->
-                        <BoxView HeightRequest="1" Color="{StaticResource CardBorder}" Margin="0,4,0,14"/>
+                        <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource CardBorder}, Dark={StaticResource CardBorderDark}}" Margin="0,4,0,14"/>
 
                         <!-- Pickers - all wrapped in same AuthFieldBorderStyle -->
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
@@ -285,28 +285,28 @@
                         </Border>
 
                         <HorizontalStackLayout Spacing="8" Margin="0,0,0,0">
-                            <CheckBox IsChecked="{Binding IsRetired}" Color="{StaticResource PrimaryPurple}"/>
+                            <CheckBox IsChecked="{Binding IsRetired}" Color="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"/>
                             <Label Text="Emekli" FontFamily="JakartaMedium" FontSize="14"
-                                   VerticalOptions="Center" TextColor="{StaticResource TextPrimary}"/>
+                                   VerticalOptions="Center" TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
                         </HorizontalStackLayout>
 
                         <!-- Hane Durumu -->
-                        <BoxView HeightRequest="1" Color="{StaticResource CardBorder}" Margin="0,14,0,14"/>
+                        <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource CardBorder}, Dark={StaticResource CardBorderDark}}" Margin="0,14,0,14"/>
                         <Label Text="HANE DURUMU" Style="{StaticResource FieldLabelStyle}" Margin="0,0,0,8"/>
 
                         <HorizontalStackLayout Spacing="8">
-                            <CheckBox IsChecked="{Binding IsHeadOfFamily}" Color="{StaticResource PrimaryPurple}"/>
+                            <CheckBox IsChecked="{Binding IsHeadOfFamily}" Color="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"/>
                             <Label Text="Hane Reisi misiniz?" FontFamily="JakartaMedium" FontSize="14"
-                                   VerticalOptions="Center" TextColor="{StaticResource TextPrimary}"/>
+                                   VerticalOptions="Center" TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
                         </HorizontalStackLayout>
 
                         <VerticalStackLayout Spacing="0"
                                              IsVisible="{Binding IsHeadOfFamily, Converter={StaticResource InvertedBoolConverter}}"
                                              Margin="0,8,0,0">
                             <HorizontalStackLayout Spacing="8" Margin="0,0,0,12">
-                                <CheckBox IsChecked="{Binding IsHeadOfFamilyRetired}" Color="{StaticResource PrimaryPurple}"/>
+                                <CheckBox IsChecked="{Binding IsHeadOfFamilyRetired}" Color="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"/>
                                 <Label Text="Hane Reisi Emekli" FontFamily="JakartaMedium" FontSize="14"
-                                       VerticalOptions="Center" TextColor="{StaticResource TextPrimary}"/>
+                                       VerticalOptions="Center" TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
                             </HorizontalStackLayout>
 
                             <Label Text="HANE REİSİ MESLEK" Style="{StaticResource FieldLabelStyle}"/>
@@ -350,11 +350,11 @@
                                         Style="{StaticResource AuthPrimaryButtonStyle}"/>
                                 <Border StrokeThickness="0"
                                         StrokeShape="RoundRectangle 26"
-                                        BackgroundColor="{StaticResource PrimaryPurple}"
+                                        BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"
                                         HeightRequest="52"
                                         IsVisible="{Binding IsBusy}">
                                     <ActivityIndicator IsRunning="True"
-                                                       Color="{StaticResource White}"
+                                                       Color="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource WhiteDark}}"
                                                        HeightRequest="24" WidthRequest="24"
                                                        HorizontalOptions="Center" VerticalOptions="Center"/>
                                 </Border>
@@ -393,11 +393,11 @@
                    HorizontalTextAlignment="Center"
                    Margin="0,0,0,12"/>
 
-            <Border Grid.Row="1" StrokeShape="RoundRectangle 12" Stroke="{StaticResource CardBorder}"
-                    BackgroundColor="{StaticResource White}" Padding="16">
+            <Border Grid.Row="1" StrokeShape="RoundRectangle 12" Stroke="{AppThemeBinding Light={StaticResource CardBorder}, Dark={StaticResource CardBorderDark}}"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource WhiteDark}}" Padding="16">
                 <ScrollView>
                     <Label FontFamily="JakartaMedium" FontSize="13"
-                           TextColor="{StaticResource TextPrimary}"
+                           TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"
                            LineBreakMode="WordWrap"
                            Text="{Binding KvkkText}"/>
                 </ScrollView>
@@ -405,16 +405,16 @@
 
             <VerticalStackLayout Grid.Row="2" Spacing="8" Margin="0,12,0,0">
                 <Label Text="{Binding ErrorMessage}"
-                       TextColor="{StaticResource Danger}"
+                       TextColor="{AppThemeBinding Light={StaticResource Danger}, Dark={StaticResource DangerDark}}"
                        FontFamily="JakartaMedium" FontSize="13"
                        HorizontalTextAlignment="Center"
                        IsVisible="{Binding HasError}"/>
 
                 <HorizontalStackLayout Spacing="8" HorizontalOptions="Center">
-                    <CheckBox IsChecked="{Binding KvkkAccepted}" Color="{StaticResource PrimaryPurple}"/>
+                    <CheckBox IsChecked="{Binding KvkkAccepted}" Color="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"/>
                     <Label Text="KVKK metnini okudum ve onaylıyorum."
                            FontFamily="JakartaSemiBold" FontSize="13"
-                           TextColor="{StaticResource TextPrimary}"
+                           TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"
                            VerticalOptions="Center"/>
                 </HorizontalStackLayout>
             </VerticalStackLayout>
@@ -427,11 +427,11 @@
                             Style="{StaticResource AuthPrimaryButtonStyle}"/>
                     <Border StrokeThickness="0"
                             StrokeShape="RoundRectangle 26"
-                            BackgroundColor="{StaticResource PrimaryPurple}"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"
                             HeightRequest="52"
                             IsVisible="{Binding IsBusy}">
                         <ActivityIndicator IsRunning="True"
-                                           Color="{StaticResource White}"
+                                           Color="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource WhiteDark}}"
                                            HeightRequest="24" WidthRequest="24"
                                            HorizontalOptions="Center" VerticalOptions="Center"/>
                     </Border>

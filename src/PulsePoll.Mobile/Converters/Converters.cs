@@ -1,4 +1,5 @@
 using System.Globalization;
+using PulsePoll.Mobile.Helpers;
 
 namespace PulsePoll.Mobile.Converters;
 
@@ -8,8 +9,8 @@ public class BoolToColorConverter : IValueConverter
     {
         if (value is bool b)
         {
-            var successColor = Application.Current!.Resources.TryGetValue("Success", out var s) ? (Color)s : Colors.Green;
-            var dangerColor = Application.Current!.Resources.TryGetValue("Danger", out var d) ? (Color)d : Colors.Red;
+            var successColor = ThemeHelper.Resolve("Success", "SuccessDark", Colors.Green);
+            var dangerColor = ThemeHelper.Resolve("Danger", "DangerDark", Colors.Red);
             return b ? successColor : dangerColor;
         }
         return Colors.Gray;
@@ -26,8 +27,8 @@ public class AmountToColorConverter : IValueConverter
         if (value is decimal amount)
         {
             if (amount > 0)
-                return Application.Current!.Resources.TryGetValue("Success", out var s) ? (Color)s : Colors.Green;
-            return Application.Current!.Resources.TryGetValue("PrimaryPurple", out var p) ? (Color)p : Colors.Purple;
+                return ThemeHelper.Resolve("Success", "SuccessDark", Colors.Green);
+            return ThemeHelper.Resolve("PrimaryPurple", "PrimaryPurpleDark", Colors.Purple);
         }
         return Colors.Gray;
     }
@@ -41,17 +42,16 @@ public class StatusToColorConverter : IValueConverter
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         var status = value?.ToString()?.Trim();
-        var resources = Application.Current!.Resources;
 
         return status switch
         {
-            "Tamamlandı" or "Completed" => resources.TryGetValue("Success", out var s) ? (Color)s : Colors.Green,
-            "Devam Ediyor" or "Partial" or "Kısmi" => resources.TryGetValue("Amber", out var a) ? (Color)a : Colors.Orange,
+            "Tamamlandı" or "Completed" => ThemeHelper.Resolve("Success", "SuccessDark", Colors.Green),
+            "Devam Ediyor" or "Partial" or "Kısmi" => ThemeHelper.Resolve("Amber", "AmberDark", Colors.Orange),
             "Elendi" or "Diskalifiye" or "Disqualify" or "Elenmiş" or "ScreenOut" =>
-                resources.TryGetValue("Danger", out var d) ? (Color)d : Colors.Red,
+                ThemeHelper.Resolve("Danger", "DangerDark", Colors.Red),
             "Kota Dolu" or "QuotaFull" =>
-                resources.TryGetValue("PrimaryPurple", out var p) ? (Color)p : Colors.Purple,
-            _ => resources.TryGetValue("TextTertiary", out var t) ? (Color)t : Colors.Gray
+                ThemeHelper.Resolve("PrimaryPurple", "PrimaryPurpleDark", Colors.Purple),
+            _ => ThemeHelper.Resolve("TextTertiary", "TextTertiaryDark", Colors.Gray)
         };
     }
 
@@ -64,17 +64,16 @@ public class StatusToBgColorConverter : IValueConverter
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         var status = value?.ToString()?.Trim();
-        var resources = Application.Current!.Resources;
 
         return status switch
         {
-            "Tamamlandı" or "Completed" => resources.TryGetValue("SuccessLight", out var s) ? (Color)s : Colors.LightGreen,
-            "Devam Ediyor" or "Partial" or "Kısmi" => resources.TryGetValue("AmberLight", out var a) ? (Color)a : Colors.LemonChiffon,
+            "Tamamlandı" or "Completed" => ThemeHelper.Resolve("SuccessLight", "SuccessLightDark", Colors.LightGreen),
+            "Devam Ediyor" or "Partial" or "Kısmi" => ThemeHelper.Resolve("AmberLight", "AmberLightDark", Colors.LemonChiffon),
             "Elendi" or "Diskalifiye" or "Disqualify" or "Elenmiş" or "ScreenOut" =>
-                resources.TryGetValue("DangerLight", out var d) ? (Color)d : Colors.MistyRose,
+                ThemeHelper.Resolve("DangerLight", "DangerLightDark", Colors.MistyRose),
             "Kota Dolu" or "QuotaFull" =>
-                resources.TryGetValue("PrimaryLight", out var p) ? (Color)p : Colors.Lavender,
-            _ => resources.TryGetValue("SurfaceColor", out var t) ? (Color)t : Colors.LightGray
+                ThemeHelper.Resolve("PrimaryLight", "PrimaryLightDark", Colors.Lavender),
+            _ => ThemeHelper.Resolve("SurfaceColor", "SurfaceColorDark", Colors.LightGray)
         };
     }
 
@@ -106,15 +105,14 @@ public class NotificationTypeToBgConverter : IValueConverter
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         var type = value?.ToString();
-        var resources = Application.Current!.Resources;
 
         return type switch
         {
-            "survey" => resources.TryGetValue("PrimaryLight", out var p) ? (Color)p : Colors.Lavender,
-            "earning" => resources.TryGetValue("AmberLight", out var a) ? (Color)a : Colors.LemonChiffon,
-            "rank" => resources.TryGetValue("SuccessLight", out var s) ? (Color)s : Colors.LightGreen,
-            "disqualified" => resources.TryGetValue("DangerLight", out var d) ? (Color)d : Colors.MistyRose,
-            _ => resources.TryGetValue("SurfaceColor", out var t) ? (Color)t : Colors.LightGray
+            "survey" => ThemeHelper.Resolve("PrimaryLight", "PrimaryLightDark", Colors.Lavender),
+            "earning" => ThemeHelper.Resolve("AmberLight", "AmberLightDark", Colors.LemonChiffon),
+            "rank" => ThemeHelper.Resolve("SuccessLight", "SuccessLightDark", Colors.LightGreen),
+            "disqualified" => ThemeHelper.Resolve("DangerLight", "DangerLightDark", Colors.MistyRose),
+            _ => ThemeHelper.Resolve("SurfaceColor", "SurfaceColorDark", Colors.LightGray)
         };
     }
 
@@ -148,11 +146,11 @@ public class BoolToReadBgConverter : IValueConverter
         if (value is bool isRead)
         {
             if (isRead)
-                return Colors.White;
+                return ThemeHelper.Resolve("White", "WhiteDark", Colors.White);
             // Unread → light purple tint
-            return Application.Current!.Resources.TryGetValue("PrimaryLight", out var p) ? (Color)p : Color.FromArgb("#EDE8FF");
+            return ThemeHelper.Resolve("PrimaryLight", "PrimaryLightDark", Color.FromArgb("#EDE8FF"));
         }
-        return Colors.White;
+        return ThemeHelper.Resolve("White", "WhiteDark", Colors.White);
     }
 
     public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)

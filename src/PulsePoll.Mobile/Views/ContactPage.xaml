@@ -5,13 +5,13 @@
              x:Class="PulsePoll.Mobile.Views.ContactPage"
              x:DataType="vm:ContactViewModel"
              Title="İletişim"
-             BackgroundColor="{StaticResource PageBackground}">
+             BackgroundColor="{AppThemeBinding Light={StaticResource PageBackground}, Dark={StaticResource PageBackgroundDark}}">
 
     <ScrollView>
         <VerticalStackLayout Spacing="0" Padding="28,28,28,0">
 
             <!-- Logo Mark -->
-            <Border BackgroundColor="{StaticResource PrimaryPurple}"
+            <Border BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"
                     StrokeShape="RoundRectangle 22" Stroke="Transparent"
                     WidthRequest="72" HeightRequest="72"
                     HorizontalOptions="Start"
@@ -22,31 +22,31 @@
 
             <!-- Loading -->
             <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}"
-                               Color="{StaticResource PrimaryPurple}" HeightRequest="40"/>
+                               Color="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}" HeightRequest="40"/>
 
             <!-- Title -->
             <Label Text="{Binding ContactTitle}"
                    FontFamily="JakartaExtraBold" FontSize="22"
-                   TextColor="{StaticResource TextPrimary}"
+                   TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"
                    Margin="0,0,0,8"/>
 
             <!-- Body -->
             <Label Text="{Binding ContactBody}"
                    FontFamily="JakartaRegular" FontSize="14"
-                   TextColor="{StaticResource TextSecondary}"
+                   TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}"
                    LineBreakMode="WordWrap"
                    Margin="0,0,0,28"/>
 
             <!-- Email -->
-            <Border StrokeShape="RoundRectangle 16" Stroke="{StaticResource CardBorder}"
-                    BackgroundColor="{StaticResource White}" Padding="16"
+            <Border StrokeShape="RoundRectangle 16" Stroke="{AppThemeBinding Light={StaticResource CardBorder}, Dark={StaticResource CardBorderDark}}"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource WhiteDark}}" Padding="16"
                     Margin="0,0,0,12"
                     IsVisible="{Binding HasEmail}">
                 <Border.GestureRecognizers>
                     <TapGestureRecognizer Command="{Binding OpenEmailCommand}"/>
                 </Border.GestureRecognizers>
                 <Grid ColumnDefinitions="40,*,Auto" ColumnSpacing="14">
-                    <Border BackgroundColor="{StaticResource PrimaryLight}"
+                    <Border BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryLightDark}}"
                             StrokeShape="RoundRectangle 12" Stroke="Transparent"
                             WidthRequest="40" HeightRequest="40">
                         <Image Source="icon_mail.png" WidthRequest="20" HeightRequest="20"
@@ -54,9 +54,9 @@
                     </Border>
                     <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
                         <Label Text="E-posta" FontFamily="JakartaMedium" FontSize="12"
-                               TextColor="{StaticResource TextSecondary}"/>
+                               TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}"/>
                         <Label Text="{Binding ContactEmail}" FontFamily="JakartaSemiBold" FontSize="14"
-                               TextColor="{StaticResource TextPrimary}"/>
+                               TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
                     </VerticalStackLayout>
                     <Image Grid.Column="2" Source="icon_arrow_right.png"
                            WidthRequest="16" HeightRequest="16"
@@ -65,15 +65,15 @@
             </Border>
 
             <!-- Phone -->
-            <Border StrokeShape="RoundRectangle 16" Stroke="{StaticResource CardBorder}"
-                    BackgroundColor="{StaticResource White}" Padding="16"
+            <Border StrokeShape="RoundRectangle 16" Stroke="{AppThemeBinding Light={StaticResource CardBorder}, Dark={StaticResource CardBorderDark}}"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource WhiteDark}}" Padding="16"
                     Margin="0,0,0,12"
                     IsVisible="{Binding HasPhone}">
                 <Border.GestureRecognizers>
                     <TapGestureRecognizer Command="{Binding OpenPhoneCommand}"/>
                 </Border.GestureRecognizers>
                 <Grid ColumnDefinitions="40,*,Auto" ColumnSpacing="14">
-                    <Border BackgroundColor="{StaticResource PrimaryLight}"
+                    <Border BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryLightDark}}"
                             StrokeShape="RoundRectangle 12" Stroke="Transparent"
                             WidthRequest="40" HeightRequest="40">
                         <Image Source="icon_phone.png" WidthRequest="20" HeightRequest="20"
@@ -81,9 +81,9 @@
                     </Border>
                     <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
                         <Label Text="Telefon" FontFamily="JakartaMedium" FontSize="12"
-                               TextColor="{StaticResource TextSecondary}"/>
+                               TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}"/>
                         <Label Text="{Binding ContactPhone}" FontFamily="JakartaSemiBold" FontSize="14"
-                               TextColor="{StaticResource TextPrimary}"/>
+                               TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
                     </VerticalStackLayout>
                     <Image Grid.Column="2" Source="icon_arrow_right.png"
                            WidthRequest="16" HeightRequest="16"
@@ -92,15 +92,15 @@
             </Border>
 
             <!-- WhatsApp -->
-            <Border StrokeShape="RoundRectangle 16" Stroke="{StaticResource CardBorder}"
-                    BackgroundColor="{StaticResource White}" Padding="16"
+            <Border StrokeShape="RoundRectangle 16" Stroke="{AppThemeBinding Light={StaticResource CardBorder}, Dark={StaticResource CardBorderDark}}"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource WhiteDark}}" Padding="16"
                     Margin="0,0,0,12"
                     IsVisible="{Binding HasWhatsapp}">
                 <Border.GestureRecognizers>
                     <TapGestureRecognizer Command="{Binding OpenWhatsappCommand}"/>
                 </Border.GestureRecognizers>
                 <Grid ColumnDefinitions="40,*,Auto" ColumnSpacing="14">
-                    <Border BackgroundColor="{StaticResource PrimaryLight}"
+                    <Border BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryLightDark}}"
                             StrokeShape="RoundRectangle 12" Stroke="Transparent"
                             WidthRequest="40" HeightRequest="40">
                         <Image Source="icon_whatsapp.png" WidthRequest="20" HeightRequest="20"
@@ -108,9 +108,9 @@
                     </Border>
                     <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
                         <Label Text="WhatsApp" FontFamily="JakartaMedium" FontSize="12"
-                               TextColor="{StaticResource TextSecondary}"/>
+                               TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}"/>
                         <Label Text="{Binding ContactWhatsapp}" FontFamily="JakartaSemiBold" FontSize="14"
-                               TextColor="{StaticResource TextPrimary}"/>
+                               TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
                     </VerticalStackLayout>
                     <Image Grid.Column="2" Source="icon_arrow_right.png"
                            WidthRequest="16" HeightRequest="16"
@@ -121,7 +121,7 @@
             <!-- Status Message -->
             <Label Text="{Binding StatusMessage}"
                    FontFamily="JakartaMedium" FontSize="13"
-                   TextColor="{StaticResource PrimaryPurple}"
+                   TextColor="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"
                    HorizontalTextAlignment="Center"
                    Margin="0,16,0,0"/>
 

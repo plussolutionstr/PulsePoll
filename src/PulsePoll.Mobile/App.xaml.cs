@@ -54,10 +54,11 @@ public partial class App : Application
     private NavigationPage CreateAuthNavigation()
     {
         var welcomePage = _serviceProvider.GetRequiredService<WelcomePage>();
+        var isDark = Current!.RequestedTheme == AppTheme.Dark;
         return new NavigationPage(welcomePage)
         {
-            BarBackgroundColor = Color.FromArgb("#F7F5FF"),
-            BarTextColor = Color.FromArgb("#1A1535")
+            BarBackgroundColor = Color.FromArgb(isDark ? "#0F0D1A" : "#F7F5FF"),
+            BarTextColor = Color.FromArgb(isDark ? "#F0ECF7" : "#1A1535")
         };
     }
 }

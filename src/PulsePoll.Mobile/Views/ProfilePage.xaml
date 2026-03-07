@@ -37,7 +37,7 @@
                 <Label Text="{Binding StatusMessage}"
                        IsVisible="{Binding StatusMessage, Converter={StaticResource StringToBoolConverter}}"
                        FontFamily="JakartaMedium" FontSize="13"
-                       TextColor="{StaticResource PrimaryPurple}"
+                       TextColor="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"
                        HorizontalTextAlignment="Center"/>
 
                 <!-- Avatar Card -->
@@ -47,20 +47,20 @@
                     <Grid HeightRequest="88" WidthRequest="88" HorizontalOptions="Center">
                         <!-- Avatar circle (initials) -->
                         <Border StrokeThickness="3"
-                                Stroke="{StaticResource PrimaryPurple}"
+                                Stroke="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"
                                 StrokeShape="RoundRectangle 44"
                                 HeightRequest="88" WidthRequest="88"
-                                BackgroundColor="{StaticResource PrimaryLight}"
+                                BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryLightDark}}"
                                 HorizontalOptions="Center"
                                 IsVisible="{Binding HasProfilePhoto, Converter={StaticResource InvertedBoolConverter}}">
                             <Label Text="{Binding Initials}"
                                    FontFamily="JakartaBold" FontSize="28"
                                    HorizontalOptions="Center" VerticalOptions="Center"
-                                   TextColor="{StaticResource PrimaryPurple}"/>
+                                   TextColor="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"/>
                         </Border>
                         <!-- Profile photo -->
                         <Border StrokeThickness="3"
-                                Stroke="{StaticResource PrimaryPurple}"
+                                Stroke="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"
                                 StrokeShape="RoundRectangle 44"
                                 HeightRequest="88" WidthRequest="88"
                                 IsVisible="{Binding HasProfilePhoto}"
@@ -73,7 +73,7 @@
                                 Stroke="{StaticResource White}"
                                 StrokeShape="RoundRectangle 14"
                                 HeightRequest="30" WidthRequest="30"
-                                BackgroundColor="{StaticResource PrimaryPurple}"
+                                BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"
                                 HorizontalOptions="End" VerticalOptions="End"
                                 Margin="0,0,2,2">
                             <Border.GestureRecognizers>
@@ -88,14 +88,14 @@
                     <!-- Full Name -->
                     <Label Text="{Binding FullName}"
                            FontFamily="JakartaBold" FontSize="18"
-                           TextColor="{StaticResource TextPrimary}"
+                           TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"
                            HorizontalTextAlignment="Center"/>
 
                     <!-- Referral Code (tappable to copy) -->
                     <Border x:Name="CoachReferral"
                             StrokeThickness="0"
                             StrokeShape="RoundRectangle 12"
-                            BackgroundColor="{StaticResource PrimaryLight}"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryLightDark}}"
                             Padding="14,8"
                             HorizontalOptions="Center">
                         <Border.GestureRecognizers>
@@ -104,16 +104,16 @@
                         <HorizontalStackLayout Spacing="8">
                             <Label Text="{Binding ReferralCode}"
                                    FontFamily="JakartaSemiBold" FontSize="14"
-                                   TextColor="{StaticResource PrimaryPurple}"
+                                   TextColor="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"
                                    VerticalOptions="Center"/>
                             <Label Text="⧉" FontSize="16" VerticalOptions="Center"
-                                   TextColor="{StaticResource PrimaryPurple}"/>
+                                   TextColor="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"/>
                         </HorizontalStackLayout>
                     </Border>
 
                     <!-- Stars -->
                     <Label x:Name="CoachStars" FontFamily="JakartaBold" FontSize="22"
-                           TextColor="{StaticResource Amber}"
+                           TextColor="{AppThemeBinding Light={StaticResource Amber}, Dark={StaticResource AmberDark}}"
                            HorizontalTextAlignment="Center"
                            Text="{Binding Star, Converter={StaticResource StarConverter}}"/>
                 </VerticalStackLayout>
@@ -121,37 +121,37 @@
 
             <!-- Stats Row -->
             <Grid x:Name="CoachStats" ColumnDefinitions="*,*,*" ColumnSpacing="10">
-                <Border StrokeShape="RoundRectangle 16" Stroke="{StaticResource CardBorder}"
-                        BackgroundColor="{StaticResource White}" Padding="12,16">
+                <Border StrokeShape="RoundRectangle 16" Stroke="{AppThemeBinding Light={StaticResource CardBorder}, Dark={StaticResource CardBorderDark}}"
+                        BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource WhiteDark}}" Padding="12,16">
                     <VerticalStackLayout HorizontalOptions="Center" Spacing="4">
                         <Label Text="{Binding CompletedCount}"
                                FontFamily="JakartaBold" FontSize="20"
-                               TextColor="{StaticResource PrimaryPurple}"
+                               TextColor="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"
                                HorizontalTextAlignment="Center"/>
                         <Label Text="Tamamlanan" FontFamily="JakartaMedium" FontSize="11"
-                               TextColor="{StaticResource TextSecondary}" HorizontalTextAlignment="Center"/>
+                               TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}" HorizontalTextAlignment="Center"/>
                     </VerticalStackLayout>
                 </Border>
-                <Border Grid.Column="1" StrokeShape="RoundRectangle 16" Stroke="{StaticResource CardBorder}"
-                        BackgroundColor="{StaticResource White}" Padding="12,16">
+                <Border Grid.Column="1" StrokeShape="RoundRectangle 16" Stroke="{AppThemeBinding Light={StaticResource CardBorder}, Dark={StaticResource CardBorderDark}}"
+                        BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource WhiteDark}}" Padding="12,16">
                     <VerticalStackLayout HorizontalOptions="Center" Spacing="4">
                         <Label Text="{Binding DisqualifiedCount}"
                                FontFamily="JakartaBold" FontSize="20"
-                               TextColor="{StaticResource Danger}"
+                               TextColor="{AppThemeBinding Light={StaticResource Danger}, Dark={StaticResource DangerDark}}"
                                HorizontalTextAlignment="Center"/>
                         <Label Text="Elenen" FontFamily="JakartaMedium" FontSize="11"
-                               TextColor="{StaticResource TextSecondary}" HorizontalTextAlignment="Center"/>
+                               TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}" HorizontalTextAlignment="Center"/>
                     </VerticalStackLayout>
                 </Border>
-                <Border Grid.Column="2" StrokeShape="RoundRectangle 16" Stroke="{StaticResource CardBorder}"
-                        BackgroundColor="{StaticResource White}" Padding="12,16">
+                <Border Grid.Column="2" StrokeShape="RoundRectangle 16" Stroke="{AppThemeBinding Light={StaticResource CardBorder}, Dark={StaticResource CardBorderDark}}"
+                        BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource WhiteDark}}" Padding="12,16">
                     <VerticalStackLayout HorizontalOptions="Center" Spacing="4">
                         <Label Text="{Binding SuccessRate, StringFormat='%{0}'}"
                                FontFamily="JakartaBold" FontSize="20"
-                               TextColor="{StaticResource Success}"
+                               TextColor="{AppThemeBinding Light={StaticResource Success}, Dark={StaticResource SuccessDark}}"
                                HorizontalTextAlignment="Center"/>
                         <Label Text="Başarı" FontFamily="JakartaMedium" FontSize="11"
-                               TextColor="{StaticResource TextSecondary}" HorizontalTextAlignment="Center"/>
+                               TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}" HorizontalTextAlignment="Center"/>
                     </VerticalStackLayout>
                 </Border>
             </Grid>
@@ -162,12 +162,12 @@
                     <Grid ColumnDefinitions="*,Auto">
                         <Label Text="Profil Bilgileri"
                                FontFamily="JakartaSemiBold" FontSize="16"
-                               TextColor="{StaticResource TextPrimary}"/>
+                               TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
                         <Button Grid.Column="1"
                                 Text="{Binding IsEditing, Converter={StaticResource EditButtonTextConverter}}"
                                 FontFamily="JakartaSemiBold" FontSize="12"
-                                BackgroundColor="{StaticResource PrimaryLight}"
-                                TextColor="{StaticResource PrimaryPurple}"
+                                BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryLightDark}}"
+                                TextColor="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"
                                 Padding="12,6"
                                 CornerRadius="12"
                                 BorderWidth="0"
@@ -182,12 +182,12 @@
                             <VerticalStackLayout Spacing="2">
                                 <Label Text="Ad" Style="{StaticResource CaptionStyle}"/>
                                 <Label Text="{Binding FirstName}" FontFamily="JakartaSemiBold" FontSize="14"
-                                       TextColor="{StaticResource TextPrimary}"/>
+                                       TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
                             </VerticalStackLayout>
                             <VerticalStackLayout Grid.Column="1" Spacing="2">
                                 <Label Text="Soyad" Style="{StaticResource CaptionStyle}"/>
                                 <Label Text="{Binding LastName}" FontFamily="JakartaSemiBold" FontSize="14"
-                                       TextColor="{StaticResource TextPrimary}"/>
+                                       TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
                             </VerticalStackLayout>
                         </Grid>
                         <!-- E-posta / Telefon -->
@@ -195,12 +195,12 @@
                             <VerticalStackLayout Spacing="2">
                                 <Label Text="E-posta" Style="{StaticResource CaptionStyle}"/>
                                 <Label Text="{Binding Email}" FontFamily="JakartaSemiBold" FontSize="14"
-                                       TextColor="{StaticResource TextPrimary}"/>
+                                       TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
                             </VerticalStackLayout>
                             <VerticalStackLayout Grid.Column="1" Spacing="2">
                                 <Label Text="Telefon" Style="{StaticResource CaptionStyle}"/>
                                 <Label Text="{Binding PhoneNumber}" FontFamily="JakartaSemiBold" FontSize="14"
-                                       TextColor="{StaticResource TextPrimary}"/>
+                                       TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
                             </VerticalStackLayout>
                         </Grid>
                         <!-- Cinsiyet / Doğum Tarihi -->
@@ -209,12 +209,12 @@
                                 <Label Text="Cinsiyet" Style="{StaticResource CaptionStyle}"/>
                                 <Label Text="{Binding SelectedGender, Converter={StaticResource GenderDisplayConverter}}"
                                        FontFamily="JakartaSemiBold" FontSize="14"
-                                       TextColor="{StaticResource TextPrimary}"/>
+                                       TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
                             </VerticalStackLayout>
                             <VerticalStackLayout Grid.Column="1" Spacing="2">
                                 <Label Text="Doğum Tarihi" Style="{StaticResource CaptionStyle}"/>
                                 <Label Text="{Binding BirthDateDisplay}" FontFamily="JakartaSemiBold" FontSize="14"
-                                       TextColor="{StaticResource TextPrimary}"/>
+                                       TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
                             </VerticalStackLayout>
                         </Grid>
                         <!-- Medeni Durum / GSM -->
@@ -223,13 +223,13 @@
                                 <Label Text="Medeni Durum" Style="{StaticResource CaptionStyle}"/>
                                 <Label Text="{Binding SelectedMaritalStatus, Converter={StaticResource MaritalStatusDisplayConverter}}"
                                        FontFamily="JakartaSemiBold" FontSize="14"
-                                       TextColor="{StaticResource TextPrimary}"/>
+                                       TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
                             </VerticalStackLayout>
                             <VerticalStackLayout Grid.Column="1" Spacing="2">
                                 <Label Text="GSM Operatörü" Style="{StaticResource CaptionStyle}"/>
                                 <Label Text="{Binding SelectedGsmOperator, Converter={StaticResource GsmOperatorDisplayConverter}}"
                                        FontFamily="JakartaSemiBold" FontSize="14"
-                                       TextColor="{StaticResource TextPrimary}"/>
+                                       TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
                             </VerticalStackLayout>
                         </Grid>
                         <!-- İl / İlçe -->
@@ -237,25 +237,25 @@
                             <VerticalStackLayout Spacing="2">
                                 <Label Text="İl" Style="{StaticResource CaptionStyle}"/>
                                 <Label Text="{Binding SelectedCity.Name}" FontFamily="JakartaSemiBold" FontSize="14"
-                                       TextColor="{StaticResource TextPrimary}"/>
+                                       TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
                             </VerticalStackLayout>
                             <VerticalStackLayout Grid.Column="1" Spacing="2">
                                 <Label Text="İlçe" Style="{StaticResource CaptionStyle}"/>
                                 <Label Text="{Binding SelectedDistrict.Name}" FontFamily="JakartaSemiBold" FontSize="14"
-                                       TextColor="{StaticResource TextPrimary}"/>
+                                       TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
                             </VerticalStackLayout>
                         </Grid>
                         <!-- Meslek (tek satır) -->
                         <VerticalStackLayout Spacing="2">
                             <Label Text="Meslek" Style="{StaticResource CaptionStyle}"/>
                             <Label Text="{Binding SelectedProfession.Name}" FontFamily="JakartaSemiBold" FontSize="14"
-                                   TextColor="{StaticResource TextPrimary}"/>
+                                   TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
                         </VerticalStackLayout>
                         <!-- Eğitim Durumu (tek satır) -->
                         <VerticalStackLayout Spacing="2">
                             <Label Text="Eğitim Durumu" Style="{StaticResource CaptionStyle}"/>
                             <Label Text="{Binding SelectedEducationLevel.Name}" FontFamily="JakartaSemiBold" FontSize="14"
-                                   TextColor="{StaticResource TextPrimary}"/>
+                                   TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
                         </VerticalStackLayout>
                         <!-- Emekli / Hane Reisi -->
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
@@ -263,13 +263,13 @@
                                 <Label Text="Emekli" Style="{StaticResource CaptionStyle}"/>
                                 <Label Text="{Binding IsRetired, Converter={StaticResource BoolToYesNoConverter}}"
                                        FontFamily="JakartaSemiBold" FontSize="14"
-                                       TextColor="{StaticResource TextPrimary}"/>
+                                       TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
                             </VerticalStackLayout>
                             <VerticalStackLayout Grid.Column="1" Spacing="2">
                                 <Label Text="Hane Reisi" Style="{StaticResource CaptionStyle}"/>
                                 <Label Text="{Binding IsHeadOfFamily, Converter={StaticResource BoolToYesNoConverter}}"
                                        FontFamily="JakartaSemiBold" FontSize="14"
-                                       TextColor="{StaticResource TextPrimary}"/>
+                                       TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
                             </VerticalStackLayout>
                         </Grid>
                     </VerticalStackLayout>
@@ -331,14 +331,14 @@
                         <!-- Emekli / Hane Reisi -->
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                             <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
-                                <CheckBox IsChecked="{Binding IsRetired}" Color="{StaticResource PrimaryPurple}"/>
+                                <CheckBox IsChecked="{Binding IsRetired}" Color="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"/>
                                 <Label Text="Emekli" FontFamily="JakartaMedium" FontSize="14"
-                                       VerticalOptions="Center" TextColor="{StaticResource TextPrimary}"/>
+                                       VerticalOptions="Center" TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
                             </HorizontalStackLayout>
                             <HorizontalStackLayout Grid.Column="1" Spacing="8" VerticalOptions="Center">
-                                <CheckBox IsChecked="{Binding IsHeadOfFamily}" Color="{StaticResource PrimaryPurple}"/>
+                                <CheckBox IsChecked="{Binding IsHeadOfFamily}" Color="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"/>
                                 <Label Text="Hane Reisi" FontFamily="JakartaMedium" FontSize="14"
-                                       VerticalOptions="Center" TextColor="{StaticResource TextPrimary}"/>
+                                       VerticalOptions="Center" TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
                             </HorizontalStackLayout>
                         </Grid>
 
@@ -347,7 +347,7 @@
                                              IsVisible="{Binding IsHeadOfFamily, Converter={StaticResource InvertedBoolConverter}}">
                             <Label Text="Hane Reisi Bilgileri"
                                    FontFamily="JakartaSemiBold" FontSize="14"
-                                   TextColor="{StaticResource TextSecondary}"/>
+                                   TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}"/>
                             <!-- Hane Reisi Meslek (tek satır) -->
                             <VerticalStackLayout Spacing="4">
                                 <Label Text="Hane Reisi Meslek" Style="{StaticResource CaptionStyle}"/>
@@ -365,9 +365,9 @@
                                         FontFamily="JakartaMedium" FontSize="14"/>
                             </VerticalStackLayout>
                             <HorizontalStackLayout Spacing="8">
-                                <CheckBox IsChecked="{Binding IsHeadOfFamilyRetired}" Color="{StaticResource PrimaryPurple}"/>
+                                <CheckBox IsChecked="{Binding IsHeadOfFamilyRetired}" Color="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"/>
                                 <Label Text="Hane Reisi Emekli" FontFamily="JakartaMedium" FontSize="14"
-                                       VerticalOptions="Center" TextColor="{StaticResource TextPrimary}"/>
+                                       VerticalOptions="Center" TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
                             </HorizontalStackLayout>
                         </VerticalStackLayout>
 
@@ -378,13 +378,13 @@
                                         Command="{Binding SaveProfileCommand}"
                                         IsVisible="{Binding IsSaving, Converter={StaticResource InvertedBoolConverter}}"
                                         FontFamily="JakartaSemiBold" FontSize="14"
-                                        BackgroundColor="{StaticResource PrimaryPurple}"
+                                        BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"
                                         TextColor="{StaticResource White}"
                                         CornerRadius="12"
                                         HeightRequest="44"/>
                                 <Border StrokeThickness="0"
                                         StrokeShape="RoundRectangle 12"
-                                        BackgroundColor="{StaticResource PrimaryPurple}"
+                                        BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"
                                         HeightRequest="44"
                                         IsVisible="{Binding IsSaving}">
                                     <ActivityIndicator IsRunning="True"
@@ -397,8 +397,8 @@
                                     Command="{Binding CancelEditCommand}"
                                     IsEnabled="{Binding IsSaving, Converter={StaticResource InvertedBoolConverter}}"
                                     FontFamily="JakartaSemiBold" FontSize="14"
-                                    BackgroundColor="{StaticResource PrimaryLight}"
-                                    TextColor="{StaticResource PrimaryPurple}"
+                                    BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryLightDark}}"
+                                    TextColor="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"
                                     CornerRadius="12"
                                     HeightRequest="44"/>
                         </Grid>
@@ -409,8 +409,8 @@
             <!-- Contact -->
             <Button Text="İletişim"
                     Command="{Binding GoToContactCommand}"
-                    BackgroundColor="{StaticResource PrimaryLight}"
-                    TextColor="{StaticResource PrimaryPurple}"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryLightDark}}"
+                    TextColor="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"
                     FontFamily="JakartaSemiBold" FontSize="14"
                     HeightRequest="48" CornerRadius="14"
                     Margin="0,8,0,0"/>
@@ -418,8 +418,8 @@
             <!-- Logout -->
             <Button Text="Çıkış Yap"
                     Command="{Binding LogoutCommand}"
-                    BackgroundColor="{StaticResource DangerLight}"
-                    TextColor="{StaticResource Danger}"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource DangerLight}, Dark={StaticResource DangerLightDark}}"
+                    TextColor="{AppThemeBinding Light={StaticResource Danger}, Dark={StaticResource DangerDark}}"
                     FontFamily="JakartaSemiBold" FontSize="14"
                     HeightRequest="48" CornerRadius="14"
                     Margin="0,4,0,0"/>
@@ -431,39 +431,39 @@
         <!-- ══════ SHIMMER OVERLAY ══════ -->
         <Grid x:Name="ShimmerOverlay"
               IsVisible="{Binding IsLoading}"
-              BackgroundColor="{StaticResource PageBackground}"
+              BackgroundColor="{AppThemeBinding Light={StaticResource PageBackground}, Dark={StaticResource PageBackgroundDark}}"
               InputTransparent="True">
             <Grid x:Name="ShimmerContainer">
                 <ScrollView>
                     <VerticalStackLayout Spacing="16" Padding="20,16">
                         <!-- Title -->
-                        <Border StrokeThickness="0" BackgroundColor="#E4DDF2"
+                        <Border StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerMid}, Dark={StaticResource ShimmerMidDark}}"
                                 StrokeShape="RoundRectangle 8"
                                 HeightRequest="26" WidthRequest="70"
                                 HorizontalOptions="Start"/>
 
                         <!-- Avatar Card -->
-                        <Border StrokeThickness="0" BackgroundColor="#E8E1F6"
+                        <Border StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerBase}, Dark={StaticResource ShimmerBaseDark}}"
                                 StrokeShape="RoundRectangle 20"
                                 Padding="20">
                             <VerticalStackLayout Spacing="12" HorizontalOptions="Center">
                                 <!-- Avatar circle -->
-                                <Border StrokeThickness="0" BackgroundColor="#DDD4F0"
+                                <Border StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerMuted}, Dark={StaticResource ShimmerMutedDark}}"
                                         StrokeShape="RoundRectangle 44"
                                         HeightRequest="88" WidthRequest="88"
                                         HorizontalOptions="Center"/>
                                 <!-- Name -->
-                                <Border StrokeThickness="0" BackgroundColor="#D8CEE9"
+                                <Border StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerDeep}, Dark={StaticResource ShimmerDeepDark}}"
                                         StrokeShape="RoundRectangle 8"
                                         HeightRequest="22" WidthRequest="160"
                                         HorizontalOptions="Center"/>
                                 <!-- Referral code -->
-                                <Border StrokeThickness="0" BackgroundColor="#DDD4F0"
+                                <Border StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerMuted}, Dark={StaticResource ShimmerMutedDark}}"
                                         StrokeShape="RoundRectangle 12"
                                         HeightRequest="32" WidthRequest="130"
                                         HorizontalOptions="Center"/>
                                 <!-- Stars -->
-                                <Border StrokeThickness="0" BackgroundColor="#E4DDF2"
+                                <Border StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerMid}, Dark={StaticResource ShimmerMidDark}}"
                                         StrokeShape="RoundRectangle 6"
                                         HeightRequest="22" WidthRequest="100"
                                         HorizontalOptions="Center"/>
@@ -472,29 +472,29 @@
 
                         <!-- Stats Row -->
                         <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10">
-                            <Border StrokeThickness="0" BackgroundColor="#E8E1F6"
+                            <Border StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerBase}, Dark={StaticResource ShimmerBaseDark}}"
                                     StrokeShape="RoundRectangle 16"
                                     HeightRequest="76"/>
-                            <Border Grid.Column="1" StrokeThickness="0" BackgroundColor="#E8E1F6"
+                            <Border Grid.Column="1" StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerBase}, Dark={StaticResource ShimmerBaseDark}}"
                                     StrokeShape="RoundRectangle 16"
                                     HeightRequest="76"/>
-                            <Border Grid.Column="2" StrokeThickness="0" BackgroundColor="#E8E1F6"
+                            <Border Grid.Column="2" StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerBase}, Dark={StaticResource ShimmerBaseDark}}"
                                     StrokeShape="RoundRectangle 16"
                                     HeightRequest="76"/>
                         </Grid>
 
                         <!-- Profile Info Card -->
-                        <Border StrokeThickness="0" BackgroundColor="#E8E1F6"
+                        <Border StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerBase}, Dark={StaticResource ShimmerBaseDark}}"
                                 StrokeShape="RoundRectangle 20"
                                 HeightRequest="280"/>
 
                         <!-- Contact Button -->
-                        <Border StrokeThickness="0" BackgroundColor="#ECE6F7"
+                        <Border StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerLight}, Dark={StaticResource ShimmerLightDark}}"
                                 StrokeShape="RoundRectangle 14"
                                 HeightRequest="48" Margin="0,8,0,0"/>
 
                         <!-- Logout Button -->
-                        <Border StrokeThickness="0" BackgroundColor="#F5E0E0"
+                        <Border StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerPink}, Dark={StaticResource ShimmerPinkDark}}"
                                 StrokeShape="RoundRectangle 14"
                                 HeightRequest="48" Margin="0,4,0,0"/>
                     </VerticalStackLayout>
@@ -512,7 +512,7 @@
                     <Border.Background>
                         <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
                             <GradientStop Color="#00FFFFFF" Offset="0"/>
-                            <GradientStop Color="#66FFFFFF" Offset="0.5"/>
+                            <GradientStop Color="{AppThemeBinding Light={StaticResource ShimmerSweepHighlight}, Dark={StaticResource ShimmerSweepHighlightDark}}" Offset="0.5"/>
                             <GradientStop Color="#00FFFFFF" Offset="1"/>
                         </LinearGradientBrush>
                     </Border.Background>

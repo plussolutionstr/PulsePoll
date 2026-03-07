@@ -6,7 +6,7 @@
              x:Class="PulsePoll.Mobile.Views.LoginPage"
              x:DataType="vm:LoginViewModel"
              Title="Giriş Yap"
-             BackgroundColor="{StaticResource PageBackground}">
+             BackgroundColor="{AppThemeBinding Light={StaticResource PageBackground}, Dark={StaticResource PageBackgroundDark}}">
 
     <ContentPage.Resources>
         <converters:InvertedBoolConverter x:Key="InvertedBoolConverter"/>
@@ -17,7 +17,7 @@
             <VerticalStackLayout Spacing="0" Padding="28,28,28,0">
 
                 <!-- Logo Mark -->
-                <Border BackgroundColor="{StaticResource PrimaryPurple}"
+                <Border BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"
                         StrokeShape="RoundRectangle 22" Stroke="Transparent"
                         WidthRequest="72" HeightRequest="72"
                         HorizontalOptions="Start"
@@ -36,7 +36,7 @@
 
                 <!-- Error -->
                 <Label Text="{Binding ErrorMessage}"
-                       TextColor="{StaticResource Danger}"
+                       TextColor="{AppThemeBinding Light={StaticResource Danger}, Dark={StaticResource DangerDark}}"
                        FontFamily="JakartaMedium" FontSize="13"
                        HorizontalTextAlignment="Start"
                        IsVisible="{Binding HasError}"
@@ -60,7 +60,7 @@
                     <Label Text="ŞİFRE" Style="{StaticResource FieldLabelStyle}" Margin="0"/>
                     <Label Grid.Column="1" Text="Şifremi Unuttum"
                            FontFamily="JakartaSemiBold" FontSize="12"
-                           TextColor="{StaticResource PrimaryPurple}">
+                           TextColor="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}">
                         <Label.GestureRecognizers>
                             <TapGestureRecognizer Command="{Binding GoToForgotPasswordCommand}"/>
                         </Label.GestureRecognizers>
@@ -85,11 +85,11 @@
                             Style="{StaticResource AuthPrimaryButtonStyle}"/>
                     <Border StrokeThickness="0"
                             StrokeShape="RoundRectangle 26"
-                            BackgroundColor="{StaticResource PrimaryPurple}"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"
                             HeightRequest="52"
                             IsVisible="{Binding IsBusy}">
                         <ActivityIndicator IsRunning="True"
-                                           Color="{StaticResource White}"
+                                           Color="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource WhiteDark}}"
                                            HeightRequest="24" WidthRequest="24"
                                            HorizontalOptions="Center" VerticalOptions="Center"/>
                     </Border>

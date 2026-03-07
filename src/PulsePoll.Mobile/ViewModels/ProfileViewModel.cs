@@ -395,10 +395,11 @@ public partial class ProfileViewModel : ObservableObject
         }
 
         var welcomePage = _serviceProvider.GetRequiredService<Views.WelcomePage>();
+        var isDark = Application.Current!.RequestedTheme == AppTheme.Dark;
         Application.Current!.Windows[0].Page = new NavigationPage(welcomePage)
         {
-            BarBackgroundColor = Color.FromArgb("#F7F5FF"),
-            BarTextColor = Color.FromArgb("#1A1535")
+            BarBackgroundColor = Color.FromArgb(isDark ? "#0F0D1A" : "#F7F5FF"),
+            BarTextColor = Color.FromArgb(isDark ? "#F0ECF7" : "#1A1535")
         };
     }
 

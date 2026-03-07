@@ -16,12 +16,12 @@
             <Grid ColumnDefinitions="*,Auto">
                 <Border StrokeThickness="0"
                         StrokeShape="RoundRectangle 12"
-                        BackgroundColor="{StaticResource PrimaryLight}"
+                        BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryLightDark}}"
                         Padding="12,6"
                         HorizontalOptions="Start">
                     <Label Text="{Binding BrandName}"
                            FontFamily="JakartaSemiBold" FontSize="13"
-                           TextColor="{StaticResource PrimaryPurple}"/>
+                           TextColor="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"/>
                 </Border>
                 <ImageButton Grid.Column="1"
                              Source="icon_close.png"
@@ -31,10 +31,10 @@
 
             <!-- Progress Info -->
             <Grid ColumnDefinitions="*,Auto">
-                <Label TextColor="{StaticResource TextSecondary}" FontFamily="JakartaMedium" FontSize="13">
+                <Label TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}" FontFamily="JakartaMedium" FontSize="13">
                     <Label.FormattedText>
                         <FormattedString>
-                            <Span Text="{Binding CurrentIndex, StringFormat='{0}'}" FontFamily="JakartaBold" TextColor="{StaticResource TextPrimary}"/>
+                            <Span Text="{Binding CurrentIndex, StringFormat='{0}'}" FontFamily="JakartaBold" TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
                             <Span Text="{Binding TotalQuestions, StringFormat=' / {0} Soru'}"/>
                         </FormattedString>
                     </Label.FormattedText>
@@ -42,12 +42,12 @@
                 <Label Grid.Column="1"
                        Text="{Binding Reward, StringFormat='₺{0}'}"
                        FontFamily="JakartaSemiBold" FontSize="13"
-                       TextColor="{StaticResource Amber}"/>
+                       TextColor="{AppThemeBinding Light={StaticResource Amber}, Dark={StaticResource AmberDark}}"/>
             </Grid>
 
             <!-- Progress Bar -->
             <ProgressBar Progress="{Binding Progress}"
-                         ProgressColor="{StaticResource PrimaryPurple}"
+                         ProgressColor="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"
                          HeightRequest="8"/>
         </VerticalStackLayout>
 
@@ -56,11 +56,11 @@
             <VerticalStackLayout Spacing="16">
                 <Label Text="{Binding CurrentQuestion.Number, StringFormat='Soru {0}'}"
                        FontFamily="JakartaSemiBold" FontSize="13"
-                       TextColor="{StaticResource PrimaryPurple}"/>
+                       TextColor="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"/>
 
                 <Label Text="{Binding CurrentQuestion.Text}"
                        FontFamily="JakartaBold" FontSize="20"
-                       TextColor="{StaticResource TextPrimary}"
+                       TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"
                        LineHeight="1.3"/>
 
                 <!-- Options -->
@@ -70,8 +70,8 @@
                         <DataTemplate x:DataType="models:OptionModel">
                             <Border Padding="16,14"
                                     StrokeShape="RoundRectangle 16"
-                                    Stroke="{StaticResource CardBorder}"
-                                    BackgroundColor="{StaticResource White}">
+                                    Stroke="{AppThemeBinding Light={StaticResource CardBorder}, Dark={StaticResource CardBorderDark}}"
+                                    BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource WhiteDark}}">
                                 <Border.GestureRecognizers>
                                     <TapGestureRecognizer
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ActiveQuestionViewModel}}, Path=SelectOptionCommand}"
@@ -79,18 +79,18 @@
                                 </Border.GestureRecognizers>
                                 <HorizontalStackLayout Spacing="12">
                                     <Border StrokeThickness="2"
-                                            Stroke="{StaticResource CardBorder}"
+                                            Stroke="{AppThemeBinding Light={StaticResource CardBorder}, Dark={StaticResource CardBorderDark}}"
                                             StrokeShape="RoundRectangle 11"
                                             HeightRequest="22" WidthRequest="22"
                                             BackgroundColor="Transparent">
-                                        <Ellipse Fill="{StaticResource PrimaryPurple}"
+                                        <Ellipse Fill="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"
                                                  HeightRequest="12" WidthRequest="12"
                                                  HorizontalOptions="Center" VerticalOptions="Center"
                                                  IsVisible="False"/>
                                     </Border>
                                     <Label Text="{Binding Text}"
                                            FontFamily="JakartaMedium" FontSize="15"
-                                           TextColor="{StaticResource TextPrimary}"
+                                           TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"
                                            VerticalOptions="Center"/>
                                 </HorizontalStackLayout>
                             </Border>

@@ -25,8 +25,8 @@
                         Padding="18,16">
                     <Border.Background>
                         <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                            <GradientStop Color="{StaticResource PrimaryPurple}" Offset="0"/>
-                            <GradientStop Color="{StaticResource PrimaryDark}" Offset="1"/>
+                            <GradientStop Color="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}" Offset="0"/>
+                            <GradientStop Color="{AppThemeBinding Light={StaticResource PrimaryDark}, Dark={StaticResource PrimaryDarkDark}}" Offset="1"/>
                         </LinearGradientBrush>
                     </Border.Background>
                     <Grid>
@@ -63,14 +63,14 @@
 
                 <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10">
                     <Border StrokeShape="RoundRectangle 16"
-                            Stroke="{StaticResource CardBorder}"
-                            BackgroundColor="{StaticResource White}"
+                            Stroke="{AppThemeBinding Light={StaticResource CardBorder}, Dark={StaticResource CardBorderDark}}"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource WhiteDark}}"
                             Padding="12,14">
                         <VerticalStackLayout Spacing="6" HorizontalOptions="Center">
                             <Image Source="icon_clock.png" HeightRequest="20" WidthRequest="20" HorizontalOptions="Center"/>
                             <Label Text="{Binding Survey.DurationMinutes, StringFormat='~{0} dk'}"
                                    FontFamily="JakartaBold" FontSize="14"
-                                   HorizontalTextAlignment="Center" TextColor="{StaticResource TextPrimary}"/>
+                                   HorizontalTextAlignment="Center" TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
                             <Label Text="Süre"
                                    Style="{StaticResource CaptionStyle}"
                                    HorizontalTextAlignment="Center"/>
@@ -79,14 +79,14 @@
 
                     <Border Grid.Column="1"
                             StrokeShape="RoundRectangle 16"
-                            Stroke="{StaticResource CardBorder}"
-                            BackgroundColor="{StaticResource White}"
+                            Stroke="{AppThemeBinding Light={StaticResource CardBorder}, Dark={StaticResource CardBorderDark}}"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource WhiteDark}}"
                             Padding="12,14">
                         <VerticalStackLayout Spacing="6" HorizontalOptions="Center">
                             <Image Source="icon_money.png" HeightRequest="20" WidthRequest="20" HorizontalOptions="Center"/>
                             <Label Text="{Binding Survey.ConsolationRewardDisplay}"
                                    FontFamily="JakartaBold" FontSize="14"
-                                   HorizontalTextAlignment="Center" TextColor="{StaticResource TextPrimary}"/>
+                                   HorizontalTextAlignment="Center" TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
                             <Label Text="Teselli Ödülü"
                                    Style="{StaticResource CaptionStyle}"
                                    HorizontalTextAlignment="Center"/>
@@ -95,14 +95,14 @@
 
                     <Border Grid.Column="2"
                             StrokeShape="RoundRectangle 16"
-                            Stroke="{StaticResource CardBorder}"
-                            BackgroundColor="{StaticResource White}"
+                            Stroke="{AppThemeBinding Light={StaticResource CardBorder}, Dark={StaticResource CardBorderDark}}"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource WhiteDark}}"
                             Padding="12,14">
                         <VerticalStackLayout Spacing="6" HorizontalOptions="Center">
                             <Image Source="icon_check.png" HeightRequest="20" WidthRequest="20" HorizontalOptions="Center"/>
                             <Label Text="{Binding Survey.RewardDisplay}"
                                    FontFamily="JakartaBold" FontSize="14"
-                                   HorizontalTextAlignment="Center" TextColor="{StaticResource TextPrimary}"/>
+                                   HorizontalTextAlignment="Center" TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
                             <Label Text="Ödül"
                                    Style="{StaticResource CaptionStyle}"
                                    HorizontalTextAlignment="Center"/>
@@ -115,12 +115,12 @@
                         <Label Text="{Binding ResultTitle}"
                                FontFamily="JakartaSemiBold"
                                FontSize="16"
-                               TextColor="{StaticResource TextPrimary}"/>
+                               TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
                         <Label Text="{Binding ResultMessage}"
                                FontFamily="JakartaRegular"
                                FontSize="14"
                                LineHeight="1.45"
-                               TextColor="{StaticResource TextSecondary}"/>
+                               TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}"/>
                     </VerticalStackLayout>
                 </Border>
 
@@ -133,7 +133,7 @@
 
         <ActivityIndicator IsVisible="{Binding IsLoading}"
                            IsRunning="{Binding IsLoading}"
-                           Color="{StaticResource PrimaryPurple}"
+                           Color="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"
                            HorizontalOptions="Center"
                            VerticalOptions="Center"/>
     </Grid>

@@ -1,5 +1,6 @@
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Graphics;
+using PulsePoll.Mobile.Helpers;
 
 namespace PulsePoll.Mobile.Models;
 
@@ -133,11 +134,11 @@ public record TransactionModel(
     public string AmountDisplay => $"{Amount:+0.##;-0.##;0} {UnitLabel}";
     public string IconGlyph => IsIncome ? "↓" : "↑";
     public Color IconColor => IsIncome
-        ? (Application.Current!.Resources.TryGetValue("Success", out var s) ? (Color)s : Colors.Green)
-        : (Application.Current!.Resources.TryGetValue("PrimaryPurple", out var p) ? (Color)p : Colors.Purple);
+        ? ThemeHelper.Resolve("Success", "SuccessDark", Colors.Green)
+        : ThemeHelper.Resolve("PrimaryPurple", "PrimaryPurpleDark", Colors.Purple);
     public Color IconBgColor => IsIncome
-        ? (Application.Current!.Resources.TryGetValue("SuccessLight", out var s) ? (Color)s : Colors.LightGreen)
-        : (Application.Current!.Resources.TryGetValue("PrimaryLight", out var p) ? (Color)p : Colors.Lavender);
+        ? ThemeHelper.Resolve("SuccessLight", "SuccessLightDark", Colors.LightGreen)
+        : ThemeHelper.Resolve("PrimaryLight", "PrimaryLightDark", Colors.Lavender);
 }
 
 public record NotificationModel(

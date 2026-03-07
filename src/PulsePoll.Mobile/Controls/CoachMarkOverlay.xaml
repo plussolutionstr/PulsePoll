@@ -14,7 +14,7 @@
         <Border x:Name="TooltipBubble"
                 StrokeThickness="0"
                 StrokeShape="RoundRectangle 16"
-                BackgroundColor="White"
+                BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource WhiteDark}}"
                 Padding="20,16"
                 Opacity="0"
                 InputTransparent="False"
@@ -22,23 +22,23 @@
             <VerticalStackLayout Spacing="10">
                 <Label x:Name="TooltipTitle"
                        FontFamily="JakartaBold" FontSize="16"
-                       TextColor="#1A1535"/>
+                       TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
                 <Label x:Name="TooltipDescription"
                        FontFamily="JakartaRegular" FontSize="13"
-                       TextColor="#6B6589"
+                       TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}"
                        LineHeight="1.4"/>
 
                 <!-- Step indicator + buttons -->
                 <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,4,0,0">
                     <Label x:Name="StepIndicator"
                            FontFamily="JakartaMedium" FontSize="12"
-                           TextColor="#B0AABE"
+                           TextColor="{AppThemeBinding Light={StaticResource TextTertiary}, Dark={StaticResource TextTertiaryDark}}"
                            VerticalOptions="Center"/>
                     <Button x:Name="SkipButton"
                             Grid.Column="1"
                             Text="Atla"
                             FontFamily="JakartaSemiBold" FontSize="13"
-                            TextColor="#6B6589"
+                            TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}"
                             BackgroundColor="Transparent"
                             Padding="8,4"
                             HorizontalOptions="End"
@@ -48,7 +48,7 @@
                             Text="İleri"
                             FontFamily="JakartaSemiBold" FontSize="13"
                             TextColor="White"
-                            BackgroundColor="#7C5CFC"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"
                             CornerRadius="12"
                             Padding="16,6"
                             HeightRequest="36"

@@ -34,8 +34,8 @@
                         Padding="24">
                     <Border.Background>
                         <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                            <GradientStop Color="{StaticResource PrimaryPurple}" Offset="0"/>
-                            <GradientStop Color="{StaticResource PrimaryDark}" Offset="1"/>
+                            <GradientStop Color="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}" Offset="0"/>
+                            <GradientStop Color="{AppThemeBinding Light={StaticResource PrimaryDark}, Dark={StaticResource PrimaryDarkDark}}" Offset="1"/>
                         </LinearGradientBrush>
                     </Border.Background>
                     <VerticalStackLayout Spacing="16">
@@ -65,7 +65,7 @@
                             <Button Text="Para Çek"
                                     FontFamily="JakartaSemiBold" FontSize="14"
                                     BackgroundColor="White"
-                                    TextColor="{StaticResource PrimaryPurple}"
+                                    TextColor="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"
                                     CornerRadius="22" HeightRequest="44"
                                     Command="{Binding NavigateToWithdrawCommand}"/>
                             <Button Grid.Column="1" Text="Geçmiş"
@@ -97,7 +97,7 @@
                                     <Border StrokeThickness="0"
                                             StrokeShape="RoundRectangle 10"
                                             HeightRequest="40" WidthRequest="56"
-                                            BackgroundColor="White">
+                                            BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource WhiteDark}}">
                                         <Image Source="{Binding DisplayImageUrl}"
                                                HeightRequest="28"
                                                WidthRequest="48"
@@ -108,7 +108,7 @@
                                     <VerticalStackLayout Spacing="2" VerticalOptions="Center">
                                         <Label Text="{Binding BankName}"
                                                FontFamily="JakartaSemiBold" FontSize="14"
-                                               TextColor="{StaticResource TextPrimary}"/>
+                                               TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
                                         <Label Text="{Binding MaskedIban}"
                                                Style="{StaticResource CaptionStyle}"/>
                                     </VerticalStackLayout>
@@ -145,7 +145,7 @@
                                     <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
                                         <Label Text="{Binding Title}"
                                                FontFamily="JakartaSemiBold" FontSize="14"
-                                               TextColor="{StaticResource TextPrimary}"/>
+                                               TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
                                         <Label Text="{Binding Description}"
                                                Style="{StaticResource CaptionStyle}"/>
                                     </VerticalStackLayout>
@@ -167,58 +167,58 @@
         <!-- ══════ SHIMMER OVERLAY ══════ -->
         <Grid x:Name="ShimmerOverlay"
               IsVisible="{Binding IsLoading}"
-              BackgroundColor="{StaticResource PageBackground}"
+              BackgroundColor="{AppThemeBinding Light={StaticResource PageBackground}, Dark={StaticResource PageBackgroundDark}}"
               InputTransparent="True">
             <Grid x:Name="ShimmerContainer">
                 <ScrollView>
                     <VerticalStackLayout Spacing="16" Padding="20,16">
                         <!-- Title -->
-                        <Border StrokeThickness="0" BackgroundColor="#E4DDF2"
+                        <Border StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerMid}, Dark={StaticResource ShimmerMidDark}}"
                                 StrokeShape="RoundRectangle 8"
                                 HeightRequest="26" WidthRequest="100"
                                 HorizontalOptions="Start"/>
 
                         <!-- Balance Card -->
-                        <Border StrokeThickness="0" BackgroundColor="#C4B5E0"
+                        <Border StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerCard}, Dark={StaticResource ShimmerCardDark}}"
                                 StrokeShape="RoundRectangle 24"
                                 HeightRequest="210"/>
 
                         <!-- Bank Accounts Title -->
-                        <Border StrokeThickness="0" BackgroundColor="#E4DDF2"
+                        <Border StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerMid}, Dark={StaticResource ShimmerMidDark}}"
                                 StrokeShape="RoundRectangle 8"
                                 HeightRequest="22" WidthRequest="140"
                                 HorizontalOptions="Start" Margin="0,8,0,0"/>
 
                         <!-- Bank Account Rows -->
                         <VerticalStackLayout Spacing="8">
-                            <Border StrokeThickness="0" BackgroundColor="#E8E1F6"
+                            <Border StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerBase}, Dark={StaticResource ShimmerBaseDark}}"
                                     StrokeShape="RoundRectangle 16"
                                     HeightRequest="68"/>
-                            <Border StrokeThickness="0" BackgroundColor="#E8E1F6"
+                            <Border StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerBase}, Dark={StaticResource ShimmerBaseDark}}"
                                     StrokeShape="RoundRectangle 16"
                                     HeightRequest="68"/>
                         </VerticalStackLayout>
 
                         <!-- Add Button -->
-                        <Border StrokeThickness="0" BackgroundColor="#ECE6F7"
+                        <Border StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerLight}, Dark={StaticResource ShimmerLightDark}}"
                                 StrokeShape="RoundRectangle 14"
                                 HeightRequest="44"/>
 
                         <!-- Transactions Title -->
-                        <Border StrokeThickness="0" BackgroundColor="#E4DDF2"
+                        <Border StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerMid}, Dark={StaticResource ShimmerMidDark}}"
                                 StrokeShape="RoundRectangle 8"
                                 HeightRequest="22" WidthRequest="120"
                                 HorizontalOptions="Start" Margin="0,8,0,0"/>
 
                         <!-- Transaction Rows -->
                         <VerticalStackLayout Spacing="8">
-                            <Border StrokeThickness="0" BackgroundColor="#E8E1F6"
+                            <Border StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerBase}, Dark={StaticResource ShimmerBaseDark}}"
                                     StrokeShape="RoundRectangle 16"
                                     HeightRequest="68"/>
-                            <Border StrokeThickness="0" BackgroundColor="#E8E1F6"
+                            <Border StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerBase}, Dark={StaticResource ShimmerBaseDark}}"
                                     StrokeShape="RoundRectangle 16"
                                     HeightRequest="68"/>
-                            <Border StrokeThickness="0" BackgroundColor="#E8E1F6"
+                            <Border StrokeThickness="0" BackgroundColor="{AppThemeBinding Light={StaticResource ShimmerBase}, Dark={StaticResource ShimmerBaseDark}}"
                                     StrokeShape="RoundRectangle 16"
                                     HeightRequest="68"/>
                         </VerticalStackLayout>
@@ -237,7 +237,7 @@
                     <Border.Background>
                         <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
                             <GradientStop Color="#00FFFFFF" Offset="0"/>
-                            <GradientStop Color="#66FFFFFF" Offset="0.5"/>
+                            <GradientStop Color="{AppThemeBinding Light={StaticResource ShimmerSweepHighlight}, Dark={StaticResource ShimmerSweepHighlightDark}}" Offset="0.5"/>
                             <GradientStop Color="#00FFFFFF" Offset="1"/>
                         </LinearGradientBrush>
                     </Border.Background>

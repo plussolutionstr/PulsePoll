@@ -5,7 +5,7 @@
              x:Class="PulsePoll.Mobile.Views.WelcomePage"
              x:DataType="vm:WelcomeViewModel"
              Shell.NavBarIsVisible="False"
-             BackgroundColor="{StaticResource PageBackground}">
+             BackgroundColor="{AppThemeBinding Light={StaticResource PageBackground}, Dark={StaticResource PageBackgroundDark}}">
 
     <ScrollView>
         <VerticalStackLayout Spacing="0" Padding="28,0" VerticalOptions="Center">
@@ -13,12 +13,12 @@
             <!-- Illustration Area -->
             <Grid HorizontalOptions="Center" WidthRequest="200" HeightRequest="200" Margin="0,40,0,0">
                 <!-- Background circle -->
-                <Ellipse Fill="{StaticResource PrimaryLight}"
+                <Ellipse Fill="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryLightDark}}"
                          WidthRequest="200" HeightRequest="200"
                          HorizontalOptions="Center" VerticalOptions="Center"/>
 
                 <!-- Central logo box -->
-                <Border BackgroundColor="{StaticResource PrimaryPurple}"
+                <Border BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"
                         StrokeShape="RoundRectangle 26"
                         Stroke="Transparent"
                         WidthRequest="88" HeightRequest="88"
@@ -28,21 +28,21 @@
                 </Border>
 
                 <!-- TL circle (top-right) -->
-                <Border BackgroundColor="{StaticResource AmberLight}"
-                        Stroke="{StaticResource Amber}"
+                <Border BackgroundColor="{AppThemeBinding Light={StaticResource AmberLight}, Dark={StaticResource AmberLightDark}}"
+                        Stroke="{AppThemeBinding Light={StaticResource Amber}, Dark={StaticResource AmberDark}}"
                         StrokeThickness="1"
                         StrokeShape="RoundRectangle 20"
                         WidthRequest="40" HeightRequest="40"
                         HorizontalOptions="End" VerticalOptions="Start"
                         Margin="0,10,10,0">
                     <Label Text="&#x20BA;" FontFamily="JakartaBold" FontSize="18"
-                           TextColor="{StaticResource Amber}"
+                           TextColor="{AppThemeBinding Light={StaticResource Amber}, Dark={StaticResource AmberDark}}"
                            HorizontalOptions="Center" VerticalOptions="Center"/>
                 </Border>
 
                 <!-- Check circle (bottom-left) -->
-                <Border BackgroundColor="{StaticResource SuccessLight}"
-                        Stroke="{StaticResource Success}"
+                <Border BackgroundColor="{AppThemeBinding Light={StaticResource SuccessLight}, Dark={StaticResource SuccessLightDark}}"
+                        Stroke="{AppThemeBinding Light={StaticResource Success}, Dark={StaticResource SuccessDark}}"
                         StrokeThickness="1"
                         StrokeShape="RoundRectangle 18"
                         WidthRequest="36" HeightRequest="36"
@@ -56,20 +56,20 @@
             <!-- Title -->
             <Label Text="PulsePoll"
                    FontFamily="JakartaExtraBold" FontSize="26"
-                   TextColor="{StaticResource PrimaryPurple}"
+                   TextColor="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"
                    HorizontalTextAlignment="Center"
                    Margin="0,36,0,4"/>
 
             <Label Text="Ankete Katıl,&#x0a;Kazanmaya Başla"
                    FontFamily="JakartaExtraBold" FontSize="22"
-                   TextColor="{StaticResource TextPrimary}"
+                   TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"
                    HorizontalTextAlignment="Center"
                    LineBreakMode="WordWrap"
                    Margin="0,0,0,10"/>
 
             <Label Text="Türkiye'nin en güvenilir anket platformunda fikirlerini paylaş, anında kazan."
                    FontFamily="JakartaRegular" FontSize="14"
-                   TextColor="{StaticResource TextSecondary}"
+                   TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}"
                    HorizontalTextAlignment="Center"
                    LineBreakMode="WordWrap"
                    Margin="10,0,10,8"/>
@@ -79,7 +79,7 @@
                 <!-- Kisa Anketler -->
                 <Border Style="{StaticResource FeaturePillStyle}">
                     <VerticalStackLayout Spacing="6" HorizontalOptions="Center">
-                        <Border BackgroundColor="{StaticResource PrimaryLight}"
+                        <Border BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryLightDark}}"
                                 StrokeShape="RoundRectangle 11" Stroke="Transparent"
                                 WidthRequest="36" HeightRequest="36"
                                 HorizontalOptions="Center">
@@ -87,7 +87,7 @@
                                    HorizontalOptions="Center" VerticalOptions="Center"/>
                         </Border>
                         <Label Text="Kısa&#x0a;Anketler" FontFamily="JakartaSemiBold" FontSize="10"
-                               TextColor="{StaticResource TextSecondary}"
+                               TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}"
                                HorizontalTextAlignment="Center" LineBreakMode="WordWrap"/>
                     </VerticalStackLayout>
                 </Border>
@@ -95,16 +95,16 @@
                 <!-- Aninda Kazanc -->
                 <Border Grid.Column="1" Style="{StaticResource FeaturePillStyle}">
                     <VerticalStackLayout Spacing="6" HorizontalOptions="Center">
-                        <Border BackgroundColor="{StaticResource AmberLight}"
+                        <Border BackgroundColor="{AppThemeBinding Light={StaticResource AmberLight}, Dark={StaticResource AmberLightDark}}"
                                 StrokeShape="RoundRectangle 11" Stroke="Transparent"
                                 WidthRequest="36" HeightRequest="36"
                                 HorizontalOptions="Center">
                             <Label Text="&#x20BA;" FontFamily="JakartaBold" FontSize="16"
-                                   TextColor="{StaticResource Amber}"
+                                   TextColor="{AppThemeBinding Light={StaticResource Amber}, Dark={StaticResource AmberDark}}"
                                    HorizontalOptions="Center" VerticalOptions="Center"/>
                         </Border>
                         <Label Text="Anında&#x0a;Kazanç" FontFamily="JakartaSemiBold" FontSize="10"
-                               TextColor="{StaticResource TextSecondary}"
+                               TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}"
                                HorizontalTextAlignment="Center" LineBreakMode="WordWrap"/>
                     </VerticalStackLayout>
                 </Border>
@@ -112,7 +112,7 @@
                 <!-- Kolay Cekim -->
                 <Border Grid.Column="2" Style="{StaticResource FeaturePillStyle}">
                     <VerticalStackLayout Spacing="6" HorizontalOptions="Center">
-                        <Border BackgroundColor="{StaticResource SuccessLight}"
+                        <Border BackgroundColor="{AppThemeBinding Light={StaticResource SuccessLight}, Dark={StaticResource SuccessLightDark}}"
                                 StrokeShape="RoundRectangle 11" Stroke="Transparent"
                                 WidthRequest="36" HeightRequest="36"
                                 HorizontalOptions="Center">
@@ -120,7 +120,7 @@
                                    HorizontalOptions="Center" VerticalOptions="Center"/>
                         </Border>
                         <Label Text="Kolay&#x0a;Çekim" FontFamily="JakartaSemiBold" FontSize="10"
-                               TextColor="{StaticResource TextSecondary}"
+                               TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}"
                                HorizontalTextAlignment="Center" LineBreakMode="WordWrap"/>
                     </VerticalStackLayout>
                 </Border>

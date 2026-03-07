@@ -7,36 +7,36 @@
     <Style x:Key="PageTitleStyle" TargetType="Label">
         <Setter Property="FontFamily" Value="JakartaExtraBold"/>
         <Setter Property="FontSize" Value="20"/>
-        <Setter Property="TextColor" Value="{StaticResource TextPrimary}"/>
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
     </Style>
 
     <Style x:Key="TitleStyle" TargetType="Label">
         <Setter Property="FontFamily" Value="JakartaBold"/>
         <Setter Property="FontSize" Value="18"/>
-        <Setter Property="TextColor" Value="{StaticResource TextPrimary}"/>
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
     </Style>
 
     <Style x:Key="SubtitleStyle" TargetType="Label">
         <Setter Property="FontFamily" Value="JakartaSemiBold"/>
         <Setter Property="FontSize" Value="14"/>
-        <Setter Property="TextColor" Value="{StaticResource TextPrimary}"/>
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
     </Style>
 
     <Style x:Key="BodyStyle" TargetType="Label">
         <Setter Property="FontFamily" Value="JakartaRegular"/>
         <Setter Property="FontSize" Value="14"/>
-        <Setter Property="TextColor" Value="{StaticResource TextSecondary}"/>
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}"/>
     </Style>
 
     <Style x:Key="CaptionStyle" TargetType="Label">
         <Setter Property="FontFamily" Value="JakartaRegular"/>
         <Setter Property="FontSize" Value="12"/>
-        <Setter Property="TextColor" Value="{StaticResource TextTertiary}"/>
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextTertiary}, Dark={StaticResource TextTertiaryDark}}"/>
     </Style>
 
     <!-- ===== Buttons ===== -->
     <Style x:Key="PrimaryButtonStyle" TargetType="Button">
-        <Setter Property="BackgroundColor" Value="{StaticResource PrimaryPurple}"/>
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"/>
         <Setter Property="TextColor" Value="{StaticResource White}"/>
         <Setter Property="FontFamily" Value="JakartaSemiBold"/>
         <Setter Property="FontSize" Value="16"/>
@@ -46,21 +46,21 @@
     </Style>
 
     <Style x:Key="SecondaryButtonStyle" TargetType="Button">
-        <Setter Property="BackgroundColor" Value="{StaticResource White}"/>
-        <Setter Property="TextColor" Value="{StaticResource PrimaryPurple}"/>
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource WhiteDark}}"/>
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"/>
         <Setter Property="FontFamily" Value="JakartaSemiBold"/>
         <Setter Property="FontSize" Value="14"/>
         <Setter Property="HeightRequest" Value="42"/>
         <Setter Property="CornerRadius" Value="21"/>
-        <Setter Property="BorderColor" Value="{StaticResource CardBorder}"/>
+        <Setter Property="BorderColor" Value="{AppThemeBinding Light={StaticResource CardBorder}, Dark={StaticResource CardBorderDark}}"/>
         <Setter Property="BorderWidth" Value="1"/>
         <Setter Property="Padding" Value="20,0"/>
     </Style>
 
     <!-- ===== Card Border ===== -->
     <Style x:Key="CardBorderStyle" TargetType="Border">
-        <Setter Property="BackgroundColor" Value="{StaticResource White}"/>
-        <Setter Property="Stroke" Value="{StaticResource CardBorder}"/>
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource WhiteDark}}"/>
+        <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource CardBorder}, Dark={StaticResource CardBorderDark}}"/>
         <Setter Property="StrokeThickness" Value="1"/>
         <Setter Property="StrokeShape" Value="RoundRectangle 20"/>
         <Setter Property="Padding" Value="16"/>
@@ -70,14 +70,14 @@
     <Style x:Key="AuthTitleStyle" TargetType="Label">
         <Setter Property="FontFamily" Value="JakartaExtraBold"/>
         <Setter Property="FontSize" Value="24"/>
-        <Setter Property="TextColor" Value="{StaticResource TextPrimary}"/>
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
         <Setter Property="HorizontalTextAlignment" Value="Start"/>
     </Style>
 
     <Style x:Key="AuthSubtitleStyle" TargetType="Label">
         <Setter Property="FontFamily" Value="JakartaRegular"/>
         <Setter Property="FontSize" Value="14"/>
-        <Setter Property="TextColor" Value="{StaticResource TextSecondary}"/>
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}"/>
         <Setter Property="HorizontalTextAlignment" Value="Start"/>
         <Setter Property="LineBreakMode" Value="WordWrap"/>
     </Style>
@@ -85,14 +85,14 @@
     <Style x:Key="FieldLabelStyle" TargetType="Label">
         <Setter Property="FontFamily" Value="JakartaBold"/>
         <Setter Property="FontSize" Value="12"/>
-        <Setter Property="TextColor" Value="{StaticResource TextSecondary}"/>
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}"/>
         <Setter Property="TextTransform" Value="Uppercase"/>
         <Setter Property="Margin" Value="0,0,0,6"/>
     </Style>
 
     <Style x:Key="AuthFieldBorderStyle" TargetType="Border">
-        <Setter Property="BackgroundColor" Value="{StaticResource White}"/>
-        <Setter Property="Stroke" Value="{StaticResource CardBorder}"/>
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource WhiteDark}}"/>
+        <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource CardBorder}, Dark={StaticResource CardBorderDark}}"/>
         <Setter Property="StrokeThickness" Value="1.5"/>
         <Setter Property="StrokeShape" Value="RoundRectangle 14"/>
         <Setter Property="HeightRequest" Value="50"/>
@@ -102,14 +102,14 @@
     <Style x:Key="AuthFieldEntryStyle" TargetType="Entry">
         <Setter Property="FontFamily" Value="JakartaMedium"/>
         <Setter Property="FontSize" Value="14"/>
-        <Setter Property="TextColor" Value="{StaticResource TextPrimary}"/>
-        <Setter Property="PlaceholderColor" Value="{StaticResource TextTertiary}"/>
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
+        <Setter Property="PlaceholderColor" Value="{AppThemeBinding Light={StaticResource TextTertiary}, Dark={StaticResource TextTertiaryDark}}"/>
         <Setter Property="BackgroundColor" Value="Transparent"/>
         <Setter Property="Margin" Value="0"/>
     </Style>
 
     <Style x:Key="AuthPrimaryButtonStyle" TargetType="Button">
-        <Setter Property="BackgroundColor" Value="{StaticResource PrimaryPurple}"/>
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"/>
         <Setter Property="TextColor" Value="{StaticResource White}"/>
         <Setter Property="FontFamily" Value="JakartaBold"/>
         <Setter Property="FontSize" Value="15"/>
@@ -119,33 +119,33 @@
     </Style>
 
     <Style x:Key="AuthOutlineButtonStyle" TargetType="Button">
-        <Setter Property="BackgroundColor" Value="{StaticResource White}"/>
-        <Setter Property="TextColor" Value="{StaticResource TextPrimary}"/>
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource WhiteDark}}"/>
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
         <Setter Property="FontFamily" Value="JakartaSemiBold"/>
         <Setter Property="FontSize" Value="14"/>
         <Setter Property="HeightRequest" Value="50"/>
         <Setter Property="CornerRadius" Value="14"/>
-        <Setter Property="BorderColor" Value="{StaticResource CardBorder}"/>
+        <Setter Property="BorderColor" Value="{AppThemeBinding Light={StaticResource CardBorder}, Dark={StaticResource CardBorderDark}}"/>
         <Setter Property="BorderWidth" Value="1.5"/>
     </Style>
 
     <Style x:Key="AuthBottomLinkStyle" TargetType="Label">
         <Setter Property="FontFamily" Value="JakartaMedium"/>
         <Setter Property="FontSize" Value="13"/>
-        <Setter Property="TextColor" Value="{StaticResource TextSecondary}"/>
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}"/>
         <Setter Property="HorizontalTextAlignment" Value="Center"/>
     </Style>
 
     <Style x:Key="AuthLinkStyle" TargetType="Label">
         <Setter Property="FontFamily" Value="JakartaSemiBold"/>
         <Setter Property="FontSize" Value="13"/>
-        <Setter Property="TextColor" Value="{StaticResource PrimaryPurple}"/>
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"/>
     </Style>
 
     <!-- Feature pill for welcome screen -->
     <Style x:Key="FeaturePillStyle" TargetType="Border">
-        <Setter Property="BackgroundColor" Value="{StaticResource White}"/>
-        <Setter Property="Stroke" Value="{StaticResource CardBorder}"/>
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource WhiteDark}}"/>
+        <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource CardBorder}, Dark={StaticResource CardBorderDark}}"/>
         <Setter Property="StrokeThickness" Value="1"/>
         <Setter Property="StrokeShape" Value="RoundRectangle 12"/>
         <Setter Property="Padding" Value="8,14"/>
@@ -154,19 +154,19 @@
     <!-- ===== Default Styles ===== -->
     <Style TargetType="Page" ApplyToDerivedTypes="True">
         <Setter Property="Padding" Value="0"/>
-        <Setter Property="BackgroundColor" Value="{StaticResource PageBackground}"/>
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource PageBackground}, Dark={StaticResource PageBackgroundDark}}"/>
     </Style>
 
     <Style TargetType="Label">
         <Setter Property="FontFamily" Value="JakartaRegular"/>
         <Setter Property="FontSize" Value="14"/>
-        <Setter Property="TextColor" Value="{StaticResource TextPrimary}"/>
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
     </Style>
 
     <Style TargetType="Button">
         <Setter Property="FontFamily" Value="JakartaSemiBold"/>
         <Setter Property="FontSize" Value="14"/>
-        <Setter Property="BackgroundColor" Value="{StaticResource PrimaryPurple}"/>
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"/>
         <Setter Property="TextColor" Value="{StaticResource White}"/>
         <Setter Property="CornerRadius" Value="12"/>
         <Setter Property="Padding" Value="14,10"/>
@@ -178,31 +178,31 @@
     <Style TargetType="Entry">
         <Setter Property="FontFamily" Value="JakartaRegular"/>
         <Setter Property="FontSize" Value="14"/>
-        <Setter Property="TextColor" Value="{StaticResource TextPrimary}"/>
-        <Setter Property="PlaceholderColor" Value="{StaticResource TextTertiary}"/>
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
+        <Setter Property="PlaceholderColor" Value="{AppThemeBinding Light={StaticResource TextTertiary}, Dark={StaticResource TextTertiaryDark}}"/>
         <Setter Property="BackgroundColor" Value="Transparent"/>
         <Setter Property="MinimumHeightRequest" Value="44"/>
     </Style>
 
     <Style TargetType="ProgressBar">
-        <Setter Property="ProgressColor" Value="{StaticResource PrimaryPurple}"/>
+        <Setter Property="ProgressColor" Value="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"/>
     </Style>
 
     <Style TargetType="ActivityIndicator">
-        <Setter Property="Color" Value="{StaticResource PrimaryPurple}"/>
+        <Setter Property="Color" Value="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"/>
     </Style>
 
     <Style TargetType="Shell" ApplyToDerivedTypes="True">
-        <Setter Property="Shell.BackgroundColor" Value="{StaticResource White}"/>
-        <Setter Property="Shell.ForegroundColor" Value="{StaticResource TextPrimary}"/>
-        <Setter Property="Shell.TitleColor" Value="{StaticResource TextPrimary}"/>
-        <Setter Property="Shell.TabBarBackgroundColor" Value="{StaticResource White}"/>
-        <Setter Property="Shell.TabBarForegroundColor" Value="{StaticResource PrimaryPurple}"/>
-        <Setter Property="Shell.TabBarTitleColor" Value="{StaticResource PrimaryPurple}"/>
-        <Setter Property="Shell.TabBarUnselectedColor" Value="{StaticResource TextTertiary}"/>
+        <Setter Property="Shell.BackgroundColor" Value="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource WhiteDark}}"/>
+        <Setter Property="Shell.ForegroundColor" Value="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
+        <Setter Property="Shell.TitleColor" Value="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
+        <Setter Property="Shell.TabBarBackgroundColor" Value="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource WhiteDark}}"/>
+        <Setter Property="Shell.TabBarForegroundColor" Value="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"/>
+        <Setter Property="Shell.TabBarTitleColor" Value="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"/>
+        <Setter Property="Shell.TabBarUnselectedColor" Value="{AppThemeBinding Light={StaticResource TextTertiary}, Dark={StaticResource TextTertiaryDark}}"/>
         <Setter Property="Shell.NavBarHasShadow" Value="False"/>
-        <Setter Property="Shell.DisabledColor" Value="{StaticResource TextTertiary}"/>
-        <Setter Property="Shell.UnselectedColor" Value="{StaticResource TextTertiary}"/>
+        <Setter Property="Shell.DisabledColor" Value="{AppThemeBinding Light={StaticResource TextTertiary}, Dark={StaticResource TextTertiaryDark}}"/>
+        <Setter Property="Shell.UnselectedColor" Value="{AppThemeBinding Light={StaticResource TextTertiary}, Dark={StaticResource TextTertiaryDark}}"/>
     </Style>
 
 </ResourceDictionary>

@@ -15,7 +15,7 @@
                 <Label Text="PulsePoll"
                        Style="{StaticResource PageTitleStyle}"
                        FontSize="24"
-                       TextColor="{StaticResource PrimaryPurple}"
+                       TextColor="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"
                        VerticalOptions="Center"/>
                 <ImageButton Grid.Column="1"
                              Source="icon_bell.png"
@@ -36,14 +36,14 @@
                                         StrokeShape="RoundRectangle 32"
                                         HeightRequest="64" WidthRequest="64"
                                         HorizontalOptions="Center"
-                                        BackgroundColor="{StaticResource PrimaryLight}"
+                                        BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryLightDark}}"
                                         Padding="2">
                                     <Label Text="{Binding Title, StringFormat='{0:0}'}"
                                            FontFamily="JakartaBold"
                                            FontSize="11"
                                            HorizontalOptions="Center"
                                            VerticalOptions="Center"
-                                           TextColor="{StaticResource PrimaryPurple}"
+                                           TextColor="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"
                                            HorizontalTextAlignment="Center"
                                            MaxLines="2"
                                            LineBreakMode="TailTruncation"/>
@@ -78,8 +78,8 @@
                             </Border.GestureRecognizers>
                             <Border.Background>
                                 <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                    <GradientStop Color="{StaticResource PrimaryPurple}" Offset="0"/>
-                                    <GradientStop Color="{StaticResource PrimaryDark}" Offset="1"/>
+                                    <GradientStop Color="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}" Offset="0"/>
+                                    <GradientStop Color="{AppThemeBinding Light={StaticResource PrimaryDark}, Dark={StaticResource PrimaryDarkDark}}" Offset="1"/>
                                 </LinearGradientBrush>
                             </Border.Background>
                             <VerticalStackLayout Spacing="8" VerticalOptions="Center">
@@ -128,11 +128,11 @@
                                     <Border StrokeThickness="0"
                                             StrokeShape="RoundRectangle 18"
                                             HeightRequest="36" WidthRequest="36"
-                                            BackgroundColor="{StaticResource PrimaryLight}">
+                                            BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryLightDark}}">
                                         <Label Text="{Binding BrandName, StringFormat='{0:0}'}"
                                                FontFamily="JakartaBold" FontSize="12"
                                                HorizontalOptions="Center" VerticalOptions="Center"
-                                               TextColor="{StaticResource PrimaryPurple}"
+                                               TextColor="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"
                                                MaxLines="1"/>
                                     </Border>
                                     <VerticalStackLayout Grid.Column="1" Margin="10,0,0,0" VerticalOptions="Center">
@@ -142,18 +142,18 @@
                                     <Border Grid.Column="2"
                                             StrokeThickness="0"
                                             StrokeShape="RoundRectangle 10"
-                                            BackgroundColor="{StaticResource AmberLight}"
+                                            BackgroundColor="{AppThemeBinding Light={StaticResource AmberLight}, Dark={StaticResource AmberLightDark}}"
                                             Padding="10,4">
                                         <Label Text="{Binding RewardDisplay}"
                                                FontFamily="JakartaBold" FontSize="13"
-                                               TextColor="#111111"/>
+                                               TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
                                     </Border>
                                 </Grid>
 
                                 <!-- Title -->
                                 <Label Text="{Binding Title}"
                                        FontFamily="JakartaBold" FontSize="15"
-                                       TextColor="{StaticResource TextPrimary}"/>
+                                       TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
 
                                 <!-- Meta -->
                                 <HorizontalStackLayout Spacing="12">
@@ -174,13 +174,13 @@
                                 <!-- Category Tag -->
                                 <Border StrokeThickness="0"
                                         StrokeShape="RoundRectangle 8"
-                                        BackgroundColor="{StaticResource PrimaryLight}"
+                                        BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryLightDark}}"
                                         Padding="10,4"
                                         IsVisible="{Binding HasCategory}"
                                         HorizontalOptions="Start">
                                     <Label Text="{Binding Category}"
                                            FontFamily="JakartaMedium" FontSize="11"
-                                           TextColor="{StaticResource PrimaryPurple}"/>
+                                           TextColor="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"/>
                                 </Border>
                             </VerticalStackLayout>
                         </Border>

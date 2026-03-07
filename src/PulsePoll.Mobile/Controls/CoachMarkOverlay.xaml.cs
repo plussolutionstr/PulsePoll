@@ -260,9 +260,13 @@ public class SpotlightDrawable : IDrawable
     public float CornerRadius { get; set; } = 12f;
     public float Opacity { get; set; } = 1f;
 
-    private static readonly Color OverlayColor = Color.FromArgb("#CC1A1535");
-    private static readonly Color RingColor = Color.FromArgb("#7C5CFC");
     private const float RingThickness = 3f;
+
+    private static Color GetOverlayColor() =>
+        Color.FromArgb(Application.Current?.RequestedTheme == AppTheme.Dark ? "#CC0F0D1A" : "#CC1A1535");
+
+    private static Color GetRingColor() =>
+        Color.FromArgb(Application.Current?.RequestedTheme == AppTheme.Dark ? "#9B82FF" : "#7C5CFC");
 
     public void Draw(ICanvas canvas, RectF dirtyRect)
     {
@@ -282,14 +286,14 @@ public class SpotlightDrawable : IDrawable
         // Inner rounded rectangle (spotlight hole)
         AppendRoundedRect(path, SpotlightRect, CornerRadius);
 
-        canvas.SetFillPaint(new SolidPaint(OverlayColor), dirtyRect);
+        canvas.SetFillPaint(new SolidPaint(GetOverlayColor()), dirtyRect);
         canvas.FillPath(path, WindingMode.EvenOdd);
 
         // --- 2. Draw highlight ring around cutout ---
         var ringPath = new PathF();
         AppendRoundedRect(ringPath, SpotlightRect, CornerRadius);
 
-        canvas.StrokeColor = RingColor;
+        canvas.StrokeColor = GetRingColor();
         canvas.StrokeSize = RingThickness;
         canvas.DrawPath(ringPath);
     }

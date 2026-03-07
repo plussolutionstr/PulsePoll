@@ -18,25 +18,25 @@
             <!-- Mini Balance Card -->
             <Border StrokeThickness="0"
                     StrokeShape="RoundRectangle 20"
-                    BackgroundColor="{StaticResource PrimaryLight}"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryLightDark}}"
                     Padding="20,16">
                 <HorizontalStackLayout Spacing="12" VerticalOptions="Center">
                     <Border StrokeThickness="0"
                             StrokeShape="RoundRectangle 20"
                             HeightRequest="40" WidthRequest="40"
-                            BackgroundColor="{StaticResource PrimaryMid}">
+                            BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryMid}, Dark={StaticResource PrimaryMidDark}}">
                         <Label Text="&#x20BA;"
                                FontFamily="JakartaExtraBold" FontSize="20"
-                               TextColor="{StaticResource PrimaryDark}"
+                               TextColor="{AppThemeBinding Light={StaticResource PrimaryDark}, Dark={StaticResource PrimaryDarkDark}}"
                                HorizontalOptions="Center" VerticalOptions="Center"/>
                     </Border>
                     <VerticalStackLayout Spacing="2" VerticalOptions="Center">
                         <Label Text="Çekilebilir Bakiye"
                                FontFamily="JakartaRegular" FontSize="12"
-                               TextColor="{StaticResource TextSecondary}"/>
+                               TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}"/>
                         <Label Text="{Binding WithdrawableBalanceInfo}"
                                FontFamily="JakartaBold" FontSize="16"
-                               TextColor="{StaticResource PrimaryDark}"/>
+                               TextColor="{AppThemeBinding Light={StaticResource PrimaryDark}, Dark={StaticResource PrimaryDarkDark}}"/>
                     </VerticalStackLayout>
                 </HorizontalStackLayout>
             </Border>
@@ -47,11 +47,11 @@
                     <Label Text="Banka Hesabı"
                            FontFamily="JakartaSemiBold"
                            FontSize="13"
-                           TextColor="{StaticResource TextSecondary}" />
+                           TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}" />
                     <Border StrokeShape="RoundRectangle 12"
-                            Stroke="{StaticResource CardBorder}"
+                            Stroke="{AppThemeBinding Light={StaticResource CardBorder}, Dark={StaticResource CardBorderDark}}"
                             StrokeThickness="1"
-                            BackgroundColor="{StaticResource PageBackground}"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource PageBackground}, Dark={StaticResource PageBackgroundDark}}"
                             Padding="12,0">
                         <Picker Title="Hesap seçin"
                                 ItemsSource="{Binding BankAccounts}"
@@ -71,17 +71,17 @@
                     <Label Text="Tutar"
                            FontFamily="JakartaSemiBold"
                            FontSize="13"
-                           TextColor="{StaticResource TextSecondary}" />
+                           TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}" />
 
                     <Border StrokeShape="RoundRectangle 12"
-                            Stroke="{StaticResource CardBorder}"
+                            Stroke="{AppThemeBinding Light={StaticResource CardBorder}, Dark={StaticResource CardBorderDark}}"
                             StrokeThickness="1"
-                            BackgroundColor="{StaticResource PageBackground}"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource PageBackground}, Dark={StaticResource PageBackgroundDark}}"
                             Padding="0">
                         <Grid ColumnDefinitions="48,*,48">
                             <Label Text="&#x20BA;"
                                    FontFamily="JakartaBold" FontSize="18"
-                                   TextColor="{StaticResource PrimaryPurple}"
+                                   TextColor="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"
                                    HorizontalOptions="Center" VerticalOptions="Center"/>
                             <Entry Grid.Column="1"
                                    Placeholder="0,00"
@@ -97,7 +97,7 @@
                             <Label Grid.Column="2"
                                    Text="TL"
                                    FontFamily="JakartaSemiBold" FontSize="14"
-                                   TextColor="{StaticResource TextTertiary}"
+                                   TextColor="{AppThemeBinding Light={StaticResource TextTertiary}, Dark={StaticResource TextTertiaryDark}}"
                                    HorizontalOptions="Center" VerticalOptions="Center"/>
                         </Grid>
                     </Border>
@@ -105,13 +105,13 @@
                     <!-- Info Hint -->
                     <Border StrokeThickness="0"
                             StrokeShape="RoundRectangle 10"
-                            BackgroundColor="{StaticResource PrimaryLight}"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryLightDark}}"
                             Padding="12,10">
                         <VerticalStackLayout Spacing="4">
                             <Label Text="{Binding ConversionInfo}"
                                    FontFamily="JakartaRegular"
                                    FontSize="12"
-                                   TextColor="{StaticResource PrimaryDark}" />
+                                   TextColor="{AppThemeBinding Light={StaticResource PrimaryDark}, Dark={StaticResource PrimaryDarkDark}}" />
                         </VerticalStackLayout>
                     </Border>
                 </VerticalStackLayout>
@@ -126,11 +126,11 @@
                         Clicked="OnSubmitClicked" />
                 <Border StrokeThickness="0"
                         StrokeShape="RoundRectangle 26"
-                        BackgroundColor="{StaticResource PrimaryPurple}"
+                        BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"
                         HeightRequest="52"
                         IsVisible="{Binding IsSaving}">
                     <ActivityIndicator IsRunning="True"
-                                       Color="{StaticResource White}"
+                                       Color="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource WhiteDark}}"
                                        HeightRequest="24" WidthRequest="24"
                                        HorizontalOptions="Center" VerticalOptions="Center"/>
                 </Border>
