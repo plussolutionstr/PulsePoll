@@ -33,7 +33,7 @@
                                    TextColor="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"
                                    HorizontalOptions="Center" VerticalOptions="Center"/>
                             <Entry Grid.Column="1"
-                                   Placeholder="00 0000 0000 0000 0000 0000 00"
+                                   Placeholder="TR00 0000 0000 0000 0000 0000 00"
                                    Text="{Binding Iban}"
                                    Keyboard="Text"
                                    MaxLength="34"
