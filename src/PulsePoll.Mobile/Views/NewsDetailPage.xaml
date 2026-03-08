@@ -2,6 +2,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:PulsePoll.Mobile.ViewModels"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              x:Class="PulsePoll.Mobile.Views.NewsDetailPage"
              x:DataType="vm:NewsDetailViewModel"
              Shell.NavBarIsVisible="False">
@@ -20,7 +21,11 @@
                     <ImageButton Source="icon_arrow_left.png"
                                  HeightRequest="24"
                                  WidthRequest="24"
-                                 Command="{Binding GoBackCommand}"/>
+                                 Command="{Binding GoBackCommand}">
+                        <ImageButton.Behaviors>
+                            <toolkit:IconTintColorBehavior TintColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}" />
+                        </ImageButton.Behaviors>
+                    </ImageButton>
                     <Label Text="Haber"
                            Style="{StaticResource TitleStyle}"
                            VerticalOptions="Center"/>

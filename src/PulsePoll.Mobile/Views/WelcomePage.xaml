@@ -2,6 +2,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:PulsePoll.Mobile.ViewModels"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              x:Class="PulsePoll.Mobile.Views.WelcomePage"
              x:DataType="vm:WelcomeViewModel"
              Shell.NavBarIsVisible="False"
@@ -49,7 +50,11 @@
                         HorizontalOptions="Start" VerticalOptions="End"
                         Margin="4,0,0,8">
                     <Image Source="icon_check.png" WidthRequest="16" HeightRequest="16"
-                           HorizontalOptions="Center" VerticalOptions="Center"/>
+                           HorizontalOptions="Center" VerticalOptions="Center">
+                        <Image.Behaviors>
+                            <toolkit:IconTintColorBehavior TintColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}" />
+                        </Image.Behaviors>
+                    </Image>
                 </Border>
             </Grid>
 

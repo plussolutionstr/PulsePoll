@@ -2,6 +2,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:PulsePoll.Mobile.ViewModels"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              x:Class="PulsePoll.Mobile.Views.SurveyResultPage"
              x:DataType="vm:SurveyResultViewModel"
              Shell.NavBarIsVisible="False">
@@ -13,7 +14,11 @@
                     <ImageButton Source="icon_arrow_left.png"
                                  HeightRequest="24"
                                  WidthRequest="24"
-                                 Command="{Binding GoBackCommand}"/>
+                                 Command="{Binding GoBackCommand}">
+                        <ImageButton.Behaviors>
+                            <toolkit:IconTintColorBehavior TintColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}" />
+                        </ImageButton.Behaviors>
+                    </ImageButton>
                     <Label Text="Anket Sonucu"
                            Style="{StaticResource TitleStyle}"
                            VerticalOptions="Center"/>
@@ -67,7 +72,11 @@
                             BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource WhiteDark}}"
                             Padding="12,14">
                         <VerticalStackLayout Spacing="6" HorizontalOptions="Center">
-                            <Image Source="icon_clock.png" HeightRequest="20" WidthRequest="20" HorizontalOptions="Center"/>
+                            <Image Source="icon_clock.png" HeightRequest="20" WidthRequest="20" HorizontalOptions="Center">
+                                <Image.Behaviors>
+                                    <toolkit:IconTintColorBehavior TintColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}" />
+                                </Image.Behaviors>
+                            </Image>
                             <Label Text="{Binding Survey.DurationMinutes, StringFormat='~{0} dk'}"
                                    FontFamily="JakartaBold" FontSize="14"
                                    HorizontalTextAlignment="Center" TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
@@ -83,7 +92,11 @@
                             BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource WhiteDark}}"
                             Padding="12,14">
                         <VerticalStackLayout Spacing="6" HorizontalOptions="Center">
-                            <Image Source="icon_money.png" HeightRequest="20" WidthRequest="20" HorizontalOptions="Center"/>
+                            <Image Source="icon_money.png" HeightRequest="20" WidthRequest="20" HorizontalOptions="Center">
+                                <Image.Behaviors>
+                                    <toolkit:IconTintColorBehavior TintColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}" />
+                                </Image.Behaviors>
+                            </Image>
                             <Label Text="{Binding Survey.ConsolationRewardDisplay}"
                                    FontFamily="JakartaBold" FontSize="14"
                                    HorizontalTextAlignment="Center" TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
@@ -99,7 +112,11 @@
                             BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource WhiteDark}}"
                             Padding="12,14">
                         <VerticalStackLayout Spacing="6" HorizontalOptions="Center">
-                            <Image Source="icon_check.png" HeightRequest="20" WidthRequest="20" HorizontalOptions="Center"/>
+                            <Image Source="icon_check.png" HeightRequest="20" WidthRequest="20" HorizontalOptions="Center">
+                                <Image.Behaviors>
+                                    <toolkit:IconTintColorBehavior TintColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}" />
+                                </Image.Behaviors>
+                            </Image>
                             <Label Text="{Binding Survey.RewardDisplay}"
                                    FontFamily="JakartaBold" FontSize="14"
                                    HorizontalTextAlignment="Center" TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>

@@ -4,6 +4,7 @@
              xmlns:vm="clr-namespace:PulsePoll.Mobile.ViewModels"
              xmlns:models="clr-namespace:PulsePoll.Mobile.Models"
              xmlns:controls="clr-namespace:PulsePoll.Mobile.Controls"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              x:Class="PulsePoll.Mobile.Views.HomePage"
              x:DataType="vm:HomeViewModel"
              Shell.NavBarIsVisible="False">
@@ -32,7 +33,11 @@
                 <Grid Grid.Column="1" VerticalOptions="Center">
                     <ImageButton Source="icon_bell.png"
                                  HeightRequest="24" WidthRequest="24"
-                                 Command="{Binding NavigateToNotificationsCommand}"/>
+                                 Command="{Binding NavigateToNotificationsCommand}">
+                        <ImageButton.Behaviors>
+                            <toolkit:IconTintColorBehavior TintColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}" />
+                        </ImageButton.Behaviors>
+                    </ImageButton>
                     <Border StrokeThickness="0"
                             StrokeShape="RoundRectangle 5"
                             HeightRequest="10" WidthRequest="10"
@@ -301,7 +306,11 @@
                                             <HorizontalStackLayout Spacing="4">
                                                 <Image Source="icon_clock.png"
                                                        HeightRequest="12" WidthRequest="12"
-                                                       VerticalOptions="Center"/>
+                                                       VerticalOptions="Center">
+                                                    <Image.Behaviors>
+                                                        <toolkit:IconTintColorBehavior TintColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}" />
+                                                    </Image.Behaviors>
+                                                </Image>
                                                 <Label Text="{Binding DurationMinutes, StringFormat='~{0} dk'}"
                                                        FontFamily="JakartaMedium" FontSize="12"
                                                        TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}"

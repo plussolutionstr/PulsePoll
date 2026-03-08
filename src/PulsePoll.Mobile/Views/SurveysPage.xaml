@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:PulsePoll.Mobile.ViewModels"
              xmlns:models="clr-namespace:PulsePoll.Mobile.Models"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              x:Class="PulsePoll.Mobile.Views.SurveysPage"
              x:DataType="vm:SurveysViewModel"
              Shell.NavBarIsVisible="False">
@@ -59,7 +60,11 @@
                                                 BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceColor}, Dark={StaticResource SurfaceColorDark}}"
                                                 Padding="10,4">
                                             <HorizontalStackLayout Spacing="4">
-                                                <Image Source="icon_clock.png" HeightRequest="14" WidthRequest="14" VerticalOptions="Center"/>
+                                                <Image Source="icon_clock.png" HeightRequest="14" WidthRequest="14" VerticalOptions="Center">
+                                                    <Image.Behaviors>
+                                                        <toolkit:IconTintColorBehavior TintColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}" />
+                                                    </Image.Behaviors>
+                                                </Image>
                                                 <Label Text="{Binding DurationMinutes, StringFormat='~{0} dk'}"
                                                        Style="{StaticResource CaptionStyle}" VerticalOptions="Center"/>
                                             </HorizontalStackLayout>

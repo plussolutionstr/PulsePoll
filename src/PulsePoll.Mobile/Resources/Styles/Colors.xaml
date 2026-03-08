@@ -45,7 +45,7 @@
     <Color x:Key="TextSecondary">#6B6589</Color>
     <Color x:Key="TextSecondaryDark">#9E95B0</Color>
     <Color x:Key="TextTertiary">#B0AABE</Color>
-    <Color x:Key="TextTertiaryDark">#5A5470</Color>
+    <Color x:Key="TextTertiaryDark">#7A7490</Color>
 
     <!-- ===== Base ===== -->
     <Color x:Key="White">#FFFFFF</Color>
