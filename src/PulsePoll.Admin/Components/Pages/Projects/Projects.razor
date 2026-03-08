@@ -350,7 +350,7 @@
             <i class="bi bi-exclamation-triangle-fill text-warning" style="font-size:2.5rem; flex-shrink:0;"></i>
             <div>
                 <p class="mb-1 fw-semibold">Bu projede <strong>@_scheduledCount</strong> zamanlanmış atama bulunuyor.</p>
-                <p class="mb-0 text-muted">Zamana yayılı dağıtımı kapatırsanız bu denekler "Başlanmamış" durumuna geçecek ve herkese anında dağıtılacak. Emin misiniz?</p>
+                <p class="mb-0 text-muted">Zamana yayılı dağıtımı kapatırsanız bu denekler "Başlanmamış" durumuna geçecek ve saatlik bildirim limitine göre kademeli olarak dağıtıma alınacak. Emin misiniz?</p>
             </div>
         </div>
     </BodyContentTemplate>
@@ -640,15 +640,14 @@
                     TimeOnly.FromDateTime(_form.DistributionStartHour),
                     TimeOnly.FromDateTime(_form.DistributionEndHour));
 
-                await ProjectService.UpdateAsync(_form.Id, dto, adminId);
-
                 if (convertScheduled)
                 {
-                    var converted = await ProjectService.ConvertScheduledToNotStartedAsync(_form.Id);
-                    Toast.Success($"Proje güncellendi. {converted} zamanlanmış atama dağıtıma açıldı.");
+                    var converted = await ProjectService.UpdateAndDisableScheduledDistributionAsync(_form.Id, dto, adminId);
+                    Toast.Success($"Proje güncellendi. {converted} zamanlanmış atama dağıtıma alındı.");
                 }
                 else
                 {
+                    await ProjectService.UpdateAsync(_form.Id, dto, adminId);
                     Toast.Success("Proje güncellendi.");
                 }
             }

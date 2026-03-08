@@ -277,12 +277,16 @@ public class DistributionService(
         if (projects.Count == 0)
             return 0;
 
-        var perProject = Math.Max(1, config.HourlyLimit / projects.Count);
+        var remaining = config.HourlyLimit;
+        var perProject = Math.Max(1, remaining / projects.Count);
         var totalSent = 0;
 
         foreach (var project in projects)
         {
-            var assignments = await projectRepository.GetUnnotifiedAssignmentsAsync(project.Id, perProject);
+            if (remaining <= 0) break;
+
+            var take = Math.Min(perProject, remaining);
+            var assignments = await projectRepository.GetUnnotifiedAssignmentsAsync(project.Id, take);
             if (assignments.Count == 0) continue;
 
             var subjectIds = assignments.Select(a => a.SubjectId).ToList();
@@ -292,10 +296,11 @@ public class DistributionService(
             await projectRepository.UpdateAssignmentsStatusBatchAsync(assignmentIds, AssignmentStatus.NotStarted, TurkeyTime.Now);
 
             totalSent += assignments.Count;
+            remaining -= assignments.Count;
 
             logger.LogInformation(
-                "Bildirim batch: Project={ProjectId} Sent={Count} PerProjectLimit={Limit}",
-                project.Id, assignments.Count, perProject);
+                "Bildirim batch: Project={ProjectId} Sent={Count} Remaining={Remaining}",
+                project.Id, assignments.Count, remaining);
         }
 
         return totalSent;

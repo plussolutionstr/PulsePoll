@@ -1,7 +1,9 @@
+using Hangfire;
 using PulsePoll.Application.Interfaces;
 
 namespace PulsePoll.Worker.Jobs;
 
+[DisableConcurrentExecution(timeoutInSeconds: 300)]
 public class NotificationBatchRecurringJob(
     IDistributionService distributionService,
     ILogger<NotificationBatchRecurringJob> logger)

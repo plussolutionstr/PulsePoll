@@ -14,4 +14,5 @@ public interface IProjectService
     Task<List<ProjectDto>> GetAllAsync();
     Task<int> GetScheduledAssignmentCountAsync(int projectId);
     Task<int> ConvertScheduledToNotStartedAsync(int projectId);
+    Task<int> UpdateAndDisableScheduledDistributionAsync(int id, UpdateProjectDto dto, int adminId);
 }

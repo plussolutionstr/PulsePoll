@@ -209,6 +209,52 @@ public class ProjectService(
         return ids.Count;
     }
 
+    public async Task<int> UpdateAndDisableScheduledDistributionAsync(int id, UpdateProjectDto dto, int adminId)
+    {
+        await updateValidator.ValidateAndThrowAsync(dto);
+
+        var project = await repository.GetByIdAsync(id)
+            ?? throw new NotFoundException("Proje");
+
+        // Scheduled atamaları çek (henüz SaveChanges olmadı)
+        var assignments = await repository.GetScheduledAssignmentsAsync(id, int.MaxValue);
+
+        // Proje alanlarını güncelle
+        project.Name                 = dto.Name;
+        project.Description          = dto.Description;
+        project.Category             = dto.Category;
+        project.ParticipantCount     = dto.ParticipantCount;
+        project.TotalTargetCount     = dto.TotalTargetCount;
+        project.DurationDays         = dto.DurationDays;
+        project.StartDate            = dto.StartDate;
+        project.Budget               = dto.Budget;
+        project.Reward               = dto.Reward;
+        project.ConsolationReward    = dto.ConsolationReward;
+        project.SurveyUrl            = dto.SurveyUrl;
+        project.SubjectParameterName = dto.SubjectParameterName;
+        project.ProjectParameterName = dto.ProjectParameterName;
+        project.EstimatedMinutes     = dto.EstimatedMinutes;
+        project.CustomerBriefing     = dto.CustomerBriefing;
+        project.StartMessage         = dto.StartMessage;
+        project.CompletedMessage     = dto.CompletedMessage;
+        project.DisqualifyMessage    = dto.DisqualifyMessage;
+        project.QuotaFullMessage     = dto.QuotaFullMessage;
+        project.ScreenOutMessage     = dto.ScreenOutMessage;
+        project.Status                  = dto.Status;
+        project.CoverMediaId            = dto.CoverMediaId;
+        project.IsScheduledDistribution = false;
+        project.DistributionStartHour   = dto.DistributionStartHour == default ? new TimeOnly(9, 0) : dto.DistributionStartHour;
+        project.DistributionEndHour     = dto.DistributionEndHour == default ? new TimeOnly(19, 0) : dto.DistributionEndHour;
+        project.SetUpdated(adminId);
+
+        // Scheduled → NotStarted (aynı change tracker, tek SaveChanges)
+        foreach (var a in assignments)
+            a.Status = AssignmentStatus.NotStarted;
+
+        await repository.UpdateAsync(project);
+        return assignments.Count;
+    }
+
     private static bool IsHiddenForSubjectList(AssignmentStatus status)
         => status is AssignmentStatus.Completed
             or AssignmentStatus.Disqualify
