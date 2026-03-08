@@ -93,6 +93,14 @@ public class SubjectRepository(AppDbContext db) : ISubjectRepository
              .Include(r => r.ReferredSubject)
              .FirstOrDefaultAsync(r => r.ReferredSubjectId == referredSubjectId);
 
+    public Task<List<Referral>> GetPendingRewardReferralsAsync()
+        => db.Referrals
+             .AsNoTracking()
+             .Include(r => r.ReferredSubject)
+             .Where(r => r.CommissionEarned == null && r.DeletedAt == null)
+             .OrderBy(r => r.Id)
+             .ToListAsync();
+
     public async Task AddReferralAsync(Referral referral)
     {
         db.Referrals.Add(referral);

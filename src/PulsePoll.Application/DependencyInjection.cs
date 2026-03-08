@@ -20,6 +20,7 @@ public static class DependencyInjection
         services.AddScoped<ISubjectScoreConfigService, SubjectScoreConfigService>();
         services.AddScoped<IRewardUnitConfigService, RewardUnitConfigService>();
         services.AddScoped<IReferralRewardConfigService, ReferralRewardConfigService>();
+        services.AddScoped<IRegistrationConfigService, RegistrationConfigService>();
         services.AddScoped<IAppContentConfigService, AppContentConfigService>();
         services.AddScoped<ICommunicationAutomationConfigService, CommunicationAutomationConfigService>();
         services.AddScoped<IReferralRewardService, ReferralRewardService>();

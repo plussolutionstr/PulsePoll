@@ -19,6 +19,7 @@ public interface ISubjectRepository
     Task<Dictionary<int, string>> GetFcmTokensByIdsAsync(IEnumerable<int> subjectIds);
     Task<List<Referral>> GetReferralsAsync(int referrerId);
     Task<Referral?> GetReferralByReferredSubjectIdAsync(int referredSubjectId);
+    Task<List<Referral>> GetPendingRewardReferralsAsync();
     Task AddReferralAsync(Referral referral);
     Task UpdateReferralAsync(Referral referral);
     Task<int> GetReferralCountAsync(int referrerId);

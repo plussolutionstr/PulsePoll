@@ -9,6 +9,7 @@
     <ItemGroup>
         <ProjectReference Include="..\..\src\PulsePoll.Application\PulsePoll.Application.csproj"/>
         <ProjectReference Include="..\..\src\PulsePoll.Infrastructure\PulsePoll.Infrastructure.csproj"/>
+        <ProjectReference Include="..\..\src\PulsePoll.Worker\PulsePoll.Worker.csproj"/>
     </ItemGroup>
 
     <ItemGroup>

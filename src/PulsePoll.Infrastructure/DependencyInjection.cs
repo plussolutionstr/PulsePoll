@@ -65,6 +65,7 @@ public static class DependencyInjection
         services.AddScoped<ISubjectScoreConfigRepository, SubjectScoreConfigRepository>();
         services.AddScoped<IRewardUnitConfigRepository, RewardUnitConfigRepository>();
         services.AddScoped<IReferralRewardConfigRepository, ReferralRewardConfigRepository>();
+        services.AddScoped<IRegistrationConfigRepository, RegistrationConfigRepository>();
         services.AddScoped<IAppContentConfigRepository, AppContentConfigRepository>();
         services.AddScoped<ICommunicationAutomationConfigRepository, CommunicationAutomationConfigRepository>();
         services.AddScoped<IMessageAutomationRepository, MessageAutomationRepository>();

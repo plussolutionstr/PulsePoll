@@ -23,6 +23,8 @@ public interface IProjectRepository
     Task RemoveAssignmentAsync(int projectId, int subjectId);
     Task<int> RemoveAssignmentsAsync(int projectId, IEnumerable<int> subjectIds);
     Task<List<ProjectAssignment>> GetSubjectAssignmentsAsync(int subjectId);
+    Task<List<int>> GetSubjectIdsWithCompletedSurveyAsync(IEnumerable<int> subjectIds);
+    Task<List<int>> GetSubjectIdsWithApprovedRewardAsync(IEnumerable<int> subjectIds);
 
     // Zamana yayılı dağıtım
     Task<List<Project>> GetActiveScheduledDistributionProjectsAsync();

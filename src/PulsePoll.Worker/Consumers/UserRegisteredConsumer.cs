@@ -13,6 +13,7 @@ public class SubjectRegisteredConsumer(
     ISubjectRepository subjectRepository,
     IWalletRepository walletRepository,
     ILookupService lookupService,
+    IRegistrationConfigService registrationConfigService,
     IReferralRewardService referralRewardService,
     ISubjectScoreService subjectScoreService,
     ISesCalculator sesCalculator,
@@ -37,6 +38,10 @@ public class SubjectRegisteredConsumer(
 
         // LSM anketi devrede olmadığı için şimdilik varsayılan seviye atanır.
         const int defaultLsmId = 1;
+        var registrationConfig = await registrationConfigService.GetAsync();
+        var initialStatus = registrationConfig.AutoApproveNewSubjects
+            ? ApprovalStatus.Approved
+            : ApprovalStatus.Pending;
 
         var subject = new Subject
         {
@@ -66,7 +71,7 @@ public class SubjectRegisteredConsumer(
             KVKKApproval = msg.KVKKApproval,
             KVKKDetail = msg.KVKKDetail,
             KVKKApprovalDate = msg.KVKKApproval ? msg.RegisteredAt : null,
-            Status = ApprovalStatus.Approved
+            Status = initialStatus
         };
 
         subject.SetCreated(0, msg.RegisteredAt);
@@ -106,11 +111,20 @@ public class SubjectRegisteredConsumer(
             subject.Id,
             ReferralRewardTriggerType.RegistrationCompleted,
             actorId: 0);
+        if (subject.Status == ApprovalStatus.Approved)
+        {
+            await referralRewardService.TryGrantAsync(
+                subject.Id,
+                ReferralRewardTriggerType.AccountApproved,
+                actorId: 0);
+        }
 
         await mailService.SendAsync(
             msg.Email,
             "PulsePoll'a Hoşgeldiniz!",
-            $"<h1>Merhaba {msg.FirstName},</h1><p>Hesabınız oluşturuldu ve aktif edildi.</p>");
+            subject.Status == ApprovalStatus.Approved
+                ? $"<h1>Merhaba {msg.FirstName},</h1><p>Hesabınız oluşturuldu ve aktif edildi.</p>"
+                : $"<h1>Merhaba {msg.FirstName},</h1><p>Hesabınız oluşturuldu. Yönetici onayı sonrası giriş yapabilirsiniz.</p>");
 
         logger.LogInformation("Denek kaydı tamamlandı: {SubjectId}", subject.Id);
     }

@@ -5,4 +5,5 @@ namespace PulsePoll.Application.Interfaces;
 public interface IReferralRewardService
 {
     Task TryGrantAsync(int referredSubjectId, ReferralRewardTriggerType triggerType, int actorId);
+    Task<int> ReconcilePendingAsync(int actorId);
 }

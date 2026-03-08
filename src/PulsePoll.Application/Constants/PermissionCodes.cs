@@ -100,6 +100,7 @@ public static class PermissionCodes
     {
         public const string View = "Settings.View";
         public const string ReferralRewardEdit = "Settings.ReferralRewardEdit";
+        public const string RegistrationEdit = "Settings.RegistrationEdit";
         public const string AppContentEdit = "Settings.AppContentEdit";
         public const string NotificationDistributionEdit = "Settings.NotificationDistributionEdit";
     }

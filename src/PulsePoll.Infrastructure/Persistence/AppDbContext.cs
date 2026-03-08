@@ -36,6 +36,7 @@ public DbSet<Wallet> Wallets => Set<Wallet>();
     public DbSet<SubjectAssignmentJob> SubjectAssignmentJobs => Set<SubjectAssignmentJob>();
     public DbSet<Referral> Referrals => Set<Referral>();
     public DbSet<ReferralRewardConfig> ReferralRewardConfigs => Set<ReferralRewardConfig>();
+    public DbSet<RegistrationConfig> RegistrationConfigs => Set<RegistrationConfig>();
     public DbSet<AppContentConfig> AppContentConfigs => Set<AppContentConfig>();
     public DbSet<SpecialDay> SpecialDays => Set<SpecialDay>();
     public DbSet<MessageTemplate> MessageTemplates => Set<MessageTemplate>();

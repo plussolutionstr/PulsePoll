@@ -143,6 +143,38 @@ public class ProjectRepository(AppDbContext db) : IProjectRepository
              .OrderByDescending(a => a.AssignedAt)
              .ToListAsync();
 
+    public Task<List<int>> GetSubjectIdsWithCompletedSurveyAsync(IEnumerable<int> subjectIds)
+    {
+        var ids = subjectIds.Distinct().ToArray();
+        if (ids.Length == 0)
+            return Task.FromResult(new List<int>());
+
+        return db.ProjectAssignments
+            .AsNoTracking()
+            .Where(a => ids.Contains(a.SubjectId)
+                     && a.Status == AssignmentStatus.Completed
+                     && a.DeletedAt == null)
+            .Select(a => a.SubjectId)
+            .Distinct()
+            .ToListAsync();
+    }
+
+    public Task<List<int>> GetSubjectIdsWithApprovedRewardAsync(IEnumerable<int> subjectIds)
+    {
+        var ids = subjectIds.Distinct().ToArray();
+        if (ids.Length == 0)
+            return Task.FromResult(new List<int>());
+
+        return db.ProjectAssignments
+            .AsNoTracking()
+            .Where(a => ids.Contains(a.SubjectId)
+                     && a.RewardStatus == RewardStatus.Approved
+                     && a.DeletedAt == null)
+            .Select(a => a.SubjectId)
+            .Distinct()
+            .ToListAsync();
+    }
+
     // Zamana yayılı dağıtım metodları
     public Task<List<Project>> GetActiveScheduledDistributionProjectsAsync()
         => db.Projects

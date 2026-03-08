@@ -78,6 +78,7 @@ public static class PermissionSeeder
 
         (PermissionCodes.Settings.View, "Ayarlar Sayfasını Görüntüle", "Settings"),
         (PermissionCodes.Settings.ReferralRewardEdit, "Referans Ödül Ayarlarını Düzenle", "Settings"),
+        (PermissionCodes.Settings.RegistrationEdit, "Kayıt Ayarlarını Düzenle", "Settings"),
         (PermissionCodes.Settings.AppContentEdit, "Mobil İçerik Ayarlarını Düzenle", "Settings"),
         (PermissionCodes.Settings.NotificationDistributionEdit, "Bildirim Dağıtım Ayarlarını Düzenle", "Settings"),
 
