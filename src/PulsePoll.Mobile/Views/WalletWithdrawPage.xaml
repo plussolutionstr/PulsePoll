@@ -27,7 +27,7 @@
                             BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryMid}, Dark={StaticResource PrimaryMidDark}}">
                         <Label Text="&#x20BA;"
                                FontFamily="JakartaExtraBold" FontSize="20"
-                               TextColor="{AppThemeBinding Light={StaticResource PrimaryDark}, Dark={StaticResource PrimaryDarkDark}}"
+                               TextColor="{AppThemeBinding Light={StaticResource PrimaryDark}, Dark={StaticResource White}}"
                                HorizontalOptions="Center" VerticalOptions="Center"/>
                     </Border>
                     <VerticalStackLayout Spacing="2" VerticalOptions="Center">
@@ -59,6 +59,7 @@
                                 SelectedItem="{Binding SelectedBankAccount}"
                                 FontFamily="JakartaSemiBold"
                                 FontSize="15"
+                                TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"
                                 HeightRequest="48"
                                 VerticalOptions="Center" />
                     </Border>
