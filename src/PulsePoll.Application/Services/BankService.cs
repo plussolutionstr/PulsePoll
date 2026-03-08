@@ -27,6 +27,15 @@ public class BankService(IBankRepository bankRepository) : IBankService
         if (await bankRepository.ExistsByNameAsync(normalizedName, excludeId: id))
             throw new BusinessException("DUPLICATE_BANK", "Aynı isimde bir banka zaten mevcut.");
 
+        if (!string.IsNullOrWhiteSpace(normalizedBankCode))
+        {
+            if (normalizedBankCode.Length != 5 || !normalizedBankCode.All(char.IsDigit))
+                throw new BusinessException("INVALID_BANK_CODE", "Banka kodu 5 haneli sayısal bir değer olmalıdır.");
+
+            if (await bankRepository.ExistsByBankCodeAsync(normalizedBankCode, excludeId: id))
+                throw new BusinessException("DUPLICATE_BANK_CODE", "Aynı banka koduna sahip başka bir banka zaten mevcut.");
+        }
+
         Bank entity;
         if (id > 0)
         {

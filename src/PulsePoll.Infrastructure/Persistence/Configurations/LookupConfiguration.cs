@@ -66,6 +66,9 @@ public class BankConfiguration : IEntityTypeConfiguration<Bank>
         builder.HasIndex(b => b.Name)
                .IsUnique()
                .HasDatabaseName("uq_banks_name");
+        builder.HasIndex(b => b.BankCode)
+               .IsUnique()
+               .HasDatabaseName("uq_banks_bank_code");
 
         builder.HasOne(b => b.ThumbnailMediaAsset)
             .WithMany(m => m.BankThumbnails)

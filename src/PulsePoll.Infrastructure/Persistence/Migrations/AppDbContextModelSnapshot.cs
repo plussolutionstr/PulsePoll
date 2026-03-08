@@ -230,6 +230,10 @@ namespace PulsePoll.Infrastructure.Persistence.Migrations
                         .IsUnique()
                         .HasDatabaseName("uq_banks_name");
 
+                    b.HasIndex("BankCode")
+                        .IsUnique()
+                        .HasDatabaseName("uq_banks_bank_code");
+
                     b.HasIndex("ThumbnailMediaAssetId")
                         .HasDatabaseName("ix_banks_thumbnail_media_asset_id");
 

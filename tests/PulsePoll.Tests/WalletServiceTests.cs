@@ -357,6 +357,36 @@ public class WalletServiceTests
     }
 
     [Fact]
+    public async Task DeleteBankAccountAsync_ThrowsBusinessException_WhenDeleteCooldownHasNotElapsed()
+    {
+        var account = MakeBankAccount();
+        account.SetCreated(1, TurkeyTime.Now.AddDays(-13));
+        _walletRepoMock.Setup(r => r.GetBankAccountAsync(1, 5)).ReturnsAsync(account);
+        _paymentSettingRepoMock
+            .Setup(r => r.GetByKeyAsync("iban.delete_cooldown_days"))
+            .ReturnsAsync(new PaymentSetting { Key = "iban.delete_cooldown_days", Value = "14" });
+
+        await _sut.Invoking(s => s.DeleteBankAccountAsync(1, 5))
+            .Should().ThrowAsync<BusinessException>()
+            .WithMessage("*silinemez*");
+    }
+
+    [Fact]
+    public async Task RequestWithdrawalAsync_ThrowsBusinessException_WhenWithdrawalCooldownHasNotElapsed()
+    {
+        var account = MakeBankAccount();
+        account.SetCreated(1, TurkeyTime.Now.AddDays(-13));
+        _walletRepoMock.Setup(r => r.GetBankAccountAsync(1, 5)).ReturnsAsync(account);
+        _paymentSettingRepoMock
+            .Setup(r => r.GetByKeyAsync("iban.withdrawal_cooldown_days"))
+            .ReturnsAsync(new PaymentSetting { Key = "iban.withdrawal_cooldown_days", Value = "14" });
+
+        await _sut.Invoking(s => s.RequestWithdrawalAsync(1, new WithdrawalRequestDto(100m, 5)))
+            .Should().ThrowAsync<BusinessException>()
+            .WithMessage("*para çekilemez*");
+    }
+
+    [Fact]
     public async Task DeleteBankAccountAsync_ThrowsNotFoundException_WhenAccountNotFound()
     {
         _walletRepoMock.Setup(r => r.GetBankAccountAsync(1, 99)).ReturnsAsync((BankAccount?)null);

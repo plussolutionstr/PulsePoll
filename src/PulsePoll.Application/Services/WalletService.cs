@@ -224,7 +224,7 @@ public class WalletService(
             ?? throw new NotFoundException("Banka hesabı");
 
         var withdrawalCooldownDays = await GetSettingIntAsync(PaymentSettingKeys.IbanWithdrawalCooldownDays, 14);
-        if (withdrawalCooldownDays > 0 && bankAccount.CreatedAt.AddDays(withdrawalCooldownDays) > DateTime.UtcNow)
+        if (withdrawalCooldownDays > 0 && bankAccount.CreatedAt.AddDays(withdrawalCooldownDays) > TurkeyTime.Now)
         {
             var endsAt = bankAccount.CreatedAt.AddDays(withdrawalCooldownDays);
             throw new BusinessException(
@@ -399,7 +399,7 @@ public class WalletService(
 
         var deleteCooldownDays = await GetSettingIntAsync(PaymentSettingKeys.IbanDeleteCooldownDays, 14);
         var withdrawalCooldownDays = await GetSettingIntAsync(PaymentSettingKeys.IbanWithdrawalCooldownDays, 14);
-        var now = DateTime.UtcNow;
+        var now = TurkeyTime.Now;
 
         var items = new List<BankAccountDto>(accounts.Count);
         foreach (var account in accounts)
@@ -483,7 +483,7 @@ public class WalletService(
             ?? throw new NotFoundException("Banka hesabı");
 
         var cooldownDays = await GetSettingIntAsync(PaymentSettingKeys.IbanDeleteCooldownDays, 14);
-        if (cooldownDays > 0 && account.CreatedAt.AddDays(cooldownDays) > DateTime.UtcNow)
+        if (cooldownDays > 0 && account.CreatedAt.AddDays(cooldownDays) > TurkeyTime.Now)
         {
             var endsAt = account.CreatedAt.AddDays(cooldownDays);
             throw new BusinessException(

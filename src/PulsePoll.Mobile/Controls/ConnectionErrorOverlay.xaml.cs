@@ -1,13 +1,16 @@
+using System.Windows.Input;
+using CommunityToolkit.Mvvm.Input;
+
 namespace PulsePoll.Mobile.Controls;
 
 public partial class ConnectionErrorOverlay : ContentView
 {
     public static readonly BindableProperty RetryCommandProperty =
-        BindableProperty.Create(nameof(RetryCommand), typeof(Command), typeof(ConnectionErrorOverlay));
+        BindableProperty.Create(nameof(RetryCommand), typeof(ICommand), typeof(ConnectionErrorOverlay));
 
-    public Command? RetryCommand
+    public ICommand? RetryCommand
     {
-        get => (Command?)GetValue(RetryCommandProperty);
+        get => (ICommand?)GetValue(RetryCommandProperty);
         set => SetValue(RetryCommandProperty, value);
     }
 
@@ -27,9 +30,10 @@ public partial class ConnectionErrorOverlay : ContentView
 
         try
         {
-            RetryCommand.Execute(null);
-            // Give the command time to complete and hide the overlay
-            await Task.Delay(500);
+            if (RetryCommand is IAsyncRelayCommand asyncRelayCommand)
+                await asyncRelayCommand.ExecuteAsync(null);
+            else
+                RetryCommand.Execute(null);
         }
         finally
         {

@@ -15,6 +15,9 @@ public class BankRepository(AppDbContext db) : IBankRepository
     public Task<bool> ExistsByNameAsync(string name, int excludeId)
         => db.Banks.AnyAsync(b => b.Name == name && b.Id != excludeId);
 
+    public Task<bool> ExistsByBankCodeAsync(string bankCode, int excludeId)
+        => db.Banks.AnyAsync(b => b.BankCode == bankCode && b.Id != excludeId);
+
     public async Task AddAsync(Bank bank)
     {
         db.Banks.Add(bank);
