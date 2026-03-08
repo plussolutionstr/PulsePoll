@@ -113,17 +113,13 @@ public record BankAccountModel(int Id, string BankName, string MaskedIban, strin
     public DateTime? DeleteCooldownEndsAt { get; init; }
     public bool CanWithdraw { get; init; } = true;
     public DateTime? WithdrawalCooldownEndsAt { get; init; }
-    public string? CooldownMessage
-    {
-        get
-        {
-            if (!CanDelete && DeleteCooldownEndsAt.HasValue)
-                return $"{DeleteCooldownEndsAt.Value:dd.MM.yyyy} tarihine kadar silinemez";
-            if (!CanWithdraw && WithdrawalCooldownEndsAt.HasValue)
-                return $"{WithdrawalCooldownEndsAt.Value:dd.MM.yyyy} tarihine kadar çekim yapılamaz";
-            return null;
-        }
-    }
+    public string? DeleteCooldownMessage => !CanDelete && DeleteCooldownEndsAt.HasValue
+        ? $"{DeleteCooldownEndsAt.Value:dd.MM.yyyy} tarihine kadar silinemez"
+        : null;
+    public string? WithdrawalCooldownMessage => !CanWithdraw && WithdrawalCooldownEndsAt.HasValue
+        ? $"{WithdrawalCooldownEndsAt.Value:dd.MM.yyyy} tarihine kadar çekim yapılamaz"
+        : null;
+    public string? CooldownMessage => DeleteCooldownMessage ?? WithdrawalCooldownMessage;
 }
 public record BankOptionModel(
     int Id,

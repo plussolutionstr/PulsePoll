@@ -88,45 +88,52 @@
                                      BindableLayout.ItemsSource="{Binding BankAccounts}">
                     <BindableLayout.ItemTemplate>
                         <DataTemplate x:DataType="models:BankAccountModel">
-                            <SwipeView>
-                                <SwipeView.RightItems>
-                                    <SwipeItems>
-                                        <SwipeItem Text="Sil"
-                                                   BackgroundColor="{AppThemeBinding Light={StaticResource Danger}, Dark={StaticResource DangerDark}}"
-                                                   Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteBankAccountCommand}"
-                                                   CommandParameter="{Binding .}" />
-                                    </SwipeItems>
-                                </SwipeView.RightItems>
-                                <Border Style="{StaticResource CardBorderStyle}" Padding="14">
-                                    <VerticalStackLayout Spacing="6">
-                                        <HorizontalStackLayout Spacing="12">
-                                            <Border StrokeThickness="0"
-                                                    StrokeShape="RoundRectangle 10"
-                                                    HeightRequest="40" WidthRequest="56"
-                                                    BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource WhiteDark}}">
-                                                <Image Source="{Binding DisplayImageUrl}"
-                                                       HeightRequest="28"
-                                                       WidthRequest="48"
-                                                       Aspect="AspectFit"
-                                                       HorizontalOptions="Center"
-                                                       VerticalOptions="Center"/>
-                                            </Border>
-                                            <VerticalStackLayout Spacing="2" VerticalOptions="Center">
-                                                <Label Text="{Binding BankName}"
-                                                       FontFamily="JakartaSemiBold" FontSize="14"
-                                                       TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
-                                                <Label Text="{Binding MaskedIban}"
-                                                       Style="{StaticResource CaptionStyle}"/>
-                                            </VerticalStackLayout>
-                                        </HorizontalStackLayout>
+                            <Border Style="{StaticResource CardBorderStyle}" Padding="14">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnBankAccountTapped" />
+                                </Border.GestureRecognizers>
+                                <VerticalStackLayout Spacing="0">
+                                    <HorizontalStackLayout Spacing="12">
+                                        <Border StrokeThickness="0"
+                                                StrokeShape="RoundRectangle 10"
+                                                HeightRequest="40" WidthRequest="56"
+                                                BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource WhiteDark}}">
+                                            <Image Source="{Binding DisplayImageUrl}"
+                                                   HeightRequest="28"
+                                                   WidthRequest="48"
+                                                   Aspect="AspectFit"
+                                                   HorizontalOptions="Center"
+                                                   VerticalOptions="Center"/>
+                                        </Border>
+                                        <VerticalStackLayout Spacing="2" VerticalOptions="Center">
+                                            <Label Text="{Binding BankName}"
+                                                   FontFamily="JakartaSemiBold" FontSize="14"
+                                                   TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
+                                            <Label Text="{Binding MaskedIban}"
+                                                   Style="{StaticResource CaptionStyle}"/>
+                                        </VerticalStackLayout>
+                                    </HorizontalStackLayout>
+                                    <!-- Expanded: Delete Button -->
+                                    <VerticalStackLayout StyleId="DeletePanel" Spacing="8" Margin="0,10,0,0"
+                                                         IsVisible="False">
                                         <Label Text="{Binding CooldownMessage}"
                                                IsVisible="{Binding CooldownMessage, Converter={StaticResource StringToBool}}"
                                                FontFamily="JakartaRegular" FontSize="11"
-                                               TextColor="{AppThemeBinding Light={StaticResource Amber}, Dark={StaticResource AmberDark}}"
-                                               Margin="0,-2,0,0"/>
+                                               TextColor="{AppThemeBinding Light={StaticResource Amber}, Dark={StaticResource AmberDark}}"/>
+                                        <Button Text="Hesabı Sil"
+                                                HeightRequest="36"
+                                                CornerRadius="18"
+                                                FontFamily="JakartaSemiBold"
+                                                FontSize="13"
+                                                Padding="16,0"
+                                                BackgroundColor="{AppThemeBinding Light={StaticResource DangerLight}, Dark={StaticResource DangerLightDark}}"
+                                                TextColor="{AppThemeBinding Light={StaticResource Danger}, Dark={StaticResource DangerDark}}"
+                                                HorizontalOptions="Fill"
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteBankAccountCommand}"
+                                                CommandParameter="{Binding .}" />
                                     </VerticalStackLayout>
-                                </Border>
-                            </SwipeView>
+                                </VerticalStackLayout>
+                            </Border>
                         </DataTemplate>
                     </BindableLayout.ItemTemplate>
                 </VerticalStackLayout>

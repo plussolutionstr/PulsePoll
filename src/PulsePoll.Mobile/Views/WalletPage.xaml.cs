@@ -94,6 +94,33 @@ public partial class WalletPage : ContentPage
         await CoachMark.ShowAsync(steps);
     }
 
+    private VerticalStackLayout? _expandedPanel;
+
+    private void OnBankAccountTapped(object? sender, TappedEventArgs e)
+    {
+        var border = sender as Border;
+        var outerStack = border?.Content as VerticalStackLayout;
+        if (outerStack is null) return;
+
+        var panel = outerStack.Children.OfType<VerticalStackLayout>()
+            .FirstOrDefault(v => v.StyleId == "DeletePanel");
+
+        if (panel is null) return;
+
+        if (_expandedPanel == panel)
+        {
+            panel.IsVisible = false;
+            _expandedPanel = null;
+            return;
+        }
+
+        if (_expandedPanel is not null)
+            _expandedPanel.IsVisible = false;
+
+        panel.IsVisible = true;
+        _expandedPanel = panel;
+    }
+
     private void StartShimmer()
     {
         if (_shimmerCts is not null)

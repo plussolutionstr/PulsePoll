@@ -29,7 +29,7 @@ public partial class WalletWithdrawViewModel : ObservableObject
     public string WithdrawableBalanceInfo => $"Çekilebilir bakiye: ₺{WithdrawableBalanceTry.ToString("N2", TrCulture)}";
     public bool HasWithdrawalCooldown => SelectedBankAccount is { CanWithdraw: false };
     public string? WithdrawalCooldownMessage => SelectedBankAccount is { CanWithdraw: false }
-        ? SelectedBankAccount.CooldownMessage
+        ? SelectedBankAccount.WithdrawalCooldownMessage
         : null;
 
     public async Task LoadAsync()
@@ -76,7 +76,7 @@ public partial class WalletWithdrawViewModel : ObservableObject
             return (false, "Lütfen bir banka hesabı seçin.");
 
         if (!SelectedBankAccount.CanWithdraw)
-            return (false, SelectedBankAccount.CooldownMessage ?? "Bu hesaba henüz para çekilemez.");
+            return (false, SelectedBankAccount.WithdrawalCooldownMessage ?? "Bu hesaba henüz para çekilemez.");
 
         if (!TryParseAmount(Amount, out var amount) || amount <= 0)
             return (false, "Lütfen geçerli bir tutar girin. Örnek: 1.000,00");

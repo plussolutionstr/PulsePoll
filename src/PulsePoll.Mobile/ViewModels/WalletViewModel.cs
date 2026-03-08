@@ -118,7 +118,7 @@ public partial class WalletViewModel : ObservableObject
 
         if (!account.CanDelete)
         {
-            await Shell.Current.DisplayAlertAsync("Bilgi", account.CooldownMessage ?? "Bu hesap henüz silinemez.", "Tamam");
+            await Shell.Current.DisplayAlertAsync("Bilgi", account.DeleteCooldownMessage ?? "Bu hesap henüz silinemez.", "Tamam");
             return;
         }
 
