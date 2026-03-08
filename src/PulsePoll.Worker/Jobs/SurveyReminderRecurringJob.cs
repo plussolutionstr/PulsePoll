@@ -5,24 +5,26 @@ namespace PulsePoll.Worker.Jobs;
 
 [DisableConcurrentExecution(timeoutInSeconds: 60)]
 public class SurveyReminderRecurringJob(
-    IProjectRepository projectRepository,
     IDistributionService distributionService,
     ILogger<SurveyReminderRecurringJob> logger)
 {
     public async Task ExecuteAsync()
     {
-        var projects = await projectRepository.GetActiveScheduledDistributionProjectsAsync();
+        var results = await distributionService.RunDueReminderNotificationsAsync();
 
-        if (projects.Count == 0)
+        if (results.Count == 0)
         {
-            logger.LogInformation("Hatırlatma: Aktif zamanlanmış proje yok.");
+            logger.LogInformation("Hatırlatma: Bu saat için gönderilecek proje yok.");
             return;
         }
 
-        foreach (var project in projects)
+        foreach (var result in results)
         {
-            var count = await distributionService.SendReminderNotificationsAsync(project.Id);
-            logger.LogInformation("Hatırlatma gönderildi: Project={ProjectId} Count={Count}", project.Id, count);
+            logger.LogInformation(
+                "Hatırlatma gönderildi: Project={ProjectId} '{ProjectName}' Count={Count}",
+                result.ProjectId,
+                result.ProjectName,
+                result.ReminderCount);
         }
     }
 }

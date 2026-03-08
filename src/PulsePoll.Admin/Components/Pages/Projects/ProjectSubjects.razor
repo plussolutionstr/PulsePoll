@@ -568,7 +568,7 @@
         ? $"{_removeSubjectIds.Count} deneği projeden çıkarmak istediğinize emin misiniz?"
         : "Bu deneği projeden kaldırmak istediğinize emin misiniz?";
     private string RemoveConfirmDetail => _removeSubjectIds.Count > 1
-        ? "Sadece başlanmamış atamalar kaldırılır."
+        ? "Sadece başlanmamış veya zamanlanmış atamalar kaldırılır."
         : _assignmentToRemove?.FullName ?? string.Empty;
 
     protected override async Task OnInitializedAsync()
@@ -916,7 +916,7 @@
 
         if (_removeSubjectIds.Count == 0)
         {
-            Toast.Warning("Projeden çıkarılabilecek (başlanmamış) seçili denek yok.");
+            Toast.Warning("Projeden çıkarılabilecek (başlanmamış veya zamanlanmış) seçili denek yok.");
             return;
         }
 

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using PulsePoll.Application.DTOs;
 using PulsePoll.Application.Interfaces;
 using PulsePoll.Domain.Entities;
 using PulsePoll.Domain.Enums;
@@ -145,6 +146,7 @@ public class ProjectRepository(AppDbContext db) : IProjectRepository
     // Zamana yayılı dağıtım metodları
     public Task<List<Project>> GetActiveScheduledDistributionProjectsAsync()
         => db.Projects
+             .AsNoTracking()
              .Where(p => p.Status == ProjectStatus.Active
                       && p.IsScheduledDistribution
                       && p.DeletedAt == null)
@@ -152,20 +154,32 @@ public class ProjectRepository(AppDbContext db) : IProjectRepository
 
     public Task<int> GetAssignmentCountByStatusAsync(int projectId, AssignmentStatus status)
         => db.ProjectAssignments
-             .CountAsync(a => a.ProjectId == projectId && a.Status == status);
+             .CountAsync(a => a.ProjectId == projectId
+                           && a.Status == status
+                           && a.DeletedAt == null);
 
     public Task<List<ProjectAssignment>> GetScheduledAssignmentsAsync(int projectId, int take)
         => db.ProjectAssignments
-             .Where(a => a.ProjectId == projectId && a.Status == AssignmentStatus.Scheduled)
+             .Where(a => a.ProjectId == projectId
+                      && a.Status == AssignmentStatus.Scheduled
+                      && a.DeletedAt == null)
              .OrderBy(a => a.AssignedAt)
              .Take(take)
+             .ToListAsync();
+
+    public Task<List<AssignmentStatusCountDto>> GetAssignmentStatusCountsAsync(int projectId)
+        => db.ProjectAssignments
+             .AsNoTracking()
+             .Where(a => a.ProjectId == projectId && a.DeletedAt == null)
+             .GroupBy(a => a.Status)
+             .Select(g => new AssignmentStatusCountDto(g.Key, g.Count()))
              .ToListAsync();
 
     public async Task UpdateAssignmentsStatusBatchAsync(IEnumerable<int> assignmentIds, AssignmentStatus newStatus, DateTime? scheduledNotifiedAt = null)
     {
         var ids = assignmentIds.ToList();
         var assignments = await db.ProjectAssignments
-            .Where(a => ids.Contains(a.Id))
+            .Where(a => ids.Contains(a.Id) && a.DeletedAt == null)
             .ToListAsync();
 
         foreach (var a in assignments)
@@ -184,15 +198,9 @@ public class ProjectRepository(AppDbContext db) : IProjectRepository
         return db.ProjectAssignments
             .Where(a => a.ProjectId == projectId
                      && a.Status == AssignmentStatus.NotStarted
+                     && a.DeletedAt == null
                      && a.ScheduledNotifiedAt != null
                      && a.ScheduledNotifiedAt < notifiedBeforeUtc)
             .ToListAsync();
     }
-
-    public Task<int> GetTodayDistributedCountAsync(int projectId, DateOnly today)
-        => db.ProjectAssignments
-             .CountAsync(a => a.ProjectId == projectId
-                           && a.Status != AssignmentStatus.Scheduled
-                           && a.ScheduledNotifiedAt != null
-                           && DateOnly.FromDateTime(a.ScheduledNotifiedAt!.Value) == today);
 }

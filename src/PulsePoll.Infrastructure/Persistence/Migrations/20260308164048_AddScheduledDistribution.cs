@@ -17,14 +17,14 @@ namespace PulsePoll.Infrastructure.Persistence.Migrations
                 table: "projects",
                 type: "time without time zone",
                 nullable: false,
-                defaultValue: new TimeOnly(0, 0, 0));
+                defaultValue: new TimeOnly(19, 0, 0));
 
             migrationBuilder.AddColumn<TimeOnly>(
                 name: "distribution_start_hour",
                 table: "projects",
                 type: "time without time zone",
                 nullable: false,
-                defaultValue: new TimeOnly(0, 0, 0));
+                defaultValue: new TimeOnly(9, 0, 0));
 
             migrationBuilder.AddColumn<bool>(
                 name: "is_scheduled_distribution",

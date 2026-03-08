@@ -6,6 +6,7 @@ public interface IDistributionService
 {
     Task<DistributionRunResultDto> RunHourlyDistributionAsync(int projectId);
     Task<List<DistributionRunResultDto>> RunAllHourlyDistributionsAsync();
+    Task<List<DistributionReminderResultDto>> RunDueReminderNotificationsAsync();
     Task<int> SendReminderNotificationsAsync(int projectId);
     Task<DistributionProgressDto> GetDistributionProgressAsync(int projectId);
     Task<List<DistributionLogDto>> GetDistributionLogsAsync(int projectId);

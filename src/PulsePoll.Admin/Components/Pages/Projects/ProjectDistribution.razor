@@ -2,7 +2,6 @@
 @attribute [HasPermission(PermissionCodes.Projects.ManageSubjects)]
 @using PulsePoll.Application.DTOs
 @inject IDistributionService DistributionService
-@inject IProjectService ProjectService
 @inject IAppToastService Toast
 @inject NavigationManager NavigationManager
 @inject IPermissionAuthorizationService PermissionService
@@ -96,7 +95,7 @@ else
         </div>
 
         <!-- Aksiyon Butonları -->
-        @if (_canManage)
+        @if (_progress.IsScheduledDistribution && _progress.ProjectStatus == ProjectStatus.Active && _progress.HasValidDistributionWindow)
         {
             <div class="d-flex gap-2 mb-3">
                 <DxButton Text="@(_isRunning ? "Çalışıyor..." : "Manuel Dağıtım Çalıştır")"
@@ -113,6 +112,12 @@ else
                           Enabled="!_isRunning && !_isSendingReminders" />
             </div>
         }
+        else if (_canManage)
+        {
+            <div class="alert alert-warning py-2 mb-3">
+                Dağıtım aksiyonları yalnızca aktif, zamana yayılı dağıtımı açık ve geçerli saat penceresine sahip projelerde kullanılabilir.
+            </div>
+        }
     }
 
     <!-- Dağıtım Log Tablosu -->
@@ -127,7 +132,7 @@ else
                     </CellDisplayTemplate>
                 </DxGridDataColumn>
                 <DxGridDataColumn FieldName="DistributedCount" Caption="Dağıtılan" Width="100px" />
-                <DxGridDataColumn FieldName="ScheduledBefore" Caption="Önceki Scheduled" Width="140px" />
+                <DxGridDataColumn FieldName="ScheduledBefore" Caption="Önceki Zamanlanmış" Width="150px" />
                 <DxGridDataColumn FieldName="DailyQuota" Caption="Günlük Kota" Width="110px" />
                 <DxGridDataColumn FieldName="HourlyQuota" Caption="Saatlik Kota" Width="110px" />
                 <DxGridDataColumn FieldName="RemainingDays" Caption="Kalan Gün" Width="100px" />
@@ -184,7 +189,7 @@ else
         }
         catch (Exception ex)
         {
-            Toast.Error($"Veriler yüklenemedi: {ex.Message}");
+            ErrorHandler.HandleOperation(ex, Toast, "Dağıtım verileri yüklenemedi.");
         }
         finally
         {
@@ -203,7 +208,7 @@ else
         }
         catch (Exception ex)
         {
-            Toast.Error($"Dağıtım başarısız: {ex.Message}");
+            ErrorHandler.HandleOperation(ex, Toast, "Dağıtım çalıştırılamadı.");
         }
         finally
         {
@@ -221,7 +226,7 @@ else
         }
         catch (Exception ex)
         {
-            Toast.Error($"Hatırlatma gönderilemedi: {ex.Message}");
+            ErrorHandler.HandleOperation(ex, Toast, "Hatırlatma gönderilemedi.");
         }
         finally
         {

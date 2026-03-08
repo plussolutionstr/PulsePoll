@@ -80,5 +80,30 @@ public class UpdateProjectValidator : AbstractValidator<UpdateProjectDto>
         RuleFor(x => x.ScreenOutMessage)
             .NotEmpty().WithMessage("Screen-out mesajı zorunludur.")
             .MaximumLength(500);
+
+        When(x => x.IsScheduledDistribution, () =>
+        {
+            RuleFor(x => x.DistributionStartHour)
+                .Must(BeWholeHour)
+                .WithMessage("Dağıtım başlangıç saati tam saat olmalıdır.");
+
+            RuleFor(x => x.DistributionEndHour)
+                .Must(BeWholeHour)
+                .WithMessage("Dağıtım bitiş saati tam saat olmalıdır.");
+
+            RuleFor(x => x)
+                .Must(x => x.DistributionStartHour < x.DistributionEndHour)
+                .WithMessage("Dağıtım başlangıç saati bitiş saatinden önce olmalıdır.");
+
+            RuleFor(x => x.DistributionStartHour)
+                .InclusiveBetween(new TimeOnly(9, 0), new TimeOnly(18, 0))
+                .WithMessage("Dağıtım başlangıç saati 09:00-18:00 aralığında olmalıdır.");
+
+            RuleFor(x => x.DistributionEndHour)
+                .InclusiveBetween(new TimeOnly(10, 0), new TimeOnly(19, 0))
+                .WithMessage("Dağıtım bitiş saati 10:00-19:00 aralığında olmalıdır.");
+        });
     }
+
+    private static bool BeWholeHour(TimeOnly time) => time.Minute == 0 && time.Second == 0;
 }

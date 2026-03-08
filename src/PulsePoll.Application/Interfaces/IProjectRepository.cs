@@ -1,3 +1,4 @@
+using PulsePoll.Application.DTOs;
 using PulsePoll.Domain.Entities;
 using PulsePoll.Domain.Enums;
 
@@ -27,7 +28,7 @@ public interface IProjectRepository
     Task<List<Project>> GetActiveScheduledDistributionProjectsAsync();
     Task<int> GetAssignmentCountByStatusAsync(int projectId, AssignmentStatus status);
     Task<List<ProjectAssignment>> GetScheduledAssignmentsAsync(int projectId, int take);
+    Task<List<AssignmentStatusCountDto>> GetAssignmentStatusCountsAsync(int projectId);
     Task UpdateAssignmentsStatusBatchAsync(IEnumerable<int> assignmentIds, AssignmentStatus newStatus, DateTime? scheduledNotifiedAt = null);
     Task<List<ProjectAssignment>> GetNotStartedNeedingReminderAsync(int projectId, DateOnly notifiedBefore);
-    Task<int> GetTodayDistributedCountAsync(int projectId, DateOnly today);
 }

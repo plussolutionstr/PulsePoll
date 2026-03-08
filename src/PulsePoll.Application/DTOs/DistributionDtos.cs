@@ -1,3 +1,5 @@
+using PulsePoll.Domain.Enums;
+
 namespace PulsePoll.Application.DTOs;
 
 public record DistributionRunResultDto(
@@ -24,7 +26,10 @@ public record DistributionProgressDto(
     DateOnly? StartDate,
     DateOnly? EndDate,
     TimeOnly DistributionStartHour,
-    TimeOnly DistributionEndHour);
+    TimeOnly DistributionEndHour,
+    ProjectStatus ProjectStatus,
+    bool IsScheduledDistribution,
+    bool HasValidDistributionWindow);
 
 public record DistributionLogDto(
     int Id,
@@ -37,3 +42,12 @@ public record DistributionLogDto(
     int RemainingDays,
     bool IsLastDayFlush,
     DateTime CreatedAt);
+
+public record DistributionReminderResultDto(
+    int ProjectId,
+    string ProjectName,
+    int ReminderCount);
+
+public record AssignmentStatusCountDto(
+    AssignmentStatus Status,
+    int Count);

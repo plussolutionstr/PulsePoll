@@ -449,8 +449,8 @@ private readonly List<ProjectStatus> _statuses = Enum.GetValues<ProjectStatus>()
             CoverImageUrl  = dto.CoverImageUrl,
             CoverImageName = dto.CoverMediaId.HasValue ? "(mevcut görsel)" : null,
             IsScheduledDistribution = dto.IsScheduledDistribution,
-            DistributionStartHour = DateTime.Today.Add(dto.DistributionStartHour.ToTimeSpan()),
-            DistributionEndHour = DateTime.Today.Add(dto.DistributionEndHour.ToTimeSpan())
+            DistributionStartHour = NormalizeDistributionEditTime(dto.DistributionStartHour, 9),
+            DistributionEndHour = NormalizeDistributionEditTime(dto.DistributionEndHour, 19)
         };
         _formError = null;
         _popupVisible = true;
@@ -492,7 +492,10 @@ private readonly List<ProjectStatus> _statuses = Enum.GetValues<ProjectStatus>()
             Status = ProjectStatus.Draft,
             CoverMediaId = dto.CoverMediaId,
             CoverImageUrl = dto.CoverImageUrl,
-            CoverImageName = dto.CoverMediaId.HasValue ? "(mevcut görsel)" : null
+            CoverImageName = dto.CoverMediaId.HasValue ? "(mevcut görsel)" : null,
+            IsScheduledDistribution = dto.IsScheduledDistribution,
+            DistributionStartHour = NormalizeDistributionEditTime(dto.DistributionStartHour, 9),
+            DistributionEndHour = NormalizeDistributionEditTime(dto.DistributionEndHour, 19)
         };
         _formError = null;
         _popupVisible = true;
@@ -712,6 +715,12 @@ private readonly List<ProjectStatus> _statuses = Enum.GetValues<ProjectStatus>()
         return claim is not null && int.TryParse(claim.Value, out var adminUserId)
             ? adminUserId
             : 0;
+    }
+
+    private static DateTime NormalizeDistributionEditTime(TimeOnly time, int defaultHour)
+    {
+        var normalized = time == default ? new TimeOnly(defaultHour, 0) : time;
+        return DateTime.Today.Add(normalized.ToTimeSpan());
     }
 
     private sealed class FormModel

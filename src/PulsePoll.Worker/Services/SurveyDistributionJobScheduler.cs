@@ -15,33 +15,39 @@ public class SurveyDistributionJobScheduler(
     public const string HourlyJobId = "survey-distribution-hourly";
     public const string DailyReminderJobId = "survey-distribution-reminder";
 
-    private static readonly TimeZoneInfo IstanbulTz = GetIstanbulTimeZone();
+    private static readonly TimeZoneInfo IstanbulTz = ResolveTurkeyTimeZone();
 
     public Task RefreshAsync(CancellationToken cancellationToken = default)
     {
         _ = cancellationToken;
 
-        // Her saat başı 09:00-19:00 arası (Türkiye saati)
+        // Her saat başı kontrol et; proje bazlı pencere filtresi servis katmanında uygulanır.
         recurringJobManager.AddOrUpdate<SurveyDistributionRecurringJob>(
             HourlyJobId,
             job => job.ExecuteAsync(),
-            "0 9-19 * * *",
+            "0 * * * *",
             new RecurringJobOptions { TimeZone = IstanbulTz });
 
-        // Her gün 10:00'da hatırlatma (Türkiye saati)
+        // Her saat başı kontrol et; hatırlatma yalnızca proje başlangıç saatinde gönderilir.
         recurringJobManager.AddOrUpdate<SurveyReminderRecurringJob>(
             DailyReminderJobId,
             job => job.ExecuteAsync(),
-            "0 10 * * *",
+            "0 * * * *",
             new RecurringJobOptions { TimeZone = IstanbulTz });
 
-        logger.LogInformation("Survey distribution jobs scheduled. Hourly: 09-19, Reminder: 10:00 Istanbul time.");
+        logger.LogInformation("Survey distribution jobs scheduled. Distribution=hourly Reminder=hourly TimeZone={TimeZoneId}", IstanbulTz.Id);
         return Task.CompletedTask;
     }
 
-    private static TimeZoneInfo GetIstanbulTimeZone()
+    private static TimeZoneInfo ResolveTurkeyTimeZone()
     {
-        try { return TimeZoneInfo.FindSystemTimeZoneById("Europe/Istanbul"); }
-        catch { return TimeZoneInfo.Local; }
+        try
+        {
+            return TimeZoneInfo.FindSystemTimeZoneById("Europe/Istanbul");
+        }
+        catch (TimeZoneNotFoundException)
+        {
+            return TimeZoneInfo.FindSystemTimeZoneById("Turkey Standard Time");
+        }
     }
 }
