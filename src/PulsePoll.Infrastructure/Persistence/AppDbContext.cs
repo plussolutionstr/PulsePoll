@@ -52,6 +52,8 @@ public DbSet<Wallet> Wallets => Set<Wallet>();
     public DbSet<SubjectScoreConfig> SubjectScoreConfigs => Set<SubjectScoreConfig>();
     public DbSet<RewardUnitConfig> RewardUnitConfigs => Set<RewardUnitConfig>();
 
+    public DbSet<DistributionLog> DistributionLogs => Set<DistributionLog>();
+
     public DbSet<Role> Roles => Set<Role>();
     public DbSet<Permission> Permissions => Set<Permission>();
     public DbSet<AdminUserRole> AdminUserRoles => Set<AdminUserRole>();

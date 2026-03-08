@@ -36,6 +36,11 @@ builder.Services.AddScoped<CommunicationAutomationRecurringJob>();
 builder.Services.AddScoped<ICommunicationAutomationJobScheduler, CommunicationAutomationJobScheduler>();
 builder.Services.AddHostedService<CommunicationAutomationSchedulerBootstrapService>();
 
+builder.Services.AddScoped<SurveyDistributionRecurringJob>();
+builder.Services.AddScoped<SurveyReminderRecurringJob>();
+builder.Services.AddScoped<ISurveyDistributionJobScheduler, SurveyDistributionJobScheduler>();
+builder.Services.AddHostedService<SurveyDistributionSchedulerBootstrapService>();
+
 builder.Services.AddMassTransit(x =>
 {
     x.AddConsumer<SubjectRegisteredConsumer>();

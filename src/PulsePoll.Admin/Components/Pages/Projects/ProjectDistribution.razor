@@ -1,0 +1,231 @@
+@page "/projects/{ProjectId:int}/distribution"
+@attribute [HasPermission(PermissionCodes.Projects.ManageSubjects)]
+@using PulsePoll.Application.DTOs
+@inject IDistributionService DistributionService
+@inject IProjectService ProjectService
+@inject IAppToastService Toast
+@inject NavigationManager NavigationManager
+@inject IPermissionAuthorizationService PermissionService
+
+<PageTitle>Dağıtım İzleme — PulsePoll Admin</PageTitle>
+
+@if (_project is null)
+{
+    <DxLoadingPanel Visible="true" Text="Yükleniyor..." />
+}
+else
+{
+    <div class="d-flex align-items-center gap-2 mb-3">
+        <DxButton IconCssClass="bi bi-arrow-left"
+                  RenderStyle="ButtonRenderStyle.Link"
+                  Click="@(() => NavigationManager.NavigateTo($"/projects/{ProjectId}/subjects"))" />
+        <h4 class="mb-0">Dağıtım İzleme — @_project.ProjectName</h4>
+    </div>
+
+    @if (_progress is not null)
+    {
+        <!-- Özet Kartlar -->
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <div class="fs-2 fw-bold text-primary">@_progress.TotalAssigned</div>
+                        <div class="text-muted small">Toplam Atanan</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <div class="fs-2 fw-bold text-info">@_progress.ScheduledCount</div>
+                        <div class="text-muted small">Zamanlanmış</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <div class="fs-2 fw-bold text-warning">@_progress.NotStartedCount</div>
+                        <div class="text-muted small">Dağıtıldı (Bekliyor)</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <div class="fs-2 fw-bold text-success">@_progress.CompletedCount</div>
+                        <div class="text-muted small">Tamamlandı</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <div class="fs-2 fw-bold text-secondary">@_progress.DailyQuota</div>
+                        <div class="text-muted small">Günlük Kota</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <div class="fs-2 fw-bold text-dark">@_progress.TodayDistributed</div>
+                        <div class="text-muted small">Bugün Dağıtılan</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <div class="fs-2 fw-bold @(_progress.RemainingDays <= 1 ? "text-danger" : "text-dark")">@_progress.RemainingDays</div>
+                        <div class="text-muted small">Kalan Gün</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <div class="small text-muted">Dağıtım Penceresi</div>
+                        <div class="fw-semibold">@_progress.DistributionStartHour.ToString("HH:mm") – @_progress.DistributionEndHour.ToString("HH:mm")</div>
+                        <div class="small text-muted mt-1">
+                            @(_progress.StartDate?.ToString("dd.MM.yyyy") ?? "—") – @(_progress.EndDate?.ToString("dd.MM.yyyy") ?? "—")
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Aksiyon Butonları -->
+        @if (_canManage)
+        {
+            <div class="d-flex gap-2 mb-3">
+                <DxButton Text="@(_isRunning ? "Çalışıyor..." : "Manuel Dağıtım Çalıştır")"
+                          IconCssClass="@(_isRunning ? "spinner-border spinner-border-sm" : "bi bi-send")"
+                          RenderStyle="ButtonRenderStyle.Primary"
+                          RenderStyleMode="ButtonRenderStyleMode.Outline"
+                          Click="RunDistributionAsync"
+                          Enabled="!_isRunning && !_isSendingReminders" />
+                <DxButton Text="@(_isSendingReminders ? "Gönderiliyor..." : "Hatırlatma Gönder")"
+                          IconCssClass="@(_isSendingReminders ? "spinner-border spinner-border-sm" : "bi bi-bell")"
+                          RenderStyle="ButtonRenderStyle.Secondary"
+                          RenderStyleMode="ButtonRenderStyleMode.Outline"
+                          Click="SendRemindersAsync"
+                          Enabled="!_isRunning && !_isSendingReminders" />
+            </div>
+        }
+    }
+
+    <!-- Dağıtım Log Tablosu -->
+    <h5 class="mb-2">Dağıtım Logları</h5>
+    <DxLoadingPanel @bind-Visible="_isLoading" IsContentBlocked="true" ApplyBackgroundShading="true" IndicatorAreaVisible="false" Text="Yükleniyor...">
+        <DxGrid Data="_logs" ShowFilterRow="false" PageSize="50">
+            <Columns>
+                <DxGridDataColumn FieldName="RunDate" Caption="Tarih" DisplayFormat="dd.MM.yyyy" Width="110px" />
+                <DxGridDataColumn FieldName="RunTime" Caption="Saat" Width="80px">
+                    <CellDisplayTemplate>
+                        @(((TimeOnly)context.Value).ToString("HH:mm"))
+                    </CellDisplayTemplate>
+                </DxGridDataColumn>
+                <DxGridDataColumn FieldName="DistributedCount" Caption="Dağıtılan" Width="100px" />
+                <DxGridDataColumn FieldName="ScheduledBefore" Caption="Önceki Scheduled" Width="140px" />
+                <DxGridDataColumn FieldName="DailyQuota" Caption="Günlük Kota" Width="110px" />
+                <DxGridDataColumn FieldName="HourlyQuota" Caption="Saatlik Kota" Width="110px" />
+                <DxGridDataColumn FieldName="RemainingDays" Caption="Kalan Gün" Width="100px" />
+                <DxGridDataColumn FieldName="IsLastDayFlush" Caption="Son Gün" Width="90px">
+                    <CellDisplayTemplate>
+                        @if ((bool)context.Value)
+                        {
+                            <span class="badge bg-danger">Son Gün</span>
+                        }
+                    </CellDisplayTemplate>
+                </DxGridDataColumn>
+                <DxGridDataColumn FieldName="CreatedAt" Caption="Kayıt Zamanı" DisplayFormat="dd.MM.yyyy HH:mm" Width="150px" />
+            </Columns>
+            <TotalSummary>
+                <DxGridSummaryItem SummaryType="GridSummaryItemType.Sum"
+                                   FieldName="DistributedCount"
+                                   FooterColumnName="DistributedCount"
+                                   DisplayText="Toplam: {0}" />
+            </TotalSummary>
+        </DxGrid>
+    </DxLoadingPanel>
+}
+
+@code {
+    [Parameter] public int ProjectId { get; set; }
+
+    private DistributionProgressDto? _progress;
+    private DistributionDto? _project;
+    private IReadOnlyList<DistributionLogDto> _logs = [];
+    private bool _isLoading = true;
+    private bool _isRunning;
+    private bool _isSendingReminders;
+    private bool _canManage;
+
+    private record DistributionDto(int Id, string ProjectName);
+
+    protected override async Task OnInitializedAsync()
+    {
+        var permissions = await PermissionService.GetCurrentPermissionsAsync();
+        _canManage = permissions.Contains(PermissionCodes.Projects.ManageSubjects);
+
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            _progress = await DistributionService.GetDistributionProgressAsync(ProjectId);
+            _project = new DistributionDto(ProjectId, _progress.ProjectName);
+            var logs = await DistributionService.GetDistributionLogsAsync(ProjectId);
+            _logs = logs;
+        }
+        catch (Exception ex)
+        {
+            Toast.Error($"Veriler yüklenemedi: {ex.Message}");
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task RunDistributionAsync()
+    {
+        _isRunning = true;
+        try
+        {
+            var result = await DistributionService.RunHourlyDistributionAsync(ProjectId);
+            Toast.Success($"{result.DistributedCount} denek dağıtıldı. Kalan: {result.RemainingScheduled}");
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            Toast.Error($"Dağıtım başarısız: {ex.Message}");
+        }
+        finally
+        {
+            _isRunning = false;
+        }
+    }
+
+    private async Task SendRemindersAsync()
+    {
+        _isSendingReminders = true;
+        try
+        {
+            var count = await DistributionService.SendReminderNotificationsAsync(ProjectId);
+            Toast.Success($"{count} deneklere hatırlatma gönderildi.");
+        }
+        catch (Exception ex)
+        {
+            Toast.Error($"Hatırlatma gönderilemedi: {ex.Message}");
+        }
+        finally
+        {
+            _isSendingReminders = false;
+        }
+    }
+}

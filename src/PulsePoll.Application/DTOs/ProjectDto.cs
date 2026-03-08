@@ -32,6 +32,9 @@ public record ProjectDto(
     AssignmentStatus? AssignmentStatus,
     int? CoverMediaId,
     string? CoverImageUrl,
+    bool IsScheduledDistribution = false,
+    TimeOnly DistributionStartHour = default,
+    TimeOnly DistributionEndHour = default,
     string RewardUnitCode = "TRY",
     string RewardUnitLabel = "TL",
     decimal RewardUnitTryMultiplier = 1m);
@@ -59,7 +62,10 @@ public record CreateProjectDto(
     string DisqualifyMessage,
     string QuotaFullMessage,
     string ScreenOutMessage,
-    int? CoverMediaId = null);
+    int? CoverMediaId = null,
+    bool IsScheduledDistribution = false,
+    TimeOnly DistributionStartHour = default,
+    TimeOnly DistributionEndHour = default);
 
 public record UpdateProjectDto(
     string Name,
@@ -83,4 +89,7 @@ public record UpdateProjectDto(
     string QuotaFullMessage,
     string ScreenOutMessage,
     ProjectStatus Status,
-    int? CoverMediaId = null);
+    int? CoverMediaId = null,
+    bool IsScheduledDistribution = false,
+    TimeOnly DistributionStartHour = default,
+    TimeOnly DistributionEndHour = default);

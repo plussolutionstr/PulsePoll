@@ -23,5 +23,8 @@ public enum AssignmentStatus
     ScreenOut = 5,
 
     [Description("Bilinmiyor")]
-    Unknown = 6
+    Unknown = 6,
+
+    [Description("Zamanlanmış")]
+    Scheduled = 7
 }

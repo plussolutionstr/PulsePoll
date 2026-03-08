@@ -14,6 +14,7 @@ public class ProjectAssignment : EntityBase
     public DateTime? RewardProcessedAt { get; set; }
     public int? RewardProcessedBy { get; set; }
     public string? RewardRejectionReason { get; set; }
+    public DateTime? ScheduledNotifiedAt { get; set; }
 
     public Project Project { get; set; } = null!;
     public Subject Subject { get; set; } = null!;

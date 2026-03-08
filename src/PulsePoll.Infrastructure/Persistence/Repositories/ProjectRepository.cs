@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PulsePoll.Application.Interfaces;
 using PulsePoll.Domain.Entities;
+using PulsePoll.Domain.Enums;
 
 namespace PulsePoll.Infrastructure.Persistence.Repositories;
 
@@ -140,4 +141,58 @@ public class ProjectRepository(AppDbContext db) : IProjectRepository
              .Include(a => a.Project).ThenInclude(p => p.Customer)
              .OrderByDescending(a => a.AssignedAt)
              .ToListAsync();
+
+    // Zamana yayılı dağıtım metodları
+    public Task<List<Project>> GetActiveScheduledDistributionProjectsAsync()
+        => db.Projects
+             .Where(p => p.Status == ProjectStatus.Active
+                      && p.IsScheduledDistribution
+                      && p.DeletedAt == null)
+             .ToListAsync();
+
+    public Task<int> GetAssignmentCountByStatusAsync(int projectId, AssignmentStatus status)
+        => db.ProjectAssignments
+             .CountAsync(a => a.ProjectId == projectId && a.Status == status);
+
+    public Task<List<ProjectAssignment>> GetScheduledAssignmentsAsync(int projectId, int take)
+        => db.ProjectAssignments
+             .Where(a => a.ProjectId == projectId && a.Status == AssignmentStatus.Scheduled)
+             .OrderBy(a => a.AssignedAt)
+             .Take(take)
+             .ToListAsync();
+
+    public async Task UpdateAssignmentsStatusBatchAsync(IEnumerable<int> assignmentIds, AssignmentStatus newStatus, DateTime? scheduledNotifiedAt = null)
+    {
+        var ids = assignmentIds.ToList();
+        var assignments = await db.ProjectAssignments
+            .Where(a => ids.Contains(a.Id))
+            .ToListAsync();
+
+        foreach (var a in assignments)
+        {
+            a.Status = newStatus;
+            if (scheduledNotifiedAt.HasValue)
+                a.ScheduledNotifiedAt = scheduledNotifiedAt;
+        }
+
+        await db.SaveChangesAsync();
+    }
+
+    public Task<List<ProjectAssignment>> GetNotStartedNeedingReminderAsync(int projectId, DateOnly notifiedBefore)
+    {
+        var notifiedBeforeUtc = notifiedBefore.ToDateTime(TimeOnly.MinValue);
+        return db.ProjectAssignments
+            .Where(a => a.ProjectId == projectId
+                     && a.Status == AssignmentStatus.NotStarted
+                     && a.ScheduledNotifiedAt != null
+                     && a.ScheduledNotifiedAt < notifiedBeforeUtc)
+            .ToListAsync();
+    }
+
+    public Task<int> GetTodayDistributedCountAsync(int projectId, DateOnly today)
+        => db.ProjectAssignments
+             .CountAsync(a => a.ProjectId == projectId
+                           && a.Status != AssignmentStatus.Scheduled
+                           && a.ScheduledNotifiedAt != null
+                           && DateOnly.FromDateTime(a.ScheduledNotifiedAt!.Value) == today);
 }

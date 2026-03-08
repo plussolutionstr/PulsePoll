@@ -77,7 +77,10 @@ public class ProjectService(
             DisqualifyMessage    = dto.DisqualifyMessage,
             QuotaFullMessage     = dto.QuotaFullMessage,
             ScreenOutMessage     = dto.ScreenOutMessage,
-            CoverMediaId         = dto.CoverMediaId
+            CoverMediaId              = dto.CoverMediaId,
+            IsScheduledDistribution   = dto.IsScheduledDistribution,
+            DistributionStartHour     = dto.DistributionStartHour == default ? new TimeOnly(9, 0) : dto.DistributionStartHour,
+            DistributionEndHour       = dto.DistributionEndHour == default ? new TimeOnly(19, 0) : dto.DistributionEndHour
         };
         project.SetCreated(adminId);
 
@@ -115,8 +118,11 @@ public class ProjectService(
         project.DisqualifyMessage    = dto.DisqualifyMessage;
         project.QuotaFullMessage     = dto.QuotaFullMessage;
         project.ScreenOutMessage     = dto.ScreenOutMessage;
-        project.Status               = dto.Status;
-        project.CoverMediaId         = dto.CoverMediaId;
+        project.Status                  = dto.Status;
+        project.CoverMediaId            = dto.CoverMediaId;
+        project.IsScheduledDistribution = dto.IsScheduledDistribution;
+        project.DistributionStartHour   = dto.DistributionStartHour == default ? new TimeOnly(9, 0) : dto.DistributionStartHour;
+        project.DistributionEndHour     = dto.DistributionEndHour == default ? new TimeOnly(19, 0) : dto.DistributionEndHour;
         project.SetUpdated(adminId);
 
         await repository.UpdateAsync(project);
@@ -182,6 +188,9 @@ public class ProjectService(
             assignmentStatus,
             p.CoverMediaId,
             coverImageUrl,
+            p.IsScheduledDistribution,
+            p.DistributionStartHour,
+            p.DistributionEndHour,
             rewardUnit.UnitCode,
             rewardUnit.UnitLabel,
             rewardUnit.TryMultiplier);
@@ -191,5 +200,6 @@ public class ProjectService(
         => status is AssignmentStatus.Completed
             or AssignmentStatus.Disqualify
             or AssignmentStatus.QuotaFull
-            or AssignmentStatus.ScreenOut;
+            or AssignmentStatus.ScreenOut
+            or AssignmentStatus.Scheduled;
 }

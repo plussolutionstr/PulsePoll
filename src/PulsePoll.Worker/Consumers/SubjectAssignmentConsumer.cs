@@ -31,6 +31,13 @@ public class SubjectAssignmentConsumer(
 
         try
         {
+            var project = await projectRepository.GetByIdAsync(msg.ProjectId)
+                ?? throw new InvalidOperationException($"Proje bulunamadı: {msg.ProjectId}");
+
+            var initialStatus = project.IsScheduledDistribution
+                ? AssignmentStatus.Scheduled
+                : AssignmentStatus.NotStarted;
+
             var existingIds = await projectRepository.GetAssignedSubjectIdsAsync(msg.ProjectId);
             var existingSet = existingIds.ToHashSet();
 
@@ -44,7 +51,7 @@ public class SubjectAssignmentConsumer(
                         ProjectId  = msg.ProjectId,
                         SubjectId  = id,
                         AssignedAt = now,
-                        Status     = AssignmentStatus.NotStarted
+                        Status     = initialStatus
                     };
                     a.SetCreated(msg.AdminId, now);
                     return a;
