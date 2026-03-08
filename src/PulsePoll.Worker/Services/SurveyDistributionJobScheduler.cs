@@ -14,6 +14,7 @@ public class SurveyDistributionJobScheduler(
 {
     public const string HourlyJobId = "survey-distribution-hourly";
     public const string DailyReminderJobId = "survey-distribution-reminder";
+    public const string NotificationBatchJobId = "notification-batch-hourly";
 
     private static readonly TimeZoneInfo IstanbulTz = ResolveTurkeyTimeZone();
 
@@ -35,7 +36,14 @@ public class SurveyDistributionJobScheduler(
             "0 * * * *",
             new RecurringJobOptions { TimeZone = IstanbulTz });
 
-        logger.LogInformation("Survey distribution jobs scheduled. Distribution=hourly Reminder=hourly TimeZone={TimeZoneId}", IstanbulTz.Id);
+        // Her saat başı: non-scheduled projelerde bildirim batch dağıtımı
+        recurringJobManager.AddOrUpdate<NotificationBatchRecurringJob>(
+            NotificationBatchJobId,
+            job => job.ExecuteAsync(),
+            "0 * * * *",
+            new RecurringJobOptions { TimeZone = IstanbulTz });
+
+        logger.LogInformation("Survey distribution jobs scheduled. Distribution=hourly Reminder=hourly NotificationBatch=hourly TimeZone={TimeZoneId}", IstanbulTz.Id);
         return Task.CompletedTask;
     }
 

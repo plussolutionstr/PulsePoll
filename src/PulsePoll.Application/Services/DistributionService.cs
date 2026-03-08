@@ -11,6 +11,7 @@ public class DistributionService(
     IProjectRepository projectRepository,
     IDistributionLogRepository distributionLogRepository,
     INotificationService notificationService,
+    INotificationDistributionConfigService notificationDistributionConfigService,
     ILogger<DistributionService> logger) : IDistributionService
 {
     private static readonly TimeOnly DefaultDistributionStartHour = new(9, 0);
@@ -266,6 +267,38 @@ public class DistributionService(
 
         logger.LogInformation("Hatırlatma gönderildi: Project={ProjectId} Count={Count}", project.Id, assignments.Count);
         return assignments.Count;
+    }
+
+    public async Task<int> RunNotificationBatchAsync()
+    {
+        var config = await notificationDistributionConfigService.GetAsync();
+        var projects = await projectRepository.GetActiveNonScheduledProjectsAsync();
+
+        if (projects.Count == 0)
+            return 0;
+
+        var perProject = Math.Max(1, config.HourlyLimit / projects.Count);
+        var totalSent = 0;
+
+        foreach (var project in projects)
+        {
+            var assignments = await projectRepository.GetUnnotifiedAssignmentsAsync(project.Id, perProject);
+            if (assignments.Count == 0) continue;
+
+            var subjectIds = assignments.Select(a => a.SubjectId).ToList();
+            await notificationService.SendPushToManyAsync(subjectIds, "Yeni anketin var!", project.StartMessage, "survey_assigned");
+
+            var assignmentIds = assignments.Select(a => a.Id).ToList();
+            await projectRepository.UpdateAssignmentsStatusBatchAsync(assignmentIds, AssignmentStatus.NotStarted, TurkeyTime.Now);
+
+            totalSent += assignments.Count;
+
+            logger.LogInformation(
+                "Bildirim batch: Project={ProjectId} Sent={Count} PerProjectLimit={Limit}",
+                project.Id, assignments.Count, perProject);
+        }
+
+        return totalSent;
     }
 
     private static bool HasValidDistributionWindow(Project project)

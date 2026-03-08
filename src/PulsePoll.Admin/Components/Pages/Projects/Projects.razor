@@ -339,6 +339,33 @@
     </FooterContentTemplate>
 </DxPopup>
 
+<!-- Zamana Yayılı Dağıtım Kapatma Onayı -->
+<DxPopup @bind-Visible="_scheduledConfirmVisible"
+         HeaderText="Zamanlanmış Atamalar"
+         Width="480px"
+         CloseOnOutsideClick="false"
+         ShowFooter="true">
+    <BodyContentTemplate Context="_">
+        <div class="d-flex align-items-start gap-3 p-2">
+            <i class="bi bi-exclamation-triangle-fill text-warning" style="font-size:2.5rem; flex-shrink:0;"></i>
+            <div>
+                <p class="mb-1 fw-semibold">Bu projede <strong>@_scheduledCount</strong> zamanlanmış atama bulunuyor.</p>
+                <p class="mb-0 text-muted">Zamana yayılı dağıtımı kapatırsanız bu denekler "Başlanmamış" durumuna geçecek ve herkese anında dağıtılacak. Emin misiniz?</p>
+            </div>
+        </div>
+    </BodyContentTemplate>
+    <FooterContentTemplate>
+        <DxButton Text="Evet, Dağıtıma Aç" IconCssClass="bi bi-check-lg"
+                  RenderStyle="ButtonRenderStyle.Primary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="OnScheduledConfirmYes" Enabled="!_isSaving" />
+        <DxButton Text="İptal"
+                  RenderStyle="ButtonRenderStyle.Secondary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="OnScheduledConfirmNo" />
+    </FooterContentTemplate>
+</DxPopup>
+
 @code {
     private DxGrid? _grid;
     private DxContextMenu? _contextMenu;
@@ -346,7 +373,7 @@
 
     private IReadOnlyList<ProjectDto> _projects = [];
     private List<CustomerDto> _customers = [];
-private readonly List<ProjectStatus> _statuses = Enum.GetValues<ProjectStatus>().ToList();
+    private readonly List<ProjectStatus> _statuses = Enum.GetValues<ProjectStatus>().ToList();
 
     private bool _isLoading = true;
     private bool _popupVisible;
@@ -365,6 +392,11 @@ private readonly List<ProjectStatus> _statuses = Enum.GetValues<ProjectStatus>()
 
     // Medya picker
     private bool _mediaPickerVisible;
+
+    // Scheduled → NotStarted onay
+    private bool _scheduledConfirmVisible;
+    private int _scheduledCount;
+    private bool _wasScheduledDistribution;
 
     protected override async Task OnInitializedAsync()
     {
@@ -419,6 +451,7 @@ private readonly List<ProjectStatus> _statuses = Enum.GetValues<ProjectStatus>()
         }
 
         _isNew = false;
+        _wasScheduledDistribution = dto.IsScheduledDistribution;
         _form = new FormModel
         {
             Id = dto.Id,
@@ -522,6 +555,22 @@ private readonly List<ProjectStatus> _statuses = Enum.GetValues<ProjectStatus>()
         if (string.IsNullOrWhiteSpace(_form.SurveyUrl)) { _formError = "Anket URL zorunludur."; return; }
         if (string.IsNullOrWhiteSpace(_form.SubjectParameterName)) { _formError = "Parametre adı zorunludur."; return; }
 
+        // Düzenleme: scheduled distribution kapatılıyorsa ve bekleyen atama varsa onay iste
+        if (!_isNew && _wasScheduledDistribution && !_form.IsScheduledDistribution)
+        {
+            _scheduledCount = await ProjectService.GetScheduledAssignmentCountAsync(_form.Id);
+            if (_scheduledCount > 0)
+            {
+                _scheduledConfirmVisible = true;
+                return;
+            }
+        }
+
+        await SaveProjectAsync();
+    }
+
+    private async Task SaveProjectAsync(bool convertScheduled = false)
+    {
         _isSaving = true;
         _formError = null;
         try
@@ -592,7 +641,16 @@ private readonly List<ProjectStatus> _statuses = Enum.GetValues<ProjectStatus>()
                     TimeOnly.FromDateTime(_form.DistributionEndHour));
 
                 await ProjectService.UpdateAsync(_form.Id, dto, adminId);
-                Toast.Success("Proje güncellendi.");
+
+                if (convertScheduled)
+                {
+                    var converted = await ProjectService.ConvertScheduledToNotStartedAsync(_form.Id);
+                    Toast.Success($"Proje güncellendi. {converted} zamanlanmış atama dağıtıma açıldı.");
+                }
+                else
+                {
+                    Toast.Success("Proje güncellendi.");
+                }
             }
 
             _popupVisible = false;
@@ -681,6 +739,18 @@ private readonly List<ProjectStatus> _statuses = Enum.GetValues<ProjectStatus>()
         {
             _isDeleting = false;
         }
+    }
+
+    private async Task OnScheduledConfirmYes()
+    {
+        _scheduledConfirmVisible = false;
+        await SaveProjectAsync(convertScheduled: true);
+    }
+
+    private void OnScheduledConfirmNo()
+    {
+        _scheduledConfirmVisible = false;
+        _form.IsScheduledDistribution = true; // geri al
     }
 
     private void OpenMediaPicker()

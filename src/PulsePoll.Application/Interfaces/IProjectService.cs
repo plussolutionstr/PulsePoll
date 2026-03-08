@@ -12,4 +12,6 @@ public interface IProjectService
     Task SetStatusAsync(int id, ProjectStatus status, int adminId);
     Task DeleteAsync(int id, int adminId);
     Task<List<ProjectDto>> GetAllAsync();
+    Task<int> GetScheduledAssignmentCountAsync(int projectId);
+    Task<int> ConvertScheduledToNotStartedAsync(int projectId);
 }

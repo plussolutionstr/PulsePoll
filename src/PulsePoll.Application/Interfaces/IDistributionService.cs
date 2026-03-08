@@ -10,4 +10,7 @@ public interface IDistributionService
     Task<int> SendReminderNotificationsAsync(int projectId);
     Task<DistributionProgressDto> GetDistributionProgressAsync(int projectId);
     Task<List<DistributionLogDto>> GetDistributionLogsAsync(int projectId);
+
+    // Bildirim batch dağıtımı (non-scheduled projeler)
+    Task<int> RunNotificationBatchAsync();
 }

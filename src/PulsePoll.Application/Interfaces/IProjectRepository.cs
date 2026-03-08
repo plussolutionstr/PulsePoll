@@ -31,4 +31,8 @@ public interface IProjectRepository
     Task<List<AssignmentStatusCountDto>> GetAssignmentStatusCountsAsync(int projectId);
     Task UpdateAssignmentsStatusBatchAsync(IEnumerable<int> assignmentIds, AssignmentStatus newStatus, DateTime? scheduledNotifiedAt = null);
     Task<List<ProjectAssignment>> GetNotStartedNeedingReminderAsync(int projectId, DateOnly notifiedBefore);
+
+    // Bildirim dağıtımı (non-scheduled projeler)
+    Task<List<Project>> GetActiveNonScheduledProjectsAsync();
+    Task<List<ProjectAssignment>> GetUnnotifiedAssignmentsAsync(int projectId, int take);
 }

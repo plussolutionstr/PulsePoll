@@ -36,6 +36,7 @@ public static class DependencyInjection
         services.AddScoped<ISpecialDayCalendarService, SpecialDayCalendarService>();
         services.AddScoped<IAdminAssignmentService, AdminAssignmentService>();
         services.AddScoped<IDistributionService, DistributionService>();
+        services.AddScoped<INotificationDistributionConfigService, NotificationDistributionConfigService>();
         services.AddScoped<IPaymentBatchService, PaymentBatchService>();
         services.AddScoped<IBankService, BankService>();
         services.AddScoped<SubjectProjectHistoryService>();

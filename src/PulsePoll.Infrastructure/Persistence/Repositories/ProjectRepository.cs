@@ -203,4 +203,23 @@ public class ProjectRepository(AppDbContext db) : IProjectRepository
                      && a.ScheduledNotifiedAt < notifiedBeforeUtc)
             .ToListAsync();
     }
+
+    // Bildirim dağıtımı (non-scheduled projeler)
+    public Task<List<Project>> GetActiveNonScheduledProjectsAsync()
+        => db.Projects
+             .AsNoTracking()
+             .Where(p => p.Status == ProjectStatus.Active
+                      && !p.IsScheduledDistribution
+                      && p.DeletedAt == null)
+             .ToListAsync();
+
+    public Task<List<ProjectAssignment>> GetUnnotifiedAssignmentsAsync(int projectId, int take)
+        => db.ProjectAssignments
+             .Where(a => a.ProjectId == projectId
+                      && a.Status == AssignmentStatus.NotStarted
+                      && a.ScheduledNotifiedAt == null
+                      && a.DeletedAt == null)
+             .OrderBy(a => a.AssignedAt)
+             .Take(take)
+             .ToListAsync();
 }
