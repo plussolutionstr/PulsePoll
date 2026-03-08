@@ -1,5 +1,3 @@
-using System.Collections.ObjectModel;
-using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using PulsePoll.Mobile.ApiModels;
 using PulsePoll.Mobile.Models;
@@ -115,5 +113,17 @@ public partial class WalletAddBankAccountViewModel : ObservableObject
     }
 
     private static string NormalizeIban(string? raw)
-        => (raw ?? string.Empty).Trim().ToUpperInvariant().Replace(" ", string.Empty);
+    {
+        var compact = new string((raw ?? string.Empty)
+            .Where(char.IsLetterOrDigit)
+            .ToArray())
+            .ToUpperInvariant();
+
+        if (compact.StartsWith("TR", StringComparison.Ordinal))
+            return compact;
+
+        return compact.All(char.IsDigit)
+            ? $"TR{compact}"
+            : compact;
+    }
 }

@@ -322,17 +322,38 @@ public class WalletServiceTests
         captured!.IsDefault.Should().BeFalse();
     }
 
+    [Fact]
+    public async Task AddBankAccountAsync_NormalizesDigitOnlyIban_BeforePersisting()
+    {
+        _walletRepoMock.Setup(r => r.GetBankAccountsAsync(1)).ReturnsAsync([]);
+
+        BankAccount? captured = null;
+        _walletRepoMock
+            .Setup(r => r.AddBankAccountAsync(It.IsAny<BankAccount>()))
+            .Callback<BankAccount>(a => captured = a)
+            .Returns(Task.CompletedTask);
+
+        _lookupServiceMock.Setup(l => l.GetBankByIdAsync(1)).ReturnsAsync(new Domain.Entities.Bank { Id = 1, Name = "Test Bank", IsActive = true });
+
+        await _sut.AddBankAccountAsync(1, new AddBankAccountDto(1, "123456789012345678901234"));
+
+        captured.Should().NotBeNull();
+        captured!.IbanEncrypted.Should().Be("TR123456789012345678901234");
+        captured.IbanLast4.Should().Be("1234");
+    }
+
     // ────────────────── DeleteBankAccountAsync ──────────────────
 
     [Fact]
-    public async Task DeleteBankAccountAsync_CallsRepositoryDelete_WhenAccountExists()
+    public async Task DeleteBankAccountAsync_SoftDeletesAndUpdatesAccount_WhenAccountExists()
     {
         var account = MakeBankAccount();
         _walletRepoMock.Setup(r => r.GetBankAccountAsync(1, 5)).ReturnsAsync(account);
 
         await _sut.DeleteBankAccountAsync(subjectId: 1, accountId: 5);
 
-        _walletRepoMock.Verify(r => r.DeleteBankAccountAsync(account), Times.Once);
+        account.DeletedAt.Should().NotBeNull();
+        _walletRepoMock.Verify(r => r.UpdateBankAccountAsync(account), Times.Once);
     }
 
     [Fact]

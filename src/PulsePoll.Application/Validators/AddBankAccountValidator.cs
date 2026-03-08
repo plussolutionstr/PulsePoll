@@ -12,7 +12,21 @@ public class AddBankAccountValidator : AbstractValidator<AddBankAccountDto>
 
         RuleFor(x => x.Iban)
             .NotEmpty().WithMessage("IBAN zorunludur.")
-            .Length(26).WithMessage("Türk IBAN numarası 26 karakter olmalıdır.")
-            .Matches(@"^TR\d{24}$").WithMessage("Geçerli bir Türk IBAN numarası giriniz (TR + 24 rakam).");
+            .Must(BeValidTurkishIban).WithMessage("Geçerli bir Türk IBAN numarası giriniz.");
+    }
+
+    private static bool BeValidTurkishIban(string? rawIban)
+    {
+        var compact = new string((rawIban ?? string.Empty)
+            .Where(char.IsLetterOrDigit)
+            .ToArray())
+            .ToUpperInvariant();
+
+        if (!compact.StartsWith("TR", StringComparison.Ordinal))
+            compact = $"TR{compact}";
+
+        return compact.Length == 26 &&
+               compact.StartsWith("TR", StringComparison.Ordinal) &&
+               compact.Skip(2).All(char.IsDigit);
     }
 }

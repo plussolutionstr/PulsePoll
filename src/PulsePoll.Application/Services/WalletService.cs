@@ -451,13 +451,14 @@ public class WalletService(
 
     public async Task AddBankAccountAsync(int subjectId, AddBankAccountDto dto)
     {
-        await bankAccountValidator.ValidateAndThrowAsync(dto);
+        var normalizedDto = dto with { Iban = NormalizeTurkishIban(dto.Iban) };
+        await bankAccountValidator.ValidateAndThrowAsync(normalizedDto);
 
         var existing = await walletRepository.GetBankAccountsAsync(subjectId);
         if (existing.Count >= 5)
             throw new BusinessException("BANK_ACCOUNT_LIMIT_EXCEEDED", "En fazla 5 banka hesabı ekleyebilirsiniz.");
 
-        var bank = await lookupService.GetBankByIdAsync(dto.BankId);
+        var bank = await lookupService.GetBankByIdAsync(normalizedDto.BankId);
         if (bank is null || !bank.IsActive)
             throw new BusinessException("BANK_NOT_AVAILABLE", "Seçilen banka aktif değil.");
 
@@ -465,8 +466,8 @@ public class WalletService(
         {
             SubjectId      = subjectId,
             BankName       = bank.Name,
-            IbanLast4      = dto.Iban[^4..],
-            IbanEncrypted  = dto.Iban,
+            IbanLast4      = normalizedDto.Iban[^4..],
+            IbanEncrypted  = normalizedDto.Iban,
             IsDefault      = existing.Count == 0
         };
         account.SetCreated(subjectId);
@@ -565,6 +566,21 @@ public class WalletService(
         }
 
         return sb.ToString();
+    }
+
+    private static string NormalizeTurkishIban(string? rawIban)
+    {
+        var compact = new string((rawIban ?? string.Empty)
+            .Where(char.IsLetterOrDigit)
+            .ToArray())
+            .ToUpperInvariant();
+
+        if (compact.StartsWith("TR", StringComparison.Ordinal))
+            return compact;
+
+        return compact.All(char.IsDigit)
+            ? $"TR{compact}"
+            : compact;
     }
 
     private async Task<int> GetSettingIntAsync(string key, int defaultValue)
