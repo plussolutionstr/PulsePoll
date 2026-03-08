@@ -70,6 +70,7 @@
         <PackageReference Include="CommunityToolkit.Maui"/>
         <PackageReference Include="CommunityToolkit.Mvvm"/>
         <PackageReference Include="Plugin.StoreReview"/>
+        <PackageReference Include="Sentry.Maui"/>
     </ItemGroup>
 
     <!-- Android: Firebase Cloud Messaging -->

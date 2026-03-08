@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using PulsePoll.Mobile.Services;
 using PulsePoll.Mobile.ViewModels;
 using PulsePoll.Mobile.Views;
+using Sentry.Maui;
 
 namespace PulsePoll.Mobile;
 
@@ -11,8 +12,23 @@ public static class MauiProgram
     public static MauiApp CreateMauiApp()
     {
         var builder = MauiApp.CreateBuilder();
+        var settings = AppSettings.Load();
+
         builder
             .UseMauiApp<App>()
+            .UseSentry(options =>
+            {
+                options.Dsn = settings.SentryDsn;
+                options.Debug = settings.SentryDebug;
+                options.TracesSampleRate = settings.SentryTracesSampleRate;
+                options.EnableLogs = settings.SentryEnableLogs;
+#if DEBUG
+                options.Environment = "development";
+#else
+                options.Environment = "production";
+#endif
+                options.Release = $"{AppInfo.Current.PackageName}@{AppInfo.Current.VersionString}+{AppInfo.Current.BuildString}";
+            })
             .UseMauiCommunityToolkit()
             .ConfigureFonts(fonts =>
             {
@@ -70,7 +86,6 @@ public static class MauiProgram
 #endif
             });
 
-        var settings = AppSettings.Load();
         builder.Services.AddSingleton(settings);
 
         // Shell & Auth

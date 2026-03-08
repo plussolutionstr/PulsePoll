@@ -6,6 +6,10 @@ public class AppSettings
 {
     public string ApiBaseUrl { get; set; } = string.Empty;
     public string? ApiBaseUrl_Android { get; set; }
+    public string? SentryDsn { get; set; }
+    public bool SentryDebug { get; set; }
+    public double SentryTracesSampleRate { get; set; } = 1.0;
+    public bool SentryEnableLogs { get; set; } = true;
 
     public static AppSettings Load()
     {
