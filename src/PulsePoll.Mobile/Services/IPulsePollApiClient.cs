@@ -31,7 +31,6 @@ public interface IPulsePollApiClient
     Task<List<BankOptionApiDto>> GetAvailableBanksAsync(CancellationToken ct = default);
     Task<List<BankAccountApiDto>> GetBankAccountsAsync(CancellationToken ct = default);
     Task AddBankAccountAsync(int bankId, string iban, CancellationToken ct = default);
-    Task UpdateBankAccountAsync(int bankAccountId, int bankId, string iban, CancellationToken ct = default);
     Task DeleteBankAccountAsync(int bankAccountId, CancellationToken ct = default);
     Task RequestWithdrawalAsync(decimal amount, int bankAccountId, CancellationToken ct = default);
 

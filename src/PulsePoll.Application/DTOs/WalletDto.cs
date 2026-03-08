@@ -42,7 +42,11 @@ public record BankAccountDto(
     string IbanLast4,
     bool IsDefault,
     string? ThumbnailImageUrl,
-    string? LogoImageUrl);
+    string? LogoImageUrl,
+    bool CanDelete = true,
+    DateTime? DeleteCooldownEndsAt = null,
+    bool CanWithdraw = true,
+    DateTime? WithdrawalCooldownEndsAt = null);
 
 public record AddBankAccountDto(
     int BankId,

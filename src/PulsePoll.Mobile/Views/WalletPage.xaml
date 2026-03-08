@@ -11,6 +11,7 @@
 
     <ContentPage.Resources>
         <converters:AmountToColorConverter x:Key="AmountToColor"/>
+        <converters:StringToBoolConverter x:Key="StringToBool"/>
     </ContentPage.Resources>
 
     <Grid>
@@ -87,33 +88,45 @@
                                      BindableLayout.ItemsSource="{Binding BankAccounts}">
                     <BindableLayout.ItemTemplate>
                         <DataTemplate x:DataType="models:BankAccountModel">
-                            <Border Style="{StaticResource CardBorderStyle}" Padding="14">
-                                <Border.GestureRecognizers>
-                                    <TapGestureRecognizer
-                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.NavigateToEditBankAccountCommand}"
-                                        CommandParameter="{Binding .}" />
-                                </Border.GestureRecognizers>
-                                <HorizontalStackLayout Spacing="12">
-                                    <Border StrokeThickness="0"
-                                            StrokeShape="RoundRectangle 10"
-                                            HeightRequest="40" WidthRequest="56"
-                                            BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource WhiteDark}}">
-                                        <Image Source="{Binding DisplayImageUrl}"
-                                               HeightRequest="28"
-                                               WidthRequest="48"
-                                               Aspect="AspectFit"
-                                               HorizontalOptions="Center"
-                                               VerticalOptions="Center"/>
-                                    </Border>
-                                    <VerticalStackLayout Spacing="2" VerticalOptions="Center">
-                                        <Label Text="{Binding BankName}"
-                                               FontFamily="JakartaSemiBold" FontSize="14"
-                                               TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
-                                        <Label Text="{Binding MaskedIban}"
-                                               Style="{StaticResource CaptionStyle}"/>
+                            <SwipeView>
+                                <SwipeView.RightItems>
+                                    <SwipeItems>
+                                        <SwipeItem Text="Sil"
+                                                   BackgroundColor="{AppThemeBinding Light={StaticResource Danger}, Dark={StaticResource DangerDark}}"
+                                                   Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteBankAccountCommand}"
+                                                   CommandParameter="{Binding .}" />
+                                    </SwipeItems>
+                                </SwipeView.RightItems>
+                                <Border Style="{StaticResource CardBorderStyle}" Padding="14">
+                                    <VerticalStackLayout Spacing="6">
+                                        <HorizontalStackLayout Spacing="12">
+                                            <Border StrokeThickness="0"
+                                                    StrokeShape="RoundRectangle 10"
+                                                    HeightRequest="40" WidthRequest="56"
+                                                    BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource WhiteDark}}">
+                                                <Image Source="{Binding DisplayImageUrl}"
+                                                       HeightRequest="28"
+                                                       WidthRequest="48"
+                                                       Aspect="AspectFit"
+                                                       HorizontalOptions="Center"
+                                                       VerticalOptions="Center"/>
+                                            </Border>
+                                            <VerticalStackLayout Spacing="2" VerticalOptions="Center">
+                                                <Label Text="{Binding BankName}"
+                                                       FontFamily="JakartaSemiBold" FontSize="14"
+                                                       TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"/>
+                                                <Label Text="{Binding MaskedIban}"
+                                                       Style="{StaticResource CaptionStyle}"/>
+                                            </VerticalStackLayout>
+                                        </HorizontalStackLayout>
+                                        <Label Text="{Binding CooldownMessage}"
+                                               IsVisible="{Binding CooldownMessage, Converter={StaticResource StringToBool}}"
+                                               FontFamily="JakartaRegular" FontSize="11"
+                                               TextColor="{AppThemeBinding Light={StaticResource Amber}, Dark={StaticResource AmberDark}}"
+                                               Margin="0,-2,0,0"/>
                                     </VerticalStackLayout>
-                                </HorizontalStackLayout>
-                            </Border>
+                                </Border>
+                            </SwipeView>
                         </DataTemplate>
                     </BindableLayout.ItemTemplate>
                 </VerticalStackLayout>

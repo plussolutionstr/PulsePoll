@@ -51,14 +51,6 @@ public class WalletController(IWalletService walletService) : ControllerBase
         return this.NoContentResponse();
     }
 
-    [HttpPut("banks/{id:int}")]
-    [EnableRateLimiting("bank-add")]
-    public async Task<IActionResult> UpdateBank(int id, [FromBody] AddBankAccountDto dto)
-    {
-        await walletService.UpdateBankAccountAsync(SubjectId, id, dto);
-        return this.NoContentResponse();
-    }
-
     [HttpDelete("banks/{id:int}")]
     public async Task<IActionResult> DeleteBank(int id)
     {

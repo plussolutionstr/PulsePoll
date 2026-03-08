@@ -11,6 +11,9 @@ public partial class App : Application
     {
         InitializeComponent();
         _serviceProvider = serviceProvider;
+
+        if (!Preferences.Default.ContainsKey("app_install_date"))
+            Preferences.Default.Set("app_install_date", DateTime.UtcNow.Ticks);
     }
 
     protected override Window CreateWindow(IActivationState? activationState)

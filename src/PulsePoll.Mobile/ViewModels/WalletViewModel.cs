@@ -111,12 +111,47 @@ public partial class WalletViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private async Task NavigateToEditBankAccountAsync(BankAccountModel? account)
+    private async Task DeleteBankAccountAsync(BankAccountModel? account)
     {
         if (account is null)
             return;
 
-        await Shell.Current.GoToAsync($"wallet-add-bank?accountId={account.Id}");
+        if (!account.CanDelete)
+        {
+            await Shell.Current.DisplayAlertAsync("Bilgi", account.CooldownMessage ?? "Bu hesap henüz silinemez.", "Tamam");
+            return;
+        }
+
+        var confirmed = await Shell.Current.DisplayAlertAsync(
+            "Hesabı Sil",
+            $"{account.BankName} hesabını silmek istediğinize emin misiniz?",
+            "Sil",
+            "Vazgeç");
+
+        if (!confirmed)
+            return;
+
+        if (IsBusy)
+            return;
+
+        IsBusy = true;
+        try
+        {
+            await _apiClient.DeleteBankAccountAsync(account.Id);
+            await LoadCommand.ExecuteAsync(null);
+        }
+        catch (HttpRequestException ex) when (!string.IsNullOrWhiteSpace(ex.Message))
+        {
+            await Shell.Current.DisplayAlertAsync("Hata", ex.Message, "Tamam");
+        }
+        catch
+        {
+            await Shell.Current.DisplayAlertAsync("Hata", "Banka hesabı silinemedi.", "Tamam");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
     }
 
     [RelayCommand]

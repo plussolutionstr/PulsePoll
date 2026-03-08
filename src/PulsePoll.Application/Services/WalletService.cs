@@ -222,6 +222,16 @@ public class WalletService(
 
         var bankAccount = await walletRepository.GetBankAccountAsync(subjectId, dto.BankAccountId)
             ?? throw new NotFoundException("Banka hesabı");
+
+        var withdrawalCooldownDays = await GetSettingIntAsync(PaymentSettingKeys.IbanWithdrawalCooldownDays, 14);
+        if (withdrawalCooldownDays > 0 && bankAccount.CreatedAt.AddDays(withdrawalCooldownDays) > DateTime.UtcNow)
+        {
+            var endsAt = bankAccount.CreatedAt.AddDays(withdrawalCooldownDays);
+            throw new BusinessException(
+                "BANK_ACCOUNT_WITHDRAWAL_COOLDOWN",
+                $"Bu hesaba {endsAt:dd.MM.yyyy} tarihine kadar para çekilemez.");
+        }
+
         var referenceId = $"withdrawal:{Guid.NewGuid():N}";
         var requestedAt = TurkeyTime.Now;
         await walletRepository.CreateWithdrawalTransactionAsync(
@@ -387,6 +397,10 @@ public class WalletService(
             .GroupBy(b => NormalizeBankName(b.Name), StringComparer.Ordinal)
             .ToDictionary(g => g.Key, g => g.First(), StringComparer.Ordinal);
 
+        var deleteCooldownDays = await GetSettingIntAsync(PaymentSettingKeys.IbanDeleteCooldownDays, 14);
+        var withdrawalCooldownDays = await GetSettingIntAsync(PaymentSettingKeys.IbanWithdrawalCooldownDays, 14);
+        var now = DateTime.UtcNow;
+
         var items = new List<BankAccountDto>(accounts.Count);
         foreach (var account in accounts)
         {
@@ -394,13 +408,22 @@ public class WalletService(
             var thumbnailImageUrl = await ResolveBankMediaUrlAsync(bank?.ThumbnailMediaAsset?.ObjectKey);
             var logoImageUrl = await ResolveBankMediaUrlAsync(bank?.LogoMediaAsset?.ObjectKey);
 
+            var deleteEndsAt = deleteCooldownDays > 0 ? account.CreatedAt.AddDays(deleteCooldownDays) : (DateTime?)null;
+            var withdrawalEndsAt = withdrawalCooldownDays > 0 ? account.CreatedAt.AddDays(withdrawalCooldownDays) : (DateTime?)null;
+            var canDelete = deleteEndsAt is null || deleteEndsAt <= now;
+            var canWithdraw = withdrawalEndsAt is null || withdrawalEndsAt <= now;
+
             items.Add(new BankAccountDto(
                 account.Id,
                 account.BankName,
                 account.IbanLast4,
                 account.IsDefault,
                 thumbnailImageUrl,
-                logoImageUrl));
+                logoImageUrl,
+                canDelete,
+                canDelete ? null : deleteEndsAt,
+                canWithdraw,
+                canWithdraw ? null : withdrawalEndsAt));
         }
 
         return items;
@@ -452,33 +475,19 @@ public class WalletService(
         logger.LogInformation("Banka hesabı eklendi: SubjectId={SubjectId}", subjectId);
     }
 
-    public async Task UpdateBankAccountAsync(int subjectId, int accountId, AddBankAccountDto dto)
-    {
-        await bankAccountValidator.ValidateAndThrowAsync(dto);
-
-        var account = await walletRepository.GetBankAccountAsync(subjectId, accountId)
-            ?? throw new NotFoundException("Banka hesabı");
-
-        var bank = await lookupService.GetBankByIdAsync(dto.BankId);
-        if (bank is null || !bank.IsActive)
-            throw new BusinessException("BANK_NOT_AVAILABLE", "Seçilen banka aktif değil.");
-
-        account.BankName = bank.Name;
-        account.IbanLast4 = dto.Iban[^4..];
-        account.IbanEncrypted = dto.Iban;
-        account.SetUpdated(subjectId);
-
-        await walletRepository.UpdateBankAccountAsync(account);
-
-        logger.LogInformation(
-            "Banka hesabı güncellendi: SubjectId={SubjectId} AccountId={AccountId}",
-            subjectId, accountId);
-    }
-
     public async Task DeleteBankAccountAsync(int subjectId, int accountId)
     {
         var account = await walletRepository.GetBankAccountAsync(subjectId, accountId)
             ?? throw new NotFoundException("Banka hesabı");
+
+        var cooldownDays = await GetSettingIntAsync(PaymentSettingKeys.IbanDeleteCooldownDays, 14);
+        if (cooldownDays > 0 && account.CreatedAt.AddDays(cooldownDays) > DateTime.UtcNow)
+        {
+            var endsAt = account.CreatedAt.AddDays(cooldownDays);
+            throw new BusinessException(
+                "BANK_ACCOUNT_COOLDOWN",
+                $"Bu hesap {endsAt:dd.MM.yyyy} tarihine kadar silinemez.");
+        }
 
         await walletRepository.DeleteBankAccountAsync(account);
 
@@ -554,6 +563,15 @@ public class WalletService(
         }
 
         return sb.ToString();
+    }
+
+    private async Task<int> GetSettingIntAsync(string key, int defaultValue)
+    {
+        var setting = await paymentSettingRepository.GetByKeyAsync(key);
+        if (setting is null || string.IsNullOrWhiteSpace(setting.Value))
+            return defaultValue;
+
+        return int.TryParse(setting.Value.Trim(), out var parsed) && parsed >= 0 ? parsed : defaultValue;
     }
 
     private async Task<decimal> GetMinWithdrawalThresholdTryAsync()

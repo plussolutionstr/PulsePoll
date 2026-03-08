@@ -5,7 +5,7 @@
              xmlns:converters="clr-namespace:PulsePoll.Mobile.Converters"
              x:Class="PulsePoll.Mobile.Views.WalletAddBankAccountPage"
              x:DataType="viewModels:WalletAddBankAccountViewModel"
-             Title="{Binding PageTitle}">
+             Title="Banka Hesabı Ekle">
 
     <ContentPage.Resources>
         <converters:InvertedBoolConverter x:Key="InvertedBoolConverter"/>
@@ -81,7 +81,7 @@
 
             <!-- Buttons -->
             <Grid HeightRequest="52">
-                <Button Text="{Binding SaveButtonText}"
+                <Button Text="Kaydet"
                         Style="{StaticResource PrimaryButtonStyle}"
                         HorizontalOptions="Fill"
                         IsVisible="{Binding IsSaving, Converter={StaticResource InvertedBoolConverter}}"
@@ -97,17 +97,6 @@
                                        HorizontalOptions="Center" VerticalOptions="Center"/>
                 </Border>
             </Grid>
-
-            <Button Text="Sil"
-                    HeightRequest="52"
-                    CornerRadius="26"
-                    FontFamily="JakartaSemiBold"
-                    FontSize="14"
-                    Clicked="OnDeleteClicked"
-                    IsVisible="{Binding IsEditMode}"
-                    IsEnabled="{Binding IsSaving, Converter={StaticResource InvertedBoolConverter}}"
-                    BackgroundColor="{AppThemeBinding Light={StaticResource DangerLight}, Dark={StaticResource DangerLightDark}}"
-                    TextColor="{AppThemeBinding Light={StaticResource Danger}, Dark={StaticResource DangerDark}}" />
 
             <Button Text="İptal"
                     Style="{StaticResource SecondaryButtonStyle}"

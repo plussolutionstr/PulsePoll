@@ -180,13 +180,6 @@ public sealed class PulsePollApiClient : IPulsePollApiClient
         await EnsureSuccessOrThrowAsync(response, ct);
     }
 
-    public async Task UpdateBankAccountAsync(int bankAccountId, int bankId, string iban, CancellationToken ct = default)
-    {
-        var payload = new UpdateBankAccountApiRequest(bankId, iban);
-        var response = await _http.PutAsJsonAsync($"api/wallet/banks/{bankAccountId}", payload, JsonOptions, ct);
-        await EnsureSuccessOrThrowAsync(response, ct);
-    }
-
     public async Task DeleteBankAccountAsync(int bankAccountId, CancellationToken ct = default)
     {
         var response = await _http.DeleteAsync($"api/wallet/banks/{bankAccountId}", ct);

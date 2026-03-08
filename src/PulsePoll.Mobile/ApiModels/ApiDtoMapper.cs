@@ -74,7 +74,11 @@ public static class ApiDtoMapper
             dto.IsDefault)
         {
             ThumbnailImageUrl = dto.ThumbnailImageUrl,
-            LogoImageUrl = dto.LogoImageUrl
+            LogoImageUrl = dto.LogoImageUrl,
+            CanDelete = dto.CanDelete,
+            DeleteCooldownEndsAt = dto.DeleteCooldownEndsAt,
+            CanWithdraw = dto.CanWithdraw,
+            WithdrawalCooldownEndsAt = dto.WithdrawalCooldownEndsAt
         };
 
     public static BankOptionModel ToModel(this BankOptionApiDto dto)

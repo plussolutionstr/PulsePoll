@@ -104,7 +104,11 @@ public record BankAccountApiDto(
     string IbanLast4,
     bool IsDefault,
     string? ThumbnailImageUrl,
-    string? LogoImageUrl);
+    string? LogoImageUrl,
+    bool CanDelete = true,
+    DateTime? DeleteCooldownEndsAt = null,
+    bool CanWithdraw = true,
+    DateTime? WithdrawalCooldownEndsAt = null);
 
 public record BankOptionApiDto(
     int Id,
@@ -114,7 +118,6 @@ public record BankOptionApiDto(
     string? LogoImageUrl);
 
 public record AddBankAccountApiRequest(int BankId, string Iban);
-public record UpdateBankAccountApiRequest(int BankId, string Iban);
 
 public record WithdrawalRequestApiRequest(decimal Amount, int BankAccountId);
 

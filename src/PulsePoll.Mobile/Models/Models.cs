@@ -109,6 +109,21 @@ public record BankAccountModel(int Id, string BankName, string MaskedIban, strin
     public string DisplayImageUrl => !string.IsNullOrWhiteSpace(ThumbnailImageUrl)
         ? ThumbnailImageUrl!
         : (LogoImageUrl ?? string.Empty);
+    public bool CanDelete { get; init; } = true;
+    public DateTime? DeleteCooldownEndsAt { get; init; }
+    public bool CanWithdraw { get; init; } = true;
+    public DateTime? WithdrawalCooldownEndsAt { get; init; }
+    public string? CooldownMessage
+    {
+        get
+        {
+            if (!CanDelete && DeleteCooldownEndsAt.HasValue)
+                return $"{DeleteCooldownEndsAt.Value:dd.MM.yyyy} tarihine kadar silinemez";
+            if (!CanWithdraw && WithdrawalCooldownEndsAt.HasValue)
+                return $"{WithdrawalCooldownEndsAt.Value:dd.MM.yyyy} tarihine kadar çekim yapılamaz";
+            return null;
+        }
+    }
 }
 public record BankOptionModel(
     int Id,

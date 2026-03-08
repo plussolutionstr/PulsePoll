@@ -72,6 +72,21 @@
                                     Enabled="@_canEdit" />
                     </DxFormLayoutItem>
                 </DxFormLayoutGroup>
+
+                <DxFormLayoutGroup Caption="IBAN Güvenlik Ayarları" ColSpanMd="12">
+                    <DxFormLayoutItem Caption="Yeni IBAN Silme Bekleme Süresi (gün)" ColSpanMd="4">
+                        <DxSpinEdit @bind-Value="_form.IbanDeleteCooldownDays"
+                                    MinValue="0"
+                                    Increment="1"
+                                    Enabled="@_canEdit" />
+                    </DxFormLayoutItem>
+                    <DxFormLayoutItem Caption="Yeni IBAN Para Çekme Bekleme Süresi (gün)" ColSpanMd="4">
+                        <DxSpinEdit @bind-Value="_form.IbanWithdrawalCooldownDays"
+                                    MinValue="0"
+                                    Increment="1"
+                                    Enabled="@_canEdit" />
+                    </DxFormLayoutItem>
+                </DxFormLayoutGroup>
             </DxFormLayout>
         </div>
     </div>
@@ -116,6 +131,14 @@
                 map,
                 PaymentSettingKeys.WithdrawalMinAmountTry,
                 "0"));
+            _form.IbanDeleteCooldownDays = ParseIntOrDefault(GetValueOrDefault(
+                map,
+                PaymentSettingKeys.IbanDeleteCooldownDays,
+                "14"), 14);
+            _form.IbanWithdrawalCooldownDays = ParseIntOrDefault(GetValueOrDefault(
+                map,
+                PaymentSettingKeys.IbanWithdrawalCooldownDays,
+                "14"), 14);
         }
         finally { _isLoading = false; }
     }
@@ -151,6 +174,18 @@
                 adminId,
                 "Minimum çekim eşiği (TL).");
 
+            await PaymentBatchService.UpsertSettingAsync(
+                PaymentSettingKeys.IbanDeleteCooldownDays,
+                _form.IbanDeleteCooldownDays.ToString(CultureInfo.InvariantCulture),
+                adminId,
+                "Yeni IBAN silme bekleme süresi (gün).");
+
+            await PaymentBatchService.UpsertSettingAsync(
+                PaymentSettingKeys.IbanWithdrawalCooldownDays,
+                _form.IbanWithdrawalCooldownDays.ToString(CultureInfo.InvariantCulture),
+                adminId,
+                "Yeni IBAN para çekme bekleme süresi (gün).");
+
             Toast.Success("Ödeme ayarları kaydedildi.");
             await LoadAsync();
         }
@@ -176,6 +211,9 @@
             ? value
             : fallback;
 
+    private static int ParseIntOrDefault(string? rawValue, int defaultValue)
+        => int.TryParse(rawValue?.Trim(), out var parsed) && parsed >= 0 ? parsed : defaultValue;
+
     private static decimal ParseDecimalOrZero(string? rawValue)
     {
         if (string.IsNullOrWhiteSpace(rawValue))
@@ -193,5 +231,7 @@
         public string BankTransferTemplate { get; set; } = PaymentFileTemplateDefaults.BankTransferTemplate;
         public string BankTransferFileNameTemplate { get; set; } = PaymentFileTemplateDefaults.BankTransferFileNameTemplate;
         public decimal WithdrawalMinAmountTry { get; set; }
+        public int IbanDeleteCooldownDays { get; set; } = 14;
+        public int IbanWithdrawalCooldownDays { get; set; } = 14;
     }
 }

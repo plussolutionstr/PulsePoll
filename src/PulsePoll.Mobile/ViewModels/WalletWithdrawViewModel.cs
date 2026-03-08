@@ -27,6 +27,10 @@ public partial class WalletWithdrawViewModel : ObservableObject
     [ObservableProperty] private BankAccountModel? _selectedBankAccount;
     public string ConversionInfo => $"Tutarı TL girersiniz. 1 {RewardUnitLabel} = ₺{UnitTryMultiplier.ToString("N2", TrCulture)}";
     public string WithdrawableBalanceInfo => $"Çekilebilir bakiye: ₺{WithdrawableBalanceTry.ToString("N2", TrCulture)}";
+    public bool HasWithdrawalCooldown => SelectedBankAccount is { CanWithdraw: false };
+    public string? WithdrawalCooldownMessage => SelectedBankAccount is { CanWithdraw: false }
+        ? SelectedBankAccount.CooldownMessage
+        : null;
 
     public async Task LoadAsync()
     {
@@ -71,6 +75,9 @@ public partial class WalletWithdrawViewModel : ObservableObject
         if (SelectedBankAccount is null)
             return (false, "Lütfen bir banka hesabı seçin.");
 
+        if (!SelectedBankAccount.CanWithdraw)
+            return (false, SelectedBankAccount.CooldownMessage ?? "Bu hesaba henüz para çekilemez.");
+
         if (!TryParseAmount(Amount, out var amount) || amount <= 0)
             return (false, "Lütfen geçerli bir tutar girin. Örnek: 1.000,00");
 
@@ -113,4 +120,9 @@ public partial class WalletWithdrawViewModel : ObservableObject
     partial void OnRewardUnitLabelChanged(string value) => OnPropertyChanged(nameof(ConversionInfo));
     partial void OnUnitTryMultiplierChanged(decimal value) => OnPropertyChanged(nameof(ConversionInfo));
     partial void OnWithdrawableBalanceTryChanged(decimal value) => OnPropertyChanged(nameof(WithdrawableBalanceInfo));
+    partial void OnSelectedBankAccountChanged(BankAccountModel? value)
+    {
+        OnPropertyChanged(nameof(HasWithdrawalCooldown));
+        OnPropertyChanged(nameof(WithdrawalCooldownMessage));
+    }
 }

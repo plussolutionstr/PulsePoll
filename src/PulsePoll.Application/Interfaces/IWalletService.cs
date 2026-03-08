@@ -16,7 +16,6 @@ public interface IWalletService
     Task<IEnumerable<BankAccountDto>> GetBankAccountsAsync(int subjectId);
     Task<IEnumerable<AvailableBankDto>> GetAvailableBanksAsync();
     Task AddBankAccountAsync(int subjectId, AddBankAccountDto dto);
-    Task UpdateBankAccountAsync(int subjectId, int accountId, AddBankAccountDto dto);
     Task DeleteBankAccountAsync(int subjectId, int accountId);
     Task<List<WalletLedgerDto>> GetLedgerAsync(int subjectId, int page = 1, int pageSize = 50);
 }

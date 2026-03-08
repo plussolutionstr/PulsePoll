@@ -1,3 +1,4 @@
+using Plugin.StoreReview;
 using PulsePoll.Mobile.Controls;
 using PulsePoll.Mobile.ViewModels;
 using System.ComponentModel;
@@ -31,6 +32,8 @@ public partial class HomePage : ContentPage
             Preferences.Default.Set(HomeRefreshRequiredKey, false);
             await _viewModel.RefreshCommand.ExecuteAsync(null);
         }
+
+        TryShowRatePrompt();
     }
 
     protected override void OnDisappearing()
@@ -102,6 +105,30 @@ public partial class HomePage : ContentPage
         };
 
         await CoachMark.ShowAsync(steps);
+    }
+
+    private static void TryShowRatePrompt()
+    {
+        if (Preferences.Default.Get("rate_prompt_shown", false))
+            return;
+
+        var installTicks = Preferences.Default.Get("app_install_date", 0L);
+        if (installTicks <= 0)
+            return;
+
+        var installDate = new DateTime(installTicks, DateTimeKind.Utc);
+        if ((DateTime.UtcNow - installDate).TotalDays < 30)
+            return;
+
+        Preferences.Default.Set("rate_prompt_shown", true);
+        try
+        {
+            CrossStoreReview.Current.RequestReview(false);
+        }
+        catch
+        {
+            // Platform may not support in-app rating
+        }
     }
 
     private void StartShimmer()

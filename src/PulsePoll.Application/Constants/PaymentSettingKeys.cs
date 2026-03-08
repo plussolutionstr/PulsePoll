@@ -13,4 +13,8 @@ public static class PaymentSettingKeys
 
     // File name template used for export file name generation.
     public const string BankTransferFileNameTemplate = "withdrawal.bank_transfer_file_name_template";
+
+    // IBAN security cooldowns (days)
+    public const string IbanDeleteCooldownDays = "iban.delete_cooldown_days";
+    public const string IbanWithdrawalCooldownDays = "iban.withdrawal_cooldown_days";
 }
