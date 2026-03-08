@@ -23,6 +23,7 @@
     <Columns>
         <DxGridDataColumn FieldName="Name" Caption="Banka Adı" MinWidth="200" />
         <DxGridDataColumn FieldName="Code" Caption="Kod" Width="120px" />
+        <DxGridDataColumn FieldName="BankCode" Caption="Banka Kodu" Width="120px" />
         <DxGridDataColumn FieldName="IsActive" Caption="Durum" Width="90px">
             <CellDisplayTemplate>
                 @{
@@ -92,13 +93,17 @@
         }
 
         <DxFormLayout>
-            <DxFormLayoutItem ColSpanMd="8">
+            <DxFormLayoutItem ColSpanMd="4">
                 <label class="form-label">Banka Adı *</label>
                 <DxTextBox @bind-Text="_form.Name" />
             </DxFormLayoutItem>
             <DxFormLayoutItem ColSpanMd="4">
                 <label class="form-label">Kod</label>
                 <DxTextBox @bind-Text="_form.Code" />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanMd="4">
+                <label class="form-label">Banka Kodu</label>
+                <DxTextBox @bind-Text="_form.BankCode" />
             </DxFormLayoutItem>
             <DxFormLayoutItem ColSpanMd="12">
                 <label class="form-label">Thumbnail</label>
@@ -261,6 +266,7 @@
             Id = item.Id,
             Name = item.Name,
             Code = item.Code,
+            BankCode = item.BankCode,
             IsActive = item.IsActive,
             ThumbnailMediaAssetId = item.ThumbnailMediaAssetId,
             LogoMediaAssetId = item.LogoMediaAssetId
@@ -343,6 +349,7 @@
                 _form.Id,
                 _form.Name,
                 _form.Code,
+                _form.BankCode,
                 _form.IsActive,
                 _form.ThumbnailMediaAssetId,
                 _form.LogoMediaAssetId);
@@ -366,6 +373,7 @@
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public string? Code { get; set; }
+        public string? BankCode { get; set; }
         public bool IsActive { get; set; } = true;
         public int? ThumbnailMediaAssetId { get; set; }
         public int? LogoMediaAssetId { get; set; }

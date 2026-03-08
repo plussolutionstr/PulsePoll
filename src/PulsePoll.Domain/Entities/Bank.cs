@@ -13,6 +13,9 @@ public class Bank
     [MaxLength(20)]
     public string? Code { get; set; }
 
+    [MaxLength(10)]
+    public string? BankCode { get; set; }
+
     public bool IsActive { get; set; } = true;
 
     public int? ThumbnailMediaAssetId { get; set; }

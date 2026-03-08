@@ -61,6 +61,7 @@ public class BankConfiguration : IEntityTypeConfiguration<Bank>
     {
         builder.Property(b => b.Name).IsRequired().HasMaxLength(200);
         builder.Property(b => b.Code).HasMaxLength(20);
+        builder.Property(b => b.BankCode).HasMaxLength(10);
         builder.Property(b => b.IsActive).HasDefaultValue(true);
         builder.HasIndex(b => b.Name)
                .IsUnique()

@@ -125,6 +125,7 @@ public record BankOptionModel(
     int Id,
     string Name,
     string? Code = null,
+    string? BankCode = null,
     string? ThumbnailImageUrl = null,
     string? LogoImageUrl = null)
 {

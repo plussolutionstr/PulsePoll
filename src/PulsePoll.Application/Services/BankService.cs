@@ -18,10 +18,11 @@ public class BankService(IBankRepository bankRepository) : IBankService
         await bankRepository.UpdateAsync(bank);
     }
 
-    public async Task CreateOrUpdateAsync(int id, string name, string? code, bool isActive, int? thumbnailMediaAssetId, int? logoMediaAssetId)
+    public async Task CreateOrUpdateAsync(int id, string name, string? code, string? bankCode, bool isActive, int? thumbnailMediaAssetId, int? logoMediaAssetId)
     {
         var normalizedName = name.Trim();
         var normalizedCode = string.IsNullOrWhiteSpace(code) ? null : code.Trim().ToUpperInvariant();
+        var normalizedBankCode = string.IsNullOrWhiteSpace(bankCode) ? null : bankCode.Trim();
 
         if (await bankRepository.ExistsByNameAsync(normalizedName, excludeId: id))
             throw new BusinessException("DUPLICATE_BANK", "Aynı isimde bir banka zaten mevcut.");
@@ -40,6 +41,7 @@ public class BankService(IBankRepository bankRepository) : IBankService
 
         entity.Name = normalizedName;
         entity.Code = normalizedCode;
+        entity.BankCode = normalizedBankCode;
         entity.IsActive = isActive;
         entity.ThumbnailMediaAssetId = thumbnailMediaAssetId;
         entity.LogoMediaAssetId = logoMediaAssetId;

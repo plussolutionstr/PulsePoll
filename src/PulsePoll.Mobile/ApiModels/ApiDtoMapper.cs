@@ -82,7 +82,7 @@ public static class ApiDtoMapper
         };
 
     public static BankOptionModel ToModel(this BankOptionApiDto dto)
-        => new(dto.Id, dto.Name, dto.Code, dto.ThumbnailImageUrl, dto.LogoImageUrl);
+        => new(dto.Id, dto.Name, dto.Code, dto.BankCode, dto.ThumbnailImageUrl, dto.LogoImageUrl);
 
     public static TransactionModel ToModel(this WalletTransactionApiDto dto)
     {

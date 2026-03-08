@@ -5,39 +5,15 @@
              xmlns:converters="clr-namespace:PulsePoll.Mobile.Converters"
              x:Class="PulsePoll.Mobile.Views.WalletAddBankAccountPage"
              x:DataType="viewModels:WalletAddBankAccountViewModel"
-             Title="Banka Hesabı Ekle">
+             Title="Banka Hesab&#305; Ekle">
 
     <ContentPage.Resources>
         <converters:InvertedBoolConverter x:Key="InvertedBoolConverter"/>
+        <converters:StringToBoolConverter x:Key="StringToBoolConverter"/>
     </ContentPage.Resources>
 
     <ScrollView>
         <VerticalStackLayout Padding="20,16" Spacing="16">
-
-            <!-- Bank Selection -->
-            <Border Style="{StaticResource CardBorderStyle}" Padding="16">
-                <VerticalStackLayout Spacing="8">
-                    <Label Text="Banka"
-                           FontFamily="JakartaSemiBold"
-                           FontSize="13"
-                           TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}" />
-                    <Border StrokeShape="RoundRectangle 12"
-                            Stroke="{AppThemeBinding Light={StaticResource CardBorder}, Dark={StaticResource CardBorderDark}}"
-                            StrokeThickness="1"
-                            BackgroundColor="{AppThemeBinding Light={StaticResource PageBackground}, Dark={StaticResource PageBackgroundDark}}"
-                            Padding="12,0">
-                        <Picker Title="Banka seçin"
-                                ItemsSource="{Binding Banks}"
-                                ItemDisplayBinding="{Binding Name}"
-                                SelectedItem="{Binding SelectedBank}"
-                                FontFamily="JakartaSemiBold"
-                                FontSize="15"
-                                TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"
-                                HeightRequest="48"
-                                VerticalOptions="Center" />
-                    </Border>
-                </VerticalStackLayout>
-            </Border>
 
             <!-- IBAN Entry -->
             <Border Style="{StaticResource CardBorderStyle}" Padding="16">
@@ -71,12 +47,40 @@
                             StrokeShape="RoundRectangle 10"
                             BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryLightDark}}"
                             Padding="12,10">
-                        <Label Text="26 karakter uzunluğunda, TR ile başlayan IBAN numaranızı girin."
+                        <Label Text="26 karakter uzunlu&#287;unda, TR ile ba&#351;layan IBAN numaran&#305;z&#305; girin."
                                FontFamily="JakartaRegular"
                                FontSize="12"
                                TextColor="{AppThemeBinding Light={StaticResource PrimaryDark}, Dark={StaticResource PrimaryDarkDark}}" />
                     </Border>
                 </VerticalStackLayout>
+            </Border>
+
+            <!-- Detected Bank Display -->
+            <Border Style="{StaticResource CardBorderStyle}" Padding="16"
+                    IsVisible="{Binding HasDetectedBank}">
+                <HorizontalStackLayout Spacing="12">
+                    <Image Source="{Binding DetectedBank.DisplayImageUrl}"
+                           HeightRequest="36" WidthRequest="36"
+                           Aspect="AspectFit"
+                           VerticalOptions="Center"/>
+                    <Label Text="{Binding DetectedBank.Name}"
+                           FontFamily="JakartaSemiBold"
+                           FontSize="16"
+                           TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"
+                           VerticalOptions="Center"/>
+                </HorizontalStackLayout>
+            </Border>
+
+            <!-- Bank Error -->
+            <Border StrokeThickness="0"
+                    StrokeShape="RoundRectangle 10"
+                    BackgroundColor="{AppThemeBinding Light=#FFF3F3, Dark=#3D2020}"
+                    Padding="12,10"
+                    IsVisible="{Binding BankError, Converter={StaticResource StringToBoolConverter}}">
+                <Label Text="{Binding BankError}"
+                       FontFamily="JakartaMedium"
+                       FontSize="13"
+                       TextColor="{AppThemeBinding Light=#D32F2F, Dark=#EF9A9A}" />
             </Border>
 
             <!-- Buttons -->
@@ -98,7 +102,7 @@
                 </Border>
             </Grid>
 
-            <Button Text="İptal"
+            <Button Text="&#304;ptal"
                     Style="{StaticResource SecondaryButtonStyle}"
                     HeightRequest="52"
                     CornerRadius="26"

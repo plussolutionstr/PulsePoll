@@ -441,6 +441,7 @@ public class WalletService(
                 bank.Id,
                 bank.Name,
                 bank.Code,
+                bank.BankCode,
                 thumbnailImageUrl,
                 logoImageUrl));
         }

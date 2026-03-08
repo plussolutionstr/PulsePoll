@@ -56,5 +56,6 @@ public record AvailableBankDto(
     int Id,
     string Name,
     string? Code,
+    string? BankCode,
     string? ThumbnailImageUrl,
     string? LogoImageUrl);
