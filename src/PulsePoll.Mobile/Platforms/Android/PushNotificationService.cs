@@ -33,6 +33,19 @@ public class PushNotificationService : IPushNotificationService
     {
         try
         {
+            if (OperatingSystem.IsAndroidVersionAtLeast(33))
+            {
+                var notificationStatus = await Permissions.CheckStatusAsync<Permissions.PostNotifications>();
+                if (notificationStatus != PermissionStatus.Granted)
+                    notificationStatus = await Permissions.RequestAsync<Permissions.PostNotifications>();
+
+                if (notificationStatus != PermissionStatus.Granted)
+                {
+                    System.Diagnostics.Debug.WriteLine("[FCM] Notification permission not granted.");
+                    return;
+                }
+            }
+
             var token = await GetTokenAsync();
             if (string.IsNullOrEmpty(token))
                 return;
