@@ -14,6 +14,7 @@ public class SubjectRegisteredConsumer(
     IWalletRepository walletRepository,
     ILookupService lookupService,
     IReferralRewardService referralRewardService,
+    ISubjectScoreService subjectScoreService,
     ISesCalculator sesCalculator,
     SmtpMailService mailService) : IConsumer<SubjectRegisteredMessage>
 {
@@ -96,6 +97,9 @@ public class SubjectRegisteredConsumer(
                 logger.LogInformation("Kayıt sırasında banka hesabı eklendi: SubjectId={SubjectId}", subject.Id);
             }
         }
+
+        await subjectScoreService.RecalculateAsync(subject.Id);
+        logger.LogInformation("Başlangıç score snapshot oluşturuldu: {SubjectId}", subject.Id);
 
         await TryCreateReferralAsync(subject, msg.ReferenceCode, msg.RegisteredAt);
         await referralRewardService.TryGrantAsync(
