@@ -1150,11 +1150,8 @@ namespace PulsePoll.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("PulsePoll.Domain.Entities.NotificationDistributionConfig", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
                         .HasColumnName("id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp without time zone")
@@ -1189,7 +1186,10 @@ namespace PulsePoll.Infrastructure.Persistence.Migrations
                     b.HasKey("Id")
                         .HasName("pk_notification_distribution_configs");
 
-                    b.ToTable("notification_distribution_configs", (string)null);
+                    b.ToTable("notification_distribution_configs", (string)null, t =>
+                        {
+                            t.HasCheckConstraint("ck_notification_distribution_configs_singleton", "id = 1");
+                        });
                 });
 
             modelBuilder.Entity("PulsePoll.Domain.Entities.OutboxMessage", b =>

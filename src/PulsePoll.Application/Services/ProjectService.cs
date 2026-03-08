@@ -199,16 +199,6 @@ public class ProjectService(
     public Task<int> GetScheduledAssignmentCountAsync(int projectId)
         => repository.GetAssignmentCountByStatusAsync(projectId, AssignmentStatus.Scheduled);
 
-    public async Task<int> ConvertScheduledToNotStartedAsync(int projectId)
-    {
-        var assignments = await repository.GetScheduledAssignmentsAsync(projectId, int.MaxValue);
-        if (assignments.Count == 0) return 0;
-
-        var ids = assignments.Select(a => a.Id).ToList();
-        await repository.UpdateAssignmentsStatusBatchAsync(ids, AssignmentStatus.NotStarted);
-        return ids.Count;
-    }
-
     public async Task<int> UpdateAndDisableScheduledDistributionAsync(int id, UpdateProjectDto dto, int adminId)
     {
         await updateValidator.ValidateAndThrowAsync(dto);

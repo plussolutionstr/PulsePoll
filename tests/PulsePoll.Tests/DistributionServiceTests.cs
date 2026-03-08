@@ -16,6 +16,7 @@ public class DistributionServiceTests
     private readonly Mock<IProjectRepository> _projectRepository = new();
     private readonly Mock<IDistributionLogRepository> _distributionLogRepository = new();
     private readonly Mock<INotificationService> _notificationService = new();
+    private readonly Mock<INotificationDistributionConfigService> _notificationDistributionConfigService = new();
     private readonly Mock<ILogger<DistributionService>> _logger = new();
     private readonly DistributionService _sut;
 
@@ -25,6 +26,7 @@ public class DistributionServiceTests
             _projectRepository.Object,
             _distributionLogRepository.Object,
             _notificationService.Object,
+            _notificationDistributionConfigService.Object,
             _logger.Object);
     }
 
@@ -100,6 +102,52 @@ public class DistributionServiceTests
         result.OtherStatusCount.Should().Be(1);
         _projectRepository.Verify(x => x.GetAssignmentStatusCountsAsync(project.Id), Times.Once);
         _projectRepository.Verify(x => x.GetAssignmentsByProjectAsync(It.IsAny<int>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task RunNotificationBatchAsync_WhenProjectCountExceedsHourlyLimit_DoesNotExceedLimit()
+    {
+        var projects = Enumerable.Range(1, 5)
+            .Select(id => new Project
+            {
+                Id = id,
+                Name = $"Proje {id}",
+                Status = ProjectStatus.Active,
+                IsScheduledDistribution = false,
+                StartMessage = "Başlangıç"
+            })
+            .ToList();
+
+        _notificationDistributionConfigService
+            .Setup(x => x.GetAsync())
+            .ReturnsAsync(new NotificationDistributionConfigDto(3));
+        _projectRepository
+            .Setup(x => x.GetActiveNonScheduledProjectsAsync())
+            .ReturnsAsync(projects);
+
+        for (var i = 1; i <= 5; i++)
+        {
+            var projectId = i;
+            _projectRepository
+                .Setup(x => x.GetUnnotifiedAssignmentsAsync(projectId, It.IsAny<int>()))
+                .ReturnsAsync((int _, int take) =>
+                    Enumerable.Range(1, take)
+                        .Select(offset => new ProjectAssignment
+                        {
+                            Id = projectId * 100 + offset,
+                            ProjectId = projectId,
+                            SubjectId = projectId * 1000 + offset,
+                            Status = AssignmentStatus.NotStarted
+                        })
+                        .ToList());
+        }
+
+        var sent = await _sut.RunNotificationBatchAsync();
+
+        sent.Should().Be(3);
+        _notificationService.Verify(
+            x => x.SendPushToManyAsync(It.IsAny<IEnumerable<int>>(), "Yeni anketin var!", It.IsAny<string>(), "survey_assigned", null),
+            Times.Exactly(3));
     }
 
     private static Project CreateScheduledProject()

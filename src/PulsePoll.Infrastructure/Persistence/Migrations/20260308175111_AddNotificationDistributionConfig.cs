@@ -16,8 +16,7 @@ namespace PulsePoll.Infrastructure.Persistence.Migrations
                 name: "notification_distribution_configs",
                 columns: table => new
                 {
-                    id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    id = table.Column<int>(type: "integer", nullable: false),
                     hourly_limit = table.Column<int>(type: "integer", nullable: false, defaultValue: 300),
                     created_by = table.Column<int>(type: "integer", nullable: false),
                     updated_by = table.Column<int>(type: "integer", nullable: true),
@@ -29,7 +28,13 @@ namespace PulsePoll.Infrastructure.Persistence.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_notification_distribution_configs", x => x.id);
+                    table.CheckConstraint("ck_notification_distribution_configs_singleton", "id = 1");
                 });
+
+            migrationBuilder.InsertData(
+                table: "notification_distribution_configs",
+                columns: new[] { "id", "hourly_limit", "created_by", "created_at" },
+                values: new object[] { 1, 300, 0, new DateTime(2026, 3, 8, 17, 51, 11, DateTimeKind.Unspecified) });
 
             // Mevcut NotStarted atamalara ScheduledNotifiedAt set et — tekrar bildirim gitmesin
             migrationBuilder.Sql("""
