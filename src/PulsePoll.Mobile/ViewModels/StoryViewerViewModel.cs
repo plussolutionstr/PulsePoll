@@ -31,6 +31,7 @@ public partial class StoryViewerViewModel : ObservableObject
     [ObservableProperty] private int _currentIndex;
     [ObservableProperty] private double _currentProgress;
     [ObservableProperty] private bool _isLoading;
+    [ObservableProperty] private bool _hasConnectionError;
 
     public bool HasLink => !string.IsNullOrWhiteSpace(CurrentStory?.LinkUrl);
     public string ProgressText => Stories.Count == 0 ? string.Empty : $"{CurrentIndex + 1}/{Stories.Count}";
@@ -80,6 +81,13 @@ public partial class StoryViewerViewModel : ObservableObject
         _progressCts = null;
     }
 
+    [RelayCommand]
+    private async Task RetryConnectionAsync()
+    {
+        HasConnectionError = false;
+        await LoadStoriesAsync(StoryId);
+    }
+
     private async Task LoadStoriesAsync(int selectedStoryId)
     {
         PauseProgress();
@@ -107,7 +115,7 @@ public partial class StoryViewerViewModel : ObservableObject
         }
         catch
         {
-            await Shell.Current.GoToAsync("connectionerror");
+            HasConnectionError = true;
         }
         finally
         {

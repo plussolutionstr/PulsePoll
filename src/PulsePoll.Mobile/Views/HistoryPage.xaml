@@ -4,6 +4,7 @@
              xmlns:vm="clr-namespace:PulsePoll.Mobile.ViewModels"
              xmlns:models="clr-namespace:PulsePoll.Mobile.Models"
              xmlns:converters="clr-namespace:PulsePoll.Mobile.Converters"
+             xmlns:controls="clr-namespace:PulsePoll.Mobile.Controls"
              x:Class="PulsePoll.Mobile.Views.HistoryPage"
              x:DataType="vm:HistoryViewModel"
              Shell.NavBarIsVisible="False">
@@ -292,5 +293,7 @@
                 </Border>
             </Grid>
         </Grid>
+        <controls:ConnectionErrorOverlay IsVisible="{Binding HasConnectionError}"
+                                         RetryCommand="{Binding RetryConnectionCommand}"/>
     </Grid>
 </ContentPage>

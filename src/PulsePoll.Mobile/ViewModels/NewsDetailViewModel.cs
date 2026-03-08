@@ -18,6 +18,7 @@ public partial class NewsDetailViewModel : ObservableObject
     [ObservableProperty] private int _newsId;
     [ObservableProperty] private NewsModel? _newsItem;
     [ObservableProperty] private bool _isLoading = true;
+    [ObservableProperty] private bool _hasConnectionError;
 
     public bool HasLink => NewsItem?.HasLink ?? false;
 
@@ -49,6 +50,13 @@ public partial class NewsDetailViewModel : ObservableObject
         await Browser.Default.OpenAsync(uri, BrowserLaunchMode.SystemPreferred);
     }
 
+    [RelayCommand]
+    private async Task RetryConnectionAsync()
+    {
+        HasConnectionError = false;
+        await LoadNewsAsync(NewsId);
+    }
+
     private async Task LoadNewsAsync(int newsId)
     {
         IsLoading = true;
@@ -66,7 +74,7 @@ public partial class NewsDetailViewModel : ObservableObject
         }
         catch
         {
-            await Shell.Current.GoToAsync("connectionerror");
+            HasConnectionError = true;
         }
         finally
         {

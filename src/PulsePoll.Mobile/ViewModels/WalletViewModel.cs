@@ -19,6 +19,7 @@ public partial class WalletViewModel : ObservableObject
 
     [ObservableProperty] private bool _isLoading = true;
     [ObservableProperty] private bool _isBusy;
+    [ObservableProperty] private bool _hasConnectionError;
     [ObservableProperty] private decimal _withdrawableBalance;
     [ObservableProperty] private decimal _pendingBalance;
     [ObservableProperty] private decimal _totalEarned;
@@ -45,13 +46,20 @@ public partial class WalletViewModel : ObservableObject
         }
         catch
         {
-            await Shell.Current.GoToAsync("connectionerror");
+            HasConnectionError = true;
         }
         finally
         {
             IsLoading = false;
             IsBusy = false;
         }
+    }
+
+    [RelayCommand]
+    private async Task RetryConnectionAsync()
+    {
+        HasConnectionError = false;
+        await LoadAsync();
     }
 
     public async Task<bool> AddBankAccountAsync(int bankId, string iban)

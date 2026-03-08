@@ -28,6 +28,7 @@ public partial class HomeViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(HasNoSurveys))]
     private ObservableCollection<SurveyModel> _surveys = [];
     [ObservableProperty] private bool _isLoading = true;
+    [ObservableProperty] private bool _hasConnectionError;
 
     public bool HasNoSurveys => Surveys.Count == 0 && _isLoaded;
     [ObservableProperty] private bool _isRefreshing;
@@ -51,7 +52,7 @@ public partial class HomeViewModel : ObservableObject
         }
         catch
         {
-            await Shell.Current.GoToAsync("connectionerror");
+            HasConnectionError = true;
         }
         finally
         {
@@ -71,12 +72,20 @@ public partial class HomeViewModel : ObservableObject
         }
         catch
         {
-            await Shell.Current.GoToAsync("connectionerror");
+            HasConnectionError = true;
         }
         finally
         {
             IsRefreshing = false;
         }
+    }
+
+    [RelayCommand]
+    private async Task RetryConnectionAsync()
+    {
+        HasConnectionError = false;
+        _isLoaded = false;
+        await LoadDataAsync();
     }
 
     [RelayCommand]

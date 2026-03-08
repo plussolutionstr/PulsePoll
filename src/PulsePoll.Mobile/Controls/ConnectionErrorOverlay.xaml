@@ -1,10 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:vm="clr-namespace:PulsePoll.Mobile.ViewModels"
-             x:Class="PulsePoll.Mobile.Views.ConnectionErrorPage"
-             x:DataType="vm:ConnectionErrorViewModel"
-             Shell.NavBarIsVisible="False"
+             x:Class="PulsePoll.Mobile.Controls.ConnectionErrorOverlay"
              BackgroundColor="{AppThemeBinding Light={StaticResource PageBackground}, Dark={StaticResource PageBackgroundDark}}">
 
     <VerticalStackLayout Spacing="16"
@@ -33,15 +30,17 @@
                HorizontalTextAlignment="Center"
                Margin="0,0,0,8"/>
 
-        <Button Text="Yeniden Dene"
+        <Button x:Name="RetryButton"
+                Text="Yeniden Dene"
                 Style="{StaticResource PrimaryButtonStyle}"
-                Command="{Binding RetryCommand}"
-                HorizontalOptions="Fill"/>
+                HorizontalOptions="Fill"
+                Clicked="OnRetryClicked"/>
 
-        <ActivityIndicator IsVisible="{Binding IsRetrying}"
-                           IsRunning="{Binding IsRetrying}"
+        <ActivityIndicator x:Name="RetrySpinner"
+                           IsVisible="False"
+                           IsRunning="False"
                            Color="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"
                            HorizontalOptions="Center"
                            Margin="0,8,0,0"/>
     </VerticalStackLayout>
-</ContentPage>
+</ContentView>

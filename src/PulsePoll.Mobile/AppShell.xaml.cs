@@ -27,7 +27,7 @@ public partial class AppShell : Shell
         Routing.RegisterRoute("wallet-add-bank", typeof(WalletAddBankAccountPage));
         Routing.RegisterRoute("wallet-withdraw", typeof(WalletWithdrawPage));
         Routing.RegisterRoute("wallet-transactions", typeof(WalletTransactionsPage));
-        Routing.RegisterRoute("connectionerror", typeof(ConnectionErrorPage));
+
         Routing.RegisterRoute("contact", typeof(ContactPage));
     }
 }

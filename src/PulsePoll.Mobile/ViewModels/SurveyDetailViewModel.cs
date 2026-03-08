@@ -22,6 +22,7 @@ public partial class SurveyDetailViewModel : ObservableObject
     [ObservableProperty] private SurveyModel? _survey;
     [ObservableProperty] private bool _isLoading = true;
     [ObservableProperty] private bool _isStarting;
+    [ObservableProperty] private bool _hasConnectionError;
 
     partial void OnSurveyIdChanged(int value)
     {
@@ -67,6 +68,13 @@ public partial class SurveyDetailViewModel : ObservableObject
         await Shell.Current.GoToAsync("..", true);
     }
 
+    [RelayCommand]
+    private async Task RetryConnectionAsync()
+    {
+        HasConnectionError = false;
+        await LoadSurveyAsync(SurveyId);
+    }
+
     private async Task LoadSurveyAsync(int surveyId)
     {
         IsLoading = true;
@@ -74,11 +82,11 @@ public partial class SurveyDetailViewModel : ObservableObject
         {
             Survey = await _apiClient.GetProjectByIdAsync(surveyId);
             if (Survey is null)
-                await Shell.Current.GoToAsync("connectionerror");
+                HasConnectionError = true;
         }
         catch
         {
-            await Shell.Current.GoToAsync("connectionerror");
+            HasConnectionError = true;
         }
         finally
         {

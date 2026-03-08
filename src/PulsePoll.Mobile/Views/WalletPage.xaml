@@ -264,6 +264,8 @@
                 </Border>
             </Grid>
         </Grid>
+        <controls:ConnectionErrorOverlay IsVisible="{Binding HasConnectionError}"
+                                         RetryCommand="{Binding RetryConnectionCommand}"/>
         <controls:CoachMarkOverlay x:Name="CoachMark" Key="wallet"/>
     </Grid>
 </ContentPage>

@@ -21,6 +21,7 @@ public partial class SurveysViewModel : ObservableObject
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsEmpty))]
     private bool _isLoading = true;
+    [ObservableProperty] private bool _hasConnectionError;
 
     public bool IsEmpty => !IsLoading && Surveys.Count == 0;
 
@@ -45,12 +46,20 @@ public partial class SurveysViewModel : ObservableObject
         }
         catch
         {
-            await Shell.Current.GoToAsync("connectionerror");
+            HasConnectionError = true;
         }
         finally
         {
             IsLoading = false;
         }
+    }
+
+    [RelayCommand]
+    private async Task RetryConnectionAsync()
+    {
+        HasConnectionError = false;
+        _isLoaded = false;
+        await LoadDataAsync();
     }
 
     [RelayCommand]

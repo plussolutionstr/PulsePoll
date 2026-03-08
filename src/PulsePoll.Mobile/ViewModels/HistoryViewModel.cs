@@ -30,6 +30,7 @@ public partial class HistoryViewModel : ObservableObject
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsListEmpty))]
     private bool _isLoading = true;
+    [ObservableProperty] private bool _hasConnectionError;
 
     public bool IsListEmpty => !IsLoading && FlatItems.Count == 0;
     public string TotalEarnedDisplay => $"{TotalEarned:0.##} {RewardUnitLabel}";
@@ -55,12 +56,20 @@ public partial class HistoryViewModel : ObservableObject
         }
         catch
         {
-            await Shell.Current.GoToAsync("connectionerror");
+            HasConnectionError = true;
         }
         finally
         {
             IsLoading = false;
         }
+    }
+
+    [RelayCommand]
+    private async Task RetryConnectionAsync()
+    {
+        HasConnectionError = false;
+        _isLoaded = false;
+        await LoadAsync();
     }
 
     [RelayCommand]

@@ -496,5 +496,7 @@
             </Grid>
         </Grid>
         <controls:CoachMarkOverlay x:Name="CoachMark" Key="home"/>
+        <controls:ConnectionErrorOverlay IsVisible="{Binding HasConnectionError}"
+                                         RetryCommand="{Binding RetryConnectionCommand}"/>
     </Grid>
 </ContentPage>
