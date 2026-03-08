@@ -437,7 +437,7 @@
                                         Width="80px" Caption="" TextAlignment="GridTextAlignment.Center">
                         <CellDisplayTemplate>
                             @{ var a = (ProjectAssignmentDto)context.DataItem; }
-                            @if (a.Status == AssignmentStatus.NotStarted)
+                            @if (a.Status is AssignmentStatus.NotStarted or AssignmentStatus.Scheduled)
                             {
                                 <DxButton Text="Kaldır" IconCssClass="bi bi-person-dash"
                                           RenderStyle="ButtonRenderStyle.Danger"
@@ -563,7 +563,7 @@
     private int PendingRewardSelectionCount => _selectedAssignments.Cast<ProjectAssignmentDto>()
         .Count(IsRewardPendingApproval);
     private int RemovableSelectionCount => _selectedAssignments.Cast<ProjectAssignmentDto>()
-        .Count(a => a.Status == AssignmentStatus.NotStarted);
+        .Count(a => a.Status is AssignmentStatus.NotStarted or AssignmentStatus.Scheduled);
     private string RemoveConfirmTitle => _removeSubjectIds.Count > 1
         ? $"{_removeSubjectIds.Count} deneği projeden çıkarmak istediğinize emin misiniz?"
         : "Bu deneği projeden kaldırmak istediğinize emin misiniz?";
@@ -909,7 +909,7 @@
         }
 
         _removeSubjectIds = _selectedAssignments.Cast<ProjectAssignmentDto>()
-            .Where(a => a.Status == AssignmentStatus.NotStarted)
+            .Where(a => a.Status is AssignmentStatus.NotStarted or AssignmentStatus.Scheduled)
             .Select(a => a.SubjectId)
             .Distinct()
             .ToList();
@@ -1006,6 +1006,7 @@
         AssignmentStatus.QuotaFull  => "bg-info text-dark",
         AssignmentStatus.ScreenOut  => "bg-danger",
         AssignmentStatus.Unknown    => "bg-light text-dark",
+        AssignmentStatus.Scheduled  => "bg-info text-dark",
         _                           => "bg-light text-dark"
     };
 
