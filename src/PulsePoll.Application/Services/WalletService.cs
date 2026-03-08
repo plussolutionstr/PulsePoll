@@ -490,7 +490,8 @@ public class WalletService(
                 $"Bu hesap {endsAt:dd.MM.yyyy} tarihine kadar silinemez.");
         }
 
-        await walletRepository.DeleteBankAccountAsync(account);
+        account.SetDeleted(subjectId);
+        await walletRepository.UpdateBankAccountAsync(account);
 
         logger.LogInformation("Banka hesabı silindi: SubjectId={SubjectId} AccountId={AccountId}", subjectId, accountId);
     }

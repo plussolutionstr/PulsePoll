@@ -146,7 +146,7 @@ public partial class WalletViewModel : ObservableObject
         try
         {
             await _apiClient.DeleteBankAccountAsync(account.Id);
-            await LoadCommand.ExecuteAsync(null);
+            await LoadFromApiAsync();
         }
         catch (HttpRequestException ex) when (!string.IsNullOrWhiteSpace(ex.Message))
         {
