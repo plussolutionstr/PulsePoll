@@ -74,6 +74,11 @@ public class Project : EntityBase
 
     public int? CoverMediaId { get; set; }
 
+    // Zamana yayılı dağıtım
+    public bool IsScheduledDistribution { get; set; } = false;
+    public TimeOnly DistributionStartHour { get; set; } = new(9, 0);
+    public TimeOnly DistributionEndHour { get; set; } = new(19, 0);
+
     // Navigation properties
     public Customer Customer { get; set; } = null!;
     public MediaAsset? CoverMedia { get; set; }

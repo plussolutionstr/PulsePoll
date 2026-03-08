@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using PulsePoll.Infrastructure.Persistence;
@@ -11,9 +12,11 @@ using PulsePoll.Infrastructure.Persistence;
 namespace PulsePoll.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260308164048_AddScheduledDistribution")]
+    partial class AddScheduledDistribution
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1145,51 +1148,6 @@ namespace PulsePoll.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("idx_notifications_subject_id_is_read");
 
                     b.ToTable("notifications", (string)null);
-                });
-
-            modelBuilder.Entity("PulsePoll.Domain.Entities.NotificationDistributionConfig", b =>
-                {
-                    b.Property<int>("Id")
-                        .HasColumnType("integer")
-                        .HasColumnName("id");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp without time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<int>("CreatedBy")
-                        .HasColumnType("integer")
-                        .HasColumnName("created_by");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp without time zone")
-                        .HasColumnName("deleted_at");
-
-                    b.Property<int?>("DeletedBy")
-                        .HasColumnType("integer")
-                        .HasColumnName("deleted_by");
-
-                    b.Property<int>("HourlyLimit")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(300)
-                        .HasColumnName("hourly_limit");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp without time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<int?>("UpdatedBy")
-                        .HasColumnType("integer")
-                        .HasColumnName("updated_by");
-
-                    b.HasKey("Id")
-                        .HasName("pk_notification_distribution_configs");
-
-                    b.ToTable("notification_distribution_configs", (string)null, t =>
-                        {
-                            t.HasCheckConstraint("ck_notification_distribution_configs_singleton", "id = 1");
-                        });
                 });
 
             modelBuilder.Entity("PulsePoll.Domain.Entities.OutboxMessage", b =>

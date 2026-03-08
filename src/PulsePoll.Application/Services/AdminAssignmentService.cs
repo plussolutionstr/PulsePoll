@@ -75,8 +75,8 @@ public class AdminAssignmentService(
         var assignment = await projectRepository.GetAssignmentAsync(projectId, subjectId)
             ?? throw new NotFoundException("Proje ataması");
 
-        if (assignment.Status != AssignmentStatus.NotStarted)
-            throw new BusinessException("ASSIGNMENT_CANNOT_REMOVE", "Sadece başlanmamış denekler projeden çıkarılabilir.");
+        if (assignment.Status is not (AssignmentStatus.NotStarted or AssignmentStatus.Scheduled))
+            throw new BusinessException("ASSIGNMENT_CANNOT_REMOVE", "Sadece başlanmamış veya zamanlanmış denekler projeden çıkarılabilir.");
 
         await projectRepository.RemoveAssignmentAsync(projectId, subjectId);
         logger.LogInformation("Assignment removed: ProjectId={ProjectId} SubjectId={SubjectId}",
@@ -95,7 +95,7 @@ public class AdminAssignmentService(
 
         var assignments = await projectRepository.GetAssignmentsByProjectAndSubjectsAsync(projectId, ids);
         var removableIds = assignments
-            .Where(a => a.Status == AssignmentStatus.NotStarted)
+            .Where(a => a.Status is AssignmentStatus.NotStarted or AssignmentStatus.Scheduled)
             .Select(a => a.SubjectId)
             .ToArray();
 

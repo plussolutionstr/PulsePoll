@@ -67,5 +67,20 @@ public class ProjectAssignmentConfiguration : IEntityTypeConfiguration<ProjectAs
                .HasDatabaseName("uq_project_assignments_project_subject");
 
         builder.HasIndex(a => a.SubjectId).HasDatabaseName("idx_project_assignments_subject_id");
+        builder.HasIndex(a => new { a.ProjectId, a.Status }).HasDatabaseName("idx_project_assignments_project_status");
+    }
+}
+
+public class DistributionLogConfiguration : IEntityTypeConfiguration<DistributionLog>
+{
+    public void Configure(EntityTypeBuilder<DistributionLog> builder)
+    {
+        builder.HasOne(d => d.Project)
+               .WithMany()
+               .HasForeignKey(d => d.ProjectId)
+               .HasConstraintName("fk_distribution_logs_projects")
+               .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(d => new { d.ProjectId, d.RunDate }).HasDatabaseName("idx_distribution_logs_project_date");
     }
 }

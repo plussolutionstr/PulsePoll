@@ -104,6 +104,10 @@
         {
             <DxContextMenuItem Text="Proje Ekstresi" Name="statement" IconCssClass="bi bi-receipt-cutoff" />
         }
+        @if (_canManageSubjects)
+        {
+            <DxContextMenuItem Text="Dağıtım İzleme" Name="distribution" IconCssClass="bi bi-send-check" />
+        }
         @if (_canDelete)
         {
             <DxContextMenuItem Text="Sil" Name="delete" IconCssClass="bi bi-trash" CssClass="text-danger" BeginGroup="true" />
@@ -265,6 +269,25 @@
                 </DxFormLayoutItem>
             </DxFormLayoutGroup>
 
+            <DxFormLayoutGroup Caption="Zamana Yayılı Dağıtım" ColSpanMd="12">
+                <DxFormLayoutItem ColSpanMd="12">
+                    <DxCheckBox @bind-Checked="_form.IsScheduledDistribution"
+                                LabelText="Zamana yayılı dağıtımı aktif et"
+                                LabelPosition="LabelPosition.Right" />
+                </DxFormLayoutItem>
+                @if (_form.IsScheduledDistribution)
+                {
+                    <DxFormLayoutItem ColSpanMd="6">
+                        <label class="form-label">Dağıtım Başlangıç Saati</label>
+                        <DxTimeEdit @bind-Time="_form.DistributionStartHour" />
+                    </DxFormLayoutItem>
+                    <DxFormLayoutItem ColSpanMd="6">
+                        <label class="form-label">Dağıtım Bitiş Saati</label>
+                        <DxTimeEdit @bind-Time="_form.DistributionEndHour" />
+                    </DxFormLayoutItem>
+                }
+            </DxFormLayoutGroup>
+
             <DxFormLayoutItem ColSpanMd="12">
                 <label class="form-label">Müşteri Bilgilendirme (Briefing)</label>
                 <DxMemo @bind-Text="_form.CustomerBriefing" Rows="3" />
@@ -316,6 +339,33 @@
     </FooterContentTemplate>
 </DxPopup>
 
+<!-- Zamana Yayılı Dağıtım Kapatma Onayı -->
+<DxPopup @bind-Visible="_scheduledConfirmVisible"
+         HeaderText="Zamanlanmış Atamalar"
+         Width="480px"
+         CloseOnOutsideClick="false"
+         ShowFooter="true">
+    <BodyContentTemplate Context="_">
+        <div class="d-flex align-items-start gap-3 p-2">
+            <i class="bi bi-exclamation-triangle-fill text-warning" style="font-size:2.5rem; flex-shrink:0;"></i>
+            <div>
+                <p class="mb-1 fw-semibold">Bu projede <strong>@_scheduledCount</strong> zamanlanmış atama bulunuyor.</p>
+                <p class="mb-0 text-muted">Zamana yayılı dağıtımı kapatırsanız bu denekler "Başlanmamış" durumuna geçecek ve saatlik bildirim limitine göre kademeli olarak dağıtıma alınacak. Emin misiniz?</p>
+            </div>
+        </div>
+    </BodyContentTemplate>
+    <FooterContentTemplate>
+        <DxButton Text="Evet, Dağıtıma Aç" IconCssClass="bi bi-check-lg"
+                  RenderStyle="ButtonRenderStyle.Primary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="OnScheduledConfirmYes" Enabled="!_isSaving" />
+        <DxButton Text="İptal"
+                  RenderStyle="ButtonRenderStyle.Secondary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="OnScheduledConfirmNo" />
+    </FooterContentTemplate>
+</DxPopup>
+
 @code {
     private DxGrid? _grid;
     private DxContextMenu? _contextMenu;
@@ -323,7 +373,7 @@
 
     private IReadOnlyList<ProjectDto> _projects = [];
     private List<CustomerDto> _customers = [];
-private readonly List<ProjectStatus> _statuses = Enum.GetValues<ProjectStatus>().ToList();
+    private readonly List<ProjectStatus> _statuses = Enum.GetValues<ProjectStatus>().ToList();
 
     private bool _isLoading = true;
     private bool _popupVisible;
@@ -342,6 +392,11 @@ private readonly List<ProjectStatus> _statuses = Enum.GetValues<ProjectStatus>()
 
     // Medya picker
     private bool _mediaPickerVisible;
+
+    // Scheduled → NotStarted onay
+    private bool _scheduledConfirmVisible;
+    private int _scheduledCount;
+    private bool _wasScheduledDistribution;
 
     protected override async Task OnInitializedAsync()
     {
@@ -396,6 +451,7 @@ private readonly List<ProjectStatus> _statuses = Enum.GetValues<ProjectStatus>()
         }
 
         _isNew = false;
+        _wasScheduledDistribution = dto.IsScheduledDistribution;
         _form = new FormModel
         {
             Id = dto.Id,
@@ -424,7 +480,10 @@ private readonly List<ProjectStatus> _statuses = Enum.GetValues<ProjectStatus>()
             Status = dto.Status,
             CoverMediaId   = dto.CoverMediaId,
             CoverImageUrl  = dto.CoverImageUrl,
-            CoverImageName = dto.CoverMediaId.HasValue ? "(mevcut görsel)" : null
+            CoverImageName = dto.CoverMediaId.HasValue ? "(mevcut görsel)" : null,
+            IsScheduledDistribution = dto.IsScheduledDistribution,
+            DistributionStartHour = NormalizeDistributionEditTime(dto.DistributionStartHour, 9),
+            DistributionEndHour = NormalizeDistributionEditTime(dto.DistributionEndHour, 19)
         };
         _formError = null;
         _popupVisible = true;
@@ -466,7 +525,10 @@ private readonly List<ProjectStatus> _statuses = Enum.GetValues<ProjectStatus>()
             Status = ProjectStatus.Draft,
             CoverMediaId = dto.CoverMediaId,
             CoverImageUrl = dto.CoverImageUrl,
-            CoverImageName = dto.CoverMediaId.HasValue ? "(mevcut görsel)" : null
+            CoverImageName = dto.CoverMediaId.HasValue ? "(mevcut görsel)" : null,
+            IsScheduledDistribution = dto.IsScheduledDistribution,
+            DistributionStartHour = NormalizeDistributionEditTime(dto.DistributionStartHour, 9),
+            DistributionEndHour = NormalizeDistributionEditTime(dto.DistributionEndHour, 19)
         };
         _formError = null;
         _popupVisible = true;
@@ -493,6 +555,22 @@ private readonly List<ProjectStatus> _statuses = Enum.GetValues<ProjectStatus>()
         if (string.IsNullOrWhiteSpace(_form.SurveyUrl)) { _formError = "Anket URL zorunludur."; return; }
         if (string.IsNullOrWhiteSpace(_form.SubjectParameterName)) { _formError = "Parametre adı zorunludur."; return; }
 
+        // Düzenleme: scheduled distribution kapatılıyorsa ve bekleyen atama varsa onay iste
+        if (!_isNew && _wasScheduledDistribution && !_form.IsScheduledDistribution)
+        {
+            _scheduledCount = await ProjectService.GetScheduledAssignmentCountAsync(_form.Id);
+            if (_scheduledCount > 0)
+            {
+                _scheduledConfirmVisible = true;
+                return;
+            }
+        }
+
+        await SaveProjectAsync();
+    }
+
+    private async Task SaveProjectAsync(bool convertScheduled = false)
+    {
         _isSaving = true;
         _formError = null;
         try
@@ -525,7 +603,10 @@ private readonly List<ProjectStatus> _statuses = Enum.GetValues<ProjectStatus>()
                     _form.DisqualifyMessage.Trim(),
                     _form.QuotaFullMessage.Trim(),
                     _form.ScreenOutMessage.Trim(),
-                    _form.CoverMediaId);
+                    _form.CoverMediaId,
+                    _form.IsScheduledDistribution,
+                    TimeOnly.FromDateTime(_form.DistributionStartHour),
+                    TimeOnly.FromDateTime(_form.DistributionEndHour));
 
                 await ProjectService.CreateAsync(dto, adminId);
                 Toast.Success("Proje kaydedildi.");
@@ -554,10 +635,21 @@ private readonly List<ProjectStatus> _statuses = Enum.GetValues<ProjectStatus>()
                     _form.QuotaFullMessage.Trim(),
                     _form.ScreenOutMessage.Trim(),
                     _form.Status,
-                    _form.CoverMediaId);
+                    _form.CoverMediaId,
+                    _form.IsScheduledDistribution,
+                    TimeOnly.FromDateTime(_form.DistributionStartHour),
+                    TimeOnly.FromDateTime(_form.DistributionEndHour));
 
-                await ProjectService.UpdateAsync(_form.Id, dto, adminId);
-                Toast.Success("Proje güncellendi.");
+                if (convertScheduled)
+                {
+                    var converted = await ProjectService.UpdateAndDisableScheduledDistributionAsync(_form.Id, dto, adminId);
+                    Toast.Success($"Proje güncellendi. {converted} zamanlanmış atama dağıtıma alındı.");
+                }
+                else
+                {
+                    await ProjectService.UpdateAsync(_form.Id, dto, adminId);
+                    Toast.Success("Proje güncellendi.");
+                }
             }
 
             _popupVisible = false;
@@ -596,6 +688,9 @@ private readonly List<ProjectStatus> _statuses = Enum.GetValues<ProjectStatus>()
                 break;
             case "statement" when _canViewStatement:
                 NavigationManager.NavigateTo($"/projects/{_selectedItem.Id}/statement");
+                break;
+            case "distribution" when _canManageSubjects:
+                NavigationManager.NavigateTo($"/projects/{_selectedItem.Id}/distribution");
                 break;
             case "delete" when _canDelete:
                 ShowDeleteConfirm(_selectedItem);
@@ -645,6 +740,18 @@ private readonly List<ProjectStatus> _statuses = Enum.GetValues<ProjectStatus>()
         }
     }
 
+    private async Task OnScheduledConfirmYes()
+    {
+        _scheduledConfirmVisible = false;
+        await SaveProjectAsync(convertScheduled: true);
+    }
+
+    private void OnScheduledConfirmNo()
+    {
+        _scheduledConfirmVisible = false;
+        _form.IsScheduledDistribution = true; // geri al
+    }
+
     private void OpenMediaPicker()
         => _mediaPickerVisible = true;
 
@@ -679,6 +786,12 @@ private readonly List<ProjectStatus> _statuses = Enum.GetValues<ProjectStatus>()
             : 0;
     }
 
+    private static DateTime NormalizeDistributionEditTime(TimeOnly time, int defaultHour)
+    {
+        var normalized = time == default ? new TimeOnly(defaultHour, 0) : time;
+        return DateTime.Today.Add(normalized.ToTimeSpan());
+    }
+
     private sealed class FormModel
     {
         public int Id { get; set; }
@@ -708,5 +821,8 @@ private readonly List<ProjectStatus> _statuses = Enum.GetValues<ProjectStatus>()
         public int? CoverMediaId { get; set; }
         public string? CoverImageUrl { get; set; }
         public string? CoverImageName { get; set; }
+        public bool IsScheduledDistribution { get; set; }
+        public DateTime DistributionStartHour { get; set; } = DateTime.Today.AddHours(9);
+        public DateTime DistributionEndHour { get; set; } = DateTime.Today.AddHours(19);
     }
 }

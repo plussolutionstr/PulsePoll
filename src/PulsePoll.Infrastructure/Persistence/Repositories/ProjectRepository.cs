@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
+using PulsePoll.Application.DTOs;
 using PulsePoll.Application.Interfaces;
 using PulsePoll.Domain.Entities;
+using PulsePoll.Domain.Enums;
 
 namespace PulsePoll.Infrastructure.Persistence.Repositories;
 
@@ -139,5 +141,85 @@ public class ProjectRepository(AppDbContext db) : IProjectRepository
              .Where(a => a.SubjectId == subjectId && a.DeletedAt == null)
              .Include(a => a.Project).ThenInclude(p => p.Customer)
              .OrderByDescending(a => a.AssignedAt)
+             .ToListAsync();
+
+    // Zamana yayılı dağıtım metodları
+    public Task<List<Project>> GetActiveScheduledDistributionProjectsAsync()
+        => db.Projects
+             .AsNoTracking()
+             .Where(p => p.Status == ProjectStatus.Active
+                      && p.IsScheduledDistribution
+                      && p.DeletedAt == null)
+             .ToListAsync();
+
+    public Task<int> GetAssignmentCountByStatusAsync(int projectId, AssignmentStatus status)
+        => db.ProjectAssignments
+             .CountAsync(a => a.ProjectId == projectId
+                           && a.Status == status
+                           && a.DeletedAt == null);
+
+    public Task<List<ProjectAssignment>> GetScheduledAssignmentsAsync(int projectId, int take)
+        => db.ProjectAssignments
+             .Where(a => a.ProjectId == projectId
+                      && a.Status == AssignmentStatus.Scheduled
+                      && a.DeletedAt == null)
+             .OrderBy(a => a.AssignedAt)
+             .Take(take)
+             .ToListAsync();
+
+    public Task<List<AssignmentStatusCountDto>> GetAssignmentStatusCountsAsync(int projectId)
+        => db.ProjectAssignments
+             .AsNoTracking()
+             .Where(a => a.ProjectId == projectId && a.DeletedAt == null)
+             .GroupBy(a => a.Status)
+             .Select(g => new AssignmentStatusCountDto(g.Key, g.Count()))
+             .ToListAsync();
+
+    public async Task UpdateAssignmentsStatusBatchAsync(IEnumerable<int> assignmentIds, AssignmentStatus newStatus, DateTime? scheduledNotifiedAt = null)
+    {
+        var ids = assignmentIds.ToList();
+        var assignments = await db.ProjectAssignments
+            .Where(a => ids.Contains(a.Id) && a.DeletedAt == null)
+            .ToListAsync();
+
+        foreach (var a in assignments)
+        {
+            a.Status = newStatus;
+            if (scheduledNotifiedAt.HasValue)
+                a.ScheduledNotifiedAt = scheduledNotifiedAt;
+        }
+
+        await db.SaveChangesAsync();
+    }
+
+    public Task<List<ProjectAssignment>> GetNotStartedNeedingReminderAsync(int projectId, DateOnly notifiedBefore)
+    {
+        var notifiedBeforeUtc = notifiedBefore.ToDateTime(TimeOnly.MinValue);
+        return db.ProjectAssignments
+            .Where(a => a.ProjectId == projectId
+                     && a.Status == AssignmentStatus.NotStarted
+                     && a.DeletedAt == null
+                     && a.ScheduledNotifiedAt != null
+                     && a.ScheduledNotifiedAt < notifiedBeforeUtc)
+            .ToListAsync();
+    }
+
+    // Bildirim dağıtımı (non-scheduled projeler)
+    public Task<List<Project>> GetActiveNonScheduledProjectsAsync()
+        => db.Projects
+             .AsNoTracking()
+             .Where(p => p.Status == ProjectStatus.Active
+                      && !p.IsScheduledDistribution
+                      && p.DeletedAt == null)
+             .ToListAsync();
+
+    public Task<List<ProjectAssignment>> GetUnnotifiedAssignmentsAsync(int projectId, int take)
+        => db.ProjectAssignments
+             .Where(a => a.ProjectId == projectId
+                      && a.Status == AssignmentStatus.NotStarted
+                      && a.ScheduledNotifiedAt == null
+                      && a.DeletedAt == null)
+             .OrderBy(a => a.AssignedAt)
+             .Take(take)
              .ToListAsync();
 }
