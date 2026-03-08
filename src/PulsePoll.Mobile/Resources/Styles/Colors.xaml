@@ -35,7 +35,7 @@
     <Color x:Key="PageBackground">#F7F5FF</Color>
     <Color x:Key="PageBackgroundDark">#0F0D1A</Color>
     <Color x:Key="SurfaceColor">#F0EDF9</Color>
-    <Color x:Key="SurfaceColorDark">#1A1726</Color>
+    <Color x:Key="SurfaceColorDark">#282541</Color>
     <Color x:Key="CardBorder">#E8E3F5</Color>
     <Color x:Key="CardBorderDark">#2A2640</Color>
 
