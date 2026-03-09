@@ -239,6 +239,12 @@
                     <span class="badge @StatusBadgeClass(r.Status)">@r.Status.GetDescription()</span>
                 </CellDisplayTemplate>
             </DxGridDataColumn>
+            <DxGridDataColumn FieldName="IsSurveyHelperEnabled" Caption="Helper" Width="80px" TextAlignment="GridTextAlignment.Center">
+                <CellDisplayTemplate>
+                    @{ var r = (Subject)context.DataItem; }
+                    @(r.IsSurveyHelperEnabled ? "Acik" : "Kapali")
+                </CellDisplayTemplate>
+            </DxGridDataColumn>
             <DxGridDataColumn FieldName="CreatedAt" Caption="Kayıt Tarihi" Width="110px" DisplayFormat="dd.MM.yyyy"/>
             <DxGridCommandColumn NewButtonVisible="false" EditButtonVisible="false" DeleteButtonVisible="false"
                                  Width="50px" Caption="" TextAlignment="GridTextAlignment.Center">
@@ -340,6 +346,17 @@
                         <label class="form-label">Referans Kodu</label>
                         <DxTextBox Text="@(_selectedItem.ReferenceCode ?? "-")" ReadOnly="true"/>
                     </DxFormLayoutItem>
+                    <DxFormLayoutItem ColSpanMd="12">
+                        <label class="form-label d-block mb-2">Survey Helper</label>
+                        <div class="d-flex align-items-center gap-2">
+                            <DxCheckBox @bind-Checked="_detailSurveyHelperEnabled"
+                                        Enabled="@_canEdit" />
+                            <span>Bu denek için survey helper'ı aktif et</span>
+                        </div>
+                        <div class="small text-muted mt-1">
+                            Aktif olduğunda, helper destekli projelerde mobilde ? butonu görünebilir.
+                        </div>
+                    </DxFormLayoutItem>
                 </DxFormLayoutGroup>
                 <DxFormLayoutGroup Caption="Konum" ColSpanMd="12">
                     <DxFormLayoutItem ColSpanMd="6">
@@ -401,6 +418,15 @@
         }
     </BodyContentTemplate>
     <FooterContentTemplate>
+        @if (_canEdit)
+        {
+            <DxButton Text="@(_isDetailSaving ? "Kaydediliyor..." : "Kaydet")"
+                      IconCssClass="@(_isDetailSaving ? "spinner-border spinner-border-sm" : "bi bi-check-lg")"
+                      RenderStyle="ButtonRenderStyle.Primary"
+                      RenderStyleMode="ButtonRenderStyleMode.Outline"
+                      Click="SaveDetailAsync"
+                      Enabled="!_isDetailSaving" />
+        }
         <DxButton Text="Kapat"
                   RenderStyle="ButtonRenderStyle.Secondary"
                   RenderStyleMode="ButtonRenderStyleMode.Outline"
@@ -511,6 +537,7 @@
     private bool _isLoading = true;
     private bool _filterPanelVisible;
     private bool _detailVisible;
+    private bool _isDetailSaving;
     private bool _confirmVisible;
     private bool _isActioning;
     private bool _isApproving;
@@ -521,6 +548,7 @@
     private string? _pushTitle;
     private string? _pushMessage;
     private bool _canApprove;
+    private bool _canEdit;
     private bool _canReject;
     private bool _canSendSms;
     private bool _canSendPush;
@@ -537,6 +565,7 @@
     private string _confirmButtonText = string.Empty;
     private string _confirmIconClass = string.Empty;
     private ButtonRenderStyle _confirmButtonStyle = ButtonRenderStyle.Primary;
+    private bool _detailSurveyHelperEnabled;
 
     // Enum option lists — EditSettings/DxComboBoxSettings için typed records
     private record EnumOpt<T>(T Value, string Label) where T : struct, Enum;
@@ -564,6 +593,7 @@
     {
         var permissions = await PermissionService.GetCurrentPermissionsAsync();
         _canApprove = permissions.Contains(PermissionCodes.Subjects.Approve);
+        _canEdit = permissions.Contains(PermissionCodes.Subjects.Edit);
         _canReject = permissions.Contains(PermissionCodes.Subjects.Reject);
         _canSendSms = permissions.Contains(PermissionCodes.Subjects.SendSms);
         _canSendPush = permissions.Contains(PermissionCodes.Subjects.SendPush);
@@ -681,6 +711,7 @@
         switch (e.ItemInfo.Name)
         {
             case "detail":
+                _detailSurveyHelperEnabled = _selectedItem.IsSurveyHelperEnabled;
                 _detailVisible = true;
                 break;
             case "projects":
@@ -799,6 +830,36 @@
     {
         if (_grid is not null)
             await _grid.ExportToXlsxAsync("denekler");
+    }
+
+    private async Task SaveDetailAsync()
+    {
+        if (_selectedItem is null)
+            return;
+
+        if (!_canEdit)
+        {
+            Toast.Error("Denek duzenleme yetkiniz yok.");
+            return;
+        }
+
+        _isDetailSaving = true;
+        try
+        {
+            var adminId = await GetAdminIdAsync();
+            await SubjectService.SetSurveyHelperEnabledAsync(_selectedItem.Id, _detailSurveyHelperEnabled, adminId);
+            _selectedItem.IsSurveyHelperEnabled = _detailSurveyHelperEnabled;
+            Toast.Success("Survey helper ayarı güncellendi.");
+            ReloadGridAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleOperation(ex, Toast);
+        }
+        finally
+        {
+            _isDetailSaving = false;
+        }
     }
 
     private async Task SendSmsAsync()

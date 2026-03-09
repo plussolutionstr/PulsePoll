@@ -25,6 +25,10 @@ public interface IProjectRepository
     Task<List<ProjectAssignment>> GetSubjectAssignmentsAsync(int subjectId);
     Task<List<int>> GetSubjectIdsWithCompletedSurveyAsync(IEnumerable<int> subjectIds);
     Task<List<int>> GetSubjectIdsWithApprovedRewardAsync(IEnumerable<int> subjectIds);
+    Task<List<ProjectSurveyHelperEntry>> GetSurveyHelperEntriesAsync(int projectId);
+    Task<ProjectSurveyHelperEntry?> GetSurveyHelperEntryByIdAsync(int projectId, int entryId);
+    Task AddSurveyHelperEntryAsync(ProjectSurveyHelperEntry entry);
+    Task UpdateSurveyHelperEntryAsync(ProjectSurveyHelperEntry entry);
 
     // Zamana yayılı dağıtım
     Task<List<Project>> GetActiveScheduledDistributionProjectsAsync();

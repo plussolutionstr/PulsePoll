@@ -205,6 +205,19 @@ public sealed class PulsePollApiClient : IPulsePollApiClient
         return result.Data.Url;
     }
 
+    public async Task<SurveyHelperMatchApiDto?> GetSurveyHelperMatchAsync(int projectId, string questionText, CancellationToken ct = default)
+    {
+        var response = await _http.PostAsJsonAsync(
+            $"api/projects/{projectId}/helper/match",
+            new { questionText },
+            JsonOptions,
+            ct);
+        await EnsureSuccessOrThrowAsync(response, ct);
+
+        var result = await response.Content.ReadFromJsonAsync<ApiResponse<SurveyHelperMatchApiDto>>(JsonOptions, ct);
+        return result is { Success: true } ? result.Data : null;
+    }
+
     public Task<ProfileApiDto?> GetProfileAsync(CancellationToken ct = default)
         => GetAsync<ProfileApiDto>("api/profile", ct);
 

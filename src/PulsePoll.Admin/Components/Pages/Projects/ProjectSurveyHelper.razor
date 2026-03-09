@@ -1,0 +1,296 @@
+@page "/projects/{ProjectId:int}/survey-helper"
+@attribute [HasPermission(PermissionCodes.Projects.Edit)]
+@using PulsePoll.Application.DTOs
+@using PulsePoll.Application.Extensions
+@using PulsePoll.Domain.Enums
+@using System.Security.Claims
+@inject IProjectService ProjectService
+@inject IAppToastService Toast
+@inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthStateProvider
+
+<PageTitle>Survey Helper - PulsePoll Admin</PageTitle>
+
+<div class="d-flex align-items-center justify-content-between gap-2 mb-3">
+    <div class="d-flex align-items-center gap-2">
+        <DxButton Text="← Projeler"
+                  RenderStyle="ButtonRenderStyle.Link"
+                  Click="@(() => Nav.NavigateTo("/projects"))" />
+        <span class="text-muted">/</span>
+        <span class="fw-semibold">@_projectName - Survey Helper</span>
+        <span class="badge @ProjectStatusBadge(_projectStatus)">@_projectStatus.GetDescription()</span>
+    </div>
+    <DxButton Text="Yeni Kayıt"
+              IconCssClass="bi bi-plus-lg"
+              RenderStyle="ButtonRenderStyle.Primary"
+              RenderStyleMode="ButtonRenderStyleMode.Outline"
+              Click="OpenCreatePopup" />
+</div>
+
+@if (!string.IsNullOrWhiteSpace(_projectInfo))
+{
+    <div class="alert alert-secondary py-2 mb-3">@_projectInfo</div>
+}
+
+<DxLoadingPanel @bind-Visible="_isLoading"
+                IsContentBlocked="true"
+                ApplyBackgroundShading="true"
+                IndicatorAreaVisible="false"
+                Text="Yükleniyor...">
+    <DxGrid Data="@_entries" PageSize="20" ShowFilterRow="true">
+        <Columns>
+            <DxGridDataColumn FieldName="QuestionText" Caption="Soru Metni" MinWidth="280" />
+            <DxGridDataColumn FieldName="HelpText" Caption="Yardım Metni" MinWidth="320" />
+            <DxGridDataColumn FieldName="CreatedAt" Caption="Oluşturma" DisplayFormat="dd.MM.yyyy HH:mm" Width="150px" />
+            <DxGridCommandColumn Width="110px" Caption="" TextAlignment="GridTextAlignment.Center">
+                <CellDisplayTemplate>
+                    @{
+                        var item = (ProjectSurveyHelperEntryDto)context.DataItem;
+                    }
+                    <div class="d-flex justify-content-center gap-1">
+                        <DxButton IconCssClass="bi bi-pencil"
+                                  RenderStyle="ButtonRenderStyle.Link"
+                                  title="Düzenle"
+                                  Click="@(async _ => await OpenEditPopupAsync(item))" />
+                        <DxButton IconCssClass="bi bi-trash text-danger"
+                                  RenderStyle="ButtonRenderStyle.Link"
+                                  title="Sil"
+                                  Click="@(async _ => await ConfirmDeleteAsync(item))" />
+                    </div>
+                </CellDisplayTemplate>
+            </DxGridCommandColumn>
+        </Columns>
+    </DxGrid>
+</DxLoadingPanel>
+
+<DxPopup @bind-Visible="_popupVisible"
+         HeaderText="@(_form.Id.HasValue ? "Survey Helper Kaydını Düzenle" : "Yeni Survey Helper Kaydı")"
+         Width="760px"
+         CloseOnOutsideClick="false"
+         ShowFooter="true">
+    <BodyContentTemplate Context="_">
+        @if (!string.IsNullOrWhiteSpace(_formError))
+        {
+            <div class="alert alert-danger py-2 mb-3">@_formError</div>
+        }
+        <DxFormLayout>
+            <DxFormLayoutItem ColSpanMd="12">
+                <label class="form-label">Soru Metni *</label>
+                <DxMemo @bind-Text="_form.QuestionText" Rows="4" />
+                <div class="small text-muted mt-1">Buraya soru metnini veya eşleşmesini istediğin anahtar ifadeyi yaz.</div>
+            </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanMd="12">
+                <label class="form-label">Yardım Metni *</label>
+                <DxMemo @bind-Text="_form.HelpText" Rows="6" />
+            </DxFormLayoutItem>
+        </DxFormLayout>
+    </BodyContentTemplate>
+    <FooterContentTemplate>
+        <DxButton Text="@(_isSaving ? "Kaydediliyor..." : "Kaydet")"
+                  IconCssClass="@(_isSaving ? "spinner-border spinner-border-sm" : "bi bi-check-lg")"
+                  RenderStyle="ButtonRenderStyle.Primary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="SaveAsync"
+                  Enabled="!_isSaving" />
+        <DxButton Text="İptal"
+                  RenderStyle="ButtonRenderStyle.Secondary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="@(() => _popupVisible = false)"
+                  Enabled="!_isSaving" />
+    </FooterContentTemplate>
+</DxPopup>
+
+<DxPopup @bind-Visible="_deleteVisible"
+         HeaderText="Silme Onayı"
+         Width="420px"
+         CloseOnOutsideClick="false"
+         ShowFooter="true">
+    <BodyContentTemplate Context="_">
+        <div class="d-flex align-items-start gap-3 p-2">
+            <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size:2rem; flex-shrink:0;"></i>
+            <div>
+                <p class="mb-1 fw-semibold">Bu survey helper kaydını silmek istediğinize emin misiniz?</p>
+                <p class="mb-0 text-muted">@_deleteTarget?.QuestionText</p>
+            </div>
+        </div>
+    </BodyContentTemplate>
+    <FooterContentTemplate>
+        <DxButton Text="Sil"
+                  IconCssClass="bi bi-trash"
+                  RenderStyle="ButtonRenderStyle.Danger"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="DeleteAsync"
+                  Enabled="!_isDeleting" />
+        <DxButton Text="İptal"
+                  RenderStyle="ButtonRenderStyle.Secondary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="@(() => _deleteVisible = false)"
+                  Enabled="!_isDeleting" />
+    </FooterContentTemplate>
+</DxPopup>
+
+@code {
+    [Parameter] public int ProjectId { get; set; }
+
+    private bool _isLoading = true;
+    private bool _isSaving;
+    private bool _isDeleting;
+    private bool _popupVisible;
+    private bool _deleteVisible;
+    private string? _formError;
+    private string _projectName = "Proje";
+    private string? _projectInfo;
+    private ProjectStatus _projectStatus = ProjectStatus.Draft;
+    private List<ProjectSurveyHelperEntryDto> _entries = [];
+    private ProjectSurveyHelperEntryDto? _deleteTarget;
+    private FormModel _form = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            var project = await ProjectService.GetByIdAsync(ProjectId);
+            if (project is null)
+            {
+                Toast.Error("Proje bulunamadı.");
+                Nav.NavigateTo("/projects");
+                return;
+            }
+
+            _projectName = project.Name;
+            _projectStatus = project.Status;
+            _projectInfo = project.SupportsSurveyHelper
+                ? "Survey helper bu proje için aktif."
+                : "Survey helper bu proje için kapalı. Mobilde ? butonunun görünmesi için proje düzenleme ekranından checkbox'ı aç.";
+            _entries = await ProjectService.GetSurveyHelperEntriesAsync(ProjectId);
+        }
+        catch (Exception ex)
+        {
+            Toast.Error(ex.Message);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void OpenCreatePopup()
+    {
+        _form = new FormModel();
+        _formError = null;
+        _popupVisible = true;
+    }
+
+    private Task OpenEditPopupAsync(ProjectSurveyHelperEntryDto item)
+    {
+        _form = new FormModel
+        {
+            Id = item.Id,
+            QuestionText = item.QuestionText,
+            HelpText = item.HelpText
+        };
+        _formError = null;
+        _popupVisible = true;
+        return Task.CompletedTask;
+    }
+
+    private Task ConfirmDeleteAsync(ProjectSurveyHelperEntryDto item)
+    {
+        _deleteTarget = item;
+        _deleteVisible = true;
+        return Task.CompletedTask;
+    }
+
+    private async Task SaveAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_form.QuestionText))
+        {
+            _formError = "Soru metni zorunludur.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_form.HelpText))
+        {
+            _formError = "Yardım metni zorunludur.";
+            return;
+        }
+
+        _isSaving = true;
+        _formError = null;
+        try
+        {
+            await ProjectService.SaveSurveyHelperEntryAsync(
+                ProjectId,
+                new SaveProjectSurveyHelperEntryDto(_form.Id, _form.QuestionText.Trim(), _form.HelpText.Trim()),
+                adminId: await GetAdminIdAsync());
+
+            _popupVisible = false;
+            await LoadAsync();
+            Toast.Success("Survey helper kaydı kaydedildi.");
+        }
+        catch (Exception ex)
+        {
+            _formError = ex.Message;
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private async Task DeleteAsync()
+    {
+        if (_deleteTarget is null)
+            return;
+
+        _isDeleting = true;
+        try
+        {
+            await ProjectService.DeleteSurveyHelperEntryAsync(ProjectId, _deleteTarget.Id, adminId: await GetAdminIdAsync());
+            _deleteVisible = false;
+            _deleteTarget = null;
+            await LoadAsync();
+            Toast.Success("Survey helper kaydı silindi.");
+        }
+        catch (Exception ex)
+        {
+            Toast.Error(ex.Message);
+        }
+        finally
+        {
+            _isDeleting = false;
+        }
+    }
+
+    private static string ProjectStatusBadge(ProjectStatus status) => status switch
+    {
+        ProjectStatus.Draft => "bg-secondary",
+        ProjectStatus.Active => "bg-success",
+        ProjectStatus.Paused => "bg-warning text-dark",
+        ProjectStatus.Completed => "bg-info text-dark",
+        ProjectStatus.Cancelled => "bg-danger",
+        _ => "bg-light text-dark"
+    };
+
+    private async Task<int> GetAdminIdAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var claim = authState.User.FindFirst(ClaimTypes.NameIdentifier);
+        return claim is not null && int.TryParse(claim.Value, out var adminUserId)
+            ? adminUserId
+            : 0;
+    }
+
+    private sealed class FormModel
+    {
+        public int? Id { get; set; }
+        public string QuestionText { get; set; } = string.Empty;
+        public string HelpText { get; set; } = string.Empty;
+    }
+}

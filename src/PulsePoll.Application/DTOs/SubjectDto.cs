@@ -40,7 +40,8 @@ public record SubjectDto(
     int? Star,
     int CompletedCount,
     int DisqualifiedCount,
-    int SuccessRate);
+    int SuccessRate,
+    bool IsSurveyHelperEnabled);
 
 public record RegisterSubjectDto(
     string RegistrationToken,

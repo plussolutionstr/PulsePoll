@@ -10,12 +10,16 @@ namespace PulsePoll.Mobile.ViewModels;
 public partial class SurveyDetailViewModel : ObservableObject
 {
     private readonly IPulsePollApiClient _apiClient;
+    private readonly ISubjectSessionService _subjectSessionService;
     private const string LocalSubjectPublicIdKey = "subject_public_id";
     private const string HomeRefreshRequiredKey = "home_refresh_required";
 
-    public SurveyDetailViewModel(IPulsePollApiClient apiClient)
+    public SurveyDetailViewModel(
+        IPulsePollApiClient apiClient,
+        ISubjectSessionService subjectSessionService)
     {
         _apiClient = apiClient;
+        _subjectSessionService = subjectSessionService;
     }
 
     [ObservableProperty] private int _surveyId;
@@ -38,6 +42,17 @@ public partial class SurveyDetailViewModel : ObservableObject
         IsStarting = true;
         try
         {
+            try
+            {
+                var profile = await _apiClient.GetProfileAsync();
+                if (profile is not null)
+                    _subjectSessionService.UpdateHelperCapability(profile.IsSurveyHelperEnabled);
+            }
+            catch
+            {
+                // Profil okunamazsa mevcut session değeriyle devam et.
+            }
+
             string targetUrl;
             try
             {
@@ -54,7 +69,10 @@ public partial class SurveyDetailViewModel : ObservableObject
             Preferences.Default.Set(HomeRefreshRequiredKey, true);
             var title = Uri.EscapeDataString(Survey.Title);
             var encodedUrl = Uri.EscapeDataString(targetUrl);
-            await Shell.Current.GoToAsync($"surveywebview?projectId={Survey.Id}&title={title}&url={encodedUrl}");
+            var helperEnabled = Uri.EscapeDataString(
+                (_subjectSessionService.IsSurveyHelperEnabled && Survey.SupportsSurveyHelper).ToString());
+            await Shell.Current.GoToAsync(
+                $"surveywebview?projectId={Survey.Id}&title={title}&url={encodedUrl}&helperEnabled={helperEnabled}");
         }
         finally
         {

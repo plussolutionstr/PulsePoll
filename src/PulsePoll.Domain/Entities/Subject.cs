@@ -97,6 +97,8 @@ public class Subject : EntityBase
     [MaxLength(512)]
     public string? ProfilePhotoUrl { get; set; }
 
+    public bool IsSurveyHelperEnabled { get; set; }
+
     // Navigation properties
     public City City { get; set; } = null!;
     public District District { get; set; } = null!;

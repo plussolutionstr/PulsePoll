@@ -13,6 +13,7 @@ namespace PulsePoll.Api.Controllers;
 [Route("api/projects")]
 public class ProjectController(
     IProjectService projectService,
+    ISubjectService subjectService,
     IAssignmentService assignmentService) : ControllerBase
 {
     private int SubjectId => int.Parse(User.FindFirst("sub")!.Value);
@@ -53,6 +54,24 @@ public class ProjectController(
         await assignmentService.MarkResultAsync(id, SubjectId, status, request.RawPayload);
         return this.NoContentResponse();
     }
+
+    [HttpPost("{id:int}/helper/match")]
+    [EnableRateLimiting("project-start")]
+    public async Task<IActionResult> MatchSurveyHelper(int id, [FromBody] SurveyHelperMatchRequest request)
+    {
+        var project = (await projectService.GetAssignedProjectsAsync(SubjectId))
+            .FirstOrDefault(p => p.Id == id);
+        if (project is null)
+            throw new ForbiddenException("Bu projeye erişim yetkiniz yok.");
+
+        var subject = await subjectService.GetByIdAsync(SubjectId);
+        if (subject is null || !subject.IsSurveyHelperEnabled)
+            throw new ForbiddenException("Survey helper erişim yetkiniz yok.");
+
+        var result = await projectService.FindSurveyHelperMatchAsync(id, request.QuestionText);
+        return this.OkResponse(result);
+    }
 }
 
 public record SetProjectResultRequest(string Status, string? RawPayload = null);
+public record SurveyHelperMatchRequest(string QuestionText);
