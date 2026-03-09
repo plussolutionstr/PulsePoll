@@ -13,6 +13,7 @@ public partial class SurveyWebViewViewModel : ObservableObject
 {
     private readonly ISurveyHelperService _surveyHelperService;
     private bool _resultHandled;
+    private string _lastAutoProcessedPageText = string.Empty;
 
     public SurveyWebViewViewModel(ISurveyHelperService surveyHelperService)
     {
@@ -120,6 +121,18 @@ public partial class SurveyWebViewViewModel : ObservableObject
     {
         CurrentQuestionText = DecodeJavaScriptResult(rawQuestionText);
         return await _surveyHelperService.GetHelpAsync(ProjectId, CurrentQuestionText, ct);
+    }
+
+    public bool ShouldRunAutoHelpForPage(string pageText)
+    {
+        if (string.IsNullOrWhiteSpace(pageText))
+            return false;
+
+        if (string.Equals(_lastAutoProcessedPageText, pageText, StringComparison.Ordinal))
+            return false;
+
+        _lastAutoProcessedPageText = pageText;
+        return true;
     }
 
     private static string DecodeJavaScriptResult(string? rawValue)

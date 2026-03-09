@@ -5,6 +5,7 @@ namespace PulsePoll.Mobile.Views;
 
 public partial class SurveyWebViewPage : ContentPage
 {
+    private static readonly TimeSpan AutoHelpDelay = TimeSpan.FromMilliseconds(250);
     private readonly SurveyWebViewViewModel _viewModel;
 
     public SurveyWebViewPage(SurveyWebViewViewModel viewModel)
@@ -28,7 +29,10 @@ public partial class SurveyWebViewPage : ContentPage
         _viewModel.IsLoading = false;
 
         // Bazı platformlar redirect yerine doğrudan survey-result sayfasını yükleyebilir.
-        await _viewModel.TryHandleSurveyResultUrlAsync(e.Url);
+        if (await _viewModel.TryHandleSurveyResultUrlAsync(e.Url))
+            return;
+
+        await TryAutoShowHelpAsync(e.Result);
     }
 
     private async void OnHelpButtonClicked(object? sender, EventArgs e)
@@ -38,9 +42,7 @@ public partial class SurveyWebViewPage : ContentPage
 
         try
         {
-            _viewModel.IsHelpBusy = true;
-            var pageText = await SurveyPageTextExtractor.ExtractAsync(SurveyWebView);
-            var result = await _viewModel.GetHelpAsync(pageText);
+            var result = await RunHelpLookupAsync(isAuto: false);
 
             if (result.Found)
             {
@@ -63,5 +65,41 @@ public partial class SurveyWebViewPage : ContentPage
         {
             _viewModel.IsHelpBusy = false;
         }
+    }
+
+    private async Task TryAutoShowHelpAsync(WebNavigationResult navigationResult)
+    {
+        if (!_viewModel.IsHelperEnabled || navigationResult != WebNavigationResult.Success || _viewModel.IsHelpBusy)
+            return;
+
+        try
+        {
+            await Task.Delay(AutoHelpDelay);
+
+            var result = await RunHelpLookupAsync(isAuto: true);
+            if (result.Found)
+            {
+                await DisplayAlertAsync("Yardım", result.Message, "Tamam");
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[SurveyHelper][Auto] {ex}");
+        }
+        finally
+        {
+            _viewModel.IsHelpBusy = false;
+        }
+    }
+
+    private async Task<SurveyHelpMatchResult> RunHelpLookupAsync(bool isAuto)
+    {
+        _viewModel.IsHelpBusy = true;
+
+        var pageText = await SurveyPageTextExtractor.ExtractAsync(SurveyWebView);
+        if (isAuto && !_viewModel.ShouldRunAutoHelpForPage(pageText))
+            return new SurveyHelpMatchResult(false, string.Empty);
+
+        return await _viewModel.GetHelpAsync(pageText);
     }
 }
