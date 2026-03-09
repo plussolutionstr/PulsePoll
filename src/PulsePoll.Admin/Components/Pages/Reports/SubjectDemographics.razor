@@ -2,7 +2,6 @@
 @attribute [HasPermission(PermissionCodes.Reports.View)]
 @inject IReportService ReportService
 @inject IAppToastService Toast
-@inject IJSRuntime JS
 
 <PageTitle>Demografik Dağılım — PulsePoll Admin</PageTitle>
 
@@ -43,32 +42,35 @@ else if (_result is not null)
         </div>
     </div>
 
-    @* Hızlı Navigasyon *@
-    <div class="demo-nav mb-4">
-        @foreach (var sect in _result.Sections)
-        {
-            <a @onclick="() => ScrollToSection(sect.GroupName)" @onclick:preventDefault class="demo-nav-item" href="">@sect.GroupName</a>
-        }
-    </div>
+    @* Tab Navigasyonu *@
+    <div class="demo-section">
+        <div class="demo-tabs">
+            @foreach (var sect in _result.Sections)
+            {
+                var isActive = sect.GroupName == _activeTab;
+                <button class="demo-tab @(isActive ? "demo-tab-active" : "")"
+                        @onclick="() => _activeTab = sect.GroupName">
+                    @sect.GroupName
+                </button>
+            }
+        </div>
 
-    @* Bölümler *@
-    @foreach (var sect in _result.Sections)
-    {
-        <div id="section-@sect.GroupName.Replace(" ", "-")" class="demo-section mb-4">
-            <div class="demo-section-header">
-                <h5 class="mb-0 fw-bold">@sect.GroupName</h5>
-                <span class="text-muted">@sect.GrandTotal.ToString("N0") denek</span>
+        @{ var active = _result.Sections.FirstOrDefault(s => s.GroupName == _activeTab) ?? _result.Sections.First(); }
+
+        <div class="demo-tab-content">
+            <div class="demo-tab-header">
+                <h5 class="mb-0 fw-bold">@active.GroupName</h5>
+                <span class="text-muted">@active.GrandTotal.ToString("N0") denek</span>
             </div>
 
             @* Bar Chart *@
-            @if (sect.Rows.Count <= 20)
+            @if (active.Rows.Count <= 20)
             {
-                <div class="demo-bars mb-3">
-                    @foreach (var row in sect.Rows)
+                <div class="demo-bars">
+                    @foreach (var row in active.Rows)
                     {
-                        var pctFemale = sect.GrandTotal > 0 ? (double)row.FemaleCount / sect.GrandTotal * 100 : 0;
-                        var pctMale = sect.GrandTotal > 0 ? (double)row.MaleCount / sect.GrandTotal * 100 : 0;
-                        var pctTotal = sect.GrandTotal > 0 ? (double)row.TotalCount / sect.GrandTotal * 100 : 0;
+                        var pctFemale = active.GrandTotal > 0 ? (double)row.FemaleCount / active.GrandTotal * 100 : 0;
+                        var pctMale = active.GrandTotal > 0 ? (double)row.MaleCount / active.GrandTotal * 100 : 0;
 
                         <div class="demo-bar-row">
                             <div class="demo-bar-label" title="@row.Value">@row.Value</div>
@@ -87,14 +89,14 @@ else if (_result is not null)
                 <table class="table table-sm table-hover demo-table mb-0">
                     <thead>
                         <tr>
-                            <th>@sect.GroupName</th>
+                            <th>@active.GroupName</th>
                             <th class="text-end">Kadın</th>
                             <th class="text-end">Erkek</th>
                             <th class="text-end fw-bold">Toplam</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var row in sect.Rows)
+                        @foreach (var row in active.Rows)
                         {
                             <tr>
                                 <td>@row.Value</td>
@@ -107,26 +109,29 @@ else if (_result is not null)
                     <tfoot>
                         <tr class="table-active fw-bold">
                             <td>TOPLAM</td>
-                            <td class="text-end">@sect.TotalFemale.ToString("N0")</td>
-                            <td class="text-end">@sect.TotalMale.ToString("N0")</td>
-                            <td class="text-end">@sect.GrandTotal.ToString("N0")</td>
+                            <td class="text-end">@active.TotalFemale.ToString("N0")</td>
+                            <td class="text-end">@active.TotalMale.ToString("N0")</td>
+                            <td class="text-end">@active.GrandTotal.ToString("N0")</td>
                         </tr>
                     </tfoot>
                 </table>
             </div>
         </div>
-    }
+    </div>
 }
 
 @code {
     private bool _isLoading = true;
     private SubjectDemographicsResultDto? _result;
+    private string _activeTab = "";
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
             _result = await ReportService.GetSubjectDemographicsAsync();
+            if (_result.Sections.Count > 0)
+                _activeTab = _result.Sections[0].GroupName;
         }
         catch (Exception ex)
         {
@@ -136,13 +141,6 @@ else if (_result is not null)
         {
             _isLoading = false;
         }
-    }
-
-    private async Task ScrollToSection(string groupName)
-    {
-        var id = "section-" + groupName.Replace(" ", "-");
-        await JS.InvokeVoidAsync("document.getElementById", id);
-        await JS.InvokeVoidAsync("eval", $"document.getElementById('{id}')?.scrollIntoView({{behavior:'smooth',block:'start'}})");
     }
 
     private static string Pct(int part, int total)

@@ -40,31 +40,7 @@
     margin-top: 0.15rem;
 }
 
-/* Hızlı navigasyon */
-.demo-nav {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-}
-
-.demo-nav-item {
-    background: #f7f5ff;
-    border: 1px solid #e5e1f3;
-    border-radius: 20px;
-    color: #6b6589;
-    font-size: 0.82rem;
-    font-weight: 600;
-    padding: 0.35rem 0.85rem;
-    text-decoration: none;
-    transition: all 0.15s ease;
-}
-
-.demo-nav-item:hover {
-    background: #ece8fb;
-    color: #1a1535;
-}
-
-/* Bölüm kartı */
+/* Tab yapısı */
 .demo-section {
     background: #fff;
     border: 1px solid #e5e1f3;
@@ -72,14 +48,49 @@
     box-shadow: 0 8px 24px rgba(26, 21, 53, 0.05);
 }
 
-.demo-section-header {
-    align-items: center;
+.demo-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+    border-bottom: 2px solid #e5e1f3;
+    padding: 0 0.5rem;
     background: #f7f5ff;
-    border-bottom: 1px solid #ece8fb;
     border-radius: 14px 14px 0 0;
+}
+
+.demo-tab {
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: #6b6589;
+    cursor: pointer;
+    font-size: 0.84rem;
+    font-weight: 600;
+    padding: 0.75rem 1rem;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+
+.demo-tab:hover {
+    color: #1a1535;
+    background: #ece8fb;
+}
+
+.demo-tab-active {
+    color: #5b3cc4;
+    border-bottom-color: #5b3cc4;
+}
+
+.demo-tab-content {
+    padding: 0;
+}
+
+.demo-tab-header {
+    align-items: center;
     display: flex;
     justify-content: space-between;
     padding: 0.9rem 1.25rem;
+    border-bottom: 1px solid #ece8fb;
 }
 
 /* Horizontal bar chart */
@@ -164,5 +175,14 @@
 @media (max-width: 768px) {
     .demo-bar-label {
         width: 100px;
+    }
+
+    .demo-tabs {
+        overflow-x: auto;
+    }
+
+    .demo-tab {
+        font-size: 0.78rem;
+        padding: 0.6rem 0.7rem;
     }
 }
