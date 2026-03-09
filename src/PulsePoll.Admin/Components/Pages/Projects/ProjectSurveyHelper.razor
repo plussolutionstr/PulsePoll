@@ -42,26 +42,32 @@
             <DxGridDataColumn FieldName="QuestionText" Caption="Soru Metni" MinWidth="280" />
             <DxGridDataColumn FieldName="HelpText" Caption="Yardım Metni" MinWidth="320" />
             <DxGridDataColumn FieldName="CreatedAt" Caption="Oluşturma" DisplayFormat="dd.MM.yyyy HH:mm" Width="150px" />
-            <DxGridCommandColumn Width="110px" Caption="" TextAlignment="GridTextAlignment.Center">
+            <DxGridCommandColumn NewButtonVisible="false"
+                                 EditButtonVisible="false"
+                                 DeleteButtonVisible="false"
+                                 Width="50px"
+                                 Caption=""
+                                 TextAlignment="GridTextAlignment.Center">
                 <CellDisplayTemplate>
                     @{
                         var item = (ProjectSurveyHelperEntryDto)context.DataItem;
                     }
-                    <div class="d-flex justify-content-center gap-1">
-                        <DxButton IconCssClass="bi bi-pencil"
-                                  RenderStyle="ButtonRenderStyle.Link"
-                                  title="Düzenle"
-                                  Click="@(async _ => await OpenEditPopupAsync(item))" />
-                        <DxButton IconCssClass="bi bi-trash text-danger"
-                                  RenderStyle="ButtonRenderStyle.Link"
-                                  title="Sil"
-                                  Click="@(async _ => await ConfirmDeleteAsync(item))" />
-                    </div>
+                    <DxButton IconCssClass="bi bi-three-dots-vertical"
+                              RenderStyle="ButtonRenderStyle.Link"
+                              title="İşlemler"
+                              Click="@(async e => await ShowMenuAsync(e, item))" />
                 </CellDisplayTemplate>
             </DxGridCommandColumn>
         </Columns>
     </DxGrid>
 </DxLoadingPanel>
+
+<DxContextMenu @ref="_contextMenu" ItemClick="OnContextMenuItemClick">
+    <Items>
+        <DxContextMenuItem Text="Düzenle" Name="edit" IconCssClass="bi bi-pencil" />
+        <DxContextMenuItem Text="Sil" Name="delete" IconCssClass="bi bi-trash" CssClass="text-danger" BeginGroup="true" />
+    </Items>
+</DxContextMenu>
 
 <DxPopup @bind-Visible="_popupVisible"
          HeaderText="@(_form.Id.HasValue ? "Survey Helper Kaydını Düzenle" : "Yeni Survey Helper Kaydı")"
@@ -142,6 +148,8 @@
     private string? _projectInfo;
     private ProjectStatus _projectStatus = ProjectStatus.Draft;
     private List<ProjectSurveyHelperEntryDto> _entries = [];
+    private DxContextMenu? _contextMenu;
+    private ProjectSurveyHelperEntryDto? _selectedEntry;
     private ProjectSurveyHelperEntryDto? _deleteTarget;
     private FormModel _form = new();
 
@@ -205,6 +213,31 @@
         _deleteTarget = item;
         _deleteVisible = true;
         return Task.CompletedTask;
+    }
+
+    private async Task ShowMenuAsync(MouseEventArgs args, ProjectSurveyHelperEntryDto item)
+    {
+        _selectedEntry = item;
+        if (_contextMenu is not null)
+        {
+            await _contextMenu.ShowAsync(args);
+        }
+    }
+
+    private async Task OnContextMenuItemClick(ContextMenuItemClickEventArgs args)
+    {
+        if (_selectedEntry is null)
+            return;
+
+        switch (args.ItemInfo.Name)
+        {
+            case "edit":
+                await OpenEditPopupAsync(_selectedEntry);
+                break;
+            case "delete":
+                await ConfirmDeleteAsync(_selectedEntry);
+                break;
+        }
     }
 
     private async Task SaveAsync()
