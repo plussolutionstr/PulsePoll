@@ -277,6 +277,70 @@ public class ReportService(AppDbContext db) : IReportService
         };
     }
 
+    public async Task<SubjectEarningsResultDto> GetSubjectEarningsAsync()
+    {
+        var subjects = await db.Subjects
+            .Where(s => s.Status == ApprovalStatus.Approved)
+            .Select(s => new { s.Id, s.FirstName, s.LastName, s.PhoneNumber })
+            .AsNoTracking()
+            .ToListAsync();
+
+        var subjectIds = subjects.Select(s => s.Id).ToList();
+
+        var wallets = await db.Wallets
+            .Where(w => subjectIds.Contains(w.SubjectId))
+            .Select(w => new { w.SubjectId, w.Balance })
+            .AsNoTracking()
+            .ToListAsync();
+
+        // Tüm hesaplamaları transaction'lardan yap (TotalEarned güvenilir değil)
+        var transactionTotals = await db.WalletTransactions
+            .Where(t => t.Wallet != null && subjectIds.Contains(t.Wallet.SubjectId))
+            .GroupBy(t => new { t.Wallet!.SubjectId, t.Type })
+            .Select(g => new { g.Key.SubjectId, g.Key.Type, Total = g.Sum(t => t.Amount) })
+            .ToListAsync();
+
+        var creditMap = transactionTotals
+            .Where(t => t.Type == WalletTransactionType.Credit)
+            .ToDictionary(t => t.SubjectId, t => t.Total);
+        var withdrawalMap = transactionTotals
+            .Where(t => t.Type == WalletTransactionType.Withdrawal)
+            .ToDictionary(t => t.SubjectId, t => t.Total);
+
+        var walletMap = wallets.ToDictionary(w => w.SubjectId);
+
+        var items = subjects.Select(s =>
+        {
+            var hasWallet = walletMap.TryGetValue(s.Id, out var wallet);
+            var totalEarned = creditMap.GetValueOrDefault(s.Id, 0);
+            var totalWithdrawn = withdrawalMap.GetValueOrDefault(s.Id, 0);
+
+            return new SubjectEarningsItemDto
+            {
+                SubjectId = s.Id,
+                FullName = $"{s.FirstName} {s.LastName}",
+                PhoneNumber = s.PhoneNumber,
+                TotalEarned = totalEarned,
+                TotalWithdrawn = Math.Abs(totalWithdrawn),
+                Balance = hasWallet ? wallet!.Balance : 0
+            };
+        })
+        .OrderByDescending(x => x.TotalEarned)
+        .ToList();
+
+        return new SubjectEarningsResultDto
+        {
+            Summary = new SubjectEarningsSummaryDto
+            {
+                TotalEarned = items.Sum(i => i.TotalEarned),
+                TotalWithdrawn = items.Sum(i => i.TotalWithdrawn),
+                TotalBalance = items.Sum(i => i.Balance),
+                SubjectCount = items.Count
+            },
+            Items = items
+        };
+    }
+
     private static double CalcChangePercent(int current, int previous)
     {
         if (previous == 0)

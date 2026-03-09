@@ -63,24 +63,35 @@ else if (_result is not null)
                 <span class="text-muted">@active.GrandTotal.ToString("N0") denek</span>
             </div>
 
-            @* Bar Chart *@
+            @* DxChart — Yatay Bar *@
             @if (active.Rows.Count <= 20)
             {
-                <div class="demo-bars">
-                    @foreach (var row in active.Rows)
-                    {
-                        var pctFemale = active.GrandTotal > 0 ? (double)row.FemaleCount / active.GrandTotal * 100 : 0;
-                        var pctMale = active.GrandTotal > 0 ? (double)row.MaleCount / active.GrandTotal * 100 : 0;
-
-                        <div class="demo-bar-row">
-                            <div class="demo-bar-label" title="@row.Value">@row.Value</div>
-                            <div class="demo-bar-track">
-                                <div class="demo-bar-fill demo-bar-female" style="width: @($"{pctFemale:0.##}")%"></div>
-                                <div class="demo-bar-fill demo-bar-male" style="width: @($"{pctMale:0.##}")%"></div>
-                            </div>
-                            <div class="demo-bar-count">@row.TotalCount.ToString("N0")</div>
-                        </div>
-                    }
+                var chartHeight = Math.Max(250, active.Rows.Count * 50);
+                <div class="demo-chart-container" style="padding: 1rem 1.25rem;">
+                    <DxChart Data="@active.Rows"
+                             Width="100%"
+                             Height="@($"{chartHeight}px")"
+                             CssClass="demo-chart">
+                        <DxChartBarSeries ArgumentField="@((DemographicRow r) => r.Value)"
+                                          ValueField="@((DemographicRow r) => r.FemaleCount)"
+                                          Name="Kadın"
+                                          Color="System.Drawing.Color.FromArgb(209, 136, 197)" />
+                        <DxChartBarSeries ArgumentField="@((DemographicRow r) => r.Value)"
+                                          ValueField="@((DemographicRow r) => r.MaleCount)"
+                                          Name="Erkek"
+                                          Color="System.Drawing.Color.FromArgb(122, 179, 212)" />
+                        <DxChartArgumentAxis>
+                            <DxChartAxisLabel />
+                        </DxChartArgumentAxis>
+                        <DxChartValueAxis>
+                            <DxChartAxisLabel />
+                        </DxChartValueAxis>
+                        <DxChartLegend Position="RelativePosition.Outside"
+                                       HorizontalAlignment="HorizontalAlignment.Center"
+                                       VerticalAlignment="VerticalEdge.Bottom"
+                                       Orientation="DevExpress.Blazor.Orientation.Horizontal" />
+                        <DxChartTooltip Enabled="true" />
+                    </DxChart>
                 </div>
             }
 

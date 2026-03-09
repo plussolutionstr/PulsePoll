@@ -93,61 +93,6 @@
     border-bottom: 1px solid #ece8fb;
 }
 
-/* Horizontal bar chart */
-.demo-bars {
-    padding: 1rem 1.25rem 0.5rem;
-}
-
-.demo-bar-row {
-    align-items: center;
-    display: flex;
-    gap: 0.5rem;
-    margin-bottom: 0.5rem;
-}
-
-.demo-bar-label {
-    color: #4e4970;
-    flex-shrink: 0;
-    font-size: 0.82rem;
-    font-weight: 600;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    width: 140px;
-}
-
-.demo-bar-track {
-    background: #f0edf7;
-    border-radius: 6px;
-    display: flex;
-    flex: 1;
-    height: 24px;
-    overflow: hidden;
-}
-
-.demo-bar-fill {
-    height: 100%;
-    min-width: 0;
-    transition: width 0.3s ease;
-}
-
-.demo-bar-female {
-    background: #d188c5;
-}
-
-.demo-bar-male {
-    background: #7ab3d4;
-}
-
-.demo-bar-count {
-    color: #1a1535;
-    flex-shrink: 0;
-    font-size: 0.82rem;
-    font-weight: 700;
-    text-align: right;
-    width: 60px;
-}
-
 /* Tablo — ::deep ile iç elementlere erişim */
 ::deep .demo-table {
     margin: 0;
@@ -173,10 +118,6 @@
 }
 
 @media (max-width: 768px) {
-    .demo-bar-label {
-        width: 100px;
-    }
-
     .demo-tabs {
         overflow-x: auto;
     }

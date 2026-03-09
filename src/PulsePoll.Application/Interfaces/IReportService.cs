@@ -8,4 +8,5 @@ public interface IReportService
     Task<List<int>> GetAvailableYearsAsync();
     Task<SubjectActivityResultDto> GetSubjectActivityAsync(int days);
     Task<SubjectDemographicsResultDto> GetSubjectDemographicsAsync();
+    Task<SubjectEarningsResultDto> GetSubjectEarningsAsync();
 }

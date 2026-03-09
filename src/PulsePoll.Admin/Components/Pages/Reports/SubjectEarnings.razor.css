@@ -1,0 +1,46 @@
+.earnings-widget {
+    background: #fff;
+    border: 1px solid #e5e1f3;
+    border-radius: 14px;
+    box-shadow: 0 8px 24px rgba(26, 21, 53, 0.05);
+    padding: 1.25rem;
+}
+
+.earnings-kpi-card {
+    background: #faf9ff;
+    border: 1px solid #e5e1f3;
+    border-radius: 12px;
+    padding: 1rem;
+    text-align: center;
+}
+
+.earnings-kpi-earned {
+    border-color: #b3e0c4;
+    background: #f2fdf6;
+}
+
+.earnings-kpi-withdrawn {
+    border-color: #e0b3b3;
+    background: #fdf2f2;
+}
+
+.earnings-kpi-balance {
+    border-color: #b3cde0;
+    background: #f2f7fd;
+}
+
+.earnings-kpi-label {
+    color: #6b6589;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    margin-bottom: 0.2rem;
+    text-transform: uppercase;
+}
+
+.earnings-kpi-value {
+    color: #1a1535;
+    font-size: 1.5rem;
+    font-weight: 800;
+    line-height: 1.3;
+}

@@ -1,0 +1,112 @@
+@page "/reports/subject-earnings"
+@attribute [HasPermission(PermissionCodes.Reports.View)]
+@inject IReportService ReportService
+@inject IAppToastService Toast
+
+<PageTitle>Denek Kazanç Raporu — PulsePoll Admin</PageTitle>
+
+<div class="d-flex align-items-center gap-2 mb-3">
+    <h3 class="mb-0">Denek Kazanç Raporu</h3>
+</div>
+
+<div class="earnings-widget">
+    @if (_isLoading)
+    {
+        <div class="text-muted py-3">Veriler yükleniyor...</div>
+    }
+    else if (_result is not null)
+    {
+        @* KPI Kartlar *@
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3">
+                <div class="earnings-kpi-card">
+                    <div class="earnings-kpi-label">Toplam Denek</div>
+                    <div class="earnings-kpi-value">@_result.Summary.SubjectCount.ToString("N0")</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="earnings-kpi-card earnings-kpi-earned">
+                    <div class="earnings-kpi-label">Toplam Kazanç</div>
+                    <div class="earnings-kpi-value">@_result.Summary.TotalEarned.ToString("N2") ₺</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="earnings-kpi-card earnings-kpi-withdrawn">
+                    <div class="earnings-kpi-label">Toplam Çekim</div>
+                    <div class="earnings-kpi-value">@_result.Summary.TotalWithdrawn.ToString("N2") ₺</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="earnings-kpi-card earnings-kpi-balance">
+                    <div class="earnings-kpi-label">Toplam Bakiye</div>
+                    <div class="earnings-kpi-value">@_result.Summary.TotalBalance.ToString("N2") ₺</div>
+                </div>
+            </div>
+        </div>
+
+        @* Grid *@
+        <div class="d-flex align-items-center justify-content-between mb-2">
+            <h5 class="mb-0 fw-bold">Denek Detayı</h5>
+            <DxButton Text="Excel" IconCssClass="bi bi-file-earmark-excel" Click="ExportExcelAsync"
+                      RenderStyle="ButtonRenderStyle.Light" />
+        </div>
+
+        <DxGrid @ref="_grid" Data="@_result.Items"
+                ShowFilterRow="true"
+                PageSize="25"
+                CssClass="earnings-grid">
+            <Columns>
+                <DxGridDataColumn FieldName="SubjectId" Caption="ID" Width="70px" />
+                <DxGridDataColumn FieldName="FullName" Caption="Denek" MinWidth="180" />
+                <DxGridDataColumn FieldName="PhoneNumber" Caption="Telefon" Width="140px" />
+                <DxGridDataColumn FieldName="TotalEarned" Caption="Toplam Kazanç" Width="150px" DisplayFormat="{0:N2} ₺" />
+                <DxGridDataColumn FieldName="TotalWithdrawn" Caption="Toplam Çekim" Width="150px" DisplayFormat="{0:N2} ₺" />
+                <DxGridDataColumn FieldName="Balance" Caption="Bakiye" Width="130px" DisplayFormat="{0:N2} ₺" />
+                <DxGridDataColumn FieldName="SubjectId" Caption="" Width="90px" AllowSort="false" AllowGroup="false">
+                    <CellDisplayTemplate>
+                        @{
+                            var id = (int)context.Value;
+                        }
+                        <a href="/subjects/@id/ledger" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-journal-text"></i> Ekstre
+                        </a>
+                    </CellDisplayTemplate>
+                </DxGridDataColumn>
+            </Columns>
+            <TotalSummary>
+                <DxGridSummaryItem SummaryType="GridSummaryItemType.Count" FieldName="SubjectId" DisplayText="Toplam: {0:N0}" />
+                <DxGridSummaryItem SummaryType="GridSummaryItemType.Sum" FieldName="TotalEarned" DisplayText="{0:N2} ₺" />
+                <DxGridSummaryItem SummaryType="GridSummaryItemType.Sum" FieldName="TotalWithdrawn" DisplayText="{0:N2} ₺" />
+                <DxGridSummaryItem SummaryType="GridSummaryItemType.Sum" FieldName="Balance" DisplayText="{0:N2} ₺" />
+            </TotalSummary>
+        </DxGrid>
+    }
+</div>
+
+@code {
+    private bool _isLoading = true;
+    private SubjectEarningsResultDto? _result;
+    private IGrid? _grid;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _result = await ReportService.GetSubjectEarningsAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleFormSave(ex, Toast);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task ExportExcelAsync()
+    {
+        if (_grid is not null)
+            await _grid.ExportToXlsxAsync("denek-kazanc-raporu");
+    }
+}

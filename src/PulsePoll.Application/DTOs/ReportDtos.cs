@@ -78,3 +78,27 @@ public record SubjectDemographicsResultDto
     public int TotalMale { get; init; }
     public int GrandTotal { get; init; }
 }
+
+public record SubjectEarningsItemDto
+{
+    public int SubjectId { get; init; }
+    public string FullName { get; init; } = "";
+    public string PhoneNumber { get; init; } = "";
+    public decimal TotalEarned { get; init; }
+    public decimal TotalWithdrawn { get; init; }
+    public decimal Balance { get; init; }
+}
+
+public record SubjectEarningsSummaryDto
+{
+    public decimal TotalEarned { get; init; }
+    public decimal TotalWithdrawn { get; init; }
+    public decimal TotalBalance { get; init; }
+    public int SubjectCount { get; init; }
+}
+
+public record SubjectEarningsResultDto
+{
+    public SubjectEarningsSummaryDto Summary { get; init; } = new();
+    public List<SubjectEarningsItemDto> Items { get; init; } = [];
+}
