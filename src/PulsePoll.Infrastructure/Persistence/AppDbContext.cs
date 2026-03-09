@@ -24,7 +24,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
     public DbSet<Project> Projects => Set<Project>();
     public DbSet<ProjectAssignment> ProjectAssignments => Set<ProjectAssignment>();
-public DbSet<Wallet> Wallets => Set<Wallet>();
+    public DbSet<ProjectSurveyHelperEntry> ProjectSurveyHelperEntries => Set<ProjectSurveyHelperEntry>();
+    public DbSet<Wallet> Wallets => Set<Wallet>();
     public DbSet<WalletTransaction> WalletTransactions => Set<WalletTransaction>();
     public DbSet<BankAccount> BankAccounts => Set<BankAccount>();
     public DbSet<Notification> Notifications => Set<Notification>();

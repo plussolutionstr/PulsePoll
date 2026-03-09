@@ -72,11 +72,13 @@ public record ProjectApiDto(
     AssignmentStatus? AssignmentStatus,
     int? CoverMediaId,
     string? CoverImageUrl,
+    bool SupportsSurveyHelper,
     string RewardUnitCode = "TRY",
     string RewardUnitLabel = "TL",
     decimal RewardUnitTryMultiplier = 1m);
 
 public record StartProjectApiDto(string Url);
+public record SurveyHelperMatchApiDto(bool Found, string Message);
 
 public record WalletApiDto(
     int SubjectId,
@@ -164,7 +166,8 @@ public record ProfileApiDto(
     int? Star,
     int CompletedCount,
     int DisqualifiedCount,
-    int SuccessRate);
+    int SuccessRate,
+    bool IsSurveyHelperEnabled);
 
 public record AppContentApiDto(
     string KvkkText,

@@ -108,6 +108,10 @@
         {
             <DxContextMenuItem Text="Dağıtım İzleme" Name="distribution" IconCssClass="bi bi-send-check" />
         }
+        @if (_canEdit)
+        {
+            <DxContextMenuItem Text="Survey Helper" Name="survey-helper" IconCssClass="bi bi-magic" />
+        }
         @if (_canDelete)
         {
             <DxContextMenuItem Text="Sil" Name="delete" IconCssClass="bi bi-trash" CssClass="text-danger" BeginGroup="true" />
@@ -243,6 +247,16 @@
                             @statusCtx.DataItem.GetDescription()
                         </EditBoxDisplayTemplate>
                     </DxComboBox>
+                </DxFormLayoutItem>
+                <DxFormLayoutItem ColSpanMd="12">
+                    <label class="form-label d-block mb-2">Survey Helper</label>
+                    <div class="d-flex align-items-center gap-2">
+                        <DxCheckBox @bind-Checked="_form.SupportsSurveyHelper" />
+                        <span>Bu proje için Survey Helper'ı aktif et</span>
+                    </div>
+                    <div class="small text-muted mt-1">
+                        Aktif olduğunda, helper yetkili deneklerde anket ekranında ? butonu görünür.
+                    </div>
                 </DxFormLayoutItem>
             </DxFormLayoutGroup>
 
@@ -483,7 +497,8 @@
             CoverImageName = dto.CoverMediaId.HasValue ? "(mevcut görsel)" : null,
             IsScheduledDistribution = dto.IsScheduledDistribution,
             DistributionStartHour = NormalizeDistributionEditTime(dto.DistributionStartHour, 9),
-            DistributionEndHour = NormalizeDistributionEditTime(dto.DistributionEndHour, 19)
+            DistributionEndHour = NormalizeDistributionEditTime(dto.DistributionEndHour, 19),
+            SupportsSurveyHelper = dto.SupportsSurveyHelper
         };
         _formError = null;
         _popupVisible = true;
@@ -528,7 +543,8 @@
             CoverImageName = dto.CoverMediaId.HasValue ? "(mevcut görsel)" : null,
             IsScheduledDistribution = dto.IsScheduledDistribution,
             DistributionStartHour = NormalizeDistributionEditTime(dto.DistributionStartHour, 9),
-            DistributionEndHour = NormalizeDistributionEditTime(dto.DistributionEndHour, 19)
+            DistributionEndHour = NormalizeDistributionEditTime(dto.DistributionEndHour, 19),
+            SupportsSurveyHelper = dto.SupportsSurveyHelper
         };
         _formError = null;
         _popupVisible = true;
@@ -606,7 +622,8 @@
                     _form.CoverMediaId,
                     _form.IsScheduledDistribution,
                     TimeOnly.FromDateTime(_form.DistributionStartHour),
-                    TimeOnly.FromDateTime(_form.DistributionEndHour));
+                    TimeOnly.FromDateTime(_form.DistributionEndHour),
+                    _form.SupportsSurveyHelper);
 
                 await ProjectService.CreateAsync(dto, adminId);
                 Toast.Success("Proje kaydedildi.");
@@ -638,7 +655,8 @@
                     _form.CoverMediaId,
                     _form.IsScheduledDistribution,
                     TimeOnly.FromDateTime(_form.DistributionStartHour),
-                    TimeOnly.FromDateTime(_form.DistributionEndHour));
+                    TimeOnly.FromDateTime(_form.DistributionEndHour),
+                    _form.SupportsSurveyHelper);
 
                 if (convertScheduled)
                 {
@@ -691,6 +709,9 @@
                 break;
             case "distribution" when _canManageSubjects:
                 NavigationManager.NavigateTo($"/projects/{_selectedItem.Id}/distribution");
+                break;
+            case "survey-helper" when _canEdit:
+                NavigationManager.NavigateTo($"/projects/{_selectedItem.Id}/survey-helper");
                 break;
             case "delete" when _canDelete:
                 ShowDeleteConfirm(_selectedItem);
@@ -824,5 +845,6 @@
         public bool IsScheduledDistribution { get; set; }
         public DateTime DistributionStartHour { get; set; } = DateTime.Today.AddHours(9);
         public DateTime DistributionEndHour { get; set; } = DateTime.Today.AddHours(19);
+        public bool SupportsSurveyHelper { get; set; }
     }
 }

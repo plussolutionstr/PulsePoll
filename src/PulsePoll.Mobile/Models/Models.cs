@@ -55,6 +55,7 @@ public record SurveyModel(
     string DisqualifyMessage = "",
     string QuotaFullMessage = "",
     string ScreenOutMessage = "",
+    bool SupportsSurveyHelper = false,
     string? AssignmentStatus = null)
 {
     public bool HasCategory => !string.IsNullOrWhiteSpace(Category);

@@ -175,6 +175,29 @@ public class ProjectRepository(AppDbContext db) : IProjectRepository
             .ToListAsync();
     }
 
+    public Task<List<ProjectSurveyHelperEntry>> GetSurveyHelperEntriesAsync(int projectId)
+        => db.ProjectSurveyHelperEntries
+            .Where(x => x.ProjectId == projectId && x.DeletedAt == null)
+            .OrderByDescending(x => x.QuestionText.Length)
+            .ThenBy(x => x.CreatedAt)
+            .ToListAsync();
+
+    public Task<ProjectSurveyHelperEntry?> GetSurveyHelperEntryByIdAsync(int projectId, int entryId)
+        => db.ProjectSurveyHelperEntries
+            .FirstOrDefaultAsync(x => x.ProjectId == projectId && x.Id == entryId && x.DeletedAt == null);
+
+    public async Task AddSurveyHelperEntryAsync(ProjectSurveyHelperEntry entry)
+    {
+        db.ProjectSurveyHelperEntries.Add(entry);
+        await db.SaveChangesAsync();
+    }
+
+    public async Task UpdateSurveyHelperEntryAsync(ProjectSurveyHelperEntry entry)
+    {
+        db.ProjectSurveyHelperEntries.Update(entry);
+        await db.SaveChangesAsync();
+    }
+
     // Zamana yayılı dağıtım metodları
     public Task<List<Project>> GetActiveScheduledDistributionProjectsAsync()
         => db.Projects

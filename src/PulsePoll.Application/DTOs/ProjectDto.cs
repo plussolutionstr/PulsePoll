@@ -35,6 +35,7 @@ public record ProjectDto(
     bool IsScheduledDistribution = false,
     TimeOnly DistributionStartHour = default,
     TimeOnly DistributionEndHour = default,
+    bool SupportsSurveyHelper = false,
     string RewardUnitCode = "TRY",
     string RewardUnitLabel = "TL",
     decimal RewardUnitTryMultiplier = 1m);
@@ -65,7 +66,8 @@ public record CreateProjectDto(
     int? CoverMediaId = null,
     bool IsScheduledDistribution = false,
     TimeOnly DistributionStartHour = default,
-    TimeOnly DistributionEndHour = default);
+    TimeOnly DistributionEndHour = default,
+    bool SupportsSurveyHelper = false);
 
 public record UpdateProjectDto(
     string Name,
@@ -92,4 +94,5 @@ public record UpdateProjectDto(
     int? CoverMediaId = null,
     bool IsScheduledDistribution = false,
     TimeOnly DistributionStartHour = default,
-    TimeOnly DistributionEndHour = default);
+    TimeOnly DistributionEndHour = default,
+    bool SupportsSurveyHelper = false);

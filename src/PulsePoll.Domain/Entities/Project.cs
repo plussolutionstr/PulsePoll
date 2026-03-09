@@ -78,9 +78,11 @@ public class Project : EntityBase
     public bool IsScheduledDistribution { get; set; } = false;
     public TimeOnly DistributionStartHour { get; set; } = new(9, 0);
     public TimeOnly DistributionEndHour { get; set; } = new(19, 0);
+    public bool SupportsSurveyHelper { get; set; } = false;
 
     // Navigation properties
     public Customer Customer { get; set; } = null!;
     public MediaAsset? CoverMedia { get; set; }
     public ICollection<ProjectAssignment> Assignments { get; set; } = [];
+    public ICollection<ProjectSurveyHelperEntry> SurveyHelperEntries { get; set; } = [];
 }

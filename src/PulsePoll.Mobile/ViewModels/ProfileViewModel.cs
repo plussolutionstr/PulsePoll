@@ -11,11 +11,16 @@ public partial class ProfileViewModel : ObservableObject
 {
     private readonly IPulsePollApiClient _api;
     private readonly IServiceProvider _serviceProvider;
+    private readonly ISubjectSessionService _subjectSessionService;
 
-    public ProfileViewModel(IPulsePollApiClient api, IServiceProvider serviceProvider)
+    public ProfileViewModel(
+        IPulsePollApiClient api,
+        IServiceProvider serviceProvider,
+        ISubjectSessionService subjectSessionService)
     {
         _api = api;
         _serviceProvider = serviceProvider;
+        _subjectSessionService = subjectSessionService;
         LoadProfileCommand.ExecuteAsync(null);
     }
 
@@ -103,6 +108,7 @@ public partial class ProfileViewModel : ObservableObject
             _currentProfile = await _api.GetProfileAsync();
             if (_currentProfile is null) return;
 
+            _subjectSessionService.UpdateHelperCapability(_currentProfile.IsSurveyHelperEnabled);
             MapProfileToFields(_currentProfile);
 
             var citiesTask = _api.GetCitiesAsync();
@@ -277,6 +283,7 @@ public partial class ProfileViewModel : ObservableObject
             if (updated is not null)
             {
                 _currentProfile = updated;
+                _subjectSessionService.UpdateHelperCapability(updated.IsSurveyHelperEnabled);
                 MapProfileToFields(updated);
                 StatusMessage = "Profil güncellendi.";
             }
@@ -393,6 +400,8 @@ public partial class ProfileViewModel : ObservableObject
         {
             // ignore — tokens are already cleared
         }
+
+        _subjectSessionService.Clear();
 
         var welcomePage = _serviceProvider.GetRequiredService<Views.WelcomePage>();
         var isDark = Application.Current!.RequestedTheme == AppTheme.Dark;

@@ -4,6 +4,8 @@ using PulsePoll.Application.Exceptions;
 using PulsePoll.Application.Interfaces;
 using PulsePoll.Domain.Entities;
 using PulsePoll.Domain.Enums;
+using System.Globalization;
+using System.Text;
 
 namespace PulsePoll.Application.Services;
 
@@ -15,6 +17,7 @@ public class ProjectService(
     IValidator<UpdateProjectDto> updateValidator) : IProjectService
 {
     private const string MediaBucket = "media-library";
+    private static readonly CultureInfo TrCulture = CultureInfo.GetCultureInfo("tr-TR");
 
     public async Task<List<ProjectDto>> GetAllAsync()
     {
@@ -80,7 +83,8 @@ public class ProjectService(
             CoverMediaId              = dto.CoverMediaId,
             IsScheduledDistribution   = dto.IsScheduledDistribution,
             DistributionStartHour     = dto.DistributionStartHour == default ? new TimeOnly(9, 0) : dto.DistributionStartHour,
-            DistributionEndHour       = dto.DistributionEndHour == default ? new TimeOnly(19, 0) : dto.DistributionEndHour
+            DistributionEndHour       = dto.DistributionEndHour == default ? new TimeOnly(19, 0) : dto.DistributionEndHour,
+            SupportsSurveyHelper      = dto.SupportsSurveyHelper
         };
         project.SetCreated(adminId);
 
@@ -123,6 +127,7 @@ public class ProjectService(
         project.IsScheduledDistribution = dto.IsScheduledDistribution;
         project.DistributionStartHour   = dto.DistributionStartHour == default ? new TimeOnly(9, 0) : dto.DistributionStartHour;
         project.DistributionEndHour     = dto.DistributionEndHour == default ? new TimeOnly(19, 0) : dto.DistributionEndHour;
+        project.SupportsSurveyHelper    = dto.SupportsSurveyHelper;
         project.SetUpdated(adminId);
 
         await repository.UpdateAsync(project);
@@ -191,6 +196,7 @@ public class ProjectService(
             p.IsScheduledDistribution,
             p.DistributionStartHour,
             p.DistributionEndHour,
+            p.SupportsSurveyHelper,
             rewardUnit.UnitCode,
             rewardUnit.UnitLabel,
             rewardUnit.TryMultiplier);
@@ -235,6 +241,7 @@ public class ProjectService(
         project.IsScheduledDistribution = false;
         project.DistributionStartHour   = dto.DistributionStartHour == default ? new TimeOnly(9, 0) : dto.DistributionStartHour;
         project.DistributionEndHour     = dto.DistributionEndHour == default ? new TimeOnly(19, 0) : dto.DistributionEndHour;
+        project.SupportsSurveyHelper    = dto.SupportsSurveyHelper;
         project.SetUpdated(adminId);
 
         // Scheduled → NotStarted (aynı change tracker, tek SaveChanges)
@@ -251,4 +258,132 @@ public class ProjectService(
             or AssignmentStatus.QuotaFull
             or AssignmentStatus.ScreenOut
             or AssignmentStatus.Scheduled;
+
+    public async Task<List<ProjectSurveyHelperEntryDto>> GetSurveyHelperEntriesAsync(int projectId)
+    {
+        _ = await repository.GetByIdAsync(projectId)
+            ?? throw new NotFoundException("Proje");
+
+        var rows = await repository.GetSurveyHelperEntriesAsync(projectId);
+        return rows.Select(MapSurveyHelperEntry).ToList();
+    }
+
+    public async Task<ProjectSurveyHelperEntryDto> SaveSurveyHelperEntryAsync(int projectId, SaveProjectSurveyHelperEntryDto dto, int adminId)
+    {
+        var project = await repository.GetByIdAsync(projectId)
+            ?? throw new NotFoundException("Proje");
+
+        if (string.IsNullOrWhiteSpace(dto.QuestionText))
+            throw new BusinessException("SURVEY_HELPER_QUESTION_REQUIRED", "Soru metni zorunludur.");
+
+        if (string.IsNullOrWhiteSpace(dto.HelpText))
+            throw new BusinessException("SURVEY_HELPER_HELP_REQUIRED", "Yardım metni zorunludur.");
+
+        if (dto.QuestionText.Trim().Length > 1000)
+            throw new BusinessException("SURVEY_HELPER_QUESTION_TOO_LONG", "Soru metni 1000 karakterden uzun olamaz.");
+
+        if (dto.HelpText.Trim().Length > 2000)
+            throw new BusinessException("SURVEY_HELPER_HELP_TOO_LONG", "Yardım metni 2000 karakterden uzun olamaz.");
+
+        ProjectSurveyHelperEntry entry;
+        if (dto.Id.HasValue)
+        {
+            entry = await repository.GetSurveyHelperEntryByIdAsync(projectId, dto.Id.Value)
+                ?? throw new NotFoundException("Survey helper kaydı");
+
+            entry.QuestionText = dto.QuestionText.Trim();
+            entry.HelpText = dto.HelpText.Trim();
+            entry.SetUpdated(adminId);
+            await repository.UpdateSurveyHelperEntryAsync(entry);
+        }
+        else
+        {
+            entry = new ProjectSurveyHelperEntry
+            {
+                ProjectId = project.Id,
+                QuestionText = dto.QuestionText.Trim(),
+                HelpText = dto.HelpText.Trim()
+            };
+            entry.SetCreated(adminId);
+            await repository.AddSurveyHelperEntryAsync(entry);
+        }
+
+        return MapSurveyHelperEntry(entry);
+    }
+
+    public async Task DeleteSurveyHelperEntryAsync(int projectId, int entryId, int adminId)
+    {
+        _ = await repository.GetByIdAsync(projectId)
+            ?? throw new NotFoundException("Proje");
+
+        var entry = await repository.GetSurveyHelperEntryByIdAsync(projectId, entryId)
+            ?? throw new NotFoundException("Survey helper kaydı");
+
+        entry.SetDeleted(adminId);
+        await repository.UpdateSurveyHelperEntryAsync(entry);
+    }
+
+    public async Task<ProjectSurveyHelperMatchDto> FindSurveyHelperMatchAsync(int projectId, string questionText)
+    {
+        var project = await repository.GetByIdAsync(projectId)
+            ?? throw new NotFoundException("Proje");
+
+        if (!project.SupportsSurveyHelper)
+            return new ProjectSurveyHelperMatchDto(false, "Bu proje için survey helper aktif değil.");
+
+        var normalizedQuestion = Normalize(questionText);
+        if (string.IsNullOrWhiteSpace(normalizedQuestion))
+            return new ProjectSurveyHelperMatchDto(false, "Soru algılanamadı.");
+
+        var entries = await repository.GetSurveyHelperEntriesAsync(projectId);
+        var match = entries
+            .Select(x => new { Entry = x, NormalizedQuestion = Normalize(x.QuestionText) })
+            .Where(x => !string.IsNullOrWhiteSpace(x.NormalizedQuestion))
+            .OrderByDescending(x => x.NormalizedQuestion.Length)
+            .FirstOrDefault(x => normalizedQuestion.Contains(x.NormalizedQuestion, StringComparison.Ordinal));
+
+        return match is null
+            ? new ProjectSurveyHelperMatchDto(false, "Bu soru için yardım bulunamadı.")
+            : new ProjectSurveyHelperMatchDto(true, match.Entry.HelpText);
+    }
+
+    private static string Normalize(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return string.Empty;
+
+        var lowered = value
+            .Trim()
+            .Replace('’', '\'')
+            .Replace('‘', '\'')
+            .ToLower(TrCulture);
+
+        var sb = new StringBuilder(lowered.Length);
+        var lastWasSpace = false;
+        foreach (var ch in lowered)
+        {
+            if (char.IsLetterOrDigit(ch))
+            {
+                sb.Append(ch);
+                lastWasSpace = false;
+                continue;
+            }
+
+            if (lastWasSpace)
+                continue;
+
+            sb.Append(' ');
+            lastWasSpace = true;
+        }
+
+        return sb.ToString().Trim();
+    }
+
+    private static ProjectSurveyHelperEntryDto MapSurveyHelperEntry(ProjectSurveyHelperEntry entry)
+        => new(
+            entry.Id,
+            entry.ProjectId,
+            entry.QuestionText,
+            entry.HelpText,
+            entry.CreatedAt);
 }

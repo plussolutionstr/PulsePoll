@@ -43,6 +43,23 @@ public class ProjectConfiguration : IEntityTypeConfiguration<Project>
     }
 }
 
+public class ProjectSurveyHelperEntryConfiguration : IEntityTypeConfiguration<ProjectSurveyHelperEntry>
+{
+    public void Configure(EntityTypeBuilder<ProjectSurveyHelperEntry> builder)
+    {
+        builder.Property(x => x.QuestionText).IsRequired().HasMaxLength(1000);
+        builder.Property(x => x.HelpText).IsRequired().HasMaxLength(2000);
+
+        builder.HasOne(x => x.Project)
+            .WithMany(x => x.SurveyHelperEntries)
+            .HasForeignKey(x => x.ProjectId)
+            .HasConstraintName("fk_project_survey_helper_entries_projects")
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(x => x.ProjectId).HasDatabaseName("idx_project_survey_helper_entries_project_id");
+    }
+}
+
 public class ProjectAssignmentConfiguration : IEntityTypeConfiguration<ProjectAssignment>
 {
     public void Configure(EntityTypeBuilder<ProjectAssignment> builder)

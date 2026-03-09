@@ -14,4 +14,5 @@ public interface ISubjectService
     Task ApproveAsync(int id, int adminId);
     Task RejectAsync(int id, int adminId);
     Task SendBulkSmsAsync(IEnumerable<int> subjectIds, string message, int sentByAdminId);
+    Task SetSurveyHelperEnabledAsync(int id, bool isEnabled, int adminId);
 }

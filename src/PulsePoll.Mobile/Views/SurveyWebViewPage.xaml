@@ -7,7 +7,7 @@
              x:DataType="vm:SurveyWebViewViewModel"
              Shell.NavBarIsVisible="False">
 
-    <Grid RowDefinitions="Auto,Auto,*">
+    <Grid RowDefinitions="Auto,*">
         <Grid RowDefinitions="Auto"
               ColumnDefinitions="Auto,*,Auto"
               Padding="16,14,16,10"
@@ -29,28 +29,31 @@
                    TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"
                    MaxLines="1"
                    LineBreakMode="TailTruncation"/>
-            <ActivityIndicator Grid.Column="2"
-                               IsVisible="{Binding IsLoading}"
-                               IsRunning="{Binding IsLoading}"
-                               Color="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"
-                               HeightRequest="20"
-                               WidthRequest="20"
-                               VerticalOptions="Center"/>
+            <HorizontalStackLayout Grid.Column="2"
+                                   Spacing="10"
+                                   VerticalOptions="Center"
+                                   HorizontalOptions="End">
+                <Button Text="?"
+                        Clicked="OnHelpButtonClicked"
+                        IsVisible="{Binding IsHelperEnabled}"
+                        WidthRequest="28"
+                        HeightRequest="28"
+                        Padding="0"
+                        CornerRadius="14"
+                        FontFamily="JakartaBold"
+                        FontSize="14"
+                        BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryLightDark}}"
+                        TextColor="{AppThemeBinding Light={StaticResource PrimaryDark}, Dark={StaticResource PrimaryPurpleDark}}"/>
+                <ActivityIndicator IsVisible="{Binding IsLoading}"
+                                   IsRunning="{Binding IsLoading}"
+                                   Color="{AppThemeBinding Light={StaticResource PrimaryPurple}, Dark={StaticResource PrimaryPurpleDark}}"
+                                   HeightRequest="20"
+                                   WidthRequest="20"
+                                   VerticalOptions="Center"/>
+            </HorizontalStackLayout>
         </Grid>
 
-        <Label Grid.Row="1"
-               x:Name="DebugUrlLabel"
-               Text="{Binding CurrentUrl}"
-               FontFamily="JakartaRegular"
-               FontSize="10"
-               TextColor="Red"
-               BackgroundColor="#FFFFDD"
-               Padding="8,4"
-               LineBreakMode="CharacterWrap"
-               MaxLines="3"
-               IsVisible="False"/>
-
-        <WebView Grid.Row="2"
+        <WebView Grid.Row="1"
                  x:Name="SurveyWebView"
                  Source="{Binding ResolvedUrl}"
                  Navigating="OnWebViewNavigating"

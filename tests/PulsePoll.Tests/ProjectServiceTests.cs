@@ -106,4 +106,77 @@ public class ProjectServiceTests
         _repository.Verify(x => x.UpdateAsync(project), Times.Once);
         _repository.Verify(x => x.UpdateAssignmentsStatusBatchAsync(It.IsAny<IEnumerable<int>>(), It.IsAny<AssignmentStatus>(), It.IsAny<DateTime?>()), Times.Never);
     }
+
+    [Fact]
+    public async Task FindSurveyHelperMatchAsync_ReturnsLongestContainsMatch()
+    {
+        var project = new Project
+        {
+            Id = 21,
+            CustomerId = 1,
+            Code = "PRJ21",
+            Name = "Helper Proje",
+            SupportsSurveyHelper = true
+        };
+
+        var entries = new List<ProjectSurveyHelperEntry>
+        {
+            new() { Id = 1, ProjectId = 21, QuestionText = "hazır giyim", HelpText = "Kısa eşleşme" },
+            new() { Id = 2, ProjectId = 21, QuestionText = "En sık alışveriş yaptığınız hazır giyim markaları nelerdir?", HelpText = "Tam eşleşme" }
+        };
+
+        _repository.Setup(x => x.GetByIdAsync(project.Id)).ReturnsAsync(project);
+        _repository.Setup(x => x.GetSurveyHelperEntriesAsync(project.Id)).ReturnsAsync(entries);
+
+        var result = await _sut.FindSurveyHelperMatchAsync(project.Id, "En sık alışveriş yaptığınız hazır giyim markaları nelerdir?");
+
+        result.Found.Should().BeTrue();
+        result.Message.Should().Be("Tam eşleşme");
+    }
+
+    [Fact]
+    public async Task FindSurveyHelperMatchAsync_ReturnsDisabledMessage_WhenProjectDoesNotSupportHelper()
+    {
+        var project = new Project
+        {
+            Id = 22,
+            CustomerId = 1,
+            Code = "PRJ22",
+            Name = "Helper Kapalı",
+            SupportsSurveyHelper = false
+        };
+
+        _repository.Setup(x => x.GetByIdAsync(project.Id)).ReturnsAsync(project);
+
+        var result = await _sut.FindSurveyHelperMatchAsync(project.Id, "örnek soru");
+
+        result.Found.Should().BeFalse();
+        result.Message.Should().Be("Bu proje için survey helper aktif değil.");
+    }
+
+    [Fact]
+    public async Task FindSurveyHelperMatchAsync_ReturnsNotFound_WhenNoEntryMatches()
+    {
+        var project = new Project
+        {
+            Id = 23,
+            CustomerId = 1,
+            Code = "PRJ23",
+            Name = "Helper Proje",
+            SupportsSurveyHelper = true
+        };
+
+        var entries = new List<ProjectSurveyHelperEntry>
+        {
+            new() { Id = 1, ProjectId = 23, QuestionText = "farklı soru", HelpText = "Yardım" }
+        };
+
+        _repository.Setup(x => x.GetByIdAsync(project.Id)).ReturnsAsync(project);
+        _repository.Setup(x => x.GetSurveyHelperEntriesAsync(project.Id)).ReturnsAsync(entries);
+
+        var result = await _sut.FindSurveyHelperMatchAsync(project.Id, "eşleşmeyen metin");
+
+        result.Found.Should().BeFalse();
+        result.Message.Should().Be("Bu soru için yardım bulunamadı.");
+    }
 }

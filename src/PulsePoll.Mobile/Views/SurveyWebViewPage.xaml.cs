@@ -1,3 +1,4 @@
+using PulsePoll.Mobile.Services;
 using PulsePoll.Mobile.ViewModels;
 
 namespace PulsePoll.Mobile.Views;
@@ -10,9 +11,6 @@ public partial class SurveyWebViewPage : ContentPage
     {
         InitializeComponent();
         BindingContext = _viewModel = viewModel;
-// #if DEBUG
-//         DebugUrlLabel.IsVisible = true;
-// #endif
     }
 
     private async void OnWebViewNavigating(object? sender, WebNavigatingEventArgs e)
@@ -28,9 +26,42 @@ public partial class SurveyWebViewPage : ContentPage
     private async void OnWebViewNavigated(object? sender, WebNavigatedEventArgs e)
     {
         _viewModel.IsLoading = false;
-        _viewModel.CurrentUrl = e.Url ?? string.Empty;
 
         // Bazı platformlar redirect yerine doğrudan survey-result sayfasını yükleyebilir.
         await _viewModel.TryHandleSurveyResultUrlAsync(e.Url);
+    }
+
+    private async void OnHelpButtonClicked(object? sender, EventArgs e)
+    {
+        if (_viewModel.IsHelpBusy)
+            return;
+
+        try
+        {
+            _viewModel.IsHelpBusy = true;
+            var pageText = await SurveyPageTextExtractor.ExtractAsync(SurveyWebView);
+            var result = await _viewModel.GetHelpAsync(pageText);
+
+            if (result.Found)
+            {
+                await DisplayAlertAsync("Yardım", result.Message, "Tamam");
+                return;
+            }
+
+            var message = string.IsNullOrWhiteSpace(_viewModel.CurrentQuestionText)
+                ? "Soru algılanamadı. Sayfanın yüklenmesini bekleyin."
+                : result.Message;
+
+            await DisplayAlertAsync("Yardım", message, "Tamam");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[SurveyHelper] {ex}");
+            await DisplayAlertAsync("Hata", "Yardım açılamadı. Lütfen tekrar deneyin.", "Tamam");
+        }
+        finally
+        {
+            _viewModel.IsHelpBusy = false;
+        }
     }
 }

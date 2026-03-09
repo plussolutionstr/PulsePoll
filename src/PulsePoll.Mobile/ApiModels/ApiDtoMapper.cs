@@ -52,6 +52,7 @@ public static class ApiDtoMapper
             DisqualifyMessage: dto.DisqualifyMessage,
             QuotaFullMessage: dto.QuotaFullMessage,
             ScreenOutMessage: dto.ScreenOutMessage,
+            SupportsSurveyHelper: dto.SupportsSurveyHelper,
             AssignmentStatus: dto.AssignmentStatus?.ToString());
 
     private static string ToHistoryStatus(AssignmentStatus status) => status switch

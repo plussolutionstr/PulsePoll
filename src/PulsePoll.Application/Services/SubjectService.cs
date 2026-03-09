@@ -166,6 +166,25 @@ public class SubjectService(
         logger.LogInformation("Toplu SMS gönderildi: {Count} denek by Admin {AdminId}", targets.Count, sentByAdminId);
     }
 
+    public async Task SetSurveyHelperEnabledAsync(int id, bool isEnabled, int adminId)
+    {
+        var subject = await repository.GetByIdAsync(id)
+            ?? throw new NotFoundException("Denek");
+
+        if (subject.IsSurveyHelperEnabled == isEnabled)
+            return;
+
+        subject.IsSurveyHelperEnabled = isEnabled;
+        subject.SetUpdated(adminId);
+        await repository.UpdateAsync(subject);
+
+        logger.LogInformation(
+            "Survey helper flag güncellendi: SubjectId={SubjectId} Enabled={Enabled} by Admin {AdminId}",
+            id,
+            isEnabled,
+            adminId);
+    }
+
     private async Task<SubjectDto> MapToDtoAsync(Domain.Entities.Subject s, SubjectScoreDto? score = null)
     {
         string? photoUrl = null;
@@ -237,7 +256,8 @@ public class SubjectService(
             score?.Star,
             completed,
             disqualified,
-            successRate);
+            successRate,
+            s.IsSurveyHelperEnabled);
     }
 
     private static string ResolvePrimaryBankName(Domain.Entities.Subject subject)

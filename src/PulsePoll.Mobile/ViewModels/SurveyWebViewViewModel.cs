@@ -1,26 +1,43 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using System.Text.Json;
+using PulsePoll.Mobile.Services;
 
 namespace PulsePoll.Mobile.ViewModels;
 
 [QueryProperty(nameof(ProjectId), "projectId")]
 [QueryProperty(nameof(Title), "title")]
 [QueryProperty(nameof(Url), "url")]
+[QueryProperty(nameof(HelperEnabledRaw), "helperEnabled")]
 public partial class SurveyWebViewViewModel : ObservableObject
 {
+    private readonly ISurveyHelperService _surveyHelperService;
     private bool _resultHandled;
+
+    public SurveyWebViewViewModel(ISurveyHelperService surveyHelperService)
+    {
+        _surveyHelperService = surveyHelperService;
+    }
 
     [ObservableProperty] private int _projectId;
     [ObservableProperty] private string _title = "Anket";
     [ObservableProperty] private string _url = string.Empty;
+    [ObservableProperty] private string _helperEnabledRaw = "false";
     [ObservableProperty] private bool _isLoading = true;
-    [ObservableProperty] private string _currentUrl = string.Empty;
+    [ObservableProperty] private bool _isHelpBusy;
+    [ObservableProperty] private string _currentQuestionText = string.Empty;
 
     public string ResolvedUrl => Uri.UnescapeDataString(Url ?? string.Empty);
+    public bool IsHelperEnabled => bool.TryParse(HelperEnabledRaw, out var value) && value;
 
     partial void OnUrlChanged(string value)
     {
         OnPropertyChanged(nameof(ResolvedUrl));
+    }
+
+    partial void OnHelperEnabledRawChanged(string value)
+    {
+        OnPropertyChanged(nameof(IsHelperEnabled));
     }
 
     [RelayCommand]
@@ -97,5 +114,32 @@ public partial class SurveyWebViewViewModel : ObservableObject
             "partial" => "Partial",
             _ => null
         };
+    }
+
+    public async Task<SurveyHelpMatchResult> GetHelpAsync(string? rawQuestionText, CancellationToken ct = default)
+    {
+        CurrentQuestionText = DecodeJavaScriptResult(rawQuestionText);
+        return await _surveyHelperService.GetHelpAsync(ProjectId, CurrentQuestionText, ct);
+    }
+
+    private static string DecodeJavaScriptResult(string? rawValue)
+    {
+        if (string.IsNullOrWhiteSpace(rawValue))
+            return string.Empty;
+
+        var trimmed = rawValue.Trim();
+        if (trimmed.Length >= 2 && trimmed[0] == '"' && trimmed[^1] == '"')
+        {
+            try
+            {
+                return JsonSerializer.Deserialize<string>(trimmed) ?? string.Empty;
+            }
+            catch
+            {
+                return trimmed.Trim('"');
+            }
+        }
+
+        return trimmed;
     }
 }
