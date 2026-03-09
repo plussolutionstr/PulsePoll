@@ -59,6 +59,9 @@ public interface IPulsePollApiClient
     // FCM
     Task UpdateFcmTokenAsync(string fcmToken, CancellationToken ct = default);
 
+    // Telemetry
+    Task TrackActivityAsync(int activityType, string? platform, string? appVersion, string? deviceId, CancellationToken ct = default);
+
     Task PingAsync(CancellationToken ct = default);
 
     // Media (auth-required)

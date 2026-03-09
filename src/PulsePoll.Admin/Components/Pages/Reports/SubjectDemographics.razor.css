@@ -1,0 +1,168 @@
+.demo-summary-card {
+    background: #faf9ff;
+    border: 1px solid #e5e1f3;
+    border-radius: 14px;
+    box-shadow: 0 8px 24px rgba(26, 21, 53, 0.05);
+    padding: 1.25rem;
+    text-align: center;
+}
+
+.demo-female {
+    border-color: #e0b3d8;
+    background: #fdf2fb;
+}
+
+.demo-male {
+    border-color: #b3cde0;
+    background: #f2f7fd;
+}
+
+.demo-summary-label {
+    color: #6b6589;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    margin-bottom: 0.2rem;
+    text-transform: uppercase;
+}
+
+.demo-summary-value {
+    color: #1a1535;
+    font-size: 1.8rem;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.demo-summary-pct {
+    color: #6b6589;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-top: 0.15rem;
+}
+
+/* Hızlı navigasyon */
+.demo-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.demo-nav-item {
+    background: #f7f5ff;
+    border: 1px solid #e5e1f3;
+    border-radius: 20px;
+    color: #6b6589;
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 0.35rem 0.85rem;
+    text-decoration: none;
+    transition: all 0.15s ease;
+}
+
+.demo-nav-item:hover {
+    background: #ece8fb;
+    color: #1a1535;
+}
+
+/* Bölüm kartı */
+.demo-section {
+    background: #fff;
+    border: 1px solid #e5e1f3;
+    border-radius: 14px;
+    box-shadow: 0 8px 24px rgba(26, 21, 53, 0.05);
+}
+
+.demo-section-header {
+    align-items: center;
+    background: #f7f5ff;
+    border-bottom: 1px solid #ece8fb;
+    border-radius: 14px 14px 0 0;
+    display: flex;
+    justify-content: space-between;
+    padding: 0.9rem 1.25rem;
+}
+
+/* Horizontal bar chart */
+.demo-bars {
+    padding: 1rem 1.25rem 0.5rem;
+}
+
+.demo-bar-row {
+    align-items: center;
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.demo-bar-label {
+    color: #4e4970;
+    flex-shrink: 0;
+    font-size: 0.82rem;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 140px;
+}
+
+.demo-bar-track {
+    background: #f0edf7;
+    border-radius: 6px;
+    display: flex;
+    flex: 1;
+    height: 24px;
+    overflow: hidden;
+}
+
+.demo-bar-fill {
+    height: 100%;
+    min-width: 0;
+    transition: width 0.3s ease;
+}
+
+.demo-bar-female {
+    background: #d188c5;
+}
+
+.demo-bar-male {
+    background: #7ab3d4;
+}
+
+.demo-bar-count {
+    color: #1a1535;
+    flex-shrink: 0;
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-align: right;
+    width: 60px;
+}
+
+/* Tablo — ::deep ile iç elementlere erişim */
+::deep .demo-table {
+    margin: 0;
+}
+
+::deep .demo-table thead th {
+    background: #f7f5ff;
+    border-bottom: 2px solid #e5e1f3;
+    color: #6b6589;
+    font-size: 0.82rem;
+    font-weight: 700;
+    padding: 0.6rem 1.25rem;
+    text-transform: uppercase;
+}
+
+::deep .demo-table tbody td {
+    padding: 0.5rem 1.25rem;
+}
+
+::deep .demo-table tfoot td {
+    border-top: 2px solid #e5e1f3;
+    padding: 0.5rem 1.25rem;
+}
+
+@media (max-width: 768px) {
+    .demo-bar-label {
+        width: 100px;
+    }
+}

@@ -30,6 +30,34 @@ public partial class App : Application
         return new Window(CreateAuthNavigation());
     }
 
+    protected override void OnResume()
+    {
+        base.OnResume();
+        try
+        {
+            var tracker = _serviceProvider.GetRequiredService<AppActivityTracker>();
+            tracker.OnResumed();
+        }
+        catch
+        {
+            // Telemetri uygulamayı kesmemeli
+        }
+    }
+
+    protected override void OnSleep()
+    {
+        base.OnSleep();
+        try
+        {
+            var tracker = _serviceProvider.GetRequiredService<AppActivityTracker>();
+            tracker.OnStopped();
+        }
+        catch
+        {
+            // Telemetri uygulamayı kesmemeli
+        }
+    }
+
     private async Task TryAutoLoginAsync(Window window)
     {
         try
@@ -41,6 +69,10 @@ public partial class App : Application
             {
                 var pushService = _serviceProvider.GetRequiredService<IPushNotificationService>();
                 _ = pushService.RegisterAsync();
+
+                var activityTracker = _serviceProvider.GetRequiredService<AppActivityTracker>();
+                activityTracker.Start();
+
                 window.Page = _serviceProvider.GetRequiredService<AppShell>();
             }
             else

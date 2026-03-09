@@ -44,6 +44,8 @@ public partial class LoginViewModel : ObservableObject
             if (success)
             {
                 _ = _pushService.RegisterAsync();
+                var activityTracker = _serviceProvider.GetRequiredService<AppActivityTracker>();
+                activityTracker.Start();
                 Application.Current!.Windows[0].Page = _serviceProvider.GetRequiredService<AppShell>();
             }
             else

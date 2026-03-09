@@ -88,6 +88,7 @@ public static class DependencyInjection
         services.AddScoped<IPaymentSettingRepository, PaymentSettingRepository>();
         services.AddScoped<IBankRepository, BankRepository>();
         services.AddScoped<IAdminGridDataService, AdminGridDataService>();
+        services.AddScoped<IReportService, ReportService>();
         services.AddScoped<IDistributionLogRepository, DistributionLogRepository>();
         services.AddScoped<INotificationDistributionConfigRepository, NotificationDistributionConfigRepository>();
 

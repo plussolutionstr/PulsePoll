@@ -113,6 +113,11 @@ public static class PermissionCodes
         public const string Activate = "AdminUsers.Activate";
     }
 
+    public static class Reports
+    {
+        public const string View = "Reports.View";
+    }
+
     public static class Roles
     {
         public const string View = "Roles.View";

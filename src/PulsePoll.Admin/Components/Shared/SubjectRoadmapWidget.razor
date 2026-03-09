@@ -1,0 +1,193 @@
+@inject IReportService ReportService
+@inject IAppToastService Toast
+
+<div class="roadmap-widget">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <h5 class="mb-0 fw-bold">@Title</h5>
+        <DxComboBox Data="@_availableYears"
+                    @bind-Value="_selectedYear"
+                    @bind-Value:after="OnYearChangedAsync"
+                    CssClass="roadmap-year-select"
+                    ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Never" />
+    </div>
+
+    @if (_isLoading)
+    {
+        <div class="text-muted py-3">Veriler yükleniyor...</div>
+    }
+    else if (_result is not null)
+    {
+        @* KPI Cards *@
+        <div class="row g-3 mb-3">
+            <div class="col-12 col-md-4">
+                <div class="roadmap-kpi-card">
+                    <div class="roadmap-kpi-label">Toplam</div>
+                    <div class="roadmap-kpi-value">@_result.GrandTotal.ToString("N0")</div>
+                    <div class="roadmap-kpi-change @ChangeClass(_result.ChangePercent)">
+                        @ChangeIcon(_result.ChangePercent) @FormatChange(_result.ChangePercent)
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-4">
+                <div class="roadmap-kpi-card">
+                    <div class="roadmap-kpi-label">iOS</div>
+                    <div class="roadmap-kpi-value">@_result.TotalIos.ToString("N0")</div>
+                    <div class="roadmap-kpi-change @ChangeClass(_result.IosChangePercent)">
+                        @ChangeIcon(_result.IosChangePercent) @FormatChange(_result.IosChangePercent)
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-4">
+                <div class="roadmap-kpi-card">
+                    <div class="roadmap-kpi-label">Android</div>
+                    <div class="roadmap-kpi-value">@_result.TotalAndroid.ToString("N0")</div>
+                    <div class="roadmap-kpi-change @ChangeClass(_result.AndroidChangePercent)">
+                        @ChangeIcon(_result.AndroidChangePercent) @FormatChange(_result.AndroidChangePercent)
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @* Chart *@
+        <div class="roadmap-chart-container mb-3">
+            <DxChart Data="@_chartData" CssClass="roadmap-chart">
+                <DxChartLineSeries ValueField="@((ChartPoint p) => p.Total)"
+                                   ArgumentField="@((ChartPoint p) => p.MonthName)"
+                                   Name="Toplam"
+                                   Color="System.Drawing.Color.FromArgb(106, 90, 205)" />
+                <DxChartLineSeries ValueField="@((ChartPoint p) => p.Ios)"
+                                   ArgumentField="@((ChartPoint p) => p.MonthName)"
+                                   Name="iOS"
+                                   Color="System.Drawing.Color.FromArgb(0, 122, 255)" />
+                <DxChartLineSeries ValueField="@((ChartPoint p) => p.Android)"
+                                   ArgumentField="@((ChartPoint p) => p.MonthName)"
+                                   Name="Android"
+                                   Color="System.Drawing.Color.FromArgb(52, 199, 89)" />
+                <DxChartLegend Position="RelativePosition.Outside"
+                               HorizontalAlignment="HorizontalAlignment.Center"
+                               VerticalAlignment="VerticalEdge.Bottom"
+                               Orientation="DevExpress.Blazor.Orientation.Horizontal" />
+                <DxChartTooltip Enabled="true" />
+            </DxChart>
+        </div>
+
+        @* Detail Table *@
+        @if (ShowTable)
+        {
+            <div class="table-responsive">
+                <table class="table table-sm table-hover roadmap-table">
+                    <thead>
+                        <tr>
+                            <th>Ay</th>
+                            <th class="text-end">iOS</th>
+                            <th class="text-end">Android</th>
+                            <th class="text-end fw-bold">Toplam</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var month in _result.Months)
+                        {
+                            <tr>
+                                <td>@MonthName(month.Month)</td>
+                                <td class="text-end">@month.IosCount.ToString("N0")</td>
+                                <td class="text-end">@month.AndroidCount.ToString("N0")</td>
+                                <td class="text-end fw-bold">@month.TotalCount.ToString("N0")</td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot>
+                        <tr class="table-active fw-bold">
+                            <td>TOPLAM</td>
+                            <td class="text-end">@_result.TotalIos.ToString("N0")</td>
+                            <td class="text-end">@_result.TotalAndroid.ToString("N0")</td>
+                            <td class="text-end">@_result.GrandTotal.ToString("N0")</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public string Title { get; set; } = "Denek Roadmap";
+    [Parameter] public bool ShowTable { get; set; } = true;
+
+    private bool _isLoading = true;
+    private int _selectedYear;
+    private List<int> _availableYears = [];
+    private SubjectRoadmapResultDto? _result;
+    private List<ChartPoint> _chartData = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _availableYears = await ReportService.GetAvailableYearsAsync();
+            _selectedYear = _availableYears.FirstOrDefault(TurkeyTime.Now.Year);
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleFormSave(ex, Toast);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task OnYearChangedAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleFormSave(ex, Toast);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _result = await ReportService.GetSubjectRoadmapAsync(_selectedYear);
+        _chartData = _result.Months.Select(m => new ChartPoint
+        {
+            MonthName = MonthName(m.Month),
+            Ios = m.IosCount,
+            Android = m.AndroidCount,
+            Total = m.TotalCount
+        }).ToList();
+    }
+
+    private static string MonthName(int month) => month switch
+    {
+        1 => "Oca", 2 => "Şub", 3 => "Mar", 4 => "Nis",
+        5 => "May", 6 => "Haz", 7 => "Tem", 8 => "Ağu",
+        9 => "Eyl", 10 => "Eki", 11 => "Kas", 12 => "Ara",
+        _ => ""
+    };
+
+    private static string ChangeClass(double percent) =>
+        percent > 0 ? "text-success" : percent < 0 ? "text-danger" : "text-muted";
+
+    private static string ChangeIcon(double percent) =>
+        percent > 0 ? "▲" : percent < 0 ? "▼" : "—";
+
+    private static string FormatChange(double percent) =>
+        percent == 0 ? "" : $"%{Math.Abs(percent):0.#}";
+
+    private sealed class ChartPoint
+    {
+        public string MonthName { get; set; } = "";
+        public int Ios { get; set; }
+        public int Android { get; set; }
+        public int Total { get; set; }
+    }
+}

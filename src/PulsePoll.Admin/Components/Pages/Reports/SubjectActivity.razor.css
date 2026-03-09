@@ -1,0 +1,109 @@
+.activity-widget {
+    background: #fff;
+    border: 1px solid #e5e1f3;
+    border-radius: 14px;
+    box-shadow: 0 8px 24px rgba(26, 21, 53, 0.05);
+    padding: 1.25rem;
+}
+
+::deep .activity-period-select {
+    max-width: 180px;
+}
+
+::deep .activity-status-filter {
+    max-width: 180px;
+}
+
+.activity-kpi-card {
+    background: #faf9ff;
+    border: 1px solid #ece8fb;
+    border-radius: 12px;
+    padding: 1rem;
+    text-align: center;
+}
+
+.activity-kpi-active {
+    border-color: #b7e4c7;
+    background: #f0faf4;
+}
+
+.activity-kpi-passive {
+    border-color: #ffe0a3;
+    background: #fff9ef;
+}
+
+.activity-kpi-never {
+    border-color: #d1d1d1;
+    background: #f5f5f5;
+}
+
+.activity-kpi-label {
+    color: #6b6589;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    margin-bottom: 0.2rem;
+    text-transform: uppercase;
+}
+
+.activity-kpi-value {
+    color: #1a1535;
+    font-size: 1.6rem;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.activity-kpi-pct {
+    color: #6b6589;
+    font-size: 0.82rem;
+    font-weight: 600;
+    margin-top: 0.15rem;
+}
+
+.activity-chart-container {
+    height: 320px;
+    overflow: hidden;
+    position: relative;
+}
+
+::deep .activity-chart {
+    height: 320px !important;
+    width: 100% !important;
+}
+
+.activity-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding-top: 0.5rem;
+}
+
+.activity-breakdown-row {
+    align-items: center;
+    background: #faf9ff;
+    border: 1px solid #ece8fb;
+    border-radius: 10px;
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.7rem 0.8rem;
+}
+
+.activity-dot {
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+    height: 12px;
+    width: 12px;
+}
+
+.activity-dot.active {
+    background: #2d9f5f;
+}
+
+.activity-dot.passive {
+    background: #e6a817;
+}
+
+.activity-dot.never {
+    background: #999;
+}
