@@ -56,7 +56,7 @@ public class ProjectController(
     }
 
     [HttpPost("{id:int}/helper/match")]
-    [EnableRateLimiting("project-start")]
+    [EnableRateLimiting("survey-helper")]
     public async Task<IActionResult> MatchSurveyHelper(int id, [FromBody] SurveyHelperMatchRequest request)
     {
         var project = (await projectService.GetAssignedProjectsAsync(SubjectId))

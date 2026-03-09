@@ -82,6 +82,7 @@ public static class ServiceExtensions
             AddFixedPolicy(options, "bank-add",      partitionByIp: false, limit: 5,  window: TimeSpan.FromHours(1));
             AddFixedPolicy(options, "webhook",       partitionByIp: true,  limit: 30, window: TimeSpan.FromMinutes(1));
             AddFixedPolicy(options, "project-start", partitionByIp: false, limit: 10, window: TimeSpan.FromMinutes(1));
+            AddFixedPolicy(options, "survey-helper", partitionByIp: false, limit: 60, window: TimeSpan.FromMinutes(1));
             AddFixedPolicy(options, "telemetry",     partitionByIp: false, limit: 30, window: TimeSpan.FromMinutes(1));
             AddFixedPolicy(options, "survey-result", partitionByIp: true,  limit: 60, window: TimeSpan.FromMinutes(1));
 
