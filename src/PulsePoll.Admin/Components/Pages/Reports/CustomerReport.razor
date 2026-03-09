@@ -1,0 +1,90 @@
+@page "/reports/customers"
+@attribute [HasPermission(PermissionCodes.Reports.View)]
+@inject IReportService ReportService
+@inject IAppToastService Toast
+
+<PageTitle>Müşteri Raporu — PulsePoll Admin</PageTitle>
+
+<div class="d-flex align-items-center gap-2 mb-3">
+    <h3 class="mb-0">Müşteri Raporu</h3>
+</div>
+
+@if (_isLoading)
+{
+    <div class="text-muted py-3">Veriler yükleniyor...</div>
+}
+else if (_result is not null)
+{
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="rpt-kpi-card">
+                <div class="rpt-kpi-label">Toplam Müşteri</div>
+                <div class="rpt-kpi-value">@_result.Summary.TotalCustomers</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="rpt-kpi-card rpt-kpi-blue">
+                <div class="rpt-kpi-label">Toplam Proje</div>
+                <div class="rpt-kpi-value">@_result.Summary.TotalProjects</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="rpt-kpi-card rpt-kpi-green">
+                <div class="rpt-kpi-label">Toplam Bütçe</div>
+                <div class="rpt-kpi-value">@_result.Summary.TotalBudget.ToString("N2") ₺</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="rpt-kpi-card rpt-kpi-orange">
+                <div class="rpt-kpi-label">Dağıtılan Ödül</div>
+                <div class="rpt-kpi-value">@_result.Summary.TotalDistributed.ToString("N2") ₺</div>
+            </div>
+        </div>
+    </div>
+
+    <DxGrid @ref="_grid" Data="@_result.Items"
+            ShowFilterRow="true"
+            PageSize="25"
+            CssClass="rpt-grid">
+        <Columns>
+            <DxGridDataColumn FieldName="Code" Caption="Kod" Width="80px" />
+            <DxGridDataColumn FieldName="CustomerName" Caption="Müşteri" MinWidth="180" />
+            <DxGridDataColumn FieldName="ProjectCount" Caption="Proje" Width="80px" />
+            <DxGridDataColumn FieldName="ActiveProjects" Caption="Aktif" Width="70px" />
+            <DxGridDataColumn FieldName="CompletedProjects" Caption="Tamamlanan" Width="100px" />
+            <DxGridDataColumn FieldName="TotalAssigned" Caption="Atanan" Width="90px" />
+            <DxGridDataColumn FieldName="TotalCompleted" Caption="Tamamlanan" Width="100px" />
+            <DxGridDataColumn FieldName="CompletionRate" Caption="Oran %" Width="90px" DisplayFormat="{0:N1}" />
+            <DxGridDataColumn FieldName="TotalBudget" Caption="Bütçe" Width="120px" DisplayFormat="{0:N2} ₺" />
+            <DxGridDataColumn FieldName="TotalDistributed" Caption="Dağıtılan" Width="120px" DisplayFormat="{0:N2} ₺" />
+        </Columns>
+        <TotalSummary>
+            <DxGridSummaryItem SummaryType="GridSummaryItemType.Count" FieldName="Code" DisplayText="Toplam: {0:N0}" />
+            <DxGridSummaryItem SummaryType="GridSummaryItemType.Sum" FieldName="ProjectCount" DisplayText="{0:N0}" />
+            <DxGridSummaryItem SummaryType="GridSummaryItemType.Sum" FieldName="TotalBudget" DisplayText="{0:N2} ₺" />
+            <DxGridSummaryItem SummaryType="GridSummaryItemType.Sum" FieldName="TotalDistributed" DisplayText="{0:N2} ₺" />
+        </TotalSummary>
+    </DxGrid>
+}
+
+@code {
+    private bool _isLoading = true;
+    private CustomerReportResultDto? _result;
+    private IGrid? _grid;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _result = await ReportService.GetCustomerReportAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleFormSave(ex, Toast);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+}

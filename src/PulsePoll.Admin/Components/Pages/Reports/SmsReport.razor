@@ -1,0 +1,116 @@
+@page "/reports/sms"
+@attribute [HasPermission(PermissionCodes.Reports.View)]
+@inject IReportService ReportService
+@inject IAppToastService Toast
+
+<PageTitle>SMS Raporu — PulsePoll Admin</PageTitle>
+
+<div class="d-flex align-items-center gap-2 mb-3">
+    <h3 class="mb-0">SMS Raporu</h3>
+</div>
+
+@if (_isLoading)
+{
+    <div class="text-muted py-3">Veriler yükleniyor...</div>
+}
+else if (_result is not null)
+{
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-2">
+            <div class="rpt-kpi-card">
+                <div class="rpt-kpi-label">Toplam SMS</div>
+                <div class="rpt-kpi-value">@_result.Summary.TotalCount.ToString("N0")</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-2">
+            <div class="rpt-kpi-card rpt-kpi-green">
+                <div class="rpt-kpi-label">Gönderilen</div>
+                <div class="rpt-kpi-value">@_result.Summary.SentCount.ToString("N0")</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-2">
+            <div class="rpt-kpi-card rpt-kpi-red">
+                <div class="rpt-kpi-label">Başarısız</div>
+                <div class="rpt-kpi-value">@_result.Summary.FailedCount.ToString("N0")</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-2">
+            <div class="rpt-kpi-card rpt-kpi-orange">
+                <div class="rpt-kpi-label">Bekleyen</div>
+                <div class="rpt-kpi-value">@_result.Summary.PendingCount.ToString("N0")</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-2">
+            <div class="rpt-kpi-card">
+                <div class="rpt-kpi-label">Atlanan</div>
+                <div class="rpt-kpi-value">@_result.Summary.SkippedCount.ToString("N0")</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-2">
+            <div class="rpt-kpi-card rpt-kpi-blue">
+                <div class="rpt-kpi-label">Başarı Oranı</div>
+                <div class="rpt-kpi-value">%@_result.Summary.SuccessRate</div>
+            </div>
+        </div>
+    </div>
+
+    <h5 class="fw-bold mb-3">Kaynak Bazında Dağılım</h5>
+    <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Kaynak</th>
+                    <th class="text-end">Toplam</th>
+                    <th class="text-end">Gönderilen</th>
+                    <th class="text-end">Başarısız</th>
+                    <th class="text-end">Bekleyen</th>
+                    <th class="text-end">Atlanan</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var row in _result.BySource)
+                {
+                    <tr>
+                        <td>@row.Source</td>
+                        <td class="text-end">@row.TotalCount.ToString("N0")</td>
+                        <td class="text-end">@row.SentCount.ToString("N0")</td>
+                        <td class="text-end">@row.FailedCount.ToString("N0")</td>
+                        <td class="text-end">@row.PendingCount.ToString("N0")</td>
+                        <td class="text-end">@row.SkippedCount.ToString("N0")</td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr class="table-active fw-bold">
+                    <td>TOPLAM</td>
+                    <td class="text-end">@_result.Summary.TotalCount.ToString("N0")</td>
+                    <td class="text-end">@_result.Summary.SentCount.ToString("N0")</td>
+                    <td class="text-end">@_result.Summary.FailedCount.ToString("N0")</td>
+                    <td class="text-end">@_result.Summary.PendingCount.ToString("N0")</td>
+                    <td class="text-end">@_result.Summary.SkippedCount.ToString("N0")</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+}
+
+@code {
+    private bool _isLoading = true;
+    private SmsReportResultDto? _result;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _result = await ReportService.GetSmsReportAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleFormSave(ex, Toast);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+}

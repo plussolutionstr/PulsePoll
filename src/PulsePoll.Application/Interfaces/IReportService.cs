@@ -9,4 +9,9 @@ public interface IReportService
     Task<SubjectActivityResultDto> GetSubjectActivityAsync(int days);
     Task<SubjectDemographicsResultDto> GetSubjectDemographicsAsync();
     Task<SubjectEarningsResultDto> GetSubjectEarningsAsync();
+    Task<ProjectPerformanceResultDto> GetProjectPerformanceAsync();
+    Task<CustomerReportResultDto> GetCustomerReportAsync();
+    Task<PaymentReportResultDto> GetPaymentReportAsync();
+    Task<SmsReportResultDto> GetSmsReportAsync();
+    Task<NotificationReportResultDto> GetNotificationReportAsync();
 }

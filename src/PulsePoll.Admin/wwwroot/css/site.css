@@ -85,3 +85,41 @@ body {
     border-color: var(--pp-accent) !important;
     background-color: var(--pp-surface) !important;
 }
+
+/* ── Rapor KPI Kartları ── */
+.rpt-kpi-card {
+    background: #faf9ff;
+    border: 1px solid #e5e1f3;
+    border-radius: 14px;
+    box-shadow: 0 8px 24px rgba(26, 21, 53, 0.05);
+    padding: 1.1rem;
+    text-align: center;
+}
+
+.rpt-kpi-green { border-color: #b3e0c4; background: #f2fdf6; }
+.rpt-kpi-red { border-color: #e0b3b3; background: #fdf2f2; }
+.rpt-kpi-blue { border-color: #b3cde0; background: #f2f7fd; }
+.rpt-kpi-orange { border-color: #e0d0b3; background: #fdf8f2; }
+
+.rpt-kpi-label {
+    color: #6b6589;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    margin-bottom: 0.15rem;
+    text-transform: uppercase;
+}
+
+.rpt-kpi-value {
+    color: #1a1535;
+    font-size: 1.6rem;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.rpt-kpi-sub {
+    color: #6b6589;
+    font-size: 0.82rem;
+    font-weight: 600;
+    margin-top: 0.1rem;
+}
