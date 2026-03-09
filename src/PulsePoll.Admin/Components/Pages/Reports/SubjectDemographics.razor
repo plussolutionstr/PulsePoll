@@ -1,0 +1,159 @@
+@page "/reports/subject-demographics"
+@attribute [HasPermission(PermissionCodes.Reports.View)]
+@inject IReportService ReportService
+@inject IAppToastService Toast
+
+<PageTitle>Demografik Dağılım — PulsePoll Admin</PageTitle>
+
+<div class="d-flex align-items-center gap-2 mb-3">
+    <h3 class="mb-0">Demografik Dağılım Raporu</h3>
+</div>
+
+@if (_isLoading)
+{
+    <div class="demo-widget">
+        <div class="text-muted py-3">Veriler yükleniyor...</div>
+    </div>
+}
+else if (_result is not null)
+{
+    @* Genel Özet Kartları *@
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-md-4">
+            <div class="demo-summary-card">
+                <div class="demo-summary-label">Toplam Onaylı Denek</div>
+                <div class="demo-summary-value">@_result.GrandTotal.ToString("N0")</div>
+                <div class="demo-summary-pct">&nbsp;</div>
+            </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="demo-summary-card demo-female">
+                <div class="demo-summary-label">Kadın</div>
+                <div class="demo-summary-value">@_result.TotalFemale.ToString("N0")</div>
+                <div class="demo-summary-pct">@Pct(_result.TotalFemale, _result.GrandTotal)</div>
+            </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="demo-summary-card demo-male">
+                <div class="demo-summary-label">Erkek</div>
+                <div class="demo-summary-value">@_result.TotalMale.ToString("N0")</div>
+                <div class="demo-summary-pct">@Pct(_result.TotalMale, _result.GrandTotal)</div>
+            </div>
+        </div>
+    </div>
+
+    @* Tab Navigasyonu *@
+    <div class="demo-section">
+        <div class="demo-tabs">
+            @foreach (var sect in _result.Sections)
+            {
+                var isActive = sect.GroupName == _activeTab;
+                <button class="demo-tab @(isActive ? "demo-tab-active" : "")"
+                        @onclick="() => _activeTab = sect.GroupName">
+                    @sect.GroupName
+                </button>
+            }
+        </div>
+
+        @{ var active = _result.Sections.FirstOrDefault(s => s.GroupName == _activeTab) ?? _result.Sections.First(); }
+
+        <div class="demo-tab-content">
+            <div class="demo-tab-header">
+                <h5 class="mb-0 fw-bold">@active.GroupName</h5>
+                <span class="text-muted">@active.GrandTotal.ToString("N0") denek</span>
+            </div>
+
+            @* DxChart — Yatay Bar *@
+            @if (active.Rows.Count <= 20)
+            {
+                var chartHeight = Math.Max(250, active.Rows.Count * 50);
+                <div class="demo-chart-container" style="padding: 1rem 1.25rem;">
+                    <DxChart Data="@active.Rows"
+                             Width="100%"
+                             Height="@($"{chartHeight}px")"
+                             CssClass="demo-chart">
+                        <DxChartBarSeries ArgumentField="@((DemographicRow r) => r.Value)"
+                                          ValueField="@((DemographicRow r) => r.FemaleCount)"
+                                          Name="Kadın"
+                                          Color="System.Drawing.Color.FromArgb(209, 136, 197)" />
+                        <DxChartBarSeries ArgumentField="@((DemographicRow r) => r.Value)"
+                                          ValueField="@((DemographicRow r) => r.MaleCount)"
+                                          Name="Erkek"
+                                          Color="System.Drawing.Color.FromArgb(122, 179, 212)" />
+                        <DxChartArgumentAxis>
+                            <DxChartAxisLabel />
+                        </DxChartArgumentAxis>
+                        <DxChartValueAxis>
+                            <DxChartAxisLabel />
+                        </DxChartValueAxis>
+                        <DxChartLegend Position="RelativePosition.Outside"
+                                       HorizontalAlignment="HorizontalAlignment.Center"
+                                       VerticalAlignment="VerticalEdge.Bottom"
+                                       Orientation="DevExpress.Blazor.Orientation.Horizontal" />
+                        <DxChartTooltip Enabled="true" />
+                    </DxChart>
+                </div>
+            }
+
+            @* Tablo *@
+            <div class="table-responsive">
+                <table class="table table-sm table-hover demo-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>@active.GroupName</th>
+                            <th class="text-end">Kadın</th>
+                            <th class="text-end">Erkek</th>
+                            <th class="text-end fw-bold">Toplam</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in active.Rows)
+                        {
+                            <tr>
+                                <td>@row.Value</td>
+                                <td class="text-end">@row.FemaleCount.ToString("N0")</td>
+                                <td class="text-end">@row.MaleCount.ToString("N0")</td>
+                                <td class="text-end fw-bold">@row.TotalCount.ToString("N0")</td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot>
+                        <tr class="table-active fw-bold">
+                            <td>TOPLAM</td>
+                            <td class="text-end">@active.TotalFemale.ToString("N0")</td>
+                            <td class="text-end">@active.TotalMale.ToString("N0")</td>
+                            <td class="text-end">@active.GrandTotal.ToString("N0")</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private bool _isLoading = true;
+    private SubjectDemographicsResultDto? _result;
+    private string _activeTab = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _result = await ReportService.GetSubjectDemographicsAsync();
+            if (_result.Sections.Count > 0)
+                _activeTab = _result.Sections[0].GroupName;
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleFormSave(ex, Toast);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private static string Pct(int part, int total)
+        => total <= 0 ? "%0" : $"%{(decimal)part / total * 100m:0.#}";
+}

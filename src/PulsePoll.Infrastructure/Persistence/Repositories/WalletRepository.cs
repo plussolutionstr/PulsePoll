@@ -167,44 +167,54 @@ public class WalletRepository(AppDbContext db) : IWalletRepository
 
         // Compute running balances via SQL window function, filter to page IDs
         var ids = transactions.Select(t => t.Id).ToArray();
-        await using var connection = db.Database.GetDbConnection();
-        if (connection.State != System.Data.ConnectionState.Open)
-            await connection.OpenAsync();
+        var connection = db.Database.GetDbConnection();
+        var shouldCloseConnection = connection.State != System.Data.ConnectionState.Open;
 
-        await using var cmd = connection.CreateCommand();
-        cmd.CommandText = """
-            WITH balances AS (
-                SELECT t.id,
-                       SUM(CASE WHEN t.type = 0 THEN t.amount ELSE -t.amount END)
-                           OVER (ORDER BY t.created_at, t.id) AS running_balance
-                FROM wallet_transactions t
-                WHERE t.wallet_id = @walletId
-            )
-            SELECT b.id, b.running_balance
-            FROM balances b
-            WHERE b.id = ANY(@ids)
-            """;
+        if (shouldCloseConnection)
+            await db.Database.OpenConnectionAsync();
 
-        var walletIdParam = cmd.CreateParameter();
-        walletIdParam.ParameterName = "walletId";
-        walletIdParam.Value = walletId;
-        cmd.Parameters.Add(walletIdParam);
-
-        var idsParam = cmd.CreateParameter();
-        idsParam.ParameterName = "ids";
-        idsParam.Value = ids;
-        cmd.Parameters.Add(idsParam);
-
-        var balanceMap = new Dictionary<int, decimal>();
-        await using var reader = await cmd.ExecuteReaderAsync();
-        while (await reader.ReadAsync())
+        try
         {
-            balanceMap[reader.GetInt32(0)] = reader.GetDecimal(1);
-        }
+            await using var cmd = connection.CreateCommand();
+            cmd.CommandText = """
+                WITH balances AS (
+                    SELECT t.id,
+                           SUM(CASE WHEN t.type = 0 THEN t.amount ELSE -t.amount END)
+                               OVER (ORDER BY t.created_at, t.id) AS running_balance
+                    FROM wallet_transactions t
+                    WHERE t.wallet_id = @walletId
+                )
+                SELECT b.id, b.running_balance
+                FROM balances b
+                WHERE b.id = ANY(@ids)
+                """;
 
-        return transactions
-            .Select(tx => (tx, balanceMap.GetValueOrDefault(tx.Id)))
-            .ToList();
+            var walletIdParam = cmd.CreateParameter();
+            walletIdParam.ParameterName = "walletId";
+            walletIdParam.Value = walletId;
+            cmd.Parameters.Add(walletIdParam);
+
+            var idsParam = cmd.CreateParameter();
+            idsParam.ParameterName = "ids";
+            idsParam.Value = ids;
+            cmd.Parameters.Add(idsParam);
+
+            var balanceMap = new Dictionary<int, decimal>();
+            await using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                balanceMap[reader.GetInt32(0)] = reader.GetDecimal(1);
+            }
+
+            return transactions
+                .Select(tx => (tx, balanceMap.GetValueOrDefault(tx.Id)))
+                .ToList();
+        }
+        finally
+        {
+            if (shouldCloseConnection)
+                await db.Database.CloseConnectionAsync();
+        }
     }
 
     public Task<int> CountTransactionsAsync(int walletId)

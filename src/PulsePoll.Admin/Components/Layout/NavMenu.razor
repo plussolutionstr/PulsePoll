@@ -69,6 +69,22 @@
             {
                 <DxMenuItem NavigateUrl="/news" Text="Haber Yönetimi" CssClass="@MenuItemCssClass("/news")" IconCssClass="bi bi-newspaper"/>
             }
+            @if (Has(PermissionCodes.Reports.View))
+            {
+                <DxMenuItem Text="Raporlar" IconCssClass="bi bi-graph-up" CssClass="@MenuItemCssClass("/reports")">
+                    <Items>
+                        <DxMenuItem NavigateUrl="/reports/subject-roadmap" Text="Denek Roadmap" CssClass="@MenuItemCssClass("/reports/subject-roadmap")" IconCssClass="bi bi-people"/>
+                        <DxMenuItem NavigateUrl="/reports/subject-activity" Text="Denek Aktivite" CssClass="@MenuItemCssClass("/reports/subject-activity")" IconCssClass="bi bi-activity"/>
+                        <DxMenuItem NavigateUrl="/reports/subject-demographics" Text="Demografik Dağılım" CssClass="@MenuItemCssClass("/reports/subject-demographics")" IconCssClass="bi bi-pie-chart"/>
+                        <DxMenuItem NavigateUrl="/reports/subject-earnings" Text="Denek Kazanç" CssClass="@MenuItemCssClass("/reports/subject-earnings")" IconCssClass="bi bi-currency-exchange"/>
+                        <DxMenuItem NavigateUrl="/reports/project-performance" Text="Anket Performans" CssClass="@MenuItemCssClass("/reports/project-performance")" IconCssClass="bi bi-clipboard-data"/>
+                        <DxMenuItem NavigateUrl="/reports/customers" Text="Müşteri Raporu" CssClass="@MenuItemCssClass("/reports/customers")" IconCssClass="bi bi-building"/>
+                        <DxMenuItem NavigateUrl="/reports/payments" Text="Ödeme Raporu" CssClass="@MenuItemCssClass("/reports/payments")" IconCssClass="bi bi-cash-stack"/>
+                        <DxMenuItem NavigateUrl="/reports/sms" Text="SMS Raporu" CssClass="@MenuItemCssClass("/reports/sms")" IconCssClass="bi bi-chat-dots"/>
+                        <DxMenuItem NavigateUrl="/reports/notifications" Text="Bildirim Raporu" CssClass="@MenuItemCssClass("/reports/notifications")" IconCssClass="bi bi-bell"/>
+                    </Items>
+                </DxMenuItem>
+            }
             @if (Has(PermissionCodes.Settings.View) || Has(PermissionCodes.AdminUsers.View) || Has(PermissionCodes.Roles.View))
             {
                 <DxMenuItem Text="Ayarlar" IconCssClass="bi bi-sliders" CssClass="@MenuItemCssClass("/settings")">

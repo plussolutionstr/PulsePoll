@@ -6,6 +6,7 @@
 @inject ISubjectService SubjectService
 @inject ICustomerService CustomerService
 @inject IPaymentBatchService PaymentBatchService
+@inject IReportService ReportService
 @inject IAppToastService Toast
 
 <PageTitle>Dashboard — PulsePoll Admin</PageTitle>
@@ -122,6 +123,12 @@ else
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mt-1">
+        <div class="col-12">
+            <SubjectRoadmapWidget Title="Denek Roadmap" ShowTable="false" />
         </div>
     </div>
 }

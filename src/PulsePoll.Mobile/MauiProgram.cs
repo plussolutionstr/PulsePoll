@@ -98,6 +98,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<IPushNotificationService, Platforms.iOS.PushNotificationService>();
 #endif
         builder.Services.AddSingleton<NotificationCenterService>();
+        builder.Services.AddSingleton<AppActivityTracker>();
         builder.Services.AddSingleton<ISubjectSessionService, SubjectSessionService>();
         builder.Services.AddTransient<ISurveyHelperService, SurveyHelperService>();
         builder.Services.AddSingleton<ITokenProvider, DevTokenProvider>();

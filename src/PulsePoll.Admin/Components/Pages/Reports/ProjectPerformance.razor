@@ -1,0 +1,105 @@
+@page "/reports/project-performance"
+@attribute [HasPermission(PermissionCodes.Reports.View)]
+@inject IReportService ReportService
+@inject IAppToastService Toast
+
+<PageTitle>Anket Performans Raporu — PulsePoll Admin</PageTitle>
+
+<div class="d-flex align-items-center gap-2 mb-3">
+    <h3 class="mb-0">Anket Performans Raporu</h3>
+</div>
+
+@if (_isLoading)
+{
+    <div class="text-muted py-3">Veriler yükleniyor...</div>
+}
+else if (_result is not null)
+{
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-2">
+            <div class="rpt-kpi-card">
+                <div class="rpt-kpi-label">Toplam Proje</div>
+                <div class="rpt-kpi-value">@_result.Summary.TotalProjects</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-2">
+            <div class="rpt-kpi-card rpt-kpi-green">
+                <div class="rpt-kpi-label">Aktif</div>
+                <div class="rpt-kpi-value">@_result.Summary.ActiveProjects</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-2">
+            <div class="rpt-kpi-card rpt-kpi-blue">
+                <div class="rpt-kpi-label">Tamamlanan</div>
+                <div class="rpt-kpi-value">@_result.Summary.CompletedProjects</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-2">
+            <div class="rpt-kpi-card">
+                <div class="rpt-kpi-label">Toplam Atama</div>
+                <div class="rpt-kpi-value">@_result.Summary.TotalAssigned.ToString("N0")</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-2">
+            <div class="rpt-kpi-card rpt-kpi-green">
+                <div class="rpt-kpi-label">Tamamlama Oranı</div>
+                <div class="rpt-kpi-value">%@_result.Summary.OverallCompletionRate</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-2">
+            <div class="rpt-kpi-card rpt-kpi-orange">
+                <div class="rpt-kpi-label">Dağıtılan Ödül</div>
+                <div class="rpt-kpi-value">@_result.Summary.TotalDistributed.ToString("N2") ₺</div>
+            </div>
+        </div>
+    </div>
+
+    <DxGrid @ref="_grid" Data="@_result.Items"
+            ShowFilterRow="true"
+            PageSize="25"
+            CssClass="rpt-grid">
+        <Columns>
+            <DxGridDataColumn FieldName="ProjectId" Caption="ID" Width="60px" />
+            <DxGridDataColumn FieldName="ProjectName" Caption="Proje" MinWidth="180" />
+            <DxGridDataColumn FieldName="CustomerName" Caption="Müşteri" MinWidth="150" />
+            <DxGridDataColumn FieldName="Status" Caption="Durum" Width="100px" />
+            <DxGridDataColumn FieldName="TotalAssigned" Caption="Atanan" Width="90px" />
+            <DxGridDataColumn FieldName="Completed" Caption="Tamamlanan" Width="100px" />
+            <DxGridDataColumn FieldName="NotStarted" Caption="Başlamayan" Width="100px" />
+            <DxGridDataColumn FieldName="Partial" Caption="Yarım" Width="80px" />
+            <DxGridDataColumn FieldName="Disqualify" Caption="Diskalifiye" Width="100px" />
+            <DxGridDataColumn FieldName="ScreenOut" Caption="Elenen" Width="80px" />
+            <DxGridDataColumn FieldName="QuotaFull" Caption="Kota Dolu" Width="95px" />
+            <DxGridDataColumn FieldName="CompletionRate" Caption="Oran %" Width="90px" DisplayFormat="{0:N1}" />
+            <DxGridDataColumn FieldName="TotalDistributed" Caption="Dağıtılan" Width="110px" DisplayFormat="{0:N2} ₺" />
+        </Columns>
+        <TotalSummary>
+            <DxGridSummaryItem SummaryType="GridSummaryItemType.Count" FieldName="ProjectId" DisplayText="Toplam: {0:N0}" />
+            <DxGridSummaryItem SummaryType="GridSummaryItemType.Sum" FieldName="TotalAssigned" DisplayText="{0:N0}" />
+            <DxGridSummaryItem SummaryType="GridSummaryItemType.Sum" FieldName="Completed" DisplayText="{0:N0}" />
+            <DxGridSummaryItem SummaryType="GridSummaryItemType.Sum" FieldName="TotalDistributed" DisplayText="{0:N2} ₺" />
+        </TotalSummary>
+    </DxGrid>
+}
+
+@code {
+    private bool _isLoading = true;
+    private ProjectPerformanceResultDto? _result;
+    private IGrid? _grid;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _result = await ReportService.GetProjectPerformanceAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleFormSave(ex, Toast);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+}

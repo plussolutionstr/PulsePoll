@@ -1,0 +1,65 @@
+.roadmap-widget {
+    background: #fff;
+    border: 1px solid #e5e1f3;
+    border-radius: 14px;
+    box-shadow: 0 8px 24px rgba(26, 21, 53, 0.05);
+    padding: 1.25rem;
+}
+
+::deep .roadmap-year-select {
+    max-width: 120px;
+}
+
+.roadmap-kpi-card {
+    background: #faf9ff;
+    border: 1px solid #ece8fb;
+    border-radius: 12px;
+    padding: 1rem;
+    text-align: center;
+}
+
+.roadmap-kpi-label {
+    color: #6b6589;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    margin-bottom: 0.2rem;
+    text-transform: uppercase;
+}
+
+.roadmap-kpi-value {
+    color: #1a1535;
+    font-size: 1.6rem;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.roadmap-kpi-change {
+    font-size: 0.82rem;
+    font-weight: 600;
+    margin-top: 0.15rem;
+}
+
+.roadmap-chart-container {
+    height: 350px;
+    overflow: hidden;
+    position: relative;
+}
+
+::deep .roadmap-chart {
+    height: 350px !important;
+    width: 100% !important;
+}
+
+.roadmap-table thead th {
+    background: #f7f5ff;
+    border-bottom: 2px solid #e5e1f3;
+    color: #6b6589;
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.roadmap-table tfoot td {
+    border-top: 2px solid #e5e1f3;
+}

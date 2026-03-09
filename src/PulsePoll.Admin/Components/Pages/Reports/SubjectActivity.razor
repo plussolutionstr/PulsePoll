@@ -1,0 +1,256 @@
+@page "/reports/subject-activity"
+@attribute [HasPermission(PermissionCodes.Reports.View)]
+@inject IReportService ReportService
+@inject IAppToastService Toast
+
+<PageTitle>Denek Aktivite Raporu — PulsePoll Admin</PageTitle>
+
+<div class="d-flex align-items-center gap-2 mb-3">
+    <h3 class="mb-0">Denek Aktivite Raporu</h3>
+</div>
+
+<div class="activity-widget">
+    @* Filtre *@
+    <div class="d-flex align-items-center gap-3 mb-3">
+        <label class="fw-semibold mb-0">Süre:</label>
+        <DxComboBox Data="@_periodOptions"
+                    ValueFieldName="Days"
+                    TextFieldName="Label"
+                    @bind-Value="_selectedDays"
+                    @bind-Value:after="OnPeriodChangedAsync"
+                    CssClass="activity-period-select"
+                    ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Never" />
+    </div>
+
+    @if (_isLoading)
+    {
+        <div class="text-muted py-3">Veriler yükleniyor...</div>
+    }
+    else if (_result is not null)
+    {
+        @* KPI Kartlar *@
+        <div class="row g-3 mb-3">
+            <div class="col-6 col-md-3">
+                <div class="activity-kpi-card">
+                    <div class="activity-kpi-label">Toplam Onaylı</div>
+                    <div class="activity-kpi-value">@_result.Summary.TotalApproved.ToString("N0")</div>
+                    <div class="activity-kpi-pct">&nbsp;</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="activity-kpi-card activity-kpi-active">
+                    <div class="activity-kpi-label">Aktif</div>
+                    <div class="activity-kpi-value">@_result.Summary.ActiveCount.ToString("N0")</div>
+                    <div class="activity-kpi-pct">@Pct(_result.Summary.ActiveCount, _result.Summary.TotalApproved)</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="activity-kpi-card activity-kpi-passive">
+                    <div class="activity-kpi-label">Pasif</div>
+                    <div class="activity-kpi-value">@_result.Summary.PassiveCount.ToString("N0")</div>
+                    <div class="activity-kpi-pct">@Pct(_result.Summary.PassiveCount, _result.Summary.TotalApproved)</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="activity-kpi-card activity-kpi-never">
+                    <div class="activity-kpi-label">Hiç Girmemiş</div>
+                    <div class="activity-kpi-value">@_result.Summary.NeverLoggedInCount.ToString("N0")</div>
+                    <div class="activity-kpi-pct">@Pct(_result.Summary.NeverLoggedInCount, _result.Summary.TotalApproved)</div>
+                </div>
+            </div>
+        </div>
+
+        @* Donut Grafik + Açıklamalar *@
+        <div class="row g-3 mb-3">
+            <div class="col-12 col-md-5">
+                <div class="activity-chart-container">
+                    <DxPieChart Data="@_chartData" CssClass="activity-chart">
+                        <DxPieChartSeries ValueField="@((ChartSlice s) => s.Count)"
+                                          ArgumentField="@((ChartSlice s) => s.Label)">
+                        </DxPieChartSeries>
+                        <DxChartLegend Position="RelativePosition.Outside"
+                                       HorizontalAlignment="HorizontalAlignment.Center"
+                                       VerticalAlignment="VerticalEdge.Bottom"
+                                       Orientation="DevExpress.Blazor.Orientation.Horizontal" />
+                        <DxChartTooltip Enabled="true" />
+                    </DxPieChart>
+                </div>
+            </div>
+            <div class="col-12 col-md-7">
+                @* Durum Dağılım Özeti *@
+                <div class="activity-breakdown">
+                    <div class="activity-breakdown-row">
+                        <span class="activity-dot active"></span>
+                        <span class="fw-semibold">Aktif</span>
+                        <span class="text-muted ms-1">— Son @_selectedDays gün içinde en az 1 giriş</span>
+                        <span class="ms-auto fw-bold">@_result.Summary.ActiveCount.ToString("N0")</span>
+                    </div>
+                    <div class="activity-breakdown-row">
+                        <span class="activity-dot passive"></span>
+                        <span class="fw-semibold">Pasif</span>
+                        <span class="text-muted ms-1">— Daha önce girmiş ama son @_selectedDays günde girmemiş</span>
+                        <span class="ms-auto fw-bold">@_result.Summary.PassiveCount.ToString("N0")</span>
+                    </div>
+                    <div class="activity-breakdown-row">
+                        <span class="activity-dot never"></span>
+                        <span class="fw-semibold">Hiç Girmemiş</span>
+                        <span class="text-muted ms-1">— Uygulamaya hiç giriş yapmamış</span>
+                        <span class="ms-auto fw-bold">@_result.Summary.NeverLoggedInCount.ToString("N0")</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @* Detay Grid *@
+        <div class="d-flex align-items-center justify-content-between mb-2">
+            <h5 class="mb-0 fw-bold">Denek Detayı</h5>
+            <div class="d-flex gap-2">
+                <DxComboBox Data="@_statusFilterOptions"
+                            ValueFieldName="Value"
+                            TextFieldName="Label"
+                            @bind-Value="_statusFilter"
+                            @bind-Value:after="ApplyFilter"
+                            NullText="Tüm Durumlar"
+                            CssClass="activity-status-filter"
+                            ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto" />
+                <DxButton Text="Excel" IconCssClass="bi bi-file-earmark-excel" Click="ExportExcelAsync"
+                          RenderStyle="ButtonRenderStyle.Light" />
+            </div>
+        </div>
+
+        <DxGrid @ref="_grid" Data="@_filteredItems"
+                ShowFilterRow="true"
+                PageSize="25"
+                CssClass="activity-grid">
+            <Columns>
+                <DxGridDataColumn FieldName="SubjectId" Caption="ID" Width="70px" />
+                <DxGridDataColumn FieldName="FullName" Caption="Ad Soyad" MinWidth="160" />
+                <DxGridDataColumn FieldName="PhoneNumber" Caption="Telefon" Width="140px" />
+                <DxGridDataColumn FieldName="Platform" Caption="Platform" Width="100px" />
+                <DxGridDataColumn FieldName="LastSeenAt" Caption="Son Giriş" Width="160px" DisplayFormat="{0:dd.MM.yyyy HH:mm}" />
+                <DxGridDataColumn FieldName="ActiveDays" Caption="Aktif Gün" Width="100px" />
+                <DxGridDataColumn FieldName="Status" Caption="Durum" Width="130px">
+                    <CellDisplayTemplate>
+                        @{
+                            var status = (SubjectActivityStatus)context.Value;
+                        }
+                        <span class="badge @StatusBadgeClass(status)">@StatusLabel(status)</span>
+                    </CellDisplayTemplate>
+                </DxGridDataColumn>
+            </Columns>
+            <TotalSummary>
+                <DxGridSummaryItem SummaryType="GridSummaryItemType.Count" FieldName="SubjectId" DisplayText="Toplam: {0:N0}" />
+            </TotalSummary>
+        </DxGrid>
+    }
+</div>
+
+@code {
+    private bool _isLoading = true;
+    private int _selectedDays = 30;
+    private SubjectActivityResultDto? _result;
+    private List<SubjectActivityItemDto> _filteredItems = [];
+    private List<ChartSlice> _chartData = [];
+    private SubjectActivityStatus? _statusFilter;
+    private IGrid? _grid;
+
+    private static readonly List<PeriodOption> _periodOptions =
+    [
+        new(1, "Son 24 saat"),
+        new(7, "Son 7 gün"),
+        new(30, "Son 30 gün"),
+        new(90, "Son 90 gün"),
+        new(180, "Son 6 ay"),
+        new(365, "Son 1 yıl")
+    ];
+
+    private static readonly List<StatusFilterOption> _statusFilterOptions =
+    [
+        new("Aktif", SubjectActivityStatus.Active),
+        new("Pasif", SubjectActivityStatus.Passive),
+        new("Hiç Girmemiş", SubjectActivityStatus.NeverLoggedIn)
+    ];
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleFormSave(ex, Toast);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task OnPeriodChangedAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleFormSave(ex, Toast);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _result = await ReportService.GetSubjectActivityAsync(_selectedDays);
+        _chartData =
+        [
+            new("Aktif", _result.Summary.ActiveCount),
+            new("Pasif", _result.Summary.PassiveCount),
+            new("Hiç Girmemiş", _result.Summary.NeverLoggedInCount)
+        ];
+        _statusFilter = null;
+        ApplyFilter();
+    }
+
+    private void ApplyFilter()
+    {
+        if (_result is null) return;
+        _filteredItems = _statusFilter.HasValue
+            ? _result.Items.Where(i => i.Status == _statusFilter.Value).ToList()
+            : _result.Items;
+    }
+
+    private async Task ExportExcelAsync()
+    {
+        if (_grid is not null)
+            await _grid.ExportToXlsxAsync("denek-aktivite-raporu");
+    }
+
+    private static string Pct(int part, int total)
+        => total <= 0 ? "%0" : $"%{(decimal)part / total * 100m:0.#}";
+
+    private static string StatusLabel(SubjectActivityStatus status) => status switch
+    {
+        SubjectActivityStatus.Active => "Aktif",
+        SubjectActivityStatus.Passive => "Pasif",
+        SubjectActivityStatus.NeverLoggedIn => "Hiç Girmemiş",
+        _ => ""
+    };
+
+    private static string StatusBadgeClass(SubjectActivityStatus status) => status switch
+    {
+        SubjectActivityStatus.Active => "bg-success",
+        SubjectActivityStatus.Passive => "bg-warning text-dark",
+        SubjectActivityStatus.NeverLoggedIn => "bg-secondary",
+        _ => ""
+    };
+
+    private sealed record PeriodOption(int Days, string Label);
+    private sealed record StatusFilterOption(string Label, SubjectActivityStatus Value);
+    private sealed record ChartSlice(string Label, int Count);
+}

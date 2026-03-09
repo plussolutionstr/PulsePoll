@@ -87,6 +87,8 @@ public static class PermissionSeeder
         (PermissionCodes.AdminUsers.Edit, "Kullanıcı Düzenle", "AdminUsers"),
         (PermissionCodes.AdminUsers.Activate, "Kullanıcı Aktif/Pasif", "AdminUsers"),
 
+        (PermissionCodes.Reports.View, "Raporları Görüntüle", "Reports"),
+
         (PermissionCodes.Roles.View, "Rolleri Görüntüle", "Roles"),
         (PermissionCodes.Roles.Create, "Rol Oluştur", "Roles"),
         (PermissionCodes.Roles.Edit, "Rol Düzenle", "Roles"),

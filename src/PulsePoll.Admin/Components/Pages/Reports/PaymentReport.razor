@@ -1,0 +1,141 @@
+@page "/reports/payments"
+@attribute [HasPermission(PermissionCodes.Reports.View)]
+@inject IReportService ReportService
+@inject IAppToastService Toast
+
+<PageTitle>Ödeme Raporu — PulsePoll Admin</PageTitle>
+
+<div class="d-flex align-items-center gap-2 mb-3">
+    <h3 class="mb-0">Ödeme Raporu</h3>
+</div>
+
+@if (_isLoading)
+{
+    <div class="text-muted py-3">Veriler yükleniyor...</div>
+}
+else if (_result is not null)
+{
+    <h5 class="fw-bold mb-3">Çekim Talepleri</h5>
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-4">
+            <div class="rpt-kpi-card rpt-kpi-orange">
+                <div class="rpt-kpi-label">Bekleyen</div>
+                <div class="rpt-kpi-value">@_result.WithdrawalSummary.PendingCount</div>
+                <div class="rpt-kpi-sub">@_result.WithdrawalSummary.PendingAmount.ToString("N2") ₺</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4">
+            <div class="rpt-kpi-card rpt-kpi-green">
+                <div class="rpt-kpi-label">Onaylanan</div>
+                <div class="rpt-kpi-value">@_result.WithdrawalSummary.ApprovedCount</div>
+                <div class="rpt-kpi-sub">@_result.WithdrawalSummary.ApprovedAmount.ToString("N2") ₺</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4">
+            <div class="rpt-kpi-card rpt-kpi-red">
+                <div class="rpt-kpi-label">Reddedilen</div>
+                <div class="rpt-kpi-value">@_result.WithdrawalSummary.RejectedCount</div>
+                <div class="rpt-kpi-sub">@_result.WithdrawalSummary.RejectedAmount.ToString("N2") ₺</div>
+            </div>
+        </div>
+    </div>
+
+    <h5 class="fw-bold mb-3">Ödeme Paketleri</h5>
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-4">
+            <div class="rpt-kpi-card">
+                <div class="rpt-kpi-label">Taslak</div>
+                <div class="rpt-kpi-value">@_result.BatchSummary.DraftCount</div>
+                <div class="rpt-kpi-sub">@_result.BatchSummary.DraftAmount.ToString("N2") ₺</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4">
+            <div class="rpt-kpi-card rpt-kpi-blue">
+                <div class="rpt-kpi-label">Gönderilen</div>
+                <div class="rpt-kpi-value">@_result.BatchSummary.SentCount</div>
+                <div class="rpt-kpi-sub">@_result.BatchSummary.SentAmount.ToString("N2") ₺</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4">
+            <div class="rpt-kpi-card rpt-kpi-green">
+                <div class="rpt-kpi-label">Tamamlanan</div>
+                <div class="rpt-kpi-value">@_result.BatchSummary.CompletedCount</div>
+                <div class="rpt-kpi-sub">@_result.BatchSummary.CompletedAmount.ToString("N2") ₺</div>
+            </div>
+        </div>
+    </div>
+
+    @if (_result.BankDistribution.Count > 0)
+    {
+        <h5 class="fw-bold mb-3">Banka Dağılımı (Onaylanan Çekimler)</h5>
+
+        @if (_result.BankDistribution.Count <= 15)
+        {
+            <div style="padding: 1rem; background: #fff; border: 1px solid #e5e1f3; border-radius: 14px; margin-bottom: 1rem;">
+                <DxChart Data="@_result.BankDistribution" Width="100%"
+                         Height="@($"{BankChartHeight}px")">
+                    <DxChartBarSeries ArgumentField="@((PaymentBankDistributionDto r) => r.BankName)"
+                                      ValueField="@((PaymentBankDistributionDto r) => r.TotalAmount)"
+                                      Name="Tutar (₺)"
+                                      Color="System.Drawing.Color.FromArgb(91, 60, 196)" />
+                    <DxChartArgumentAxis>
+                        <DxChartAxisLabel />
+                    </DxChartArgumentAxis>
+                    <DxChartTooltip Enabled="true" />
+                </DxChart>
+            </div>
+        }
+
+        <div class="table-responsive">
+            <table class="table table-sm table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Banka</th>
+                        <th class="text-end">Adet</th>
+                        <th class="text-end">Tutar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var bank in _result.BankDistribution)
+                    {
+                        <tr>
+                            <td>@bank.BankName</td>
+                            <td class="text-end">@bank.Count.ToString("N0")</td>
+                            <td class="text-end">@bank.TotalAmount.ToString("N2") ₺</td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot>
+                    <tr class="table-active fw-bold">
+                        <td>TOPLAM</td>
+                        <td class="text-end">@_result.BankDistribution.Sum(b => b.Count).ToString("N0")</td>
+                        <td class="text-end">@_result.BankDistribution.Sum(b => b.TotalAmount).ToString("N2") ₺</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    }
+}
+
+@code {
+    private bool _isLoading = true;
+    private PaymentReportResultDto? _result;
+
+    private int BankChartHeight => Math.Max(250, (_result?.BankDistribution.Count ?? 0) * 45);
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _result = await ReportService.GetPaymentReportAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleFormSave(ex, Toast);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+}

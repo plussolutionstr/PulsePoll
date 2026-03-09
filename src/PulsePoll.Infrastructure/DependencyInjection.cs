@@ -26,12 +26,20 @@ public static class DependencyInjection
     {
         // PostgreSQL
         services.AddDbContext<AppDbContext>(opt =>
-            opt.UseNpgsql(config.GetConnectionString("Postgres"))
+            opt.UseNpgsql(config.GetConnectionString("Postgres"),
+                npgsqlOpt => npgsqlOpt.EnableRetryOnFailure(
+                    maxRetryCount: 3,
+                    maxRetryDelay: TimeSpan.FromSeconds(1),
+                    errorCodesToAdd: null))
                .UseSnakeCaseNamingConvention());
 
         // Blazor Server gridleri için (GridDevExtremeDataSource uzun ömürlü IQueryable tutar)
         services.AddDbContextFactory<AppDbContext>(opt =>
-            opt.UseNpgsql(config.GetConnectionString("Postgres"))
+            opt.UseNpgsql(config.GetConnectionString("Postgres"),
+                npgsqlOpt => npgsqlOpt.EnableRetryOnFailure(
+                    maxRetryCount: 3,
+                    maxRetryDelay: TimeSpan.FromSeconds(1),
+                    errorCodesToAdd: null))
                .UseSnakeCaseNamingConvention(), ServiceLifetime.Scoped);
 
         // Redis
@@ -88,6 +96,7 @@ public static class DependencyInjection
         services.AddScoped<IPaymentSettingRepository, PaymentSettingRepository>();
         services.AddScoped<IBankRepository, BankRepository>();
         services.AddScoped<IAdminGridDataService, AdminGridDataService>();
+        services.AddScoped<IReportService, ReportService>();
         services.AddScoped<IDistributionLogRepository, DistributionLogRepository>();
         services.AddScoped<INotificationDistributionConfigRepository, NotificationDistributionConfigRepository>();
 

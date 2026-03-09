@@ -316,6 +316,13 @@ public sealed class PulsePollApiClient : IPulsePollApiClient
         await EnsureSuccessOrThrowAsync(response, ct);
     }
 
+    public async Task TrackActivityAsync(int activityType, string? platform, string? appVersion, string? deviceId, CancellationToken ct = default)
+    {
+        var payload = new { type = activityType, platform, appVersion, deviceId };
+        var response = await _http.PostAsJsonAsync("api/telemetry/activity", payload, JsonOptions, ct);
+        // Fire-and-forget: hata durumunda sessizce geç
+    }
+
     public async Task PingAsync(CancellationToken ct = default)
     {
         var response = await _http.GetAsync("api/projects", ct);
