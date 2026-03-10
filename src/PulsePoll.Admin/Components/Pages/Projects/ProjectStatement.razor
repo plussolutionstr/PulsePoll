@@ -2,10 +2,12 @@
 @attribute [HasPermission(PermissionCodes.Projects.StatementView)]
 @using PulsePoll.Domain.Enums
 @using PulsePoll.Application.Extensions
+@using System.Security.Claims
 @inject IProjectService ProjectService
 @inject IAdminAssignmentService AssignmentService
 @inject IAppToastService Toast
 @inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthStateProvider
 
 <PageTitle>Proje Ekstresi — PulsePoll Admin</PageTitle>
 
@@ -21,12 +23,44 @@
             <span class="badge bg-secondary">@_project.Code</span>
         }
     </div>
-    <DxButton Text="Yenile"
-              IconCssClass="bi bi-arrow-clockwise"
-              RenderStyle="ButtonRenderStyle.Secondary"
-              RenderStyleMode="ButtonRenderStyleMode.Outline"
-              SizeMode="SizeMode.Small"
-              Click="LoadAsync" />
+    <div class="d-flex align-items-center gap-2">
+        @if (_project is not null)
+        {
+            @if (_project.IsBilled)
+            {
+                <span class="badge bg-success-subtle text-success">
+                    <i class="bi bi-check-circle me-1"></i>Faturalandı
+                    @if (_project.BilledAt.HasValue)
+                    {
+                        <span class="ms-1 small">(@_project.BilledAt.Value.ToString("dd.MM.yyyy"))</span>
+                    }
+                </span>
+                <DxButton Text="İşareti Kaldır"
+                          IconCssClass="bi bi-x-circle"
+                          RenderStyle="ButtonRenderStyle.Warning"
+                          RenderStyleMode="ButtonRenderStyleMode.Outline"
+                          SizeMode="SizeMode.Small"
+                          Enabled="@(!_isBilling)"
+                          Click="@(() => SetBilledAsync(false))" />
+            }
+            else
+            {
+                <DxButton Text="Faturalandı Olarak İşaretle"
+                          IconCssClass="bi bi-receipt"
+                          RenderStyle="ButtonRenderStyle.Success"
+                          RenderStyleMode="ButtonRenderStyleMode.Outline"
+                          SizeMode="SizeMode.Small"
+                          Enabled="@(!_isBilling)"
+                          Click="@(() => SetBilledAsync(true))" />
+            }
+        }
+        <DxButton Text="Yenile"
+                  IconCssClass="bi bi-arrow-clockwise"
+                  RenderStyle="ButtonRenderStyle.Secondary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  SizeMode="SizeMode.Small"
+                  Click="LoadAsync" />
+    </div>
 </div>
 
 <DxLoadingPanel @bind-Visible="_isLoading"
@@ -206,6 +240,7 @@
     private List<ProjectAssignmentDto> _invoiceAssignments = [];
     private List<ProjectAssignmentDto> _costAssignments = [];
     private decimal _vatRate = 20m;
+    private bool _isBilling;
 
     private decimal InvoiceUnitPrice => _project?.Budget ?? 0m;
     private decimal InvoiceNet => _invoiceAssignments.Count * InvoiceUnitPrice;
@@ -281,6 +316,29 @@
                 x.EarnedAmount,
                 ToTry(x.EarnedAmount)))
             .ToList();
+    }
+
+    private async Task SetBilledAsync(bool billed)
+    {
+        _isBilling = true;
+        try
+        {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var claim = authState.User.FindFirst(ClaimTypes.NameIdentifier);
+            var adminId = claim is not null && int.TryParse(claim.Value, out var id) ? id : 0;
+
+            await ProjectService.SetBilledAsync(ProjectId, billed, adminId);
+            Toast.Success(billed ? "Faturalandı olarak işaretlendi." : "Faturalandı işareti kaldırıldı.");
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleOperation(ex, Toast, "İşlem başarısız.");
+        }
+        finally
+        {
+            _isBilling = false;
+        }
     }
 
     private decimal ToTry(decimal amount)

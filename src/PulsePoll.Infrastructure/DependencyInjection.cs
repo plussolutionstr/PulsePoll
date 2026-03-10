@@ -99,6 +99,7 @@ public static class DependencyInjection
         services.AddScoped<IReportService, ReportService>();
         services.AddScoped<IDistributionLogRepository, DistributionLogRepository>();
         services.AddScoped<INotificationDistributionConfigRepository, NotificationDistributionConfigRepository>();
+        services.AddScoped<IExternalAffiliateRepository, ExternalAffiliateRepository>();
 
         // Auth
         services.Configure<JwtSettings>(config.GetSection(JwtSettings.SectionName));

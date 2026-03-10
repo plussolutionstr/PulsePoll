@@ -1,0 +1,524 @@
+@page "/affiliates/{AffiliateId:int}"
+@attribute [HasPermission(PermissionCodes.Affiliates.View)]
+@using System.Security.Claims
+@using PulsePoll.Application.Extensions
+@inject IExternalAffiliateService AffiliateSvc
+@inject IAppToastService Toast
+@inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IPermissionAuthorizationService PermissionService
+
+<PageTitle>Ortak Detay — PulsePoll Admin</PageTitle>
+
+<div class="d-flex align-items-center gap-2 mb-3">
+    <DxButton Text="← Dış Ortaklar"
+              RenderStyle="ButtonRenderStyle.Link"
+              Click="@(() => Nav.NavigateTo("/affiliates"))" />
+    <span class="text-muted">/</span>
+    <span class="fw-semibold">@_affiliate?.Name</span>
+</div>
+
+@if (_isLoading)
+{
+    <div class="text-center py-5 text-muted">
+        <span class="spinner-border spinner-border-sm me-2"></span>Yükleniyor...
+    </div>
+}
+else if (_affiliate is null)
+{
+    <div class="alert alert-warning">Ortak bulunamadı.</div>
+}
+else
+{
+    <div class="card shadow-sm mb-3">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <div class="text-muted small">Bakiye</div>
+                    <div class="fs-5 fw-bold text-primary">@_affiliate.Balance.ToString("N2") ₺</div>
+                </div>
+                <div class="col-md-3">
+                    <div class="text-muted small">Toplam Kazanç</div>
+                    <div class="fs-5 fw-bold text-success">@_affiliate.TotalEarned.ToString("N2") ₺</div>
+                </div>
+                <div class="col-md-3">
+                    <div class="text-muted small">Toplam Ödenen</div>
+                    <div class="fs-5 fw-bold text-info">@_affiliate.TotalPaid.ToString("N2") ₺</div>
+                </div>
+                <div class="col-md-3">
+                    <div class="text-muted small">Denek Sayısı</div>
+                    <div class="fs-5 fw-bold">@_referredSubjects.Count</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-3">
+        <div class="card-body">
+            <div class="row g-3 small">
+                <div class="col-md-3"><strong>Referans Kodu:</strong> @_affiliate.AffiliateCode</div>
+                <div class="col-md-3"><strong>E-posta:</strong> @_affiliate.Email</div>
+                <div class="col-md-3"><strong>Telefon:</strong> @(_affiliate.Phone ?? "—")</div>
+                <div class="col-md-3"><strong>IBAN:</strong> @MaskIban(_affiliate.Iban)</div>
+                <div class="col-md-3"><strong>Komisyon:</strong> @(_affiliate.CommissionAmount?.ToString("N2") ?? "Global") ₺</div>
+                <div class="col-md-3">
+                    <strong>Durum:</strong>
+                    <span class="badge @(_affiliate.IsActive ? "bg-success-subtle text-success" : "bg-secondary-subtle text-secondary")">
+                        @(_affiliate.IsActive ? "Aktif" : "Pasif")
+                    </span>
+                </div>
+                @if (!string.IsNullOrWhiteSpace(_affiliate.Note))
+                {
+                    <div class="col-md-12"><strong>Not:</strong> @_affiliate.Note</div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-3">
+        <div class="card-header py-2 d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-2">
+                <span class="fw-semibold">İşlemler</span>
+                <span class="badge bg-secondary">@_affiliate.Transactions.Count</span>
+            </div>
+            <div class="d-flex gap-2">
+                @if (_canPay)
+                {
+                    <DxButton Text="Ödeme Yap"
+                              IconCssClass="bi bi-cash"
+                              RenderStyle="ButtonRenderStyle.Success"
+                              RenderStyleMode="ButtonRenderStyleMode.Outline"
+                              SizeMode="SizeMode.Small"
+                              Click="ShowPaymentPopup" />
+                    <DxButton Text="Hareket Ekle"
+                              IconCssClass="bi bi-plus-circle"
+                              RenderStyle="ButtonRenderStyle.Primary"
+                              RenderStyleMode="ButtonRenderStyleMode.Outline"
+                              SizeMode="SizeMode.Small"
+                              Click="ShowMovementPopup" />
+                }
+                <DxButton IconCssClass="bi bi-arrow-clockwise"
+                          RenderStyle="ButtonRenderStyle.Link"
+                          SizeMode="SizeMode.Small"
+                          title="Yenile"
+                          Click="LoadDataAsync" />
+            </div>
+        </div>
+        <div class="card-body p-0">
+            @if (_affiliate.Transactions.Count == 0)
+            {
+                <div class="text-center py-5 text-muted">Henüz işlem yoktur.</div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 small">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Tarih</th>
+                                <th>Tür</th>
+                                <th class="text-end">Tutar</th>
+                                <th>Denek</th>
+                                <th>Açıklama</th>
+                                <th class="text-end" style="width:80px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var tx in _affiliate.Transactions)
+                            {
+                                var badgeClass = tx.Type switch
+                                {
+                                    AffiliateTransactionType.Commission => "bg-success-subtle text-success",
+                                    AffiliateTransactionType.Payment => "bg-info-subtle text-info",
+                                    AffiliateTransactionType.Credit => "bg-success-subtle text-success",
+                                    AffiliateTransactionType.Debit => "bg-warning-subtle text-warning",
+                                    _ => "bg-secondary-subtle text-secondary"
+                                };
+                                var (amountText, amountClass) = tx.Type switch
+                                {
+                                    AffiliateTransactionType.Commission or AffiliateTransactionType.Credit
+                                        => ($"+{tx.Amount:N2}", "text-success fw-semibold"),
+                                    AffiliateTransactionType.Payment or AffiliateTransactionType.Debit
+                                        => ($"-{tx.Amount:N2}", "text-danger fw-semibold"),
+                                    _ => ($"{tx.Amount:N2}", "")
+                                };
+                                var isManual = tx.Type != AffiliateTransactionType.Commission;
+                                <tr>
+                                    <td>@tx.CreatedAt.ToString("dd.MM.yyyy HH:mm")</td>
+                                    <td><span class="badge @badgeClass">@tx.Type.GetDescription()</span></td>
+                                    <td class="text-end @amountClass">@amountText ₺</td>
+                                    <td>@(tx.Subject is not null ? $"#{tx.SubjectId} {tx.Subject.FullName}" : "—")</td>
+                                    <td>@(tx.Description ?? "—")</td>
+                                    <td class="text-end">
+                                        @if (isManual && _canPay)
+                                        {
+                                            <DxButton IconCssClass="bi bi-trash"
+                                                      RenderStyle="ButtonRenderStyle.Danger"
+                                                      RenderStyleMode="ButtonRenderStyleMode.Text"
+                                                      SizeMode="SizeMode.Small"
+                                                      title="İşlemi sil"
+                                                      Click="@(() => ShowDeletePopup(tx.Id))" />
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header py-2">
+            <div class="d-flex align-items-center gap-2">
+                <span class="fw-semibold">Yönlendirilen Denekler</span>
+                <span class="badge bg-secondary">@_referredSubjects.Count</span>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            @if (_referredSubjects.Count == 0)
+            {
+                <div class="text-center py-5 text-muted">Henüz yönlendirilen denek yok.</div>
+            }
+            else
+            {
+                <DxGrid Data="@_referredSubjects" PageSize="20" ShowFilterRow="true">
+                    <Columns>
+                        <DxGridDataColumn FieldName="Id" Caption="ID" Width="80px" />
+                        <DxGridDataColumn FieldName="FullName" Caption="Ad Soyad" MinWidth="180" />
+                        <DxGridDataColumn FieldName="Email" Caption="E-posta" MinWidth="200" />
+                        <DxGridDataColumn FieldName="Status" Caption="Durum" Width="110px">
+                            <CellDisplayTemplate>
+                                @{
+                                    var s = (Subject)context.DataItem;
+                                    var cls = s.Status switch
+                                    {
+                                        ApprovalStatus.Approved => "bg-success-subtle text-success",
+                                        ApprovalStatus.Rejected => "bg-danger-subtle text-danger",
+                                        _ => "bg-warning-subtle text-warning"
+                                    };
+                                }
+                                <span class="badge @cls">@s.Status.GetDescription()</span>
+                            </CellDisplayTemplate>
+                        </DxGridDataColumn>
+                        <DxGridDataColumn FieldName="CreatedAt" Caption="Kayıt Tarihi" Width="140px" DisplayFormat="dd.MM.yyyy HH:mm" />
+                    </Columns>
+                </DxGrid>
+            }
+        </div>
+    </div>
+}
+
+@* Ödeme Popup *@
+<DxPopup @bind-Visible="_paymentPopupVisible"
+         HeaderText="Ödeme Yap"
+         Width="480px"
+         CloseOnOutsideClick="false"
+         ShowFooter="true">
+    <BodyContentTemplate Context="_">
+        @if (!string.IsNullOrWhiteSpace(_paymentError))
+        {
+            <div class="alert alert-danger py-2 mb-3">@_paymentError</div>
+        }
+        <DxFormLayout>
+            <DxFormLayoutItem ColSpanMd="12">
+                <label class="form-label">Tutar ₺ *</label>
+                <DxSpinEdit @bind-Value="_paymentForm.Amount"
+                            MinValue="0.01m"
+                            DisplayFormat="N2" />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanMd="12">
+                <label class="form-label">Açıklama</label>
+                <DxMemo @bind-Text="_paymentForm.Description" Rows="3" />
+            </DxFormLayoutItem>
+        </DxFormLayout>
+    </BodyContentTemplate>
+    <FooterContentTemplate>
+        <DxButton Text="@(_isSavingPayment ? "Kaydediliyor..." : "Ödeme Yap")"
+                  IconCssClass="bi bi-cash"
+                  Enabled="@(!_isSavingPayment)"
+                  RenderStyle="ButtonRenderStyle.Success"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="SavePaymentAsync" />
+        <DxButton Text="İptal"
+                  RenderStyle="ButtonRenderStyle.Secondary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Enabled="@(!_isSavingPayment)"
+                  Click="@(() => _paymentPopupVisible = false)" />
+    </FooterContentTemplate>
+</DxPopup>
+
+@* Hareket Ekle Popup (SubjectLedger pattern) *@
+<DxPopup @bind-Visible="_movementPopupVisible"
+         HeaderText="Hareket Ekle"
+         Width="520px"
+         CloseOnOutsideClick="false"
+         ShowFooter="true">
+    <BodyContentTemplate Context="_">
+        @if (!string.IsNullOrWhiteSpace(_movementError))
+        {
+            <div class="alert alert-danger py-2 mb-3">@_movementError</div>
+        }
+        <DxFormLayout>
+            <DxFormLayoutItem ColSpanMd="6">
+                <label class="form-label">Hareket Tipi *</label>
+                <DxComboBox Data="@_movementTypes"
+                            @bind-Value="_movementForm.Type"
+                            ValueFieldName="Value"
+                            TextFieldName="Text" />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanMd="6">
+                <label class="form-label">Tutar ₺ *</label>
+                <DxSpinEdit @bind-Value="_movementForm.Amount"
+                            MinValue="0.01m"
+                            DisplayFormat="N2" />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanMd="12">
+                <label class="form-label">Açıklama *</label>
+                <DxMemo @bind-Text="_movementForm.Description" Rows="4" />
+            </DxFormLayoutItem>
+        </DxFormLayout>
+    </BodyContentTemplate>
+    <FooterContentTemplate>
+        <DxButton Text="@(_isSavingMovement ? "Kaydediliyor..." : "Kaydet")"
+                  IconCssClass="bi bi-check-lg"
+                  Enabled="@(!_isSavingMovement)"
+                  RenderStyle="ButtonRenderStyle.Primary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="SaveMovementAsync" />
+        <DxButton Text="İptal"
+                  IconCssClass="bi bi-x-lg"
+                  RenderStyle="ButtonRenderStyle.Secondary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="@(() => _movementPopupVisible = false)"
+                  Enabled="@(!_isSavingMovement)" />
+    </FooterContentTemplate>
+</DxPopup>
+
+@* Silme Onay Popup *@
+<DxPopup @bind-Visible="_deletePopupVisible"
+         HeaderText="İşlemi Sil"
+         Width="420px"
+         CloseOnOutsideClick="false"
+         ShowFooter="true">
+    <BodyContentTemplate Context="_">
+        <div>Seçili işlemi silmek istediğinize emin misiniz? Bakiye geri alınacaktır.</div>
+    </BodyContentTemplate>
+    <FooterContentTemplate>
+        <DxButton Text="@(_isDeleting ? "Siliniyor..." : "Sil")"
+                  IconCssClass="bi bi-trash"
+                  Enabled="@(!_isDeleting)"
+                  RenderStyle="ButtonRenderStyle.Danger"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="ConfirmDeleteAsync" />
+        <DxButton Text="İptal"
+                  IconCssClass="bi bi-x-lg"
+                  RenderStyle="ButtonRenderStyle.Secondary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Click="@(() => _deletePopupVisible = false)"
+                  Enabled="@(!_isDeleting)" />
+    </FooterContentTemplate>
+</DxPopup>
+
+@code {
+    [Parameter] public int AffiliateId { get; set; }
+
+    private ExternalAffiliate? _affiliate;
+    private List<Subject> _referredSubjects = [];
+    private bool _isLoading = true;
+    private bool _canPay;
+
+    // Payment popup
+    private bool _paymentPopupVisible;
+    private bool _isSavingPayment;
+    private string? _paymentError;
+    private PaymentForm _paymentForm = new();
+
+    // Movement popup (Hareket Ekle — SubjectLedger pattern)
+    private bool _movementPopupVisible;
+    private bool _isSavingMovement;
+    private string? _movementError;
+    private MovementForm _movementForm = new();
+    private readonly List<MovementTypeOption> _movementTypes =
+    [
+        new("credit", "Artı (+)"),
+        new("debit", "Eksi (-)")
+    ];
+
+    // Delete popup
+    private bool _deletePopupVisible;
+    private bool _isDeleting;
+    private int? _transactionToDelete;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var permissions = await PermissionService.GetCurrentPermissionsAsync();
+        _canPay = permissions.Contains(PermissionCodes.Affiliates.Pay);
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            _affiliate = await AffiliateSvc.GetByIdWithTransactionsAsync(AffiliateId);
+            if (_affiliate is not null)
+                _referredSubjects = await AffiliateSvc.GetReferredSubjectsAsync(AffiliateId);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    // --- Payment ---
+
+    private void ShowPaymentPopup()
+    {
+        _paymentForm = new PaymentForm();
+        _paymentError = null;
+        _paymentPopupVisible = true;
+    }
+
+    private async Task SavePaymentAsync()
+    {
+        if (_isSavingPayment) return;
+        _paymentError = null;
+
+        if (_paymentForm.Amount <= 0)
+        {
+            _paymentError = "Tutar 0'dan büyük olmalıdır.";
+            return;
+        }
+
+        _isSavingPayment = true;
+        try
+        {
+            var adminId = await GetAdminIdAsync();
+            await AffiliateSvc.RecordPaymentAsync(AffiliateId, _paymentForm.Amount, _paymentForm.Description, adminId);
+            _paymentPopupVisible = false;
+            Toast.Success("Ödeme kaydedildi.");
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            _paymentError = ErrorHandler.HandleFormSave(ex, Toast);
+        }
+        finally
+        {
+            _isSavingPayment = false;
+        }
+    }
+
+    // --- Movement (Hareket Ekle) ---
+
+    private void ShowMovementPopup()
+    {
+        _movementForm = new MovementForm();
+        _movementError = null;
+        _movementPopupVisible = true;
+    }
+
+    private async Task SaveMovementAsync()
+    {
+        if (_isSavingMovement) return;
+        _movementError = null;
+
+        if (_movementForm.Amount <= 0)
+        {
+            _movementError = "Tutar 0'dan büyük olmalıdır.";
+            return;
+        }
+        if (string.IsNullOrWhiteSpace(_movementForm.Description))
+        {
+            _movementError = "Açıklama zorunludur.";
+            return;
+        }
+
+        _isSavingMovement = true;
+        try
+        {
+            var adminId = await GetAdminIdAsync();
+            var isCredit = _movementForm.Type == "credit";
+            await AffiliateSvc.RecordMovementAsync(AffiliateId, _movementForm.Amount, isCredit, _movementForm.Description, adminId);
+            _movementPopupVisible = false;
+            Toast.Success("Hareket kaydedildi.");
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            _movementError = ErrorHandler.HandleFormSave(ex, Toast);
+        }
+        finally
+        {
+            _isSavingMovement = false;
+        }
+    }
+
+    // --- Delete ---
+
+    private void ShowDeletePopup(int transactionId)
+    {
+        _transactionToDelete = transactionId;
+        _deletePopupVisible = true;
+    }
+
+    private async Task ConfirmDeleteAsync()
+    {
+        if (_transactionToDelete is null) return;
+
+        _isDeleting = true;
+        try
+        {
+            var adminId = await GetAdminIdAsync();
+            await AffiliateSvc.DeleteTransactionAsync(AffiliateId, _transactionToDelete.Value, adminId);
+            _deletePopupVisible = false;
+            _transactionToDelete = null;
+            Toast.Success("İşlem silindi.");
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleOperation(ex, Toast, "İşlem silinemedi.");
+        }
+        finally
+        {
+            _isDeleting = false;
+        }
+    }
+
+    private async Task<int> GetAdminIdAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var claim = authState.User.FindFirst(ClaimTypes.NameIdentifier);
+        return claim is not null && int.TryParse(claim.Value, out var id) ? id : 0;
+    }
+
+    private static string MaskIban(string? iban)
+    {
+        if (string.IsNullOrWhiteSpace(iban))
+            return "—";
+
+        if (iban.Length <= 8)
+            return iban;
+
+        return string.Concat(iban.AsSpan(0, 4), " **** **** **** ", iban.AsSpan(iban.Length - 4));
+    }
+
+    private sealed class PaymentForm
+    {
+        public decimal Amount { get; set; }
+        public string? Description { get; set; }
+    }
+
+    private sealed record MovementTypeOption(string Value, string Text);
+
+    private sealed class MovementForm
+    {
+        public string Type { get; set; } = "credit";
+        public decimal Amount { get; set; }
+        public string Description { get; set; } = string.Empty;
+    }
+}

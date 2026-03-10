@@ -9,6 +9,7 @@ public class AssignmentService(
     IProjectRepository repository,
     ISubjectRepository subjectRepository,
     IReferralRewardService referralRewardService,
+    IAffiliateRewardService affiliateRewardService,
     IMessagePublisher publisher) : IAssignmentService
 {
     public async Task<string> StartAsync(int projectId, int subjectId)
@@ -67,6 +68,11 @@ public class AssignmentService(
             return;
 
         await referralRewardService.TryGrantAsync(
+            subjectId,
+            ReferralRewardTriggerType.FirstSurveyCompleted,
+            actorId: 0);
+
+        await affiliateRewardService.TryGrantAsync(
             subjectId,
             ReferralRewardTriggerType.FirstSurveyCompleted,
             actorId: 0);

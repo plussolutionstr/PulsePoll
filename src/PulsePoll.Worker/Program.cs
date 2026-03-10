@@ -36,6 +36,7 @@ builder.Services.AddScoped<CommunicationAutomationRecurringJob>();
 builder.Services.AddScoped<ICommunicationAutomationJobScheduler, CommunicationAutomationJobScheduler>();
 builder.Services.AddHostedService<CommunicationAutomationSchedulerBootstrapService>();
 builder.Services.AddScoped<ReferralRewardReconciliationRecurringJob>();
+builder.Services.AddScoped<AffiliateRewardReconciliationRecurringJob>();
 builder.Services.AddScoped<IReferralRewardJobScheduler, ReferralRewardJobScheduler>();
 builder.Services.AddHostedService<ReferralRewardSchedulerBootstrapService>();
 

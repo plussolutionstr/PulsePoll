@@ -80,5 +80,11 @@ public class SubjectConfiguration : IEntityTypeConfiguration<Subject>
                .HasForeignKey(s => s.SpecialCodeId)
                .HasConstraintName("fk_subjects_special_codes")
                .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(s => s.ExternalAffiliate)
+               .WithMany(a => a.ReferredSubjects)
+               .HasForeignKey(s => s.ExternalAffiliateId)
+               .HasConstraintName("fk_subjects_external_affiliates")
+               .OnDelete(DeleteBehavior.SetNull);
     }
 }

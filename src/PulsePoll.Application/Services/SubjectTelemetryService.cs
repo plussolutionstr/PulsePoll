@@ -13,6 +13,7 @@ public class SubjectTelemetryService(
     ISubjectRepository subjectRepository,
     ISubjectAppActivityRepository activityRepository,
     IReferralRewardService referralRewardService,
+    IAffiliateRewardService affiliateRewardService,
     ILogger<SubjectTelemetryService> logger) : ISubjectTelemetryService
 {
     public async Task TrackActivityAsync(int subjectId, TrackSubjectActivityDto dto)
@@ -34,6 +35,11 @@ public class SubjectTelemetryService(
         await activityRepository.AddAsync(activity);
 
         await referralRewardService.TryGrantAsync(
+            subjectId,
+            ReferralRewardTriggerType.ActiveDaysReached,
+            actorId: 0);
+
+        await affiliateRewardService.TryGrantAsync(
             subjectId,
             ReferralRewardTriggerType.ActiveDaysReached,
             actorId: 0);

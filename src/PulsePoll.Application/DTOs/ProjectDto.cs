@@ -38,7 +38,9 @@ public record ProjectDto(
     bool SupportsSurveyHelper = false,
     string RewardUnitCode = "TRY",
     string RewardUnitLabel = "TL",
-    decimal RewardUnitTryMultiplier = 1m);
+    decimal RewardUnitTryMultiplier = 1m,
+    bool IsBilled = false,
+    DateTime? BilledAt = null);
 
 public record CreateProjectDto(
     int CustomerId,

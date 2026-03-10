@@ -4,6 +4,8 @@ using PulsePoll.Api.Logging;
 using PulsePoll.Api.Middleware;
 using PulsePoll.Infrastructure;
 using PulsePoll.Infrastructure.Persistence;
+using PulsePoll.Infrastructure.Persistence.Seeding;
+using PulsePoll.Application.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
@@ -27,6 +29,23 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await db.Database.MigrateAsync();
     await DbSeeder.SeedAsync(db);
+}
+await PermissionSeeder.SeedAsync(app.Services);
+
+// Seed sonrası access-control cache'lerini temizle (Redis'te eski permission listesi kalmasın)
+try
+{
+    using var cacheScope = app.Services.CreateScope();
+    var cacheService = cacheScope.ServiceProvider.GetRequiredService<ICacheService>();
+    await cacheService.RemoveAsync("admin:access-control:permissions:v2");
+    await cacheService.RemoveAsync("admin:access-control:roles:v2");
+    await cacheService.RemoveAsync("admin:access-control:role-lookups:v1");
+    var permissionCacheService = cacheScope.ServiceProvider.GetRequiredService<IAdminPermissionCacheService>();
+    await permissionCacheService.RefreshAsync();
+}
+catch (Exception ex)
+{
+    app.Logger.LogWarning(ex, "Redis erişilemediği için access-control cache temizleme atlandı.");
 }
 
 app.UseForwardedHeaders(new ForwardedHeadersOptions

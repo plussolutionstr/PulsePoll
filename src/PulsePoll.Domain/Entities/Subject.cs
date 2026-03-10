@@ -99,7 +99,10 @@ public class Subject : EntityBase
 
     public bool IsSurveyHelperEnabled { get; set; }
 
+    public int? ExternalAffiliateId { get; set; }
+
     // Navigation properties
+    public ExternalAffiliate? ExternalAffiliate { get; set; }
     public City City { get; set; } = null!;
     public District District { get; set; } = null!;
     public Profession Profession { get; set; } = null!;

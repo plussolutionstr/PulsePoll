@@ -277,15 +277,17 @@
         ["Customers"] = 1,
         ["Projects"] = 2,
         ["Subjects"] = 3,
-        ["Payments"] = 4,
-        ["Communications"] = 5,
-        ["Notifications"] = 5,
-        ["MediaLibrary"] = 6,
-        ["Stories"] = 7,
-        ["News"] = 8,
-        ["Settings"] = 9,
-        ["AdminUsers"] = 10,
-        ["Roles"] = 11
+        ["Affiliates"] = 4,
+        ["Payments"] = 5,
+        ["Communications"] = 6,
+        ["Notifications"] = 6,
+        ["MediaLibrary"] = 7,
+        ["Stories"] = 8,
+        ["News"] = 9,
+        ["Reports"] = 10,
+        ["Settings"] = 11,
+        ["AdminUsers"] = 12,
+        ["Roles"] = 13
     };
 
     protected override async Task OnInitializedAsync()
@@ -582,9 +584,11 @@
             "Projects" => "Projeler",
             "Roles" => "Rol & Yetki Yönetimi",
             "Settings" => "Ayarlar",
+            "Reports" => "Raporlar",
             "Stories" => "Story Yönetimi",
             "Subjects" => "Denekler",
             "Surveys" => "Projeler",
+            "Affiliates" => "Dış Ortaklar",
             "Withdrawals" => "Ödemeler",
             _ => normalized
         };
@@ -670,6 +674,14 @@
                 PermissionCodes.AdminUsers.Create => "Kullanıcı Oluşturma",
                 PermissionCodes.AdminUsers.Edit => "Kullanıcı Düzenleme",
                 PermissionCodes.AdminUsers.Activate => "Kullanıcı Aktif/Pasif",
+
+                PermissionCodes.Reports.View => "Raporları Görüntüleme",
+
+                PermissionCodes.Affiliates.View => "Dış Ortakları Görüntüleme",
+                PermissionCodes.Affiliates.Create => "Dış Ortak Oluşturma",
+                PermissionCodes.Affiliates.Edit => "Dış Ortak Düzenleme",
+                PermissionCodes.Affiliates.Delete => "Dış Ortak Silme",
+                PermissionCodes.Affiliates.Pay => "Dış Ortak Ödeme",
 
                 PermissionCodes.Roles.View => "Rolleri Görüntüleme",
                 PermissionCodes.Roles.Create => "Rol Oluşturma",

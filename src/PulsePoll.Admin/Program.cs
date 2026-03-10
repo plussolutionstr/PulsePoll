@@ -2,7 +2,6 @@ using System.Security.Claims;
 using System.Net;
 using System.Threading.RateLimiting;
 using MassTransit;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -14,7 +13,6 @@ using PulsePoll.Application.Interfaces;
 using PulsePoll.Application.Services;
 using PulsePoll.Infrastructure;
 using PulsePoll.Infrastructure.Persistence;
-using PulsePoll.Infrastructure.Persistence.Seeding;
 using PulsePoll.Infrastructure.Storage;
 using Serilog;
 
@@ -114,15 +112,6 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 
 var app = builder.Build();
 
-// Ensure DB schema is up-to-date for Admin modules.
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await db.Database.MigrateAsync();
-}
-
-// Seed permissions + default SuperAdmin role + initial admin user
-await PermissionSeeder.SeedAsync(app.Services);
 try
 {
     using var scope = app.Services.CreateScope();
