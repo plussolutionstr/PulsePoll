@@ -48,14 +48,17 @@ public class OutboxDispatcherBackgroundService(
         using var scope = scopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var publisher = scope.ServiceProvider.GetRequiredService<IMessagePublisher>();
-        var now = TurkeyTime.Now;
-        var nowParam = new NpgsqlParameter("now", NpgsqlDbType.Timestamp) { Value = now };
-        var batchSizeParam = new NpgsqlParameter("batchSize", NpgsqlDbType.Integer) { Value = BatchSize };
+        var strategy = db.Database.CreateExecutionStrategy();
 
-        List<OutboxMessage> messages;
-        await using (var lockTx = await db.Database.BeginTransactionAsync(ct))
+        var messages = await strategy.ExecuteAsync(async () =>
         {
-            messages = await db.OutboxMessages
+            var now = TurkeyTime.Now;
+            var nowParam = new NpgsqlParameter("now", NpgsqlDbType.Timestamp) { Value = now };
+            var batchSizeParam = new NpgsqlParameter("batchSize", NpgsqlDbType.Integer) { Value = BatchSize };
+
+            await using var lockTx = await db.Database.BeginTransactionAsync(ct);
+
+            var batch = await db.OutboxMessages
                 .FromSqlRaw(@"
                     SELECT * FROM outbox_messages
                     WHERE processed_at IS NULL
@@ -67,18 +70,22 @@ public class OutboxDispatcherBackgroundService(
                     batchSizeParam)
                 .ToListAsync(ct);
 
-            if (messages.Count == 0)
+            if (batch.Count == 0)
             {
                 await lockTx.CommitAsync(ct);
-                return 0;
+                return batch;
             }
 
-            foreach (var message in messages)
+            foreach (var message in batch)
                 message.LockedUntil = now.Add(LockDuration);
 
             await db.SaveChangesAsync(ct);
             await lockTx.CommitAsync(ct);
-        }
+            return batch;
+        });
+
+        if (messages.Count == 0)
+            return 0;
 
         foreach (var message in messages)
         {
