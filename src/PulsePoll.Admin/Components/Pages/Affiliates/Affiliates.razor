@@ -1,0 +1,287 @@
+@page "/affiliates"
+@attribute [HasPermission(PermissionCodes.Affiliates.View)]
+@using System.Text.RegularExpressions
+@using PulsePoll.Application.Helpers
+@inject IExternalAffiliateService AffiliateSvc
+@inject IAppToastService Toast
+@inject IPermissionAuthorizationService PermissionService
+@inject NavigationManager Nav
+
+<PageTitle>Dış Ortaklar — PulsePoll Admin</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">Dış Ortaklar</h3>
+    <DxButton Text="Yeni Ortak"
+              IconCssClass="bi bi-plus-lg"
+              RenderStyle="ButtonRenderStyle.Primary"
+              RenderStyleMode="ButtonRenderStyleMode.Outline"
+              Enabled="@_canCreate"
+              Click="OpenNew" />
+</div>
+
+<DxGrid Data="@_items" ShowFilterRow="true" PageSize="20">
+    <Columns>
+        <DxGridDataColumn FieldName="Name" Caption="Ad" MinWidth="180" />
+        <DxGridDataColumn FieldName="Email" Caption="E-posta" MinWidth="200" />
+        <DxGridDataColumn FieldName="AffiliateCode" Caption="Referans Kodu" Width="140px" />
+        <DxGridDataColumn FieldName="Balance" Caption="Bakiye" Width="120px" DisplayFormat="N2" />
+        <DxGridDataColumn FieldName="TotalEarned" Caption="Toplam Kazanç" Width="130px" DisplayFormat="N2" />
+        <DxGridDataColumn FieldName="TotalPaid" Caption="Toplam Ödenen" Width="130px" DisplayFormat="N2" />
+        <DxGridDataColumn FieldName="IsActive" Caption="Durum" Width="90px">
+            <CellDisplayTemplate>
+                @{
+                    var row = (ExternalAffiliate)context.DataItem;
+                }
+                <span class="badge @(row.IsActive ? "bg-success-subtle text-success" : "bg-secondary-subtle text-secondary")">
+                    @(row.IsActive ? "Aktif" : "Pasif")
+                </span>
+            </CellDisplayTemplate>
+        </DxGridDataColumn>
+        <DxGridCommandColumn Caption="" Width="50px" TextAlignment="GridTextAlignment.Center"
+                             NewButtonVisible="false" EditButtonVisible="false" DeleteButtonVisible="false">
+            <CellDisplayTemplate>
+                @{
+                    var row = (ExternalAffiliate)context.DataItem;
+                }
+                <DxButton IconCssClass="bi bi-three-dots-vertical"
+                          RenderStyle="ButtonRenderStyle.Link"
+                          Click="@(async e => await ShowMenuAsync(e, row))"
+                          title="İşlemler" />
+            </CellDisplayTemplate>
+        </DxGridCommandColumn>
+    </Columns>
+</DxGrid>
+
+<DxContextMenu @ref="_contextMenu" ItemClick="OnContextMenuItemClick">
+    <Items>
+        <DxContextMenuItem Text="Detay" Name="detail" IconCssClass="bi bi-eye" />
+        @if (_canEdit)
+        {
+            <DxContextMenuItem Text="Düzenle" Name="edit" IconCssClass="bi bi-pencil" />
+        }
+    </Items>
+</DxContextMenu>
+
+<DxPopup @bind-Visible="_popupVisible"
+         HeaderText="@(_form.Id > 0 ? "Ortak Düzenle" : "Yeni Ortak")"
+         Width="760px"
+         CloseOnOutsideClick="false"
+         ShowFooter="true">
+    <BodyContentTemplate Context="_">
+        @if (!string.IsNullOrWhiteSpace(_formError))
+        {
+            <div class="alert alert-danger py-2 mb-3">@_formError</div>
+        }
+
+        <DxFormLayout>
+            <DxFormLayoutItem ColSpanMd="6">
+                <label class="form-label">Ad Soyad *</label>
+                <DxTextBox @bind-Text="_form.Name" />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanMd="6">
+                <label class="form-label">E-posta *</label>
+                <DxTextBox @bind-Text="_form.Email" />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanMd="6">
+                <label class="form-label">Telefon</label>
+                <DxTextBox @bind-Text="_form.Phone" NullText="5XXXXXXXXX" />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanMd="6">
+                <label class="form-label">IBAN</label>
+                <DxTextBox @bind-Text="_form.Iban" />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanMd="6">
+                <label class="form-label">Referans Kodu *</label>
+                <DxTextBox @bind-Text="_form.AffiliateCode" />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanMd="6">
+                <label class="form-label">Komisyon Tutarı ₺</label>
+                <DxSpinEdit @bind-Value="_form.CommissionAmount"
+                            MinValue="0m"
+                            DisplayFormat="N2"
+                            ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto" />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanMd="12">
+                <label class="form-label">Not</label>
+                <DxMemo @bind-Text="_form.Note" Rows="3" />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanMd="12">
+                <DxCheckBox @bind-Checked="_form.IsActive">Aktif</DxCheckBox>
+            </DxFormLayoutItem>
+        </DxFormLayout>
+    </BodyContentTemplate>
+    <FooterContentTemplate>
+        <DxButton Text="@(_isSaving ? "Kaydediliyor..." : "Kaydet")"
+                  IconCssClass="@(_isSaving ? "spinner-border spinner-border-sm" : "bi bi-check-lg")"
+                  RenderStyle="ButtonRenderStyle.Primary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Enabled="@(!_isSaving)"
+                  Click="SaveAsync" />
+        <DxButton Text="İptal"
+                  RenderStyle="ButtonRenderStyle.Secondary"
+                  RenderStyleMode="ButtonRenderStyleMode.Outline"
+                  Enabled="@(!_isSaving)"
+                  Click="@(() => _popupVisible = false)" />
+    </FooterContentTemplate>
+</DxPopup>
+
+@code {
+    private List<ExternalAffiliate> _items = [];
+    private bool _popupVisible;
+    private bool _isSaving;
+    private bool _canCreate;
+    private bool _canEdit;
+    private string? _formError;
+    private DxContextMenu? _contextMenu;
+    private ExternalAffiliate? _selectedItem;
+    private AffiliateForm _form = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var permissions = await PermissionService.GetCurrentPermissionsAsync();
+        _canCreate = permissions.Contains(PermissionCodes.Affiliates.Create);
+        _canEdit = permissions.Contains(PermissionCodes.Affiliates.Edit);
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _items = await AffiliateSvc.GetAllAsync();
+    }
+
+    private void OpenNew()
+    {
+        if (!_canCreate) return;
+        _formError = null;
+        _form = new AffiliateForm
+        {
+            IsActive = true,
+            AffiliateCode = ReferralCodeGenerator.Generate()
+        };
+        _popupVisible = true;
+    }
+
+    private async Task ShowMenuAsync(MouseEventArgs e, ExternalAffiliate item)
+    {
+        _selectedItem = item;
+        if (_contextMenu is not null)
+            await _contextMenu.ShowAsync(e);
+    }
+
+    private async Task OnContextMenuItemClick(ContextMenuItemClickEventArgs e)
+    {
+        if (_selectedItem is null) return;
+
+        switch (e.ItemInfo.Name)
+        {
+            case "detail":
+                Nav.NavigateTo($"/affiliates/{_selectedItem.Id}");
+                break;
+            case "edit":
+                OpenEdit(_selectedItem);
+                break;
+        }
+    }
+
+    private void OpenEdit(ExternalAffiliate item)
+    {
+        if (!_canEdit) return;
+        _formError = null;
+        _form = new AffiliateForm
+        {
+            Id = item.Id,
+            Name = item.Name,
+            Email = item.Email,
+            Phone = item.Phone,
+            Iban = item.Iban,
+            AffiliateCode = item.AffiliateCode,
+            CommissionAmount = item.CommissionAmount,
+            IsActive = item.IsActive,
+            Note = item.Note
+        };
+        _popupVisible = true;
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_isSaving) return;
+
+        if (string.IsNullOrWhiteSpace(_form.Name))
+        {
+            _formError = "Ad zorunludur.";
+            return;
+        }
+        if (string.IsNullOrWhiteSpace(_form.Email))
+        {
+            _formError = "E-posta zorunludur.";
+            return;
+        }
+        if (!Regex.IsMatch(_form.Email.Trim(), @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
+        {
+            _formError = "Geçerli bir e-posta adresi giriniz.";
+            return;
+        }
+        if (!string.IsNullOrWhiteSpace(_form.Phone)
+            && !Regex.IsMatch(_form.Phone.Trim(), @"^5[0-9]{9}$"))
+        {
+            _formError = "Geçerli bir telefon numarası giriniz (ör. 5306408177).";
+            return;
+        }
+        if (string.IsNullOrWhiteSpace(_form.AffiliateCode))
+        {
+            _formError = "Referans kodu zorunludur.";
+            return;
+        }
+        _isSaving = true;
+        _formError = null;
+        try
+        {
+            var adminId = await GetAdminIdAsync();
+            await AffiliateSvc.CreateOrUpdateAsync(
+                _form.Id,
+                _form.Name,
+                _form.Email,
+                _form.Phone,
+                _form.Iban,
+                _form.AffiliateCode,
+                _form.CommissionAmount,
+                _form.IsActive,
+                _form.Note,
+                adminId);
+
+            _popupVisible = false;
+            await LoadAsync();
+            Toast.Success("Ortak kaydedildi.");
+        }
+        catch (Exception ex)
+        {
+            _formError = ErrorHandler.HandleFormSave(ex, Toast);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private async Task<int> GetAdminIdAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var claim = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+        return claim is not null && int.TryParse(claim.Value, out var id) ? id : 0;
+    }
+
+    [Inject] private AuthenticationStateProvider AuthStateProvider { get; set; } = null!;
+
+    private sealed class AffiliateForm
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string? Phone { get; set; }
+        public string? Iban { get; set; }
+        public string AffiliateCode { get; set; } = string.Empty;
+        public decimal? CommissionAmount { get; set; }
+        public bool IsActive { get; set; } = true;
+        public string? Note { get; set; }
+    }
+}

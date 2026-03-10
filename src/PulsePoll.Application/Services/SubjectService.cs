@@ -12,6 +12,7 @@ public class SubjectService(
     ISubjectRepository repository,
     ISubjectScoreService scoreService,
     IReferralRewardService referralRewardService,
+    IAffiliateRewardService affiliateRewardService,
     IStorageService storageService,
     IMediaUrlService mediaUrlService,
     IMessagePublisher publisher,
@@ -132,6 +133,11 @@ public class SubjectService(
         await repository.UpdateAsync(subject);
 
         await referralRewardService.TryGrantAsync(
+            id,
+            ReferralRewardTriggerType.AccountApproved,
+            adminId);
+
+        await affiliateRewardService.TryGrantAsync(
             id,
             ReferralRewardTriggerType.AccountApproved,
             adminId);

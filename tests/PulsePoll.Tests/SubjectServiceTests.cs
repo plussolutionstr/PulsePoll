@@ -15,6 +15,7 @@ public class SubjectServiceTests
     private readonly Mock<ISubjectRepository> _repoMock = new();
     private readonly Mock<ISubjectScoreService> _scoreServiceMock = new();
     private readonly Mock<IReferralRewardService> _referralRewardServiceMock = new();
+    private readonly Mock<IAffiliateRewardService> _affiliateRewardServiceMock = new();
     private readonly Mock<IStorageService> _storageServiceMock = new();
     private readonly Mock<IMediaUrlService> _mediaUrlServiceMock = new();
     private readonly Mock<IMessagePublisher> _publisherMock = new();
@@ -29,6 +30,7 @@ public class SubjectServiceTests
             _repoMock.Object,
             _scoreServiceMock.Object,
             _referralRewardServiceMock.Object,
+            _affiliateRewardServiceMock.Object,
             _storageServiceMock.Object,
             _mediaUrlServiceMock.Object,
             _publisherMock.Object,

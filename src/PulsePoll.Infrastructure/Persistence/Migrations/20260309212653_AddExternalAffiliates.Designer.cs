@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using PulsePoll.Infrastructure.Persistence;
@@ -11,9 +12,11 @@ using PulsePoll.Infrastructure.Persistence;
 namespace PulsePoll.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260309212653_AddExternalAffiliates")]
+    partial class AddExternalAffiliates
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -824,6 +827,10 @@ namespace PulsePoll.Infrastructure.Persistence.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)")
                         .HasColumnName("total_paid");
+
+                    b.Property<int?>("TriggerType")
+                        .HasColumnType("integer")
+                        .HasColumnName("trigger_type");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp without time zone")
@@ -1753,14 +1760,6 @@ namespace PulsePoll.Infrastructure.Persistence.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime?>("BilledAt")
-                        .HasColumnType("timestamp without time zone")
-                        .HasColumnName("billed_at");
-
-                    b.Property<int?>("BilledBy")
-                        .HasColumnType("integer")
-                        .HasColumnName("billed_by");
-
                     b.Property<decimal>("Budget")
                         .HasColumnType("decimal(18,2)")
                         .HasColumnName("budget");
@@ -1841,10 +1840,6 @@ namespace PulsePoll.Infrastructure.Persistence.Migrations
                     b.Property<int>("EstimatedMinutes")
                         .HasColumnType("integer")
                         .HasColumnName("estimated_minutes");
-
-                    b.Property<bool>("IsBilled")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_billed");
 
                     b.Property<bool>("IsScheduledDistribution")
                         .HasColumnType("boolean")

@@ -22,6 +22,10 @@
             {
                 <DxMenuItem NavigateUrl="/subjects" Text="Denekler" CssClass="@MenuItemCssClass("/subjects")" IconCssClass="bi bi-people"/>
             }
+            @if (Has(PermissionCodes.Affiliates.View))
+            {
+                <DxMenuItem NavigateUrl="/affiliates" Text="Dış Ortaklar" CssClass="@MenuItemCssClass("/affiliates")" IconCssClass="bi bi-link-45deg"/>
+            }
             @if (Has(PermissionCodes.Payments.WithdrawalsView) || Has(PermissionCodes.Payments.BatchesView) || Has(PermissionCodes.Payments.SettingsView))
             {
                 <DxMenuItem Text="Ödemeler" IconCssClass="bi bi-cash-stack" CssClass="@MenuItemCssClass("/payments")">

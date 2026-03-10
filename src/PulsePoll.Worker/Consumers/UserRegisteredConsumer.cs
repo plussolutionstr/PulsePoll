@@ -15,6 +15,8 @@ public class SubjectRegisteredConsumer(
     ILookupService lookupService,
     IRegistrationConfigService registrationConfigService,
     IReferralRewardService referralRewardService,
+    IAffiliateRewardService affiliateRewardService,
+    IExternalAffiliateRepository externalAffiliateRepository,
     ISubjectScoreService subjectScoreService,
     ISesCalculator sesCalculator,
     SmtpMailService mailService) : IConsumer<SubjectRegisteredMessage>
@@ -119,6 +121,19 @@ public class SubjectRegisteredConsumer(
                 actorId: 0);
         }
 
+        // Affiliate komisyon tetikleyicileri
+        await affiliateRewardService.TryGrantAsync(
+            subject.Id,
+            ReferralRewardTriggerType.RegistrationCompleted,
+            actorId: 0);
+        if (subject.Status == ApprovalStatus.Approved)
+        {
+            await affiliateRewardService.TryGrantAsync(
+                subject.Id,
+                ReferralRewardTriggerType.AccountApproved,
+                actorId: 0);
+        }
+
         await mailService.SendAsync(
             msg.Email,
             "PulsePoll'a Hoşgeldiniz!",
@@ -138,8 +153,22 @@ public class SubjectRegisteredConsumer(
         var referrer = await subjectRepository.GetByReferralCodeAsync(normalizedCode);
         if (referrer is null)
         {
-            logger.LogWarning("Referans kodu bulunamadı: SubjectId={SubjectId} ReferenceCode={ReferenceCode}",
-                referredSubject.Id, normalizedCode);
+            // Affiliate kod lookup
+            var affiliate = await externalAffiliateRepository.GetByAffiliateCodeAsync(normalizedCode);
+            if (affiliate is not null && affiliate.IsActive)
+            {
+                referredSubject.ExternalAffiliateId = affiliate.Id;
+                await subjectRepository.UpdateAsync(referredSubject);
+                logger.LogInformation(
+                    "Affiliate bağlantısı kuruldu: SubjectId={SubjectId} AffiliateId={AffiliateId}",
+                    referredSubject.Id, affiliate.Id);
+            }
+            else
+            {
+                logger.LogWarning("Referans kodu bulunamadı: SubjectId={SubjectId} ReferenceCode={ReferenceCode}",
+                    referredSubject.Id, normalizedCode);
+            }
+
             return;
         }
 

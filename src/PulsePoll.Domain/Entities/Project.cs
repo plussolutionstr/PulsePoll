@@ -80,6 +80,11 @@ public class Project : EntityBase
     public TimeOnly DistributionEndHour { get; set; } = new(19, 0);
     public bool SupportsSurveyHelper { get; set; } = false;
 
+    // Faturalandı
+    public bool IsBilled { get; set; }
+    public DateTime? BilledAt { get; set; }
+    public int? BilledBy { get; set; }
+
     // Navigation properties
     public Customer Customer { get; set; } = null!;
     public MediaAsset? CoverMedia { get; set; }

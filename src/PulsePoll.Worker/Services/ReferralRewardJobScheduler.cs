@@ -8,6 +8,7 @@ public class ReferralRewardJobScheduler(
     ILogger<ReferralRewardJobScheduler> logger) : IReferralRewardJobScheduler
 {
     public const string ReconciliationJobId = "referral-reward-reconciliation-nightly";
+    public const string AffiliateReconciliationJobId = "affiliate-reward-reconciliation-nightly";
 
     private static readonly TimeZoneInfo IstanbulTz = ResolveTurkeyTimeZone();
 
@@ -21,8 +22,14 @@ public class ReferralRewardJobScheduler(
             "0 3 * * *",
             new RecurringJobOptions { TimeZone = IstanbulTz });
 
+        recurringJobManager.AddOrUpdate<AffiliateRewardReconciliationRecurringJob>(
+            AffiliateReconciliationJobId,
+            job => job.ExecuteAsync(),
+            "0 3 * * *",
+            new RecurringJobOptions { TimeZone = IstanbulTz });
+
         logger.LogInformation(
-            "Referral reward reconciliation scheduled: Cron={Cron} TimeZone={TimeZoneId}",
+            "Referral & Affiliate reward reconciliation scheduled: Cron={Cron} TimeZone={TimeZoneId}",
             "0 3 * * *",
             IstanbulTz.Id);
 

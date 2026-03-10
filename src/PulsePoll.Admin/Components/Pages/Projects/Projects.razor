@@ -60,6 +60,16 @@
                     <span class="badge @badgeClass">@status.GetDescription()</span>
                 </CellDisplayTemplate>
             </DxGridDataColumn>
+            <DxGridDataColumn FieldName="IsBilled" Caption="Fatura" Width="90px">
+                <CellDisplayTemplate>
+                    @{
+                        var billed = (bool)context.Value;
+                    }
+                    <span class="badge @(billed ? "bg-success-subtle text-success" : "bg-secondary-subtle text-secondary")">
+                        @(billed ? "Evet" : "Hayır")
+                    </span>
+                </CellDisplayTemplate>
+            </DxGridDataColumn>
             <DxGridDataColumn FieldName="StartDate" Caption="Başlangıç" DisplayFormat="dd.MM.yyyy" Width="110px" />
             <DxGridCommandColumn NewButtonVisible="false" EditButtonVisible="false" DeleteButtonVisible="false"
                                  Width="50px" Caption="" TextAlignment="GridTextAlignment.Center">

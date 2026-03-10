@@ -13,6 +13,7 @@ public class AdminAssignmentService(
     ISubjectAssignmentJobRepository jobRepository,
     IWalletRepository walletRepository,
     IReferralRewardService referralRewardService,
+    IAffiliateRewardService affiliateRewardService,
     IMessagePublisher publisher,
     ILogger<AdminAssignmentService> logger) : IAdminAssignmentService
 {
@@ -177,6 +178,11 @@ public class AdminAssignmentService(
                 }
 
                 await referralRewardService.TryGrantAsync(
+                    subjectId,
+                    ReferralRewardTriggerType.FirstRewardApproved,
+                    adminId);
+
+                await affiliateRewardService.TryGrantAsync(
                     subjectId,
                     ReferralRewardTriggerType.FirstRewardApproved,
                     adminId);

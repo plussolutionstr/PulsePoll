@@ -20,6 +20,8 @@ public class SubjectRegisteredConsumerTests
     private readonly Mock<ILookupService> _lookupServiceMock = new();
     private readonly Mock<IRegistrationConfigService> _registrationConfigServiceMock = new();
     private readonly Mock<IReferralRewardService> _referralRewardServiceMock = new();
+    private readonly Mock<IAffiliateRewardService> _affiliateRewardServiceMock = new();
+    private readonly Mock<IExternalAffiliateRepository> _externalAffiliateRepositoryMock = new();
     private readonly Mock<ISubjectScoreService> _subjectScoreServiceMock = new();
     private readonly Mock<ISesCalculator> _sesCalculatorMock = new();
     private readonly Mock<ILogger<SmtpMailService>> _mailLoggerMock = new();
@@ -34,6 +36,8 @@ public class SubjectRegisteredConsumerTests
             _lookupServiceMock.Object,
             _registrationConfigServiceMock.Object,
             _referralRewardServiceMock.Object,
+            _affiliateRewardServiceMock.Object,
+            _externalAffiliateRepositoryMock.Object,
             _subjectScoreServiceMock.Object,
             _sesCalculatorMock.Object,
             new SmtpMailService(_mailLoggerMock.Object));
@@ -122,6 +126,8 @@ public class SubjectRegisteredConsumerTests
             _lookupServiceMock.Object,
             _registrationConfigServiceMock.Object,
             _referralRewardServiceMock.Object,
+            _affiliateRewardServiceMock.Object,
+            _externalAffiliateRepositoryMock.Object,
             _subjectScoreServiceMock.Object,
             _sesCalculatorMock.Object,
             new SmtpMailService(_mailLoggerMock.Object));

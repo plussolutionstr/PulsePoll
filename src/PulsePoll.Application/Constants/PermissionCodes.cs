@@ -113,6 +113,15 @@ public static class PermissionCodes
         public const string Activate = "AdminUsers.Activate";
     }
 
+    public static class Affiliates
+    {
+        public const string View = "Affiliates.View";
+        public const string Create = "Affiliates.Create";
+        public const string Edit = "Affiliates.Edit";
+        public const string Delete = "Affiliates.Delete";
+        public const string Pay = "Affiliates.Pay";
+    }
+
     public static class Reports
     {
         public const string View = "Reports.View";

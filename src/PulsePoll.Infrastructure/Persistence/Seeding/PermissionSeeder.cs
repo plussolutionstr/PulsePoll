@@ -87,6 +87,12 @@ public static class PermissionSeeder
         (PermissionCodes.AdminUsers.Edit, "Kullanıcı Düzenle", "AdminUsers"),
         (PermissionCodes.AdminUsers.Activate, "Kullanıcı Aktif/Pasif", "AdminUsers"),
 
+        (PermissionCodes.Affiliates.View, "Affiliate'leri Görüntüle", "Affiliates"),
+        (PermissionCodes.Affiliates.Create, "Affiliate Oluştur", "Affiliates"),
+        (PermissionCodes.Affiliates.Edit, "Affiliate Düzenle", "Affiliates"),
+        (PermissionCodes.Affiliates.Delete, "Affiliate Sil", "Affiliates"),
+        (PermissionCodes.Affiliates.Pay, "Affiliate Ödeme Yap", "Affiliates"),
+
         (PermissionCodes.Reports.View, "Raporları Görüntüle", "Reports"),
 
         (PermissionCodes.Roles.View, "Rolleri Görüntüle", "Roles"),

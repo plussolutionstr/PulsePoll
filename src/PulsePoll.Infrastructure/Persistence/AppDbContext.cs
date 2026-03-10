@@ -57,6 +57,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<DistributionLog> DistributionLogs => Set<DistributionLog>();
     public DbSet<NotificationDistributionConfig> NotificationDistributionConfigs => Set<NotificationDistributionConfig>();
 
+    public DbSet<ExternalAffiliate> ExternalAffiliates => Set<ExternalAffiliate>();
+    public DbSet<AffiliateTransaction> AffiliateTransactions => Set<AffiliateTransaction>();
+
     public DbSet<Role> Roles => Set<Role>();
     public DbSet<Permission> Permissions => Set<Permission>();
     public DbSet<AdminUserRole> AdminUserRoles => Set<AdminUserRole>();

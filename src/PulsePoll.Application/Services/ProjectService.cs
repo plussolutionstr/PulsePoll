@@ -146,6 +146,18 @@ public class ProjectService(
         await repository.UpdateAsync(project);
     }
 
+    public async Task SetBilledAsync(int id, bool billed, int adminId)
+    {
+        var project = await repository.GetByIdAsync(id)
+            ?? throw new NotFoundException("Proje");
+
+        project.IsBilled = billed;
+        project.BilledAt = billed ? TurkeyTime.Now : null;
+        project.BilledBy = billed ? adminId : null;
+        project.SetUpdated(adminId);
+        await repository.UpdateAsync(project);
+    }
+
     public async Task DeleteAsync(int id, int adminId)
     {
         var project = await repository.GetByIdAsync(id)
@@ -199,7 +211,9 @@ public class ProjectService(
             p.SupportsSurveyHelper,
             rewardUnit.UnitCode,
             rewardUnit.UnitLabel,
-            rewardUnit.TryMultiplier);
+            rewardUnit.TryMultiplier,
+            p.IsBilled,
+            p.BilledAt);
     }
 
     public Task<int> GetScheduledAssignmentCountAsync(int projectId)
