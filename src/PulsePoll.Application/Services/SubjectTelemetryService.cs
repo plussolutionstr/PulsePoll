@@ -1,7 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Extensions.Logging;
-using PulsePoll.Application.DTOs;
 using PulsePoll.Application.Exceptions;
 using PulsePoll.Application.Interfaces;
 using PulsePoll.Domain.Entities;
@@ -16,23 +15,62 @@ public class SubjectTelemetryService(
     IAffiliateRewardService affiliateRewardService,
     ILogger<SubjectTelemetryService> logger) : ISubjectTelemetryService
 {
-    public async Task TrackActivityAsync(int subjectId, TrackSubjectActivityDto dto)
+    public async Task ProcessActivityAsync(
+        int subjectId,
+        int activityType,
+        string? platform,
+        string? appVersion,
+        string? deviceId,
+        DateTime occurredAt,
+        CancellationToken ct)
     {
         _ = await subjectRepository.GetByIdAsync(subjectId)
             ?? throw new NotFoundException("Denek");
 
-        var activity = new SubjectAppActivity
-        {
-            SubjectId = subjectId,
-            Type = dto.Type,
-            OccurredAt = TurkeyTime.Now,
-            Platform = Truncate(dto.Platform, 40),
-            AppVersion = Truncate(dto.AppVersion, 30),
-            DeviceIdHash = HashDeviceId(dto.DeviceId)
-        };
-        activity.SetCreated(subjectId);
+        var today = DateOnly.FromDateTime(occurredAt);
+        var type = (AppActivityType)activityType;
+        var hashedDeviceId = HashDeviceId(deviceId);
+        var truncatedPlatform = Truncate(platform, 40);
+        var truncatedVersion = Truncate(appVersion, 30);
 
-        await activityRepository.AddAsync(activity);
+        var existing = await activityRepository.GetBySubjectAndDateAsync(subjectId, today, ct);
+
+        if (existing is null)
+        {
+            var activity = new SubjectAppActivity
+            {
+                SubjectId = subjectId,
+                ActivityDate = today,
+                FirstOpenAt = occurredAt,
+                LastSeenAt = occurredAt,
+                OpenCount = type == AppActivityType.Open ? 1 : 0,
+                TotalMinutes = 0,
+                Platform = truncatedPlatform,
+                AppVersion = truncatedVersion,
+                DeviceIdHash = hashedDeviceId
+            };
+            activity.SetCreated(subjectId);
+
+            await activityRepository.AddAsync(activity, ct);
+        }
+        else
+        {
+            existing.LastSeenAt = occurredAt;
+            if (type == AppActivityType.Open)
+                existing.OpenCount++;
+            else if (type == AppActivityType.Heartbeat)
+                existing.TotalMinutes += 5;
+            if (truncatedPlatform is not null)
+                existing.Platform = truncatedPlatform;
+            if (truncatedVersion is not null)
+                existing.AppVersion = truncatedVersion;
+            if (hashedDeviceId is not null)
+                existing.DeviceIdHash = hashedDeviceId;
+
+            existing.SetUpdated(subjectId);
+
+            await activityRepository.UpdateAsync(existing, ct);
+        }
 
         await referralRewardService.TryGrantAsync(
             subjectId,
@@ -45,8 +83,8 @@ public class SubjectTelemetryService(
             actorId: 0);
 
         logger.LogInformation(
-            "Subject app activity tracked: SubjectId={SubjectId} Type={Type}",
-            subjectId, dto.Type);
+            "Denek aktivitesi işlendi: SubjectId={SubjectId} Type={Type} Date={Date}",
+            subjectId, type, today);
     }
 
     private static string? HashDeviceId(string? deviceId)

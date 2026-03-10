@@ -1,9 +1,13 @@
-using PulsePoll.Application.DTOs;
-
 namespace PulsePoll.Application.Interfaces;
 
 public interface ISubjectTelemetryService
 {
-    Task TrackActivityAsync(int subjectId, TrackSubjectActivityDto dto);
+    Task ProcessActivityAsync(
+        int subjectId,
+        int activityType,
+        string? platform,
+        string? appVersion,
+        string? deviceId,
+        DateTime occurredAt,
+        CancellationToken ct);
 }
-

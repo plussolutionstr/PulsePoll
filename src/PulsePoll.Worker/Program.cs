@@ -57,6 +57,7 @@ builder.Services.AddMassTransit(x =>
     x.AddConsumer<SmsSendConsumer>();
     x.AddConsumer<SmsSendFaultConsumer>();
     x.AddConsumer<CommunicationAutomationScheduleChangedConsumer>();
+    x.AddConsumer<SubjectActivityTrackedConsumer>();
 
     x.UsingRabbitMq((ctx, cfg) =>
     {
@@ -86,6 +87,8 @@ builder.Services.AddMassTransit(x =>
         cfg.ReceiveEndpoint(Queues.SmsSendFault, e => e.ConfigureConsumer<SmsSendFaultConsumer>(ctx));
         cfg.ReceiveEndpoint(Queues.CommunicationAutomationScheduleChanged, e =>
             e.ConfigureConsumer<CommunicationAutomationScheduleChangedConsumer>(ctx));
+        cfg.ReceiveEndpoint(Queues.SubjectActivityTracked, e =>
+            e.ConfigureConsumer<SubjectActivityTrackedConsumer>(ctx));
     });
 });
 

@@ -11,13 +11,13 @@ public class ReportService(AppDbContext db) : IReportService
 {
     public async Task<SubjectRoadmapResultDto> GetSubjectRoadmapAsync(int year)
     {
-        // Her deneğin ilk app activity kaydından platform bilgisini al
+        // Her deneğin en eski günlük kaydından platform bilgisini al
         var firstPlatformBySubject = db.SubjectAppActivities
             .GroupBy(a => a.SubjectId)
             .Select(g => new
             {
                 SubjectId = g.Key,
-                Platform = g.OrderBy(a => a.OccurredAt).First().Platform
+                Platform = g.OrderBy(a => a.ActivityDate).First().Platform
             });
 
         // Onaylı denekleri ay ve platform bazında grupla
@@ -148,15 +148,16 @@ public class ReportService(AppDbContext db) : IReportService
         var subjectIds = approvedSubjects.Select(s => s.Id).ToList();
 
         // Her denek için: son görülme, platform, seçilen süredeki aktif gün sayısı
+        var cutoffDate = DateOnly.FromDateTime(cutoff);
         var activityData = await db.SubjectAppActivities
             .Where(a => subjectIds.Contains(a.SubjectId))
             .GroupBy(a => a.SubjectId)
             .Select(g => new
             {
                 SubjectId = g.Key,
-                LastSeenAt = g.Max(a => a.OccurredAt),
-                Platform = g.OrderByDescending(a => a.OccurredAt).First().Platform,
-                ActiveDays = g.Count(a => a.OccurredAt >= cutoff)
+                LastSeenAt = g.Max(a => a.LastSeenAt),
+                Platform = g.OrderByDescending(a => a.ActivityDate).First().Platform,
+                ActiveDays = g.Count(a => a.ActivityDate >= cutoffDate)
             })
             .ToListAsync();
 

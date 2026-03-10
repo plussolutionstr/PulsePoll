@@ -7,46 +7,44 @@ namespace PulsePoll.Infrastructure.Persistence.Repositories;
 
 public class SubjectAppActivityRepository(AppDbContext db) : ISubjectAppActivityRepository
 {
-    public async Task AddAsync(SubjectAppActivity activity)
+    public async Task<SubjectAppActivity?> GetBySubjectAndDateAsync(int subjectId, DateOnly date, CancellationToken ct)
     {
-        db.SubjectAppActivities.Add(activity);
-        await db.SaveChangesAsync();
+        return await db.SubjectAppActivities
+            .FirstOrDefaultAsync(x => x.SubjectId == subjectId && x.ActivityDate == date, ct);
     }
 
-    public async Task<Dictionary<int, SubjectActivityStats>> GetStatsBySubjectIdsAsync(IEnumerable<int> subjectIds, DateTime sinceUtc)
+    public async Task AddAsync(SubjectAppActivity activity, CancellationToken ct)
+    {
+        db.SubjectAppActivities.Add(activity);
+        await db.SaveChangesAsync(ct);
+    }
+
+    public async Task UpdateAsync(SubjectAppActivity activity, CancellationToken ct)
+    {
+        await db.SaveChangesAsync(ct);
+    }
+
+    public async Task<Dictionary<int, SubjectActivityStats>> GetStatsBySubjectIdsAsync(
+        IEnumerable<int> subjectIds, DateTime sinceUtc)
     {
         var ids = subjectIds.Distinct().ToArray();
         if (ids.Length == 0)
             return new Dictionary<int, SubjectActivityStats>();
 
-        var recentRows = await db.SubjectAppActivities
-            .AsNoTracking()
-            .Where(x => ids.Contains(x.SubjectId) && x.OccurredAt >= sinceUtc)
-            .Select(x => new { x.SubjectId, x.OccurredAt })
-            .ToListAsync();
-
-        var activeDays = recentRows
-            .GroupBy(x => x.SubjectId)
-            .ToDictionary(
-                g => g.Key,
-                g => g.Select(x => DateOnly.FromDateTime(x.OccurredAt.Date)).Distinct().Count());
-
-        var lastSeenMap = await db.SubjectAppActivities
+        var stats = await db.SubjectAppActivities
             .AsNoTracking()
             .Where(x => ids.Contains(x.SubjectId))
             .GroupBy(x => x.SubjectId)
-            .Select(g => new { SubjectId = g.Key, LastSeenAt = g.Max(x => x.OccurredAt) })
-            .ToDictionaryAsync(x => x.SubjectId, x => (DateTime?)x.LastSeenAt);
+            .Select(g => new
+            {
+                SubjectId = g.Key,
+                ActiveDays = g.Count(x => x.ActivityDate >= DateOnly.FromDateTime(sinceUtc)),
+                LastSeenAt = g.Max(x => x.LastSeenAt)
+            })
+            .ToDictionaryAsync(
+                x => x.SubjectId,
+                x => new SubjectActivityStats(x.SubjectId, x.ActiveDays, x.LastSeenAt));
 
-        var result = new Dictionary<int, SubjectActivityStats>(ids.Length);
-        foreach (var subjectId in ids)
-        {
-            activeDays.TryGetValue(subjectId, out var days);
-            lastSeenMap.TryGetValue(subjectId, out var lastSeenAt);
-            result[subjectId] = new SubjectActivityStats(subjectId, days, lastSeenAt);
-        }
-
-        return result;
+        return stats;
     }
 }
-

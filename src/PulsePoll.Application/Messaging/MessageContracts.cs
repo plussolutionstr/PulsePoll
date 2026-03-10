@@ -13,6 +13,7 @@ public static class Queues
     public const string SmsSend = "sms.send";
     public const string SmsSendFault = "sms.send.fault";
     public const string CommunicationAutomationScheduleChanged = "communication.automation.schedule.changed";
+    public const string SubjectActivityTracked = "subject.activity.tracked";
 }
 
 // Mesaj modelleri
@@ -95,3 +96,11 @@ public record CommunicationAutomationScheduleChangedMessage(
     string TimeZoneId,
     int UpdatedByAdminId,
     DateTime UpdatedAtUtc);
+
+public record SubjectActivityTrackedMessage(
+    int SubjectId,
+    int ActivityType,
+    string? Platform,
+    string? AppVersion,
+    string? DeviceId,
+    DateTime OccurredAt);

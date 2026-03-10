@@ -8,13 +8,16 @@ public class SubjectAppActivityConfiguration : IEntityTypeConfiguration<SubjectA
 {
     public void Configure(EntityTypeBuilder<SubjectAppActivity> builder)
     {
-        builder.Property(x => x.OccurredAt).HasColumnType("timestamp without time zone");
+        builder.Property(x => x.ActivityDate).HasColumnType("date");
+        builder.Property(x => x.FirstOpenAt).HasColumnType("timestamp without time zone");
+        builder.Property(x => x.LastSeenAt).HasColumnType("timestamp without time zone");
         builder.Property(x => x.Platform).HasMaxLength(40);
         builder.Property(x => x.AppVersion).HasMaxLength(30);
         builder.Property(x => x.DeviceIdHash).HasMaxLength(128);
 
-        builder.HasIndex(x => new { x.SubjectId, x.OccurredAt })
-            .HasDatabaseName("idx_subject_app_activities_subject_id_occurred_at");
+        builder.HasIndex(x => new { x.SubjectId, x.ActivityDate })
+            .IsUnique()
+            .HasDatabaseName("idx_subject_app_activities_subject_date");
 
         builder.HasOne(x => x.Subject)
             .WithMany()
