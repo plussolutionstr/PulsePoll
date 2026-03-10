@@ -4,6 +4,7 @@ using PulsePoll.Api.Logging;
 using PulsePoll.Api.Middleware;
 using PulsePoll.Infrastructure;
 using PulsePoll.Infrastructure.Persistence;
+using PulsePoll.Infrastructure.Persistence.Seeding;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
@@ -28,6 +29,7 @@ using (var scope = app.Services.CreateScope())
     await db.Database.MigrateAsync();
     await DbSeeder.SeedAsync(db);
 }
+await PermissionSeeder.SeedAsync(app.Services);
 
 app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
